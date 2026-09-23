@@ -51,6 +51,7 @@ Log meaningful choices in `docs/DECISIONS.md`.
 ## Build & test
 
 ```bash
-# TBD: fill in once the Xcode project exists
-xcodebuild -scheme Moonbeam -destination 'platform=iOS Simulator,name=iPhone 17' build test
+xcodebuild -project moonbeam-app/moonbeam-app.xcodeproj -scheme moonbeam-app \
+  -destination 'platform=iOS Simulator,name=iPhone 17' build
+# TBD: add `test` once a test target exists
 ```

@@ -22,8 +22,10 @@ protocols injected into view models. No singletons.
 
 ## 2. Project structure
 
+Xcode project: `moonbeam-app/moonbeam-app.xcodeproj`. Source lives in `moonbeam-app/moonbeam-app/`.
+
 ```
-Moonbeam/
+moonbeam-app/moonbeam-app/
 ├── App/                 # @main entry, dependency wiring
 ├── Features/
 │   └── MoonTable/       # MoonTableView, MoonTableViewModel
@@ -33,7 +35,7 @@ Moonbeam/
 ├── Models/              # Plain value types
 ├── Formatting/          # Compass, time, and percent formatters
 └── Vendor/Astronomy/    # astronomy.c, astronomy.h, VERSION
-MoonbeamTests/           # Swift Testing: formatters, services vs USNO values
+moonbeam-appTests/       # Swift Testing (TBD: target not created yet): formatters, services vs USNO values
 ```
 
 ## 3. Data models
