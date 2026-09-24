@@ -23,13 +23,11 @@
 - **Why:** 26 is a wide enough net for a new app while still avoiding legacy baggage; nothing in the
   codebase needs a 27-only API. Verified by building and running at 26.0 — the moon table still
   prints identical values, including 94% illumination.
-- **Where it's set:** Target level is **26.0**. The project level was 27.0 and was lowered in Xcode
-  on 2026-09-23 to **26.6**, so the two no longer agree. The target overrides the project, so the
-  app ships as 26.0 either way.
-- **Loose end:** A newly added target would inherit the project's **26.6**, not 26.0, and would
-  silently exclude iOS 26.0–26.5. Worth setting the project level to 26.0 (Project ▸ Info ▸ iOS
-  Deployment Target) before adding the test target. Claude can't do this: the Xcode tooling exposes
-  no project-level build setting and forbids hand-editing `project.pbxproj`.
+- **Where it's set:** Both the project and the target read **26.0**, in Debug and Release, so new
+  targets inherit the right floor. Getting there took two passes: the target was set first, then the
+  project level went 27.0 → 26.6 → 26.0 in Xcode. Claude can only set the *target* level — the
+  Xcode tooling exposes no project-level build setting and forbids hand-editing `project.pbxproj`,
+  so project-wide changes have to be made in the UI.
 
 ### 2026-09-23 · Pin Astronomy Engine v2.1.19; call `Astronomy_SearchRiseSetEx`, not the macro
 - **Why:** `Astronomy_SearchRiseSet` is a C *macro* in v2.1.19, so Swift can't see it. The
