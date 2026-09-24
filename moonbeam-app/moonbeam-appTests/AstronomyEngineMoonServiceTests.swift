@@ -10,6 +10,12 @@ import Testing
 /// Checks the vendored Astronomy Engine against the reference table in
 /// ASTRONOMY.md §5, within the tolerances stated there.
 ///
+/// Rise/set times and the local-noon illumination are checked against **USNO**,
+/// an independent source. Azimuths and tonight's-midnight illumination have no
+/// USNO equivalent — USNO publishes no rise/set azimuth at all, and its
+/// `fracillum` is sampled at local noon — so those are engine-derived
+/// regression guards, labelled as such.
+///
 /// Per CLAUDE.md, a failure here is never to be "fixed" by widening a
 /// tolerance without logging the decision in DECISIONS.md.
 @Suite("AstronomyEngineMoonService vs ASTRONOMY.md §5")
@@ -45,19 +51,24 @@ nonisolated struct AstronomyEngineMoonServiceTests {
 
     // MARK: - Rise
 
-    @Test("Moonrise matches the reference time")
+    /// USNO publishes 17:19 for this location and date. The engine returns
+    /// 17:18:30, which rounds to 17:18 — a 30-second difference, comfortably
+    /// inside the ±2 minute tolerance.
+    @Test("Moonrise matches USNO")
     func moonriseTime() throws {
         let moonDay = service.moonDay(for: place, on: try referenceDate)
         let rise = try #require(moonDay.rise, "expected a moonrise on 2026-09-23")
-        let expected = try localDate(year: 2026, month: 9, day: 23, hour: 17, minute: 18)
+        let usno = try localDate(year: 2026, month: 9, day: 23, hour: 17, minute: 19)
 
         #expect(
-            abs(rise.date.timeIntervalSince(expected)) <= Self.timeToleranceSeconds,
-            "moonrise \(describe(rise.date)) differs from expected \(describe(expected)) by more than 2 minutes"
+            abs(rise.date.timeIntervalSince(usno)) <= Self.timeToleranceSeconds,
+            "moonrise \(describe(rise.date)) differs from USNO \(describe(usno)) by more than 2 minutes"
         )
     }
 
-    @Test("Moonrise azimuth is east-southeast")
+    /// Engine-derived: USNO publishes no rise/set azimuth, which is precisely
+    /// why the app calculates on device (ASTRONOMY.md §1).
+    @Test("Moonrise azimuth is east-southeast (engine-derived)")
     func moonriseAzimuth() throws {
         let moonDay = service.moonDay(for: place, on: try referenceDate)
         let rise = try #require(moonDay.rise)
@@ -69,19 +80,21 @@ nonisolated struct AstronomyEngineMoonServiceTests {
 
     // MARK: - Set
 
-    @Test("Moonset matches the reference time")
+    /// USNO publishes 03:37; the engine returns 03:37:09.
+    @Test("Moonset matches USNO")
     func moonsetTime() throws {
         let moonDay = service.moonDay(for: place, on: try referenceDate)
         let set = try #require(moonDay.set, "expected a moonset on 2026-09-23")
-        let expected = try localDate(year: 2026, month: 9, day: 23, hour: 3, minute: 37)
+        let usno = try localDate(year: 2026, month: 9, day: 23, hour: 3, minute: 37)
 
         #expect(
-            abs(set.date.timeIntervalSince(expected)) <= Self.timeToleranceSeconds,
-            "moonset \(describe(set.date)) differs from expected \(describe(expected)) by more than 2 minutes"
+            abs(set.date.timeIntervalSince(usno)) <= Self.timeToleranceSeconds,
+            "moonset \(describe(set.date)) differs from USNO \(describe(usno)) by more than 2 minutes"
         )
     }
 
-    @Test("Moonset azimuth is west-southwest")
+    /// Engine-derived, for the same reason as the moonrise azimuth.
+    @Test("Moonset azimuth is west-southwest (engine-derived)")
     func moonsetAzimuth() throws {
         let moonDay = service.moonDay(for: place, on: try referenceDate)
         let set = try #require(moonDay.set)
@@ -103,10 +116,29 @@ nonisolated struct AstronomyEngineMoonServiceTests {
 
     // MARK: - Phase and illumination
 
-    /// Sampled at tonight's local midnight per PRODUCT FR5, which is what
-    /// puts the reference value at 94% rather than 91%.
-    @Test("Illumination matches the reference percentage")
-    func illumination() throws {
+    /// The real external check on illumination: USNO reports `fracillum` 91%
+    /// for this date, sampled at **local noon**. Verifying at that moment is
+    /// what proves the engine's illumination maths, independent of which
+    /// moment the app chooses to display (ASTRONOMY.md §3).
+    @Test("Illumination at local noon matches USNO")
+    func illuminationAtLocalNoonMatchesUSNO() throws {
+        let localNoon = try localDate(year: 2026, month: 9, day: 23, hour: 12, minute: 0)
+        let usnoFracillum = 0.91
+
+        let engine = service.illumination(at: localNoon)
+
+        #expect(
+            abs(engine - usnoFracillum) <= Self.illuminationTolerance,
+            "illumination at local noon \(engine) is more than 1% from USNO's \(usnoFracillum)"
+        )
+    }
+
+    /// Engine-derived regression guard, not a USNO check. The app displays
+    /// tonight's local midnight per PRODUCT FR5, which reads ~93.6% and so
+    /// rounds to 94% — a different moment from USNO's noon sample, hence the
+    /// three-point gap. Pins the displayed value against drift.
+    @Test("Illumination at tonight's midnight stays at 94% (engine-derived)")
+    func illuminationAtTonightsMidnight() throws {
         let moonDay = service.moonDay(for: place, on: try referenceDate)
         let expected = 0.94
 
@@ -116,7 +148,23 @@ nonisolated struct AstronomyEngineMoonServiceTests {
         )
     }
 
-    @Test("Phase is waxing gibbous")
+    /// The gap between the two moments is real, not rounding: it's what makes
+    /// the sampling moment worth pinning down in the first place.
+    @Test("Noon and midnight illumination differ measurably")
+    func noonAndMidnightDiffer() throws {
+        let localNoon = try localDate(year: 2026, month: 9, day: 23, hour: 12, minute: 0)
+        let moonDay = service.moonDay(for: place, on: try referenceDate)
+
+        let gap = moonDay.illumination - service.illumination(at: localNoon)
+        let minimumExpectedGap = 0.02
+
+        // Waxing, so the later sample must be brighter.
+        #expect(gap > minimumExpectedGap)
+    }
+
+    /// USNO reports "Waxing Gibbous" for this date, with the next full moon on
+    /// 2026-09-26 — consistent with a phase angle short of 180°.
+    @Test("Phase is waxing gibbous, matching USNO")
     func phase() throws {
         let moonDay = service.moonDay(for: place, on: try referenceDate)
 

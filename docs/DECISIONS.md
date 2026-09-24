@@ -5,6 +5,21 @@
 
 ---
 
+### 2026-09-23 · Validate illumination against USNO at local noon, not at the displayed moment
+- **Decision:** `AstronomyEngineMoonService` gains an internal `illumination(at:)`. Tests compare
+  USNO's `fracillum` against that helper **at local noon**, and assert the displayed
+  tonight's-midnight value (94%) separately as an engine-derived regression guard.
+- **Why:** USNO samples `fracillum` at local noon. Comparing it to our displayed value would fail by
+  ~3 points for a reason that has nothing to do with correctness, and the tempting "fix" — widening
+  the tolerance to 5% — would destroy the test's power. Sampling the same moment USNO does isolates
+  the maths from the display convention, so each assertion tests one thing.
+- **Result:** USNO confirms rise 17:19 and set 03:37 (engine: 17:18:30, 03:37:09, both within
+  ±2 min), 91% at local noon (engine 90.9%), and Waxing Gibbous. §5 is no longer TBD.
+- **Kept internal, not private:** the helper is `internal` so tests can reach it via
+  `@testable import` while the C API stays confined to this one type, per the architecture rule.
+- **Not covered by USNO:** rise/set azimuth. USNO doesn't publish it — the reason we calculate on
+  device at all (§1) — so azimuth assertions remain engine-derived and are labelled that way.
+
 ### 2026-09-23 · The whole domain layer is `nonisolated`, not just the service
 - **Decision:** `nonisolated` on `Place`, `MoonEvent`, `MoonDay`, `MoonPhase`, the `MoonService`
   protocol, `AstronomyEngineMoonService` and `CompassFormatter`.

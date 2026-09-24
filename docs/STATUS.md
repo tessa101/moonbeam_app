@@ -25,13 +25,16 @@ _Last updated: 2026-09-23_
 ## Next
 1. [x] Push to GitHub (docs + Xcode project are on `main`)
 2. [x] Astronomy Engine spike: vendor `astronomy.c/.h`, bridging header, print the moon table for a hardcoded city
-3. [~] Add a test target and pull USNO reference values (run from the Mac; the cloud sandbox can't reach USNO)
-   - [x] `moonbeam-appTests` target added (Swift Testing, app-hosted, shared scheme). **20 tests in
-     3 suites, all passing:** MoonPhase angle→name incl. wraparound, CompassFormatter sector edges,
-     and AstronomyEngineMoonService against the §5 Mar Vista row at ±2 min / ±2° / ±1%.
-   - [ ] Still to do: pull the actual USNO values and confirm §5, which is the part that needs a
-     machine that can reach aa.usno.navy.mil. Right now the tests assert against Astronomy Engine's
-     own output, so they guard against regressions but don't yet prove external correctness.
+3. [x] Add a test target and pull USNO reference values
+   - `moonbeam-appTests` (Swift Testing, app-hosted, shared scheme): **22 tests / 91 cases, all
+     passing.** MoonPhase angle→name incl. wraparound, CompassFormatter sector edges, and
+     AstronomyEngineMoonService against the §5 Mar Vista row.
+   - **Validated against USNO:** rise and set times within ±2 min (engine 17:18:30 / 03:37:09 vs
+     USNO 17:19 / 03:37), illumination at local noon within ±1% (90.9% vs USNO's 91%), and phase
+     name. Azimuths have no USNO equivalent — USNO publishes none, which is why we calculate on
+     device — so those stay engine-derived regression guards, labelled as such in the tests.
+   - Note the moment mismatch in §3: USNO samples `fracillum` at local noon, the app displays
+     tonight's local midnight (94%). Both are asserted, separately and for different reasons.
 4. [ ] Build the SwiftUI table
 
 ## Open questions

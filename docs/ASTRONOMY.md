@@ -60,6 +60,14 @@ These must match USNO or the tests will drift.
   Illumination moves ~6 points across a single day (87.8% at the start of 2026-09-23 → 93.6% at the
   end), far more than the ±1% tolerance, so the moment has to be exact for tests to mean anything.
 
+> **Moment mismatch with USNO.** USNO's `fracillum` is sampled at **local noon**, not at the end of
+> the day, so its percentage will not equal ours and that is expected, not a bug. For 2026-09-23 at
+> Mar Vista, USNO reports 91% and the engine agrees at local noon (90.9%) — while the app displays
+> 94%, the value at tonight's local midnight. Validate illumination against USNO **at local noon**
+> via `AstronomyEngineMoonService.illumination(at:)`; assert the displayed midnight value separately
+> as an engine-derived regression guard. Rise/set times are directly comparable and need no such
+> adjustment.
+
 ### Phase names (from phase angle)
 
 | Angle | Name |
@@ -87,9 +95,15 @@ These must match USNO or the tests will drift.
 Reference values for tests. Fill in from USNO (run from a local machine,
 since the cloud sandbox couldn't reach it).
 
+The Mar Vista row is confirmed against USNO. Read it with §3's moment mismatch
+in mind: the two illumination figures are the *same* calculation sampled at
+different instants, not a disagreement. Engine values were rise 17:18:30 and
+set 03:37:09, both within ±2 min of USNO. USNO also reports Waxing Gibbous,
+with the next full moon on 2026-09-26 at 09:49 PDT.
+
 | City | Lat, Lon | Date | Rise | Set | Illum % | Source |
 |---|---|---|---|---|---|---|
-| Los Angeles (Mar Vista) | 34.00, -118.43 | 2026-09-23 | 5:18 PM · 105° ESE | 3:37 AM · 252° WSW | 94% | Astronomy Engine, reproduced by the vendored C build. Illumination is 93.6% at tonight's local midnight per §3. **TBD:** confirm vs USNO |
+| Los Angeles (Mar Vista) | 34.00, -118.43 | 2026-09-23 | 5:19 PM · 105° ESE | 3:37 AM · 252° WSW | 91% @ local noon · 94% displayed | **USNO** (times, illum @ local noon) + **Astronomy Engine** (azimuth, illum @ tonight's midnight) |
 | **TBD:** Reykjavík (high lat) | | | | | | |
 | **TBD:** Sydney (southern hemisphere) | | | | | | |
 | **TBD:** a no-moonrise day | | | | | | |

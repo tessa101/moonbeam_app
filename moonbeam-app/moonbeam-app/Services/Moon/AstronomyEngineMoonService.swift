@@ -67,16 +67,11 @@ nonisolated struct AstronomyEngineMoonService: MoonService {
         // day rather than 24 hours keeps this correct across DST transitions,
         // when a local day is 23 or 25 hours long.
         let endOfDay = calendar.date(byAdding: .day, value: 1, to: localMidnight)
-        let illuminationMoment = Self.astroTime(from: endOfDay ?? localMidnight)
+        let illuminationMoment = endOfDay ?? localMidnight
 
-        let phaseResult = Astronomy_MoonPhase(illuminationMoment)
+        let phaseResult = Astronomy_MoonPhase(Self.astroTime(from: illuminationMoment))
         let phaseAngle = phaseResult.status == ASTRO_SUCCESS
             ? phaseResult.angle.wrappedIntoDegreeCircle
-            : 0
-
-        let illuminationResult = Astronomy_Illumination(BODY_MOON, illuminationMoment)
-        let illumination = illuminationResult.status == ASTRO_SUCCESS
-            ? illuminationResult.phase_fraction
             : 0
 
         return MoonDay(
@@ -85,8 +80,22 @@ nonisolated struct AstronomyEngineMoonService: MoonService {
             set: set,
             phase: MoonPhase(phaseAngle: phaseAngle),
             phaseAngle: phaseAngle,
-            illumination: illumination
+            illumination: illumination(at: illuminationMoment)
         )
+    }
+
+    // MARK: - Illumination at an arbitrary moment
+
+    /// The lit fraction of the disc, `0.0...1.0`, at a specific instant.
+    ///
+    /// `moonDay(for:on:)` calls this with tonight's local midnight, the moment
+    /// PRODUCT FR5 settles on. It's also `internal` so tests can sample other
+    /// moments — USNO publishes its `fracillum` for local noon, not midnight
+    /// (ASTRONOMY.md §3) — without anything outside this type touching the
+    /// C API.
+    func illumination(at date: Date) -> Double {
+        let result = Astronomy_Illumination(BODY_MOON, Self.astroTime(from: date))
+        return result.status == ASTRO_SUCCESS ? result.phase_fraction : 0
     }
 
     // MARK: - Astronomy Engine bridging
