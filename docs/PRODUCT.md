@@ -84,7 +84,7 @@ to catch a moonrise over the ocean or a skyline, you need the **time** and the
 ## 8. Constraints
 
 - iOS only, SwiftUI, native Apple frameworks first
-- Minimum iOS: **TBD** (recommend iOS 26+, no legacy baggage for a new app)
+- Minimum iOS: **26.0** (set 2026-09-23; no legacy baggage for a new app)
 - Single third-party dependency allowed: Astronomy Engine (MIT, vendored C source)
 - Solo build with Claude Code; design partner joins at the UX/UI phase
 

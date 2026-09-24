@@ -5,6 +5,29 @@
 
 ---
 
+### 2026-09-23 · Swift 6 language mode with complete strict concurrency
+- **Decision:** `SWIFT_VERSION = 6.0` and `SWIFT_STRICT_CONCURRENCY = complete`, matching what
+  CLAUDE.md already required. The Xcode template had shipped 5.0.
+- **Outcome:** Builds clean with no errors and no concurrency warnings, so no source changes and no
+  suppressions were needed. The existing code was already compatible: the models are value types of
+  Sendable members, so they pick up implicit `Sendable`; the service is a stateless `struct` whose
+  C calls are all local; and the spike's statics are immutable.
+- **Note:** The template also sets `SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor` and
+  `SWIFT_APPROACHABLE_CONCURRENCY = YES`, both left as-is. Those make unannotated code MainActor
+  isolated, which is why calling the spike from `App.init` is fine. When the test target lands,
+  expect to mark the astronomy helpers `nonisolated` so tests can call them off the main actor.
+
+### 2026-09-23 · Minimum iOS 26.0
+- **Decision:** `IPHONEOS_DEPLOYMENT_TARGET = 26.0`, the value PRODUCT.md §8 recommended. The
+  template had 27.0.
+- **Why:** 26 is a wide enough net for a new app while still avoiding legacy baggage; nothing in the
+  codebase needs a 27-only API. Verified by building and running at 26.0 — the moon table still
+  prints identical values, including 94% illumination.
+- **Caveat:** Only the *target* was changed, because the Xcode tooling exposes no project-level
+  setting and forbids hand-editing `project.pbxproj`. The project level still reads 27.0. The target
+  wins, so the app is genuinely 26.0, but **a new target would inherit 27.0** — set the project
+  level in Xcode (Project ▸ Info ▸ iOS Deployment Target) before adding the test target.
+
 ### 2026-09-23 · Pin Astronomy Engine v2.1.19; call `Astronomy_SearchRiseSetEx`, not the macro
 - **Why:** `Astronomy_SearchRiseSet` is a C *macro* in v2.1.19, so Swift can't see it. The
   underlying function `Astronomy_SearchRiseSetEx` takes an extra `metersAboveGround`, which we
