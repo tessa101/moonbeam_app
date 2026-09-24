@@ -10,7 +10,9 @@ import Foundation
 /// `rise` and `set` are independent: either can be `nil` (the moon rises about
 /// 50 minutes later each day, so roughly monthly one of them falls outside the
 /// day), and a set can precede a rise. See ASTRONOMY.md §4.
-struct MoonDay: Equatable {
+///
+/// `nonisolated`: an inert value, not main-actor state.
+nonisolated struct MoonDay: Equatable {
     let place: Place
     let rise: MoonEvent?
     let set: MoonEvent?

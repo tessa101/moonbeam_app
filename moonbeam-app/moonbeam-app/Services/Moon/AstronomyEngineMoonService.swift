@@ -11,7 +11,12 @@ import Foundation
 /// else depends on the `MoonService` protocol. Conventions (rise/set
 /// definition, search window, refraction) are documented in ASTRONOMY.md §3
 /// and must stay in step with the USNO reference values.
-struct AstronomyEngineMoonService: MoonService {
+///
+/// `nonisolated` because this is pure computation over its inputs with no
+/// shared state, so it has no business on the main actor. The project builds
+/// with `SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor`, which would otherwise
+/// isolate it and force every caller — tests included — onto the main actor.
+nonisolated struct AstronomyEngineMoonService: MoonService {
 
     // MARK: - Constants
 

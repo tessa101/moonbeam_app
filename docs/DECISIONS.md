@@ -5,6 +5,33 @@
 
 ---
 
+### 2026-09-23 · The whole domain layer is `nonisolated`, not just the service
+- **Decision:** `nonisolated` on `Place`, `MoonEvent`, `MoonDay`, `MoonPhase`, the `MoonService`
+  protocol, `AstronomyEngineMoonService` and `CompassFormatter`.
+- **Why:** `SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor` isolates everything unannotated, which makes
+  pure value types and pure functions main-actor state. Marking only the service wasn't enough:
+  tests still failed to compile because `MoonDay.rise`, `MoonEvent.azimuth` and the `MoonService`
+  requirement were all main-actor isolated, so reading a result off the main actor was illegal.
+  These types have no mutable or shared state, so isolation buys nothing and costs a hop.
+- **Consequence:** Test suites are marked `nonisolated` too, so they genuinely exercise the code off
+  the main actor. Views and view models stay main-actor isolated by default, which is what we want.
+
+### 2026-09-23 · Unit tests live in an app-hosted target, driven by a shared scheme
+- **Decision:** `moonbeam-appTests` is a Swift Testing bundle **hosted in the app** (`TEST_HOST` +
+  `BUNDLE_LOADER` + a target dependency), and the `moonbeam-app` scheme is **shared** in
+  `xcshareddata/xcschemes/`.
+- **Why hosted:** `@testable import moonbeam_app` needs the app's Swift module. An unhosted bundle
+  with no dependency on the app fails with "Unable to resolve module dependency: 'moonbeam_app'".
+  Creating the target with the host app attached wires `TEST_HOST` and the dependency correctly;
+  creating it standalone does not, and the dependency can't be added without editing
+  `project.pbxproj`, which the Xcode tooling forbids.
+- **Why shared:** Xcode's autocreated schemes carry no test action, so `xcodebuild test` fails with
+  "Scheme moonbeam-app is not currently configured for the test action". Sharing the scheme puts the
+  test action in version control. Committing it is deliberate — don't let Xcode replace it.
+- **Also:** The test target inherits none of the app's language settings, so Swift 6, complete strict
+  concurrency, iOS 26.0 and iOS-only platforms had to be set on it explicitly. The template defaults
+  were Swift 5.0, iOS 27.0 and a multiplatform `SDKROOT = auto`.
+
 ### 2026-09-23 · Swift 6 language mode with complete strict concurrency
 - **Decision:** `SWIFT_VERSION = 6.0` and `SWIFT_STRICT_CONCURRENCY = complete`, matching what
   CLAUDE.md already required. The Xcode template had shipped 5.0.

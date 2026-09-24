@@ -35,7 +35,7 @@ moonbeam-app/moonbeam-app/
 ├── Models/              # Plain value types
 ├── Formatting/          # Compass, time, and percent formatters
 └── Vendor/Astronomy/    # astronomy.c, astronomy.h, VERSION
-moonbeam-appTests/       # Swift Testing (TBD: target not created yet): formatters, services vs USNO values
+moonbeam-appTests/       # Swift Testing, app-hosted: formatters, models, service vs ASTRONOMY.md §5
 ```
 
 ## 3. Data models

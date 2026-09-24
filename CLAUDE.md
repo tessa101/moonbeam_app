@@ -51,7 +51,17 @@ Log meaningful choices in `docs/DECISIONS.md`. Check `docs/STATUS.md` for curren
 ## Build & test
 
 ```bash
+# Build
 xcodebuild -project moonbeam-app/moonbeam-app.xcodeproj -scheme moonbeam-app \
   -destination 'platform=iOS Simulator,name=iPhone 17' build
-# TBD: add `test` once a test target exists
+
+# Test (20 tests across 3 suites in the moonbeam-appTests target)
+xcodebuild test -project moonbeam-app/moonbeam-app.xcodeproj -scheme moonbeam-app \
+  -destination 'platform=iOS Simulator,name=iPhone 17'
 ```
+
+The `moonbeam-app` scheme is **shared** (`xcshareddata/xcschemes/`) so that its test
+action is in version control and `xcodebuild test` works from a fresh clone. Don't
+delete it in favour of an autocreated scheme — autocreated schemes have no test
+action, and `xcodebuild` then fails with "not currently configured for the test
+action".

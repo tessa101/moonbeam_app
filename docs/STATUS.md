@@ -8,7 +8,8 @@ _Last updated: 2026-09-23_
 ## Where things live
 - **Local repo:** `~/app-ideas/moonbeam` (the one true folder)
 - **GitHub:** https://github.com/tessa101/moonbeam_app (`main`)
-- **Xcode project:** `moonbeam-app/moonbeam-app.xcodeproj` (SwiftUI template, no test target yet)
+- **Xcode project:** `moonbeam-app/moonbeam-app.xcodeproj` (app target + `moonbeam-appTests`)
+- The `moonbeam-app` scheme is shared and version-controlled; `xcodebuild test` depends on it
 - Don't tick "Create Git repository" in Xcode. This folder already has one.
 
 ## Done
@@ -24,9 +25,13 @@ _Last updated: 2026-09-23_
 ## Next
 1. [x] Push to GitHub (docs + Xcode project are on `main`)
 2. [x] Astronomy Engine spike: vendor `astronomy.c/.h`, bridging header, print the moon table for a hardcoded city
-3. [ ] Add a test target and pull USNO reference values (run from the Mac; the cloud sandbox can't reach USNO)
-   - Unblocked: the illumination moment is settled (tonight's local midnight, see DECISIONS.md), so
-     illumination can now be asserted at ±1% against 94% for the Mar Vista row.
+3. [~] Add a test target and pull USNO reference values (run from the Mac; the cloud sandbox can't reach USNO)
+   - [x] `moonbeam-appTests` target added (Swift Testing, app-hosted, shared scheme). **20 tests in
+     3 suites, all passing:** MoonPhase angle→name incl. wraparound, CompassFormatter sector edges,
+     and AstronomyEngineMoonService against the §5 Mar Vista row at ±2 min / ±2° / ±1%.
+   - [ ] Still to do: pull the actual USNO values and confirm §5, which is the part that needs a
+     machine that can reach aa.usno.navy.mil. Right now the tests assert against Astronomy Engine's
+     own output, so they guard against regressions but don't yet prove external correctness.
 4. [ ] Build the SwiftUI table
 
 ## Open questions

@@ -9,7 +9,10 @@ import Foundation
 ///
 /// Sectors are `compassSectorWidth` wide and centred on their heading, so N
 /// spans 348.75°–11.25° rather than starting at 0°. See ASTRONOMY.md §3.
-struct CompassFormatter {
+///
+/// `nonisolated` because it's a pure lookup over its input, so it doesn't
+/// belong on the main actor under `SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor`.
+nonisolated struct CompassFormatter {
 
     // MARK: - Constants
 
