@@ -35,7 +35,20 @@ _Last updated: 2026-09-23_
      device — so those stay engine-derived regression guards, labelled as such in the tests.
    - Note the moment mismatch in §3: USNO samples `fracillum` at local noon, the app displays
      tonight's local midnight (94%). Both are asserted, separately and for different reasons.
+   - [ ] **Confirm `xcodebuild test` on the Mac.** The 91 passing cases ran in Xcode's own runner; the
+     agent's sandbox couldn't launch the simulator from the command line. Run the command in CLAUDE.md
+     from Terminal and expect `** TEST SUCCEEDED **`.
+   - [ ] **Fill the remaining ASTRONOMY.md §5 rows from USNO** (engine predictions shown, ±2 min expected):
+     | Row | Date | Coords, tz | Engine predicts | USNO query |
+     |---|---|---|---|---|
+     | Reykjavík (high latitude) | 2026-09-23 | 64.15, -21.94 · UTC, no DST | rise 19:07 · set 02:01 | `oneday?date=2026-09-23&coords=64.15,-21.94&tz=0&dst=false` |
+     | Sydney (southern hemisphere) | 2026-09-23 | -33.87, 151.21 · AEST, no DST yet | rise 14:24 · set 03:41 | `oneday?date=2026-09-23&coords=-33.87,151.21&tz=10&dst=false` |
+     | Mar Vista (no moonrise) | 2026-10-03 | 34.00, -118.43 · PDT | **no rise** · set 14:27 (rise 23:12 on 10/2, 00:21 on 10/4) | `oneday?date=2026-10-03&coords=34.00,-118.43&tz=-8&dst=true` |
+
+     Base URL: `https://aa.usno.navy.mil/api/rstt/`. Open from the Mac (the cloud sandbox is blocked).
 4. [ ] Build the SwiftUI table
+   - Design first (Tessa): table layout, and the **"no moonrise / no moonset today"** state, which the
+     Oct 3 row above will exercise. Bring a sketch or Figma link, then spec it for the agent.
 
 ## Open questions
 - ~~Minimum iOS version (suggested 26+)~~ **Settled 2026-09-23:** deployment target is 26.0, and
