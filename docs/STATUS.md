@@ -32,8 +32,9 @@ _Last updated: 2026-09-23_
 ## Open questions
 - ~~Minimum iOS version (suggested 26+)~~ **Settled 2026-09-23:** deployment target is 26.0, and
   Swift 6 with complete strict concurrency is on. Both built and ran clean. One loose end: the
-  *project*-level deployment target still reads 27.0 and needs fixing in Xcode's UI before a second
-  target is added — see DECISIONS.md
+  *project*-level deployment target was lowered from 27.0 to **26.6**, not 26.0, so a newly added
+  target would inherit 26.6 and exclude iOS 26.0–26.5. Set it to 26.0 in Xcode before adding the
+  test target — see DECISIONS.md
 - ~~Show illumination for the current time or for local midnight?~~ **Settled 2026-09-23:** tonight's
   local midnight, i.e. the end of the selected day. See DECISIONS.md and PRODUCT FR5
 - Primary persona (confirm with design partner)
