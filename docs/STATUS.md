@@ -15,15 +15,22 @@ _Last updated: 2026-09-23_
 - Planning docs: PRODUCT, ARCHITECTURE, ASTRONOMY, DECISIONS, CLAUDE.md
 - Xcode project created inside the repo, plus a `.gitignore`
 - Astronomy Engine sanity check (JS, Mar Vista, 2026-09-23): rise 5:18 PM 105° ESE · set 3:37 AM 252° WSW · 91% illuminated
+  (that 91% was sampled at local noon; the agreed convention now puts the reference at 94% — see §5)
+- Astronomy Engine spike: vendored v2.1.19 + bridging header, app builds and prints the moon table.
+  Rise/set **reproduce the JS values exactly** (5:18 PM 105° ESE · 3:37 AM 252° WSW).
 
 ## Next
 1. [x] Push to GitHub (docs + Xcode project are on `main`)
-2. [ ] Astronomy Engine spike: vendor `astronomy.c/.h`, bridging header, print the moon table for a hardcoded city
+2. [x] Astronomy Engine spike: vendor `astronomy.c/.h`, bridging header, print the moon table for a hardcoded city
 3. [ ] Add a test target and pull USNO reference values (run from the Mac; the cloud sandbox can't reach USNO)
+   - Unblocked: the illumination moment is settled (tonight's local midnight, see DECISIONS.md), so
+     illumination can now be asserted at ±1% against 94% for the Mar Vista row.
 4. [ ] Build the SwiftUI table
 
 ## Open questions
-- Minimum iOS version (suggested 26+)
-- Show illumination for the current time or for local midnight?
+- Minimum iOS version (suggested 26+) — note the Xcode project is currently set to **27.0**, and
+  `SWIFT_VERSION` is **5.0** even though CLAUDE.md calls for Swift 6 with strict concurrency
+- ~~Show illumination for the current time or for local midnight?~~ **Settled 2026-09-23:** tonight's
+  local midnight, i.e. the end of the selected day. See DECISIONS.md and PRODUCT FR5
 - Primary persona (confirm with design partner)
 - Display name "Moonbeam" (project name is `moonbeam-app`)

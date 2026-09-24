@@ -36,10 +36,14 @@ Key C functions:
 
 | Need | Function |
 |---|---|
-| Rise / set time | `Astronomy_SearchRiseSet(BODY_MOON, observer, DIRECTION_RISE/SET, start, 1.0)` |
+| Rise / set time | `Astronomy_SearchRiseSetEx(BODY_MOON, observer, DIRECTION_RISE/SET, start, 1.0, 0.0)` |
 | Direction at that moment | `Astronomy_Equator` → `Astronomy_Horizon` → `.azimuth` |
 | Phase angle | `Astronomy_MoonPhase(time)` (0 new, 90 first quarter, 180 full, 270 last quarter) |
 | Illumination | `Astronomy_Illumination(BODY_MOON, time).phase_fraction` |
+
+In v2.1.19 `Astronomy_SearchRiseSet` is a macro wrapping `…Ex`, so it isn't visible to Swift.
+`Astronomy_Equator` and `Astronomy_Horizon` take `astro_time_t *`, so the event time needs to be
+held in a `var` and passed with `&`.
 
 ## 3. Conventions
 
@@ -50,7 +54,11 @@ These must match USNO or the tests will drift.
 - **Elevation:** 0 m by default (**TBD:** use elevation if it's cheap to get).
 - **Azimuth:** degrees clockwise from true north (not magnetic).
 - **Compass:** 16-point (N, NNE, NE … NNW), each sector 22.5° wide, centered on its heading.
-- **Illumination moment:** **TBD** (current time vs. local midnight; see PRODUCT FR5).
+- **Illumination moment:** **tonight's local midnight** — the end of the selected day in the city's
+  time zone (PRODUCT FR5). Compute it as `calendar.date(byAdding: .day, value: 1, to: localMidnight)`,
+  never `localMidnight + 24 * 3600`, so 23- and 25-hour DST days land on the right instant.
+  Illumination moves ~6 points across a single day (87.8% at the start of 2026-09-23 → 93.6% at the
+  end), far more than the ±1% tolerance, so the moment has to be exact for tests to mean anything.
 
 ### Phase names (from phase angle)
 
@@ -81,7 +89,7 @@ since the cloud sandbox couldn't reach it).
 
 | City | Lat, Lon | Date | Rise | Set | Illum % | Source |
 |---|---|---|---|---|---|---|
-| Los Angeles (Mar Vista) | 34.00, -118.43 | 2026-09-23 | 5:18 PM · 105° ESE | 3:37 AM · 252° WSW | 91% | Astronomy Engine (JS). **TBD:** confirm vs USNO |
+| Los Angeles (Mar Vista) | 34.00, -118.43 | 2026-09-23 | 5:18 PM · 105° ESE | 3:37 AM · 252° WSW | 94% | Astronomy Engine, reproduced by the vendored C build. Illumination is 93.6% at tonight's local midnight per §3. **TBD:** confirm vs USNO |
 | **TBD:** Reykjavík (high lat) | | | | | | |
 | **TBD:** Sydney (southern hemisphere) | | | | | | |
 | **TBD:** a no-moonrise day | | | | | | |

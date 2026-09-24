@@ -71,7 +71,7 @@ to catch a moonrise over the ocean or a skyline, you need the **time** and the
 - **FR2:** If there's no rise or set on a given day, show "No moonrise today," never a blank.
 - **FR3:** Direction shows as degrees + cardinal (e.g. `105° ESE`).
 - **FR4:** Geocoding failure shows a clear, recoverable error.
-- **FR5:** Illumination and phase are calculated for the local current time (**TBD:** or local midnight? Pick one convention and document it in ASTRONOMY.md).
+- **FR5:** Illumination and phase are calculated for **tonight's local midnight** — the end of the selected day in the city's time zone. The app answers "how bright is the moon tonight?", so the value shouldn't drift as the day wears on. See ASTRONOMY.md §3.
 
 ### Non-functional
 
