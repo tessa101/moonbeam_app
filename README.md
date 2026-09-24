@@ -13,6 +13,7 @@ plus lunar phase and illumination, for any city. All calculations run on the dev
 | [ARCHITECTURE.md](docs/ARCHITECTURE.md) | Structure, models, services: the *how* |
 | [ASTRONOMY.md](docs/ASTRONOMY.md) | Data sources, conventions, validation |
 | [DECISIONS.md](docs/DECISIONS.md) | Log of key choices |
+| [STATUS.md](docs/STATUS.md) | Where things stand + next steps |
 | [CLAUDE.md](CLAUDE.md) | Rules for Claude Code on this repo |
 
 ## Status

@@ -7,7 +7,7 @@ rises and sets. Read these before any non-trivial change:
 @docs/ARCHITECTURE.md
 @docs/ASTRONOMY.md
 
-Log meaningful choices in `docs/DECISIONS.md`.
+Log meaningful choices in `docs/DECISIONS.md`. Check `docs/STATUS.md` for current state, and update it at the end of a session.
 
 ## Ground rules
 
