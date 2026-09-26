@@ -25,6 +25,10 @@ final class FakePlaceSearchService: PlaceSearchService {
 
     // MARK: - Record
 
+    /// Every query handed to `suggestions(for:)`, so tests can check that
+    /// short queries never reach the search engine (SEARCH-RECENTS.md §8).
+    private(set) var searchedQueries: [String] = []
+
     private(set) var resolvedSuggestions: [PlaceSuggestion] = []
 
     // MARK: - Init
@@ -40,7 +44,8 @@ final class FakePlaceSearchService: PlaceSearchService {
     // MARK: - PlaceSearchService
 
     func suggestions(for query: String) -> AsyncThrowingStream<[PlaceSuggestion], any Error> {
-        AsyncThrowingStream { continuation in
+        searchedQueries.append(query)
+        return AsyncThrowingStream { continuation in
             if let searchError {
                 continuation.finish(throwing: searchError)
                 return
