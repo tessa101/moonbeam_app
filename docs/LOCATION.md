@@ -3,6 +3,7 @@
 **Status:** Ready for the Xcode agent · **Decided:** 2026-09-25 · **Owner:** Tessa
 **Depends on:** Astronomy Engine spike (`MoonService`, `AstronomyEngineMoonService`), which is done
 **Feeds:** Task #4, the SwiftUI moon table (design-led)
+**Amended by:** [SEARCH-RECENTS.md](SEARCH-RECENTS.md) (Step 2.1, 2026-09-26): search moves into a bottom sheet with recent cities, and the "Back to {City}" chip is removed. Where the two disagree, SEARCH-RECENTS.md wins; superseded text below is struck through.
 
 ---
 
@@ -21,7 +22,7 @@ Principle: **never force current location.** Looking up a city you're not in is 
 - Tests for all services and permission states
 
 **Out of scope (later)**
-- Recently searched cities list (V1 stores only one last-viewed place, but the storage should be shaped so it can become a list)
+- ~~Recently searched cities list~~ No longer out of scope: built in Step 2.1 (SEARCH-RECENTS.md §3)
 - Visual design and polish, animation
 - Background or continuous location updates
 
@@ -33,15 +34,19 @@ Principle: **never force current location.** Looking up a city you're not in is 
 | Screen prompt | **Where are you watching the moon tonight?** |
 | Search placeholder | Search for a city |
 | Location button | Use my location |
-| Last-viewed chip | Back to {City} |
+| ~~Last-viewed chip~~ | ~~Back to {City}~~ Removed (SEARCH-RECENTS.md §1, Decision C) |
 | Time zone label (when place ≠ device time zone) | {City} · {TZ abbreviation}, e.g. "Sydney · AEST" |
 
 ### Search field
+> The main-screen field is now a button that opens the search sheet (SEARCH-RECENTS.md §1–2).
+> Suggestions, resolving and the list states below still apply, inside the sheet.
+
 - Type-ahead suggestions for city, state/region, country (`MKLocalSearchCompleter`, filtered to addresses/cities).
 - Picking a suggestion resolves it to a `Place` and loads the moon data.
-- When the field holds a city (detected or chosen):
-  - **Tapping into the field selects all of its text**, so typing replaces it immediately.
-  - **A clear (x) button** is always visible in the field while it holds text.
+- ~~When the field holds a city (detected or chosen):~~
+  - ~~**Tapping into the field selects all of its text**, so typing replaces it immediately.~~
+  - ~~**A clear (x) button** is always visible in the field while it holds text.~~
+  - Superseded by SEARCH-RECENTS.md §1: the sheet always opens with an empty field, which has its own clear (x).
 - Suggestions list states: typing (results), no results ("No matching cities"), network error ("Can't search right now. Check your connection.").
 
 ### "Use my location" button
@@ -55,16 +60,16 @@ Principle: **never force current location.** Looking up a city you're not in is 
 2. "Use my location" below the field.
 3. No permission prompt at launch. It only appears when the user taps "Use my location".
 
-**Subsequent launches: current location wins, with last-viewed one tap away**
+**Subsequent launches: current location wins** ~~, with last-viewed one tap away~~ (recents in the search sheet now cover returning to a saved city)
 | Permission | Behavior |
 |---|---|
-| Authorized | Fetch current location → field shows current city → moon data loads. If the last-viewed place differs from the current city, show a **"Back to {City}"** chip. |
+| Authorized | Fetch current location → field shows current city → moon data loads. ~~If the last-viewed place differs from the current city, show a **"Back to {City}"** chip.~~ (Chip removed: SEARCH-RECENTS.md §1, Decision C.) |
 | Authorized, fetch fails or times out (10 s) | Fall back to last-viewed place (if any). Show "Use my location" so they can retry. |
 | Not determined / denied / restricted / services off | Show last-viewed place if one exists, otherwise the empty first-launch state. "Use my location" is visible. |
 
 While the fetch is in progress, show the last-viewed place's name as a placeholder, or a small loading state if there's no saved place. Don't show a blank screen.
 
-Picking any place (search, detect, or chip) makes it the new **last-viewed place**.
+Picking any place (search or detect ~~, or chip~~) makes it the new **last-viewed place**. A launch fix doesn't: the saved place stays the fallback for a later launch where location is off or fails. Picks from search also become **recents** (SEARCH-RECENTS.md §3).
 
 ## 4. Permission states
 
@@ -84,7 +89,7 @@ A custom in-app sheet or dialog, **not** a system alert.
 - Title: Location is off for Moonbeam
 - Body: To find the moon where you are, turn on location in **Settings › Moonbeam › Location** and choose **While Using the App**. You can also just search for a city.
 - Primary: **Open Settings** (deep-links to the app's settings page via `UIApplication.openSettingsURLString`)
-- Secondary: **Search instead** (dismisses the dialog and focuses the search field)
+- Secondary: **Search instead** (dismisses the dialog ~~and focuses the search field~~, then opens the search sheet once the dialog has gone: SEARCH-RECENTS.md §2, Decision A)
 
 **Services-off variant** (Location Services disabled for the whole device)
 - Body: Location Services are off on this device. Turn them on in **Settings › Privacy & Security › Location Services**, or search for a city.
@@ -139,8 +144,11 @@ The three services are **main-actor isolated** (the project default): they drive
   repeats `name`, which is the usual case for a city search)
 - `shortName` → "Sydney"
 - `isCurrentLocation: Bool` (not persisted as truth; used for UI). Excluded from `Codable` *and*
-  from `==`/`hash`, so a saved place and the same place freshly detected compare equal — the
-  "Back to {City}" chip in §3 depends on that comparison
+  from `==`/`hash`, so a saved place and the same place freshly detected compare equal.
+  ~~The "Back to {City}" chip in §3 depends on that comparison.~~ The chip is gone
+  (SEARCH-RECENTS.md, Decision C). `==` stays exact on everything else because
+  `PlaceStore.removeRecent` uses it to delete only the swiped row; recents dedupe uses the looser
+  `isSameCity(as:)`
 - `coordinate` is stored as `latitude`/`longitude` (so `Codable` needs no custom coding) and exposed
   as a computed `CLLocationCoordinate2D` in `Place+MapKit.swift`, which keeps the model
   Foundation-only
@@ -179,7 +187,9 @@ The three services are **main-actor isolated** (the project default): they drive
 
 ### `PlaceStore`
 - `var lastViewed: Place? { get set }`
-- Store as a Codable array under the hood (max 1 for V1) so recents is a small change later
+- ~~Store as a Codable array under the hood (max 1 for V1) so recents is a small change later~~
+  Recents turned out to need their own list, since `lastViewed` can be a detected place and recents
+  can't. See SEARCH-RECENTS.md §8 for `recents`, `addRecent`/`removeRecent` and the migration
 
 ## 7. Tests (Swift Testing)
 
@@ -196,7 +206,7 @@ Use fakes for `LocationService`, `PlaceSearchService`, `PlaceStore`.
 
 **LocationViewModel launch logic**
 - First launch, no saved place → empty state, "Use my location" visible, no permission request made
-- Authorized + fetch succeeds → current place shown; last-viewed chip shown only when it differs
+- Authorized + fetch succeeds → current place shown ~~; last-viewed chip shown only when it differs~~ (chip removed; the test now checks a launch fix doesn't replace the saved place)
 - Authorized + fetch fails or times out → falls back to last-viewed
 - Denied with saved place → saved place shown, button visible
 - Each permission state → correct button behavior / dialog variant (§4)
@@ -220,8 +230,8 @@ Use fakes for `LocationService`, `PlaceSearchService`, `PlaceStore`.
 
 - [ ] Fresh install: no permission prompt until "Use my location" is tapped
 - [ ] Can search and pick any city without ever granting location
-- [ ] With location on, relaunch shows current city; a different last-viewed city is one tap away
-- [ ] Tapping into a filled search field selects its text; (x) clears it
+- [ ] With location on, relaunch shows current city ~~; a different last-viewed city is one tap away~~ (superseded: recents, SEARCH-RECENTS.md §6)
+- [ ] ~~Tapping into a filled search field selects its text; (x) clears it~~ Superseded by SEARCH-RECENTS.md §1
 - [ ] Denied, services-off, and restricted each show the right custom dialog; "Open Settings" lands on the app's settings page
 - [ ] Returning from Settings with permission granted fetches automatically
 - [ ] Times show in the place's time zone, labeled when different from the device

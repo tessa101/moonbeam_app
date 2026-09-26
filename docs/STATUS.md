@@ -3,7 +3,7 @@
 > A living note on where things stand. Update it at the end of each work session
 > so the next session (you, or Claude) can pick up cold.
 
-_Last updated: 2026-09-25 (location view model, screen and dialog)_
+_Last updated: 2026-09-26 (Step 2.1: search sheet with recent cities)_
 
 ## Where things live
 - **Local repo:** `~/app-ideas/moonbeam` (the one true folder)
@@ -41,6 +41,18 @@ _Last updated: 2026-09-25 (location view model, screen and dialog)_
   unreachable "Mar Vista, Los Angeles" display-name test was dropped. **87 tests / 171 cases,
   8 suites, all passing** in Xcode's runner. Builds with no warnings. Decisions are in
   DECISIONS.md 2026-09-25 ("Location view model, screen and dialog").
+- **Location, Step 2.1 — search sheet with recent cities (2026-09-26).** Spec:
+  [SEARCH-RECENTS.md](SEARCH-RECENTS.md), which amends LOCATION.md. Built in the §8 build order:
+  - `PlaceStore` recents (cap 8, dedupe via `Place.isSameCity(as:)`, move to front, remove), with a
+    new `recentPlaces` key seeded once from `lastViewed`
+  - `SearchSheetViewModel`: recents at 0 characters, filtered recents at 1, type-ahead from 2
+  - `SearchSheet`, and the main-screen field turned into a button that opens it
+  - Decisions A–C: the location row closes the sheet first; the row is hidden when viewing the
+    detected location; the "Back to {City}" chip is removed
+  - **129 tests / 217 cases across 10 suites, all passing** in Xcode's runner, with no build
+    warnings. Sheet auto-focus was checked in the iPhone 17 simulator: the keyboard comes up on
+    open. Decisions are in DECISIONS.md 2026-09-26.
+  - **Device QA pending** (see Next, item 5).
 
 ## Next
 1. [x] Push to GitHub (docs + Xcode project are on `main`)
@@ -85,13 +97,21 @@ _Last updated: 2026-09-25 (location view model, screen and dialog)_
      these need a person:
      - fresh install shows no permission prompt until "Use my location" is tapped
      - real MapKit search + pick, without ever granting location
-     - relaunch with location on shows the current city, with "Back to {City}" for a different
-       saved city
-     - tapping into a filled field selects all its text (`TextField(text:selection:)` set on
-       focus; the tap that focuses could still move the caret, so check this one first); (x) clears
+     - relaunch with location on shows the current city (the "Back to {City}" chip is gone, Decision C)
      - each dialog variant appears; "Open Settings" lands on Moonbeam's settings page
      - granting in Settings and returning fetches automatically
      - Dynamic Type at the largest sizes, and VoiceOver on the screen and dialog
+   - [x] Step 2.1 search sheet + recents (SEARCH-RECENTS.md), built and unit-tested
+   - [ ] **Step 2.1 device QA, by hand** (SEARCH-RECENTS.md §6):
+     - tapping the main-screen field opens the sheet with the field focused and keyboard up
+     - recents appear with no typing; 1 character filters them; 2+ shows type-ahead; clearing returns to recents
+     - picking dismisses the sheet, loads the moon and moves that city to the top of recents
+     - max 8, no duplicates, swipe to delete, recents survive a relaunch
+     - the detected location never appears in recents
+     - the location row closes the sheet and then runs the flow; with permission denied, the dialog
+       shows and "Search instead" reopens the sheet
+     - the location row is hidden when viewing the detected location
+     - VoiceOver and Dynamic Type in the sheet
    - [ ] Time zone label says "GMT+10" for Sydney in `en_US`, not "AEST" (the system abbreviation;
      see DECISIONS.md). Decide in the design pass whether that's acceptable
 

@@ -54,9 +54,9 @@ nonisolated struct PlaceTests {
 
     // MARK: - isCurrentLocation
 
-    /// §6: the flag is presentation only. If it took part in equality, the
-    /// "Back to {City}" chip would appear even when the saved place and the
-    /// detected place are the same city.
+    /// §6: the flag is presentation only and isn't persisted. If it took part
+    /// in equality, a place would stop matching its own stored copy, and
+    /// `PlaceStore.removeRecent` (exact match) could miss the swiped row.
     @Test("isCurrentLocation is outside equality")
     func isCurrentLocationIsOutsideEquality() {
         var detected = Self.sydney

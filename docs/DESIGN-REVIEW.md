@@ -6,14 +6,20 @@
 _Started: 2026-09-26_
 
 ## Location screen (Step 2, built plain)
-- [ ] **Visual design** of `LocationScreen`: prompt, search field, suggestions list, "Use my location", "Back to {City}" chip
+- [ ] **Visual design** of `LocationScreen`: prompt, search button (opens the sheet), "Use my location" ("Back to {City}" chip removed, Decision C)
 - [ ] **Time zone label wording.** Currently "Sydney · GMT+10". Options: GMT+10 (precise, dev-ish) · "Sydney time" (friendliest, no lookup table) · AEST (familiar, needs a table). Leaning "Sydney time" with the offset in the VoiceOver label
 - [ ] **Launch loading state** while the location fetch runs (up to 10 s): last-viewed name as placeholder, or a spinner?
 - [ ] **Failed fetch message** is placeholder text: "Couldn't find your location. Try again, or search for a city." Check placement, tone, and that it doesn't vanish too quickly
 - [ ] **Suggestions list states:** no results ("No matching cities") and network error ("Can't search right now. Check your connection.")
 - [ ] **First-launch empty state:** does the empty field + prompt feel inviting, or does it need something moon-y?
 - [ ] **Detected location shows the city** ("Los Angeles", not "Mar Vista"). Revisit if neighborhoods feel more personal
-- [ ] **Select-all on tap + clear (x):** confirm the interaction feels right once styled
+- [x] ~~**Select-all on tap + clear (x):** confirm the interaction feels right once styled~~ Superseded: the main-screen field now opens the search sheet (SEARCH-RECENTS.md §1)
+
+## Search sheet (Step 2.1, built plain; SEARCH-RECENTS.md §7)
+- [ ] **Sheet visuals:** section header style, row layout (city bold + region/country secondary), location row icon
+- [ ] **VoiceOver:** field focus on present, "Recent" announced as a header, swipe-to-delete exposed as a custom action
+- [ ] **Type-ahead threshold** 2 vs 3 characters, after real-device testing (`searchMinimumCharacters`)
+- [ ] **Resolve-failure copy:** "Can't search right now" is wrong when the city was just listed as a suggestion
 
 ## Location Off dialog
 - [ ] **Visual design** of `LocationOffDialog` (custom, not a system alert)
@@ -35,7 +41,7 @@ _Started: 2026-09-26_
 - [ ] Dynamic Type up to the largest accessibility sizes, on every screen
 - [ ] VoiceOver labels and reading order (e.g. "ESE" read as "east-southeast", time zone read in full)
 - [ ] Color contrast (WCAG AA), especially on dark/night themes
-- [ ] Touch targets ≥ 44 pt (chip, clear button, "Use my location")
+- [ ] Touch targets ≥ 44 pt (clear button, "Use my location", Cancel)
 - [ ] Reduce Motion, if any animation is added
 - [ ] Dark mode (people use this app at night)
 
@@ -44,4 +50,4 @@ _Started: 2026-09-26_
 - [ ] Primary persona (confirm with design partner)
 
 ## Later
-- [ ] Recently searched cities list (weather-app pattern; storage already shaped for it)
+- [x] ~~Recently searched cities list (weather-app pattern; storage already shaped for it)~~ Built in Step 2.1 (SEARCH-RECENTS.md)

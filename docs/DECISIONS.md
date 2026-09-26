@@ -5,6 +5,37 @@
 
 ---
 
+### 2026-09-26 · Step 2.1: search sheet with recent cities (SEARCH-RECENTS.md)
+- **Decision A: the sheet's "Use my location" row closes the sheet, then runs the main-screen
+  flow.** The flow starts from the sheet's `onDismiss`, not from the tap. SwiftUI can't present
+  the Location Off dialog while the search sheet is still up from the same view, so waiting keeps
+  one code path and avoids stacked sheets. The dialog's "Search instead" does the reverse: it
+  reopens the sheet once the dialog has closed.
+- **Decision B: the location row is hidden when you're already viewing your detected location.**
+  The sheet takes `showsUseMyLocation` from `LocationViewModel`, the same rule as the main-screen
+  button. Tapping it there would only re-detect the same place.
+- **Decision C: the "Back to {City}" chip is removed.** Recents cover going back to a saved city,
+  one tap further away. `lastViewed` stays, because launch still falls back to it when location is
+  off, denied or fails. A launch fix still doesn't overwrite it.
+- **`PlaceStore` is class-only (`AnyObject`).** The plan's `mutating` recents helpers couldn't be
+  called through a `let` reference, even on a class. Both stores are classes and a store is shared
+  storage, not a value, so the protocol says so and the helpers aren't `mutating`.
+  Considered: keeping `mutating` and using `var` everywhere, which reads as if the store were copied.
+- **Resolve failures show `.failed`, whatever the error.** The sheet stays open and nothing is
+  picked. The old `LocationViewModel.choose` showed "No matching cities" when a resolve found
+  nothing, but that's wrong for a city the user just saw listed. The current "Can't search right
+  now" copy isn't right either; logged for the design pass.
+- **Type-ahead starts at 2 characters** (`SearchSheetViewModel.searchMinimumCharacters`). Shorter
+  queries never reach `MKLocalSearchCompleter`: 0 characters shows recents, and 1 filters them
+  (case- and diacritic-insensitive prefix match on any word of name, region or country). The
+  threshold is one constant, so it can move to 3 after device testing.
+- **8 recents, picked places only.** Picks from search (suggestions or recents) are added, most
+  recent first, with the oldest dropped at 9. The detected location never is, because the
+  "Use my location" row covers it. Re-picking the same city moves it to the top: same name, region
+  and country, or within ~1 km (`Place.isSameCity(as:)`). Recents live under their own
+  `recentPlaces` key, seeded once from an existing `lastViewed`. Whether that place was detected
+  isn't persisted, so it's seeded regardless.
+
 ### 2026-09-25 · Location view model, screen and dialog: the calls LOCATION.md left open
 - **The 10 s timeout cancels the fix; it doesn't just stop waiting.** `LocationViewModel` runs
   `currentPlace()` in its own task, with a watchdog that cancels it when the timeout fires.

@@ -8,9 +8,9 @@ import Foundation
 /// A location the moon table is calculated for, with the time zone used for
 /// every user-facing time in that table.
 ///
-/// `Codable` so `PlaceStore` can persist the last-viewed place, and `Hashable`
-/// so places can key a `List` or be compared for the "Back to {City}" chip
-/// (LOCATION.md §3).
+/// `Codable` so `PlaceStore` can persist the last-viewed place and recents,
+/// and `Hashable` so places can key a `List` and be matched exactly when a
+/// recent is removed (SEARCH-RECENTS.md §8).
 ///
 /// `nonisolated` like the rest of the domain layer: it's an inert value, so it
 /// shouldn't inherit main-actor isolation from
@@ -44,9 +44,9 @@ nonisolated struct Place: Codable, Hashable, Sendable {
     /// True when this place came from a location fix rather than a search.
     ///
     /// Presentation only, and deliberately excluded from `Codable` and from
-    /// equality: a saved place and the same place freshly detected have to
-    /// compare equal, because that comparison is what decides whether the
-    /// "Back to {City}" chip appears (LOCATION.md §3, §6).
+    /// equality. It isn't persisted, so if it took part in `==` a place would
+    /// stop matching its own stored copy, and `PlaceStore.removeRecent`, which
+    /// matches exactly, could miss the row it was asked to delete.
     var isCurrentLocation: Bool = false
 
     // MARK: - Init
@@ -85,7 +85,7 @@ nonisolated struct Place: Codable, Hashable, Sendable {
         return parts.joined(separator: ", ")
     }
 
-    /// "Sydney" — what the search field and the "Back to {City}" chip show.
+    /// "Sydney" — what the main-screen search button and recent rows show.
     var shortName: String { name }
 
     // MARK: - Time zones
@@ -115,10 +115,11 @@ nonisolated struct Place: Codable, Hashable, Sendable {
     /// Whether two places are the same city for recents dedupe.
     ///
     /// Looser than `==` on purpose: a re-picked search result rarely has
-    /// identical coordinates. `==` stays exact because the "Back to {City}"
-    /// chip depends on it. Compares `name` rather than `locality`, since
-    /// `locality` is often nil and neighbourhoods (Mar Vista) keep their own
-    /// name (SEARCH-RECENTS.md §8).
+    /// identical coordinates. `==` stays exact because
+    /// `PlaceStore.removeRecent` uses it to delete only the swiped row, even
+    /// if another recent is within the same-city radius. Compares `name`
+    /// rather than `locality`, since `locality` is often nil and
+    /// neighbourhoods (Mar Vista) keep their own name (SEARCH-RECENTS.md §8).
     func isSameCity(as other: Place) -> Bool {
         let sameNames = name == other.name
             && region == other.region
