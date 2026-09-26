@@ -14,6 +14,9 @@ import Observation
 /// in `SearchSheetViewModel`, which reports picks back here
 /// (SEARCH-RECENTS.md §4).
 ///
+/// Also owns the selected day (DATE.md): a calendar day in the place's time
+/// zone that the moon table and the time zone label follow.
+///
 /// Main-actor isolated (the project default), like the three location
 /// services it drives. The services come in through the initializer, so
 /// tests run the same logic against fakes.
@@ -52,8 +55,16 @@ final class LocationViewModel {
     /// state.
     private(set) var place: Place?
 
-    /// The moon table for `place`, rebuilt whenever the place changes.
+    /// The moon table for `place` on the selected day, rebuilt whenever
+    /// either changes.
     private(set) var moonTable: SpikeMoonTableViewModel?
+
+    /// The day the moon table is for. Not persisted: every launch opens on
+    /// today (DATE.md §3).
+    private(set) var daySelection: DaySelection = .today
+
+    /// Settable so the view's sheet binding can dismiss it (Cancel, drag).
+    var isCalendarPresented = false
 
     /// Mirrors `placeStore.lastViewed`, which isn't observable itself.
     private(set) var lastViewed: Place?
@@ -85,6 +96,7 @@ final class LocationViewModel {
     private let fetchTimeout: Duration
     private let deviceTimeZone: TimeZone
     private let now: () -> Date
+    private let dayLabelFormatter = DayLabelFormatter()
 
     // MARK: - Bookkeeping
 
@@ -113,7 +125,8 @@ final class LocationViewModel {
     ///   - fetchTimeout: injectable so tests needn't wait the full 10 s.
     ///   - deviceTimeZone: injectable because a test process can't change
     ///     `TimeZone.current`.
-    ///   - now: the day the moon table is for.
+    ///   - now: the clock. It decides the place's today, which the day
+    ///     selection resolves against (DATE.md §3).
     init(
         locationService: any LocationService,
         placeSearch: any PlaceSearchService,
@@ -208,8 +221,11 @@ final class LocationViewModel {
     }
 
     /// Call when the scene becomes active. §4: coming back from Settings with
-    /// permission newly granted fetches without another tap.
+    /// permission newly granted fetches without another tap. Also where the
+    /// selected day rolls over past the place's midnight (DATE.md §3).
     func sceneDidBecomeActive() async {
+        refreshDayIfNeeded()
+
         guard !isRequestingPermission else { return }
 
         let state = locationService.authorizationState
@@ -286,6 +302,148 @@ final class LocationViewModel {
         placeStore.addRecent(place)
     }
 
+    // MARK: - Day selection (DATE.md)
+
+    /// The date control's label: "Today · Sat, Sep 26, 2026". Empty with no
+    /// place; the control is hidden then.
+    var dateLabel: String {
+        guard let place else { return "" }
+        return dayLabelFormatter.label(
+            for: selectedStartOfDay(for: place),
+            dayOffset: selectedDayOffset(for: place),
+            timeZone: place.timeZone
+        )
+    }
+
+    /// The date field's accessibility value: "Today, Saturday, September 26,
+    /// 2026". It's a value, not the label, so VoiceOver reads the new date
+    /// after each adjustable swipe (DATE.md §5).
+    var dateAccessibilityValue: String {
+        guard let place else { return "" }
+        return dayLabelFormatter.accessibilityValue(
+            for: selectedStartOfDay(for: place),
+            dayOffset: selectedDayOffset(for: place),
+            timeZone: place.timeZone
+        )
+    }
+
+    /// Only off the place's today. Reads the resolved day rather than the
+    /// case, so a picked day that has become today hides it too.
+    var showsTodayChip: Bool {
+        guard let place else { return false }
+        return selectedDayOffset(for: place) != 0
+    }
+
+    var canGoBack: Bool {
+        guard let place else { return false }
+        return selectedDayOffset(for: place) > -DaySelection.maximumDayOffset
+    }
+
+    var canGoForward: Bool {
+        guard let place else { return false }
+        return selectedDayOffset(for: place) < DaySelection.maximumDayOffset
+    }
+
+    func previousDay() {
+        moveDay(by: -1)
+    }
+
+    func nextDay() {
+        moveDay(by: 1)
+    }
+
+    /// The Today chip, and the calendar sheet's Today button, which closes
+    /// the sheet like any other pick.
+    func goToToday() {
+        setDaySelection(.today)
+        isCalendarPresented = false
+    }
+
+    /// A day picked in the calendar sheet. Closes the sheet. Picking the
+    /// place's today goes back to following today.
+    func select(day: DateComponents) {
+        isCalendarPresented = false
+        guard let place else { return }
+        setDaySelection(.selecting(day, in: place.timeZone, now: now()))
+    }
+
+    func presentCalendar() {
+        guard place != nil else { return }
+        isCalendarPresented = true
+    }
+
+    // MARK: - Calendar sheet (DATE.md §2)
+
+    /// The graphical picker's selection. It works in `Date`, so the setter
+    /// turns the picked moment into a calendar day in the place's zone. The
+    /// getter gives local noon, which is safely inside the day.
+    var calendarDate: Date {
+        get {
+            guard let place else { return now() }
+            return daySelection.noon(in: place.timeZone, now: now())
+        }
+        set {
+            select(day: placeCalendar(for: calendarTimeZone).dateComponents([.year, .month, .day], from: newValue))
+        }
+    }
+
+    /// Today ±366 days in the place's zone, for the picker.
+    var calendarRange: ClosedRange<Date> {
+        DaySelection.range(in: calendarTimeZone, now: now())
+    }
+
+    /// The picker has to show the place's days, not the device's.
+    var calendarTimeZone: TimeZone {
+        place?.timeZone ?? deviceTimeZone
+    }
+
+    // MARK: - Day selection helpers
+
+    private func moveDay(by days: Int) {
+        guard let place else { return }
+        setDaySelection(daySelection.offset(by: days, in: place.timeZone, now: now()))
+    }
+
+    private func setDaySelection(_ selection: DaySelection) {
+        daySelection = selection
+        reloadMoonTable()
+    }
+
+    private func selectedStartOfDay(for place: Place) -> Date {
+        daySelection.startOfDay(in: place.timeZone, now: now())
+    }
+
+    private func selectedDayOffset(for place: Place) -> Int {
+        daySelection.dayOffset(in: place.timeZone, now: now())
+    }
+
+    private func placeCalendar(for timeZone: TimeZone) -> Calendar {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = timeZone
+        return calendar
+    }
+
+    /// Foreground only (DECISIONS.md 2026-09-26): a following-today
+    /// selection moves to the place's new day. A picked day stays put, so
+    /// its table isn't rebuilt unless clamping moved it.
+    private func refreshDayIfNeeded() {
+        guard let place, let moonTable else { return }
+        guard selectedStartOfDay(for: place) != moonTable.day else { return }
+        reloadMoonTable()
+    }
+
+    private func reloadMoonTable() {
+        guard let place else {
+            moonTable = nil
+            return
+        }
+        moonTable = SpikeMoonTableViewModel(
+            moonService: moonService,
+            place: place,
+            day: selectedStartOfDay(for: place)
+        )
+    }
+
     // MARK: - Locating
 
     /// Runs one fix in a task of its own, so picking a place meanwhile can
@@ -354,8 +512,10 @@ final class LocationViewModel {
     /// `remember` is true for anything the user picked (§3: search or
     /// detect), which makes it the new last-viewed place.
     private func show(_ place: Place, remember: Bool) {
+        // The selection carries over: following today resolves to the new
+        // city's today, a picked day stays the same calendar day (DATE.md §3).
         self.place = place
-        moonTable = SpikeMoonTableViewModel(moonService: moonService, place: place, day: now())
+        reloadMoonTable()
         locationFailed = false
 
         if remember {
@@ -364,8 +524,12 @@ final class LocationViewModel {
         }
     }
 
+    /// Sampled at local noon on the selected day, not now: the label
+    /// describes the times on screen, and a picked day can be across a DST
+    /// change from today. DST changes happen overnight, so noon has that
+    /// day's offset for nearly all of the day.
     private func timeZoneAbbreviation(for place: Place) -> String? {
-        let date = now()
+        let date = daySelection.noon(in: place.timeZone, now: now())
         guard place.isInDifferentTimeZone(from: deviceTimeZone, on: date) else { return nil }
         return place.timeZone.abbreviation(for: date)
     }
