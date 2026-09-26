@@ -238,6 +238,110 @@ struct LocationViewModelDayTests {
         #expect(!viewModel.isCalendarPresented)
     }
 
+    // MARK: - Calendar sheet: the month/year wheel
+
+    /// The graphical picker's wheel keeps the day number (Sep 27 → Oct 27).
+    /// That only moves the highlight; the sheet stays open for Done.
+    @Test("A wheel change moves the highlight without picking or closing")
+    func wheelChangeIsADraft() throws {
+        let clock = TestClock(try Self.date(2026, 9, 26, hour: 20, in: Self.losAngelesZone))
+        let service = FakeMoonService()
+        let viewModel = Self.makeViewModel(clock: clock, moonService: service)
+        viewModel.select(Self.marVista)
+        viewModel.nextDay()
+        let requestsBefore = service.requestedDates.count
+        viewModel.presentCalendar()
+        #expect(!viewModel.showsCalendarDone)
+
+        viewModel.calendarDate = try Self.date(2026, 10, 27, hour: 12, in: Self.losAngelesZone)
+
+        #expect(viewModel.isCalendarPresented)
+        #expect(viewModel.showsCalendarDone)
+        #expect(viewModel.daySelection == .day(year: 2026, month: 9, day: 27))
+        #expect(service.requestedDates.count == requestsBefore)
+        #expect(viewModel.calendarDate == (try Self.date(2026, 10, 27, hour: 12, in: Self.losAngelesZone)))
+    }
+
+    @Test("Done after a wheel change picks the highlighted day and closes")
+    func doneConfirmsTheDraft() throws {
+        let clock = TestClock(try Self.date(2026, 9, 26, hour: 20, in: Self.losAngelesZone))
+        let viewModel = Self.makeViewModel(clock: clock)
+        viewModel.select(Self.marVista)
+        viewModel.nextDay()
+        viewModel.presentCalendar()
+        viewModel.calendarDate = try Self.date(2026, 10, 27, hour: 12, in: Self.losAngelesZone)
+
+        viewModel.confirmCalendarDraft()
+
+        #expect(viewModel.daySelection == .day(year: 2026, month: 10, day: 27))
+        #expect(!viewModel.isCalendarPresented)
+        #expect(!viewModel.showsCalendarDone)
+    }
+
+    @Test("A tap on a new day after a wheel change still picks it and closes")
+    func tapAfterWheelChangePicks() throws {
+        let clock = TestClock(try Self.date(2026, 9, 26, hour: 20, in: Self.losAngelesZone))
+        let viewModel = Self.makeViewModel(clock: clock)
+        viewModel.select(Self.marVista)
+        viewModel.nextDay()
+        viewModel.presentCalendar()
+        viewModel.calendarDate = try Self.date(2026, 10, 27, hour: 12, in: Self.losAngelesZone)
+
+        viewModel.calendarDate = try Self.date(2026, 10, 3, hour: 12, in: Self.losAngelesZone)
+
+        #expect(viewModel.daySelection == .day(year: 2026, month: 10, day: 3))
+        #expect(!viewModel.isCalendarPresented)
+    }
+
+    @Test("Cancel after a wheel change drops the draft; reopening starts from the selected day")
+    func cancelDropsTheDraft() throws {
+        let clock = TestClock(try Self.date(2026, 9, 26, hour: 20, in: Self.losAngelesZone))
+        let viewModel = Self.makeViewModel(clock: clock)
+        viewModel.select(Self.marVista)
+        viewModel.nextDay()
+        viewModel.presentCalendar()
+        viewModel.calendarDate = try Self.date(2026, 10, 27, hour: 12, in: Self.losAngelesZone)
+
+        viewModel.isCalendarPresented = false
+        viewModel.presentCalendar()
+
+        #expect(viewModel.daySelection == .day(year: 2026, month: 9, day: 27))
+        #expect(!viewModel.showsCalendarDone)
+        #expect(viewModel.calendarDate == (try Self.date(2026, 9, 27, hour: 12, in: Self.losAngelesZone)))
+    }
+
+    /// Jan 31 → February: the wheel has to clamp to the 28th.
+    @Test("A wheel change clamped to the month's last day is still a draft")
+    func clampedWheelChangeIsADraft() throws {
+        let clock = TestClock(try Self.date(2026, 9, 26, hour: 20, in: Self.losAngelesZone))
+        let viewModel = Self.makeViewModel(clock: clock)
+        viewModel.select(Self.marVista)
+        viewModel.select(day: DateComponents(year: 2027, month: 1, day: 31))
+        viewModel.presentCalendar()
+
+        viewModel.calendarDate = try Self.date(2027, 2, 28, hour: 12, in: Self.losAngelesZone)
+
+        #expect(viewModel.isCalendarPresented)
+        #expect(viewModel.showsCalendarDone)
+        #expect(viewModel.daySelection == .day(year: 2027, month: 1, day: 31))
+    }
+
+    /// The accepted ambiguity: the same day number in another month looks
+    /// like the wheel, so it waits for Done.
+    @Test("Tapping the same day number in another month waits for Done")
+    func sameDayNumberElsewhereIsADraft() throws {
+        let clock = TestClock(try Self.date(2026, 9, 26, hour: 20, in: Self.losAngelesZone))
+        let viewModel = Self.makeViewModel(clock: clock)
+        viewModel.select(Self.marVista)
+        viewModel.presentCalendar()
+
+        viewModel.calendarDate = try Self.date(2026, 11, 26, hour: 12, in: Self.losAngelesZone)
+
+        #expect(viewModel.isCalendarPresented)
+        #expect(viewModel.showsCalendarDone)
+        #expect(viewModel.daySelection == .today)
+    }
+
     @Test("With no place there's no calendar to open")
     func noCalendarWithoutAPlace() throws {
         let clock = TestClock(try Self.date(2026, 9, 26, hour: 20, in: Self.losAngelesZone))

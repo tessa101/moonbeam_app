@@ -66,6 +66,11 @@ final class LocationViewModel {
     /// Settable so the view's sheet binding can dismiss it (Cancel, drag).
     var isCalendarPresented = false
 
+    /// A day highlighted in the calendar sheet but not yet picked: the
+    /// picker moved without a clear tap on a new day (see `calendarDate`).
+    /// Confirmed with Done, dropped by Cancel. `nil` otherwise.
+    private(set) var calendarDraft: DateComponents?
+
     /// Mirrors `placeStore.lastViewed`, which isn't observable itself.
     private(set) var lastViewed: Place?
 
@@ -356,19 +361,24 @@ final class LocationViewModel {
     /// the sheet like any other pick.
     func goToToday() {
         setDaySelection(.today)
+        calendarDraft = nil
         isCalendarPresented = false
     }
 
     /// A day picked in the calendar sheet. Closes the sheet. Picking the
     /// place's today goes back to following today.
     func select(day: DateComponents) {
+        calendarDraft = nil
         isCalendarPresented = false
         guard let place else { return }
         setDaySelection(.selecting(day, in: place.timeZone, now: now()))
     }
 
+    /// Every opening starts from the selected day, so a draft left by
+    /// Cancel or a drag is gone.
     func presentCalendar() {
         guard place != nil else { return }
+        calendarDraft = nil
         isCalendarPresented = true
     }
 
@@ -376,15 +386,46 @@ final class LocationViewModel {
 
     /// The graphical picker's selection. It works in `Date`, so the setter
     /// turns the picked moment into a calendar day in the place's zone. The
-    /// getter gives local noon, which is safely inside the day.
+    /// getter gives local noon on the highlighted day, safely inside it.
+    ///
+    /// The picker reports a tap on a day and a turn of its month/year wheel
+    /// the same way. The wheel keeps the day number (Sep 27 → Oct 27), or
+    /// clamps it to the month's last day (Jan 31 → Feb 28). So those changes
+    /// only move the highlight into `calendarDraft`, and the sheet stays open
+    /// for Done. Any other change is a tap on a new day: it's picked and the
+    /// sheet closes (§2). The one tap that can't be told apart, the same day
+    /// number in another month, also becomes a draft.
     var calendarDate: Date {
         get {
             guard let place else { return now() }
-            return daySelection.noon(in: place.timeZone, now: now())
+            guard let calendarDraft else { return daySelection.noon(in: place.timeZone, now: now()) }
+            return DaySelection.selecting(calendarDraft, in: place.timeZone, now: now())
+                .noon(in: place.timeZone, now: now())
         }
         set {
-            select(day: placeCalendar(for: calendarTimeZone).dateComponents([.year, .month, .day], from: newValue))
+            guard let place else { return }
+            let calendar = placeCalendar(for: place.timeZone)
+            let picked = calendar.dateComponents([.year, .month, .day], from: newValue)
+            let highlighted = calendar.dateComponents([.year, .month, .day], from: calendarDate)
+            guard picked != highlighted else { return }
+
+            if Self.isWheelChange(from: highlighted, to: picked, calendar: calendar) {
+                calendarDraft = picked
+            } else {
+                select(day: picked)
+            }
         }
+    }
+
+    /// Done appears only while there's a draft to confirm.
+    var showsCalendarDone: Bool {
+        calendarDraft != nil
+    }
+
+    /// The sheet's Done: picks the highlighted day and closes.
+    func confirmCalendarDraft() {
+        guard let calendarDraft else { return }
+        select(day: calendarDraft)
     }
 
     /// Today ±366 days in the place's zone, for the picker.
@@ -421,6 +462,22 @@ final class LocationViewModel {
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = timeZone
         return calendar
+    }
+
+    /// True if a picker change looks like the month/year wheel rather than a
+    /// tap: the day number is kept, or clamped to the new month's last day.
+    private static func isWheelChange(
+        from old: DateComponents,
+        to new: DateComponents,
+        calendar: Calendar
+    ) -> Bool {
+        guard let oldDay = old.day, let newDay = new.day else { return false }
+        if newDay == oldDay { return true }
+        guard newDay < oldDay,
+              let newDate = calendar.date(from: new),
+              let daysInMonth = calendar.range(of: .day, in: .month, for: newDate)?.count
+        else { return false }
+        return newDay == daysInMonth
     }
 
     /// Foreground only (DECISIONS.md 2026-09-26): a following-today

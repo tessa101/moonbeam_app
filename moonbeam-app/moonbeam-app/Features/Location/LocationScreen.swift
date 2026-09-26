@@ -25,6 +25,11 @@ struct LocationScreen: View {
 
                 searchButton
 
+                // DATE.md §1: under the city, above the moon table.
+                if viewModel.place != nil {
+                    DateControl(viewModel: viewModel)
+                }
+
                 if viewModel.isLocating {
                     ProgressView("Finding your location…")
                 }
@@ -70,6 +75,9 @@ struct LocationScreen: View {
                     .presentationDetents([.large])
                     .presentationDragIndicator(.visible)
             }
+        }
+        .sheet(isPresented: $viewModel.isCalendarPresented) {
+            CalendarSheet(viewModel: viewModel)
         }
     }
 
