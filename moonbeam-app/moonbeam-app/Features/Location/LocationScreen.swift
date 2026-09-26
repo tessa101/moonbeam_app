@@ -39,12 +39,6 @@ struct LocationScreen: View {
                     Text("Couldn't find your location. Try again, or search for a city.")
                 }
 
-                if let backToPlace = viewModel.backToPlace {
-                    Button("Back to \(backToPlace.shortName)") {
-                        viewModel.goBack()
-                    }
-                }
-
                 if let timeZoneLabel = viewModel.timeZoneLabel {
                     Text(timeZoneLabel)
                         .accessibilityLabel(viewModel.timeZoneAccessibilityLabel ?? timeZoneLabel)

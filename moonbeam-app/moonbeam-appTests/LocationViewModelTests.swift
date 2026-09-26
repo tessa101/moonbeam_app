@@ -102,12 +102,11 @@ struct LocationViewModelTests {
         #expect(viewModel.moonTable == nil)
         #expect(viewModel.searchFieldTitle == LocationViewModel.searchPlaceholder)
         #expect(viewModel.showsUseMyLocation)
-        #expect(viewModel.backToPlace == nil)
         #expect(!location.didRequestAuthorization)
         #expect(location.currentPlaceCount == 0)
     }
 
-    @Test("Authorized with no saved place: the current place loads, no chip")
+    @Test("Authorized with no saved place: the current place loads")
     func authorizedFetchSucceeds() async {
         let location = FakeLocationService(
             authorizationState: .authorized,
@@ -122,12 +121,13 @@ struct LocationViewModelTests {
         #expect(viewModel.moonTable?.place == Self.detectedLosAngeles)
         #expect(viewModel.searchFieldTitle == "Los Angeles")
         #expect(!viewModel.showsUseMyLocation)
-        #expect(viewModel.backToPlace == nil)
         #expect(!viewModel.isLocating)
     }
 
-    @Test("Authorized with a different saved place: the chip offers it")
-    func authorizedShowsChipForADifferentSavedPlace() async {
+    /// The saved place is the fallback for a later launch where location is
+    /// off or fails, so a launch fix mustn't overwrite it.
+    @Test("Authorized with a different saved place: launch detection doesn't replace it")
+    func launchDetectionKeepsTheSavedPlace() async {
         let store = InMemoryPlaceStore(lastViewed: Self.sydney)
         let viewModel = Self.makeViewModel(
             location: FakeLocationService(
@@ -140,28 +140,8 @@ struct LocationViewModelTests {
         await viewModel.start()
 
         #expect(viewModel.place == Self.detectedLosAngeles)
-        #expect(viewModel.backToPlace == Self.sydney)
-        // Launch detection isn't a pick, so the chip survives a relaunch.
         #expect(store.lastViewed == Self.sydney)
-    }
-
-    /// `isCurrentLocation` is outside equality, so the saved copy (which
-    /// never has it set) still matches the fresh fix.
-    @Test("Authorized with the same saved place: no chip")
-    func authorizedHidesChipForTheSameSavedPlace() async {
-        var saved = Self.detectedLosAngeles
-        saved.isCurrentLocation = false
-        let viewModel = Self.makeViewModel(
-            location: FakeLocationService(
-                authorizationState: .authorized,
-                placeResult: .success(Self.detectedLosAngeles)
-            ),
-            store: InMemoryPlaceStore(lastViewed: saved)
-        )
-
-        await viewModel.start()
-
-        #expect(viewModel.backToPlace == nil)
+        #expect(viewModel.lastViewed == Self.sydney)
     }
 
     @Test("Authorized but the fix fails: falls back to the saved place")
@@ -176,7 +156,6 @@ struct LocationViewModelTests {
         #expect(viewModel.place == Self.sydney)
         #expect(viewModel.moonTable?.place == Self.sydney)
         #expect(viewModel.showsUseMyLocation)
-        #expect(viewModel.backToPlace == nil)
         // A launch fallback is quiet; the failure message is for taps.
         #expect(!viewModel.locationFailed)
     }
@@ -290,7 +269,6 @@ struct LocationViewModelTests {
         #expect(!location.didRequestAuthorization)
         #expect(viewModel.place == Self.detectedLosAngeles)
         #expect(store.lastViewed == Self.detectedLosAngeles)
-        #expect(viewModel.backToPlace == nil)
         // SEARCH-RECENTS.md §3: the detected location never becomes a recent.
         #expect(store.recents.isEmpty)
     }
@@ -375,29 +353,6 @@ struct LocationViewModelTests {
         await viewModel.sceneDidBecomeActive()
 
         #expect(location.currentPlaceCount == fetchesAtLaunch)
-    }
-
-    // MARK: - Choosing a place
-
-    @Test("The chip returns to the saved place, makes it last-viewed again and adds it to recents")
-    func chipReturnsToTheSavedPlace() async {
-        let store = InMemoryPlaceStore(lastViewed: Self.sydney)
-        let viewModel = Self.makeViewModel(
-            location: FakeLocationService(
-                authorizationState: .authorized,
-                placeResult: .success(Self.detectedLosAngeles)
-            ),
-            store: store
-        )
-        await viewModel.start()
-
-        viewModel.goBack()
-
-        #expect(viewModel.place == Self.sydney)
-        #expect(viewModel.backToPlace == nil)
-        #expect(viewModel.showsUseMyLocation)
-        #expect(store.lastViewed == Self.sydney)
-        #expect(store.recents == [Self.sydney])
     }
 
     // MARK: - Search sheet flow (SEARCH-RECENTS.md §5)
@@ -537,8 +492,8 @@ struct LocationViewModelTests {
         let store = InMemoryPlaceStore(lastViewed: Self.sydney)
         let viewModel = Self.makeViewModel(location: location, store: store)
         await viewModel.start()
-        // Launch detected Los Angeles; go back to Sydney so the row shows.
-        viewModel.goBack()
+        // Launch detected Los Angeles; pick Sydney so the row shows.
+        viewModel.select(Self.sydney)
         let fetchesBefore = location.currentPlaceCount
         let sheet = try Self.openSearch(viewModel)
         #expect(sheet.showsUseMyLocation)
@@ -552,7 +507,7 @@ struct LocationViewModelTests {
 
         #expect(location.currentPlaceCount == fetchesBefore + 1)
         #expect(viewModel.place == Self.detectedLosAngeles)
-        // "Use my location" never adds to recents; Sydney is there from the chip.
+        // "Use my location" never adds to recents; Sydney is there from the pick.
         #expect(store.recents == [Self.sydney])
     }
 

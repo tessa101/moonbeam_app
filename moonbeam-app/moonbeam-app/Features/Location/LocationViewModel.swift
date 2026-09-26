@@ -141,14 +141,6 @@ final class LocationViewModel {
         !isLocating && !(place?.isCurrentLocation ?? false)
     }
 
-    /// The "Back to {City}" chip. Every place the user picks becomes
-    /// `lastViewed`, so the two only differ after a launch detects somewhere
-    /// else — exactly when §3 wants the chip.
-    var backToPlace: Place? {
-        guard let lastViewed, let place, lastViewed != place else { return nil }
-        return lastViewed
-    }
-
     /// §3: while a launch fetch runs, the last-viewed name stands in so the
     /// screen isn't blank.
     var searchPrompt: String {
@@ -286,14 +278,6 @@ final class LocationViewModel {
         isSearchPresented = false
     }
 
-    /// The "Back to {City}" chip.
-    func goBack() {
-        guard let backToPlace else { return }
-        stopLocating()
-        show(backToPlace, remember: true)
-        addToRecents(backToPlace)
-    }
-
     /// Only picked places become recents; a detected place never does
     /// (SEARCH-RECENTS.md §3). "Use my location" doesn't call this, and the
     /// guard covers a detected place reaching here some other way.
@@ -324,7 +308,7 @@ final class LocationViewModel {
             let detected = try await currentPlaceWithTimeout()
             guard !Task.isCancelled else { return }
             // Launch detection isn't a pick, so it doesn't replace the saved
-            // place — that's what keeps "Back to {City}" one tap away.
+            // place.
             show(detected, remember: userInitiated)
         } catch {
             guard !Task.isCancelled else { return }
@@ -367,8 +351,8 @@ final class LocationViewModel {
 
     // MARK: - Showing a place
 
-    /// `remember` is true for anything the user picked (§3: search, detect
-    /// or chip), which makes it the new last-viewed place.
+    /// `remember` is true for anything the user picked (§3: search or
+    /// detect), which makes it the new last-viewed place.
     private func show(_ place: Place, remember: Bool) {
         self.place = place
         moonTable = SpikeMoonTableViewModel(moonService: moonService, place: place, today: now())

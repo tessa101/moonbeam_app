@@ -15,7 +15,8 @@
 
 - The search field on the main screen becomes a **tap target that opens the search sheet**. It shows the current city name (or the placeholder "Search for a city") and doesn't take text input itself.
 - **Superseded from Step 2:** "tapping into the field selects all of its text" and the in-field (x) on the main screen. The sheet always opens with an empty field, so neither is needed there.
-- "Use my location" button and "Back to {City}" chip stay as they are for now (chip may become redundant with recents; logged for the design pass).
+- "Use my location" button stays as it is.
+- **"Back to {City}" chip removed** (Decision C, 2026-09-26): recents cover it, one extra tap away. `lastViewed` stays, since launch still falls back to it when location is off or fails.
 
 ## 2. Search sheet
 
@@ -46,7 +47,7 @@ Swipe-to-delete on a recent row. No "Clear all" in V1.
 ## 3. Recents rules
 
 - **Cap: 8**, most recent first. Oldest drops off when a 9th is added.
-- **Only picked places are added**: a search suggestion or the "Back to {City}" chip. The detected current location is **not** added (the "Use my location" row covers it).
+- **Only picked places are added**: a search suggestion or a recent. The detected current location is **not** added (the "Use my location" row covers it).
 - Re-picking an existing recent **moves it to the top** instead of duplicating. Identity: same locality + region + country, or coordinates within ~1 km.
 - Persisted across launches.
 
@@ -97,7 +98,7 @@ Swipe-to-delete on a recent row. No "Clear all" in V1.
 
 ## 7. For DESIGN-REVIEW.md
 
-- Is the "Back to {City}" chip still needed now that recents exist?
+- ~~Is the "Back to {City}" chip still needed now that recents exist?~~ Resolved: removed (Decision C).
 - Sheet visuals: section header style, row layout (city bold + region/country secondary), location row icon
 - VoiceOver: field focus on present, "Recent" announced as a header, swipe-to-delete exposed as a custom action
 - Threshold 2 vs 3 characters after real-device testing
@@ -166,7 +167,7 @@ enum ListState: Equatable {
 
 ### Known edge cases (accepted)
 - The chip can add a detected place to recents when `lastViewed` came from an earlier session's "Use my location" (flag isn't persisted). Rare; accepted.
-- **Possible existing bug, out of scope:** `backToPlace` compares by exact coordinates, but a fresh fix rarely matches a saved place's coordinates exactly, so "Back to Mar Vista" may show while in Mar Vista. Check in the simulator; `isSameCity` could fix it in a follow-up.
+- ~~Possible existing bug: `backToPlace` compares by exact coordinates.~~ Moot: the chip is removed (Decision C).
 
 ### Docs to update in the final step
 LOCATION.md §2 (recents no longer out of scope), §3 select-all and (x) (superseded), §8 acceptance item on select-all; DESIGN-REVIEW.md (§7 items); DECISIONS.md; STATUS.md.
