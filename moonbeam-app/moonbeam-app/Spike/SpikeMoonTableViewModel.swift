@@ -39,7 +39,8 @@ final class SpikeMoonTableViewModel {
     let place: Place
 
     /// The day this table is for, which is the selected day, not necessarily
-    /// today.
+    /// today. Not shown here: the date control shows it. `LocationViewModel`
+    /// compares against it to tell whether the day has rolled over.
     let day: Date
 
     let moonDay: MoonDay
@@ -56,12 +57,6 @@ final class SpikeMoonTableViewModel {
     }
 
     // MARK: - Display strings
-
-    var dayText: String {
-        var style = Date.FormatStyle.dateTime.weekday(.wide).month().day()
-        style.timeZone = place.timeZone
-        return day.formatted(style)
-    }
 
     var riseText: String { text(for: moonDay.rise, missing: "No moonrise today") }
 

@@ -16,36 +16,24 @@ struct SpikeMoonTableViewModelTests {
 
     private static let losAngeles = TimeZone(identifier: "America/Los_Angeles") ?? .gmt
 
-    /// Deliberately far from the real clock, so "formats `Date()`" can't pass
-    /// by accident.
+    /// Deliberately far from the real clock, so "uses `Date()`" can't pass by
+    /// accident.
     private static func farDay() throws -> Date {
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = losAngeles
         return try #require(calendar.date(from: DateComponents(year: 2020, month: 1, day: 15)))
     }
 
-    @Test("The day reaches the moon service")
+    /// `LocationViewModel`'s rollover check compares against `day`, so it
+    /// has to be the day the table was built for.
+    @Test("The day reaches the moon service and is kept")
     func dayReachesTheService() throws {
         let service = FakeMoonService()
         let day = try Self.farDay()
 
-        _ = SpikeMoonTableViewModel(moonService: service, place: SpikeMoonTableViewModel.marVista, day: day)
+        let table = SpikeMoonTableViewModel(moonService: service, place: SpikeMoonTableViewModel.marVista, day: day)
 
         #expect(service.requestedDates == [day])
-    }
-
-    @Test("dayText shows the table's day, not today")
-    func dayTextShowsTheTablesDay() throws {
-        let day = try Self.farDay()
-        let table = SpikeMoonTableViewModel(
-            moonService: FakeMoonService(),
-            place: SpikeMoonTableViewModel.marVista,
-            day: day
-        )
-
-        var style = Date.FormatStyle.dateTime.weekday(.wide).month().day()
-        style.timeZone = Self.losAngeles
-        #expect(table.dayText == day.formatted(style))
-        #expect(table.dayText != Date().formatted(style))
+        #expect(table.day == day)
     }
 }
