@@ -355,7 +355,7 @@ final class LocationViewModel {
     /// detect), which makes it the new last-viewed place.
     private func show(_ place: Place, remember: Bool) {
         self.place = place
-        moonTable = SpikeMoonTableViewModel(moonService: moonService, place: place, today: now())
+        moonTable = SpikeMoonTableViewModel(moonService: moonService, place: place, day: now())
         locationFailed = false
 
         if remember {

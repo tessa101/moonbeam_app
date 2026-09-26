@@ -37,16 +37,22 @@ final class SpikeMoonTableViewModel {
     // MARK: - State
 
     let place: Place
+
+    /// The day this table is for, which is the selected day, not necessarily
+    /// today.
+    let day: Date
+
     let moonDay: MoonDay
 
     private let compass = CompassFormatter()
 
     /// Computed once on construction. Safe here because `moonDay(for:on:)` is
-    /// synchronous, pure and well under the 50 ms budget in PRODUCT NFR2. The
-    /// real view model will load on demand so the date can change.
-    init(moonService: MoonService, place: Place = SpikeMoonTableViewModel.marVista, today: Date = Date()) {
+    /// synchronous, pure and well under the 50 ms budget in PRODUCT NFR2.
+    /// `LocationViewModel` builds a new one when the day changes.
+    init(moonService: MoonService, place: Place = SpikeMoonTableViewModel.marVista, day: Date = Date()) {
         self.place = place
-        self.moonDay = moonService.moonDay(for: place, on: today)
+        self.day = day
+        self.moonDay = moonService.moonDay(for: place, on: day)
     }
 
     // MARK: - Display strings
@@ -54,7 +60,7 @@ final class SpikeMoonTableViewModel {
     var dayText: String {
         var style = Date.FormatStyle.dateTime.weekday(.wide).month().day()
         style.timeZone = place.timeZone
-        return Date().formatted(style)
+        return day.formatted(style)
     }
 
     var riseText: String { text(for: moonDay.rise, missing: "No moonrise today") }
