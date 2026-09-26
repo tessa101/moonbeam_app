@@ -9,7 +9,8 @@ import Observation
 /// Drives the city search sheet: recents with no typing, filtered recents at
 /// one character, type-ahead from two (SEARCH-RECENTS.md §2, §8).
 ///
-/// Reports a pick through `onPick` and changes nothing else:
+/// Reports picks through `onPick` and the location row through
+/// `onUseMyLocation`, and changes nothing else:
 /// `LocationViewModel` stays the only writer of the place, `lastViewed` and
 /// recents. The one exception is swipe-to-delete, which removes a recent
 /// here because it doesn't involve the current place at all.
@@ -51,6 +52,7 @@ final class SearchSheetViewModel {
     private let placeSearch: any PlaceSearchService
     private let placeStore: any PlaceStore
     private let onPick: (Place) -> Void
+    private let onUseMyLocation: () -> Void
 
     // MARK: - Bookkeeping
 
@@ -64,12 +66,14 @@ final class SearchSheetViewModel {
         placeSearch: any PlaceSearchService,
         placeStore: any PlaceStore,
         showsUseMyLocation: Bool,
-        onPick: @escaping (Place) -> Void
+        onPick: @escaping (Place) -> Void,
+        onUseMyLocation: @escaping () -> Void
     ) {
         self.placeSearch = placeSearch
         self.placeStore = placeStore
         self.showsUseMyLocation = showsUseMyLocation
         self.onPick = onPick
+        self.onUseMyLocation = onUseMyLocation
         listState = .recents(placeStore.recents)
     }
 
@@ -92,6 +96,13 @@ final class SearchSheetViewModel {
         } catch {
             listState = .failed
         }
+    }
+
+    /// The location row. The owner closes the sheet before running the
+    /// main-screen flow (Decision A), so this only reports the tap.
+    func useMyLocation() {
+        searchTask?.cancel()
+        onUseMyLocation()
     }
 
     // MARK: - Removing recents

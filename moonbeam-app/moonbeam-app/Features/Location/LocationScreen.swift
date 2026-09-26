@@ -8,20 +8,13 @@ import SwiftUI
 /// Picks the place, then shows its moon table (LOCATION.md §3).
 ///
 /// Functional and deliberately unstyled: the visual design is a later,
-/// design-led pass. All decisions live in `LocationViewModel`; this view only
-/// owns focus and text selection, which are view state.
+/// design-led pass. All decisions live in `LocationViewModel`, including
+/// which sheet opens after another has finished closing.
 struct LocationScreen: View {
 
     @Bindable var viewModel: LocationViewModel
 
     @Environment(\.scenePhase) private var scenePhase
-
-    @FocusState private var isSearchFocused: Bool
-    @State private var searchSelection: TextSelection?
-
-    /// "Search instead" focuses the field, but only once the sheet has gone;
-    /// focusing under a dismissing sheet is dropped.
-    @State private var focusSearchAfterDialog = false
 
     var body: some View {
         ScrollView {
@@ -30,8 +23,7 @@ struct LocationScreen: View {
                     .font(.headline)
                     .accessibilityAddTraits(.isHeader)
 
-                searchField
-                suggestions
+                searchButton
 
                 if viewModel.isLocating {
                     ProgressView("Finding your location…")
@@ -71,80 +63,47 @@ struct LocationScreen: View {
             guard phase == .active else { return }
             Task { await viewModel.sceneDidBecomeActive() }
         }
-        .sheet(item: $viewModel.locationOffDialog, onDismiss: focusSearchIfRequested) { variant in
+        .sheet(item: $viewModel.locationOffDialog, onDismiss: viewModel.locationOffDialogDidDismiss) { variant in
             LocationOffDialog(
                 variant: variant,
-                onSearch: {
-                    focusSearchAfterDialog = true
-                    viewModel.dismissLocationOffDialog()
-                },
+                onSearch: viewModel.searchInsteadOfLocation,
                 onOpenedSettings: viewModel.dismissLocationOffDialog
             )
         }
-    }
-
-    // MARK: - Search field
-
-    private var searchField: some View {
-        HStack {
-            TextField(viewModel.searchPrompt, text: $viewModel.searchText, selection: $searchSelection)
-                .focused($isSearchFocused)
-                .textInputAutocapitalization(.words)
-                .autocorrectionDisabled()
-                .submitLabel(.search)
-                .onChange(of: isSearchFocused) { _, isFocused in
-                    // §3: tapping into a filled field selects its text, so
-                    // typing replaces the city rather than appending to it.
-                    guard isFocused else { return }
-                    let text = viewModel.searchText
-                    searchSelection = TextSelection(range: text.startIndex..<text.endIndex)
-                }
-
-            if !viewModel.searchText.isEmpty {
-                Button("Clear search", systemImage: "xmark.circle.fill") {
-                    viewModel.clearSearch()
-                }
-                .labelStyle(.iconOnly)
+        .sheet(isPresented: $viewModel.isSearchPresented, onDismiss: searchDidDismiss) {
+            if let searchSheet = viewModel.searchSheet {
+                SearchSheet(viewModel: searchSheet)
+                    .presentationDetents([.large])
+                    .presentationDragIndicator(.visible)
             }
         }
     }
 
-    // MARK: - Suggestions
+    // MARK: - Search button
 
-    @ViewBuilder
-    private var suggestions: some View {
-        switch viewModel.suggestionsState {
-        case .hidden:
-            EmptyView()
-        case .results(let suggestions):
-            ForEach(suggestions) { suggestion in
-                Button {
-                    isSearchFocused = false
-                    Task { await viewModel.choose(suggestion) }
-                } label: {
-                    VStack(alignment: .leading) {
-                        Text(suggestion.title)
-                        if !suggestion.subtitle.isEmpty {
-                            Text(suggestion.subtitle)
-                                .font(.caption)
-                        }
-                    }
-                }
-                .accessibilityElement(children: .combine)
+    /// Looks like a field but only opens the sheet; typing happens there
+    /// (SEARCH-RECENTS.md §1).
+    private var searchButton: some View {
+        Button(action: viewModel.presentSearch) {
+            HStack {
+                Image(systemName: "magnifyingglass")
+                    .accessibilityHidden(true)
+                Text(viewModel.searchFieldTitle)
+                    .foregroundStyle(viewModel.place == nil ? .secondary : .primary)
+                Spacer(minLength: 0)
             }
-        case .noResults:
-            Text("No matching cities")
-        case .failed:
-            Text("Can't search right now. Check your connection.")
+            .padding(8)
+            .background(.quaternary, in: RoundedRectangle(cornerRadius: 8))
         }
+        .buttonStyle(.plain)
+        .accessibilityLabel(LocationViewModel.searchPlaceholder)
+        .accessibilityValue(viewModel.place?.shortName ?? "")
     }
 
     // MARK: - Actions
 
-    private func focusSearchIfRequested() {
-        guard focusSearchAfterDialog else { return }
-        focusSearchAfterDialog = false
-        isSearchFocused = true
+    private func searchDidDismiss() {
+        Task { await viewModel.searchDidDismiss() }
     }
 }
 

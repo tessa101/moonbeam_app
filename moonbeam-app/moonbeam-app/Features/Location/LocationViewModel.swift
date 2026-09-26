@@ -10,6 +10,10 @@ import Observation
 /// the launch logic (LOCATION.md §3) and permission branches (§4) that decide
 /// which.
 ///
+/// The only writer of the place, `lastViewed` and recents. City search lives
+/// in `SearchSheetViewModel`, which reports picks back here
+/// (SEARCH-RECENTS.md §4).
+///
 /// Main-actor isolated (the project default), like the three location
 /// services it drives. The services come in through the initializer, so
 /// tests run the same logic against fakes.
@@ -29,14 +33,6 @@ final class LocationViewModel {
         /// Restricted is a device policy the user can't change, so Settings
         /// would be a dead end.
         var offersSettings: Bool { self != .restricted }
-    }
-
-    /// The suggestions list under the search field (§3).
-    enum SuggestionsState: Equatable {
-        case hidden
-        case results([PlaceSuggestion])
-        case noResults
-        case failed
     }
 
     // MARK: - Constants
@@ -69,22 +65,22 @@ final class LocationViewModel {
     /// §3 has them fall back quietly.
     private(set) var locationFailed = false
 
-    private(set) var suggestionsState: SuggestionsState = .hidden
-
     /// Settable so the view's sheet binding can dismiss it.
     var locationOffDialog: LocationOffVariant?
 
-    /// The search field. Edits by the user search; the view model filling in
-    /// a chosen place's name does not.
-    var searchText = "" {
-        didSet { searchTextDidChange(from: oldValue) }
-    }
+    /// Settable so the view's sheet binding can dismiss it (Cancel, drag).
+    var isSearchPresented = false
+
+    /// The open (or most recently open) search sheet's model. Rebuilt on
+    /// every `presentSearch()` so the field always opens empty
+    /// (SEARCH-RECENTS.md §1).
+    private(set) var searchSheet: SearchSheetViewModel?
 
     // MARK: - Dependencies
 
     private let locationService: any LocationService
     private let placeSearch: any PlaceSearchService
-    @ObservationIgnored private var placeStore: any PlaceStore
+    @ObservationIgnored private let placeStore: any PlaceStore
     private let moonService: any MoonService
     private let fetchTimeout: Duration
     private let deviceTimeZone: TimeZone
@@ -93,11 +89,15 @@ final class LocationViewModel {
     // MARK: - Bookkeeping
 
     @ObservationIgnored private var locateTask: Task<Void, Never>?
-    @ObservationIgnored private var searchTask: Task<Void, Never>?
 
-    /// Set while the view model writes a place's name into the field, so that
-    /// write doesn't search for the place it just showed.
-    @ObservationIgnored private var isFillingSearchField = false
+    /// Decision A: the search sheet's location row closes the sheet, and the
+    /// flow runs once it has gone, because the Location Off dialog can't
+    /// present over a sheet that's still up.
+    @ObservationIgnored private var useMyLocationAfterSearch = false
+
+    /// "Search instead" reopens the search sheet once the dialog has gone,
+    /// for the same reason in reverse.
+    @ObservationIgnored private var presentSearchAfterDialog = false
 
     /// The system prompt briefly deactivates the scene. Its return to active
     /// mustn't count as "back from Settings" and start a second fetch.
@@ -154,6 +154,12 @@ final class LocationViewModel {
     var searchPrompt: String {
         if isLocating, place == nil, let lastViewed { return lastViewed.shortName }
         return Self.searchPlaceholder
+    }
+
+    /// What the main-screen search button shows: the current city, or the
+    /// prompt when there isn't one yet (SEARCH-RECENTS.md §1).
+    var searchFieldTitle: String {
+        place?.shortName ?? searchPrompt
     }
 
     /// "Sydney · AEST", only when the place's clock differs from the device's
@@ -228,19 +234,56 @@ final class LocationViewModel {
         locationOffDialog = nil
     }
 
+    /// The dialog's "Search instead" / "Search for a city". The sheet opens
+    /// in `locationOffDialogDidDismiss()`.
+    func searchInsteadOfLocation() {
+        presentSearchAfterDialog = true
+        locationOffDialog = nil
+    }
+
+    /// Call from the dialog sheet's `onDismiss`.
+    func locationOffDialogDidDismiss() {
+        guard presentSearchAfterDialog else { return }
+        presentSearchAfterDialog = false
+        presentSearch()
+    }
+
+    // MARK: - Search sheet (SEARCH-RECENTS.md §2)
+
+    func presentSearch() {
+        searchSheet = SearchSheetViewModel(
+            placeSearch: placeSearch,
+            placeStore: placeStore,
+            showsUseMyLocation: showsUseMyLocation,
+            onPick: { [weak self] place in self?.select(place) },
+            onUseMyLocation: { [weak self] in self?.useMyLocationFromSearch() }
+        )
+        isSearchPresented = true
+    }
+
+    /// Call from the search sheet's `onDismiss`. Runs the location flow if
+    /// the sheet was closed by its location row (Decision A); Cancel, a drag
+    /// and a pick all land here too and do nothing further.
+    func searchDidDismiss() async {
+        guard useMyLocationAfterSearch else { return }
+        useMyLocationAfterSearch = false
+        await useMyLocation()
+    }
+
+    private func useMyLocationFromSearch() {
+        useMyLocationAfterSearch = true
+        isSearchPresented = false
+    }
+
     // MARK: - Choosing a place
 
-    func choose(_ suggestion: PlaceSuggestion) async {
-        searchTask?.cancel()
-        do {
-            let place = try await placeSearch.resolve(suggestion)
-            stopLocating()
-            show(place, remember: true)
-        } catch PlaceSearchError.noResults {
-            suggestionsState = .noResults
-        } catch {
-            suggestionsState = .failed
-        }
+    /// A place picked in the search sheet, from recents or a resolved
+    /// suggestion. Closes the sheet.
+    func select(_ place: Place) {
+        stopLocating()
+        show(place, remember: true)
+        addToRecents(place)
+        isSearchPresented = false
     }
 
     /// The "Back to {City}" chip.
@@ -248,43 +291,15 @@ final class LocationViewModel {
         guard let backToPlace else { return }
         stopLocating()
         show(backToPlace, remember: true)
+        addToRecents(backToPlace)
     }
 
-    /// The field's (x) button. Clears the text, not the place.
-    func clearSearch() {
-        searchText = ""
-    }
-
-    // MARK: - Search
-
-    /// Feeds the suggestions list from one query's stream. Internal so tests
-    /// can await it; the view reaches it through `searchText`.
-    func updateSuggestions(for query: String) async {
-        guard !query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            suggestionsState = .hidden
-            return
-        }
-
-        do {
-            for try await batch in placeSearch.suggestions(for: query) {
-                guard !Task.isCancelled else { return }
-                suggestionsState = batch.isEmpty ? .noResults : .results(batch)
-            }
-        } catch {
-            guard !Task.isCancelled else { return }
-            suggestionsState = .failed
-        }
-    }
-
-    private func searchTextDidChange(from oldValue: String) {
-        guard searchText != oldValue, !isFillingSearchField else { return }
-
-        searchTask?.cancel()
-        let query = searchText
-        searchTask = Task { [weak self] in
-            guard let self else { return }
-            await updateSuggestions(for: query)
-        }
+    /// Only picked places become recents; a detected place never does
+    /// (SEARCH-RECENTS.md §3). "Use my location" doesn't call this, and the
+    /// guard covers a detected place reaching here some other way.
+    private func addToRecents(_ place: Place) {
+        guard !place.isCurrentLocation else { return }
+        placeStore.addRecent(place)
     }
 
     // MARK: - Locating
@@ -358,11 +373,6 @@ final class LocationViewModel {
         self.place = place
         moonTable = SpikeMoonTableViewModel(moonService: moonService, place: place, today: now())
         locationFailed = false
-        suggestionsState = .hidden
-
-        isFillingSearchField = true
-        searchText = place.shortName
-        isFillingSearchField = false
 
         if remember {
             placeStore.lastViewed = place

@@ -31,6 +31,13 @@ struct LocationViewModelTests {
         isCurrentLocation: true
     )
 
+    /// Los Angeles as it comes back from storage: never flagged as current.
+    private static let savedLosAngeles: Place = {
+        var saved = detectedLosAngeles
+        saved.isCurrentLocation = false
+        return saved
+    }()
+
     private static let sydney = Place(
         name: "Sydney",
         locality: "Sydney",
@@ -93,8 +100,7 @@ struct LocationViewModelTests {
 
         #expect(viewModel.place == nil)
         #expect(viewModel.moonTable == nil)
-        #expect(viewModel.searchText.isEmpty)
-        #expect(viewModel.searchPrompt == LocationViewModel.searchPlaceholder)
+        #expect(viewModel.searchFieldTitle == LocationViewModel.searchPlaceholder)
         #expect(viewModel.showsUseMyLocation)
         #expect(viewModel.backToPlace == nil)
         #expect(!location.didRequestAuthorization)
@@ -114,7 +120,7 @@ struct LocationViewModelTests {
         #expect(viewModel.place == Self.detectedLosAngeles)
         #expect(viewModel.place?.isCurrentLocation == true)
         #expect(viewModel.moonTable?.place == Self.detectedLosAngeles)
-        #expect(viewModel.searchText == "Los Angeles")
+        #expect(viewModel.searchFieldTitle == "Los Angeles")
         #expect(!viewModel.showsUseMyLocation)
         #expect(viewModel.backToPlace == nil)
         #expect(!viewModel.isLocating)
@@ -230,7 +236,7 @@ struct LocationViewModelTests {
         await viewModel.start()
 
         #expect(viewModel.place == Self.sydney)
-        #expect(viewModel.searchText == "Sydney")
+        #expect(viewModel.searchFieldTitle == "Sydney")
         #expect(viewModel.showsUseMyLocation)
         #expect(!location.didRequestAuthorization)
         #expect(location.currentPlaceCount == 0)
@@ -285,6 +291,8 @@ struct LocationViewModelTests {
         #expect(viewModel.place == Self.detectedLosAngeles)
         #expect(store.lastViewed == Self.detectedLosAngeles)
         #expect(viewModel.backToPlace == nil)
+        // SEARCH-RECENTS.md §3: the detected location never becomes a recent.
+        #expect(store.recents.isEmpty)
     }
 
     @Test("Authorized, but a tapped fix fails: the place stays and the failure shows")
@@ -371,37 +379,7 @@ struct LocationViewModelTests {
 
     // MARK: - Choosing a place
 
-    @Test("Choosing a suggestion shows it and makes it the last-viewed place")
-    func choosingASuggestionUpdatesLastViewed() async {
-        let store = InMemoryPlaceStore()
-        let viewModel = Self.makeViewModel(search: Self.sydneySearch(), store: store)
-        await viewModel.start()
-
-        await viewModel.choose(Self.sydneySuggestion)
-
-        #expect(viewModel.place == Self.sydney)
-        #expect(viewModel.moonTable?.place == Self.sydney)
-        #expect(viewModel.searchText == "Sydney")
-        #expect(viewModel.suggestionsState == .hidden)
-        #expect(store.lastViewed == Self.sydney)
-        #expect(viewModel.lastViewed == Self.sydney)
-    }
-
-    @Test("A suggestion that won't resolve leaves the place alone")
-    func unresolvableSuggestion() async {
-        let search = Self.sydneySearch()
-        search.resolveError = URLError(.notConnectedToInternet)
-        let store = InMemoryPlaceStore()
-        let viewModel = Self.makeViewModel(search: search, store: store)
-
-        await viewModel.choose(Self.sydneySuggestion)
-
-        #expect(viewModel.place == nil)
-        #expect(viewModel.suggestionsState == .failed)
-        #expect(store.lastViewed == nil)
-    }
-
-    @Test("The chip returns to the saved place and makes it last-viewed again")
+    @Test("The chip returns to the saved place, makes it last-viewed again and adds it to recents")
     func chipReturnsToTheSavedPlace() async {
         let store = InMemoryPlaceStore(lastViewed: Self.sydney)
         let viewModel = Self.makeViewModel(
@@ -419,38 +397,208 @@ struct LocationViewModelTests {
         #expect(viewModel.backToPlace == nil)
         #expect(viewModel.showsUseMyLocation)
         #expect(store.lastViewed == Self.sydney)
+        #expect(store.recents == [Self.sydney])
     }
 
-    @Test("Clearing the field clears the text, not the place")
-    func clearingTheFieldKeepsThePlace() async {
+    // MARK: - Search sheet flow (SEARCH-RECENTS.md §5)
+
+    /// Opens the sheet and returns its model.
+    private static func openSearch(_ viewModel: LocationViewModel) throws -> SearchSheetViewModel {
+        viewModel.presentSearch()
+        #expect(viewModel.isSearchPresented)
+        return try #require(viewModel.searchSheet)
+    }
+
+    /// What SwiftUI does when the sheet finishes closing: the binding goes
+    /// false (if it hasn't already), then `onDismiss` runs.
+    private static func finishDismissingSearch(_ viewModel: LocationViewModel) async {
+        viewModel.isSearchPresented = false
+        await viewModel.searchDidDismiss()
+    }
+
+    @Test("Picking a suggestion from search shows it, closes the sheet and adds it to recents")
+    func pickingFromSearchAddsToRecents() async throws {
+        let store = InMemoryPlaceStore()
+        let viewModel = Self.makeViewModel(search: Self.sydneySearch(), store: store)
+        await viewModel.start()
+        let sheet = try Self.openSearch(viewModel)
+
+        sheet.query = "Syd"
+        await sheet.searchTask?.value
+        await sheet.pick(Self.sydneySuggestion)
+
+        #expect(viewModel.place == Self.sydney)
+        #expect(viewModel.moonTable?.place == Self.sydney)
+        #expect(viewModel.searchFieldTitle == "Sydney")
+        #expect(!viewModel.isSearchPresented)
+        #expect(store.lastViewed == Self.sydney)
+        #expect(viewModel.lastViewed == Self.sydney)
+        #expect(store.recents == [Self.sydney])
+    }
+
+    @Test("Picking a recent moves it to the top of recents")
+    func pickingARecentMovesItToTheTop() async throws {
+        let store = InMemoryPlaceStore(recents: [Self.savedLosAngeles, Self.sydney])
+        let viewModel = Self.makeViewModel(store: store)
+        await viewModel.start()
+        let sheet = try Self.openSearch(viewModel)
+
+        sheet.pick(Self.sydney)
+
+        #expect(viewModel.place == Self.sydney)
+        #expect(store.recents == [Self.sydney, Self.savedLosAngeles])
+        #expect(!viewModel.isSearchPresented)
+    }
+
+    @Test("A suggestion that won't resolve leaves the place, lastViewed and recents alone")
+    func unresolvableSuggestionFromSearch() async throws {
+        let search = Self.sydneySearch()
+        search.resolveError = URLError(.notConnectedToInternet)
+        let store = InMemoryPlaceStore()
+        let viewModel = Self.makeViewModel(search: search, store: store)
+        let sheet = try Self.openSearch(viewModel)
+
+        await sheet.pick(Self.sydneySuggestion)
+
+        #expect(viewModel.place == nil)
+        #expect(store.lastViewed == nil)
+        #expect(store.recents.isEmpty)
+        // §8: the sheet stays open showing the failure.
+        #expect(viewModel.isSearchPresented)
+        #expect(sheet.listState == .failed)
+    }
+
+    @Test("Cancel leaves the place, lastViewed and recents unchanged")
+    func cancelChangesNothing() async throws {
+        let location = FakeLocationService(authorizationState: .denied)
+        let store = InMemoryPlaceStore(lastViewed: Self.sydney, recents: [Self.sydney])
+        let viewModel = Self.makeViewModel(location: location, store: store)
+        await viewModel.start()
+        let sheet = try Self.openSearch(viewModel)
+        sheet.query = "Syd"
+
+        await Self.finishDismissingSearch(viewModel)
+
+        #expect(viewModel.place == Self.sydney)
+        #expect(store.lastViewed == Self.sydney)
+        #expect(store.recents == [Self.sydney])
+        #expect(!viewModel.isSearchPresented)
+        #expect(viewModel.locationOffDialog == nil)
+        #expect(location.currentPlaceCount == 0)
+    }
+
+    /// §1: the sheet always opens with an empty field.
+    @Test("Reopening the sheet starts with an empty field")
+    func reopeningStartsEmpty() async throws {
+        let viewModel = Self.makeViewModel(search: Self.sydneySearch())
+        let first = try Self.openSearch(viewModel)
+        first.query = "Syd"
+        await Self.finishDismissingSearch(viewModel)
+
+        let second = try Self.openSearch(viewModel)
+
+        #expect(second.query.isEmpty)
+    }
+
+    // MARK: - Decision B
+
+    @Test("The sheet hides the location row when the place is the detected location")
+    func locationRowHiddenForDetectedPlace() async throws {
+        let viewModel = Self.makeViewModel(
+            location: FakeLocationService(
+                authorizationState: .authorized,
+                placeResult: .success(Self.detectedLosAngeles)
+            )
+        )
+        await viewModel.start()
+        #expect(viewModel.place?.isCurrentLocation == true)
+
+        #expect(try !Self.openSearch(viewModel).showsUseMyLocation)
+    }
+
+    @Test("The sheet shows the location row when the place was searched for")
+    func locationRowShownForSearchedPlace() async throws {
         let viewModel = Self.makeViewModel(store: InMemoryPlaceStore(lastViewed: Self.sydney))
         await viewModel.start()
 
-        viewModel.clearSearch()
+        #expect(try Self.openSearch(viewModel).showsUseMyLocation)
+    }
 
-        #expect(viewModel.searchText.isEmpty)
+    // MARK: - Decision A
+
+    /// Nothing runs until the sheet has finished closing: the Location Off
+    /// dialog can't present over a sheet that's still up.
+    @Test("The location row closes the sheet, then runs the main-screen flow")
+    func locationRowRunsFlowAfterDismiss() async throws {
+        let location = FakeLocationService(
+            authorizationState: .authorized,
+            placeResult: .success(Self.detectedLosAngeles)
+        )
+        let store = InMemoryPlaceStore(lastViewed: Self.sydney)
+        let viewModel = Self.makeViewModel(location: location, store: store)
+        await viewModel.start()
+        // Launch detected Los Angeles; go back to Sydney so the row shows.
+        viewModel.goBack()
+        let fetchesBefore = location.currentPlaceCount
+        let sheet = try Self.openSearch(viewModel)
+        #expect(sheet.showsUseMyLocation)
+
+        sheet.useMyLocation()
+
+        #expect(!viewModel.isSearchPresented)
+        #expect(location.currentPlaceCount == fetchesBefore)
+
+        await viewModel.searchDidDismiss()
+
+        #expect(location.currentPlaceCount == fetchesBefore + 1)
+        #expect(viewModel.place == Self.detectedLosAngeles)
+        // "Use my location" never adds to recents; Sydney is there from the chip.
+        #expect(store.recents == [Self.sydney])
+    }
+
+    @Test("Location row with permission denied: the dialog shows, and Search instead reopens the sheet")
+    func locationRowDeniedThenSearchInstead() async throws {
+        let location = FakeLocationService(authorizationState: .denied)
+        let viewModel = Self.makeViewModel(
+            location: location,
+            store: InMemoryPlaceStore(lastViewed: Self.sydney)
+        )
+        await viewModel.start()
+        let firstSheet = try Self.openSearch(viewModel)
+
+        firstSheet.useMyLocation()
+        #expect(viewModel.locationOffDialog == nil)
+        await viewModel.searchDidDismiss()
+
+        #expect(viewModel.locationOffDialog == .denied)
+        #expect(!viewModel.isSearchPresented)
+
+        viewModel.searchInsteadOfLocation()
+        #expect(viewModel.locationOffDialog == nil)
+        // Not until the dialog has finished closing.
+        #expect(!viewModel.isSearchPresented)
+
+        viewModel.locationOffDialogDidDismiss()
+
+        #expect(viewModel.isSearchPresented)
+        let reopened = try #require(viewModel.searchSheet)
+        #expect(reopened !== firstSheet)
+        #expect(reopened.query.isEmpty)
         #expect(viewModel.place == Self.sydney)
     }
 
-    // MARK: - Suggestions list (§3)
+    /// Open Settings and a drag-to-dismiss close the dialog too; neither
+    /// should open the search sheet.
+    @Test("Dismissing the dialog any other way doesn't open search")
+    func dialogDismissedOtherwiseDoesNotOpenSearch() async {
+        let viewModel = Self.makeViewModel(location: FakeLocationService(authorizationState: .denied))
+        await viewModel.useMyLocation()
+        #expect(viewModel.locationOffDialog == .denied)
 
-    @Test("Suggestion list states: results, none, failure, and empty query")
-    func suggestionStates() async {
-        let search = Self.sydneySearch()
-        let viewModel = Self.makeViewModel(search: search)
+        viewModel.dismissLocationOffDialog()
+        viewModel.locationOffDialogDidDismiss()
 
-        await viewModel.updateSuggestions(for: "Syd")
-        #expect(viewModel.suggestionsState == .results([Self.sydneySuggestion]))
-
-        await viewModel.updateSuggestions(for: "Xyzzy")
-        #expect(viewModel.suggestionsState == .noResults)
-
-        await viewModel.updateSuggestions(for: "   ")
-        #expect(viewModel.suggestionsState == .hidden)
-
-        search.searchError = URLError(.notConnectedToInternet)
-        await viewModel.updateSuggestions(for: "Syd")
-        #expect(viewModel.suggestionsState == .failed)
+        #expect(!viewModel.isSearchPresented)
     }
 
     // MARK: - Time zones (§5)
@@ -460,9 +608,9 @@ struct LocationViewModelTests {
     /// engine-derived ASTRONOMY.md §5 value (see PlaceTimeZoneTests).
     @Test("Sydney on a Los Angeles device: times in AEST and the label shown")
     func sydneyOnALosAngelesDevice() async throws {
-        let viewModel = Self.makeViewModel(search: Self.sydneySearch())
+        let viewModel = Self.makeViewModel()
 
-        await viewModel.choose(Self.sydneySuggestion)
+        viewModel.select(Self.sydney)
 
         let moonTable = try #require(viewModel.moonTable)
         let rise = try #require(moonTable.moonDay.rise)

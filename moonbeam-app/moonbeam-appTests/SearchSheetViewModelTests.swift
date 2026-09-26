@@ -50,11 +50,12 @@ struct SearchSheetViewModelTests {
         )
     }
 
-    /// Records picks, so tests can check both what was picked and that
-    /// nothing was.
+    /// Records picks and location-row taps, so tests can check both what
+    /// happened and that nothing did.
     @MainActor
     private final class PickRecorder {
         var picked: [Place] = []
+        var useMyLocationCount = 0
     }
 
     private static func makeViewModel(
@@ -67,7 +68,8 @@ struct SearchSheetViewModelTests {
             placeSearch: search,
             placeStore: InMemoryPlaceStore(recents: recents),
             showsUseMyLocation: showsUseMyLocation,
-            onPick: { recorder.picked.append($0) }
+            onPick: { recorder.picked.append($0) },
+            onUseMyLocation: { recorder.useMyLocationCount += 1 }
         )
     }
 
@@ -265,6 +267,17 @@ struct SearchSheetViewModelTests {
         #expect(recorder.picked.isEmpty)
     }
 
+    @Test("The location row reports the tap and picks nothing")
+    func locationRowReportsTap() {
+        let recorder = PickRecorder()
+        let viewModel = Self.makeViewModel(recents: [Self.sydney], recorder: recorder)
+
+        viewModel.useMyLocation()
+
+        #expect(recorder.useMyLocationCount == 1)
+        #expect(recorder.picked.isEmpty)
+    }
+
     // MARK: - Removing recents
 
     @Test("Swiping a recent away removes it from the store and the list")
@@ -274,7 +287,8 @@ struct SearchSheetViewModelTests {
             placeSearch: FakePlaceSearchService(),
             placeStore: store,
             showsUseMyLocation: true,
-            onPick: { _ in }
+            onPick: { _ in },
+            onUseMyLocation: {}
         )
 
         viewModel.removeRecent(Self.lisbon)
