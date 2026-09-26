@@ -3,7 +3,7 @@
 > *How* Moonbeam is built. Start small and write down the patterns so they stay consistent.
 > Sections marked **TBD** get filled in after the first spike.
 
-_Last updated: 2026-09-23_
+_Last updated: 2026-09-25_
 
 ---
 
@@ -31,7 +31,7 @@ moonbeam-app/moonbeam-app/
 │   └── MoonTable/       # MoonTableView, MoonTableViewModel
 ├── Services/
 │   ├── Moon/            # MoonService protocol + AstronomyEngineMoonService
-│   └── Geocoding/       # GeocodingService protocol + MapKit impl
+│   └── Location/        # LocationService, PlaceSearchService, PlaceStore + real and fake impls
 ├── Models/              # Plain value types
 ├── Formatting/          # Compass, time, and percent formatters
 └── Vendor/Astronomy/    # astronomy.c, astronomy.h, VERSION
@@ -41,11 +41,20 @@ moonbeam-appTests/       # Swift Testing, app-hosted: formatters, models, servic
 ## 3. Data models
 
 ```swift
-struct Place: Equatable {
-    let name: String            // "Los Angeles, CA"
+struct Place: Codable, Hashable, Sendable {
+    let name: String            // "Sydney"
+    let locality: String?       // "Sydney" — the city, when it differs from name
+    let region: String?         // "NSW"
+    let country: String?        // "Australia"
     let latitude: Double
     let longitude: Double
-    let timeZone: TimeZone
+    let timeZone: TimeZone      // the place's own; every displayed time uses it
+    var isCurrentLocation: Bool // UI only: outside Codable and ==
+}
+
+struct PlaceSuggestion: Identifiable, Hashable, Sendable {
+    let title: String           // "Sydney"
+    let subtitle: String        // "NSW, Australia"
 }
 
 struct MoonEvent: Equatable {
@@ -73,18 +82,35 @@ Models are plain values with no formatting logic. `Formatting/` turns them into 
 ## 4. Services
 
 ```swift
-protocol MoonService {
+protocol MoonService {                                         // nonisolated
     func moonDay(for place: Place, on date: Date) -> MoonDay   // sync, pure, fast
 }
 
-protocol GeocodingService {
-    func place(for query: String) async throws -> Place
+protocol LocationService {                                     // @MainActor
+    var authorizationState: LocationAuthState { get }
+    func requestAuthorization() async -> LocationAuthState
+    func currentPlace() async throws -> Place
+}
+
+protocol PlaceSearchService {                                  // @MainActor
+    func suggestions(for query: String) -> AsyncThrowingStream<[PlaceSuggestion], any Error>
+    func resolve(_ suggestion: PlaceSuggestion) async throws -> Place
+}
+
+protocol PlaceStore {                                          // @MainActor
+    var lastViewed: Place? { get set }
 }
 ```
 
-- `MoonService` is synchronous and deterministic, so it's easy to test.
-- `GeocodingService` is async and can fail. It's the only network-touching code.
-- Both get mock implementations for SwiftUI previews and tests.
+- `MoonService` is synchronous, deterministic and `nonisolated`, so it's easy to test.
+- The location services are async, can fail, and are the only network-touching code. They're
+  main-actor isolated because `CLLocationManager` and MapKit expect a single, UI-bound home;
+  the models they return stay `nonisolated` so results cross back out freely.
+- All four get fake implementations for SwiftUI previews and tests.
+
+`GeocodingService` from the first draft of this doc was superseded by `LocationService` +
+`PlaceSearchService`: the spec calls for two distinct jobs (detect where you are, search for
+anywhere) with different failure modes. See LOCATION.md.
 
 ## 5. State management
 
@@ -94,7 +120,9 @@ protocol GeocodingService {
 
 ## 6. Persistence
 
-V1 has none. **TBD (V1.1):** the last-used city goes in `@AppStorage`, and saved places in SwiftData if that feature happens.
+One thing: the last-viewed place, via `PlaceStore` → `UserDefaults` (LOCATION.md §6). Stored as a
+JSON *array* capped at one entry, so the deferred recent-searches feature becomes a cap change
+rather than a migration. **TBD:** saved places in SwiftData, if that feature happens.
 
 ## 7. Apple frameworks
 
@@ -102,8 +130,8 @@ V1 has none. **TBD (V1.1):** the last-used city goes in `@AppStorage`, and saved
 |---|---|
 | SwiftUI | UI |
 | Observation | `@Observable` view models |
-| MapKit | City → coordinates + time zone (**TBD:** confirm current geocoding API in spike, `MKGeocodingRequest` vs `CLGeocoder`) |
-| CoreLocation | V1.1 current location |
+| MapKit | City search (`MKLocalSearchCompleter`, `MKLocalSearch`) and reverse geocoding (`MKReverseGeocodingRequest`). **Settled 2026-09-25:** `CLGeocoder` and `MKMapItem.placemark` are deprecated in iOS 26 |
+| CoreLocation | One-shot current location via `CLLocationUpdate.liveUpdates()`; authorization via `CLLocationManager` |
 | Swift Testing | Unit tests |
 
 ## 8. Dependencies
@@ -122,7 +150,9 @@ reference values. See `ASTRONOMY.md`.
 ## 10. Security & privacy
 
 - No analytics, no third-party SDKs, and no data leaves the device except geocoding queries.
-- Location permission (V1.1): When In Use only, with a clear purpose string.
+- Location permission: When In Use only, with a clear purpose string
+  (`NSLocationWhenInUseUsageDescription`), requested on tap and never at launch.
+  `NSLocationDefaultAccuracyReduced` is `YES` — city-level is all the moon maths needs.
 - Privacy manifest (`PrivacyInfo.xcprivacy`) added before any TestFlight build.
 
 ## 11. Testing

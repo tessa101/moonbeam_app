@@ -21,9 +21,22 @@
 		533924D53064AE46009094C9 /* moonbeam-appTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "moonbeam-appTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		53E955F5306759D400A88410 /* Exceptions for "moonbeam-app" folder in "moonbeam-app" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 5339244830649605009094C9 /* moonbeam-app */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		5339244B30649605009094C9 /* moonbeam-app */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				53E955F5306759D400A88410 /* Exceptions for "moonbeam-app" folder in "moonbeam-app" target */,
+			);
 			path = "moonbeam-app";
 			sourceTree = "<group>";
 		};
@@ -312,6 +325,8 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				HEADER_SEARCH_PATHS = "$(SRCROOT)/moonbeam-app/Vendor/Astronomy";
+				INFOPLIST_FILE = "moonbeam-app/Info.plist";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Moonbeam uses your location to show when and where the moon rises and sets near you.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -348,6 +363,8 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				HEADER_SEARCH_PATHS = "$(SRCROOT)/moonbeam-app/Vendor/Astronomy";
+				INFOPLIST_FILE = "moonbeam-app/Info.plist";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Moonbeam uses your location to show when and where the moon rises and sets near you.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;

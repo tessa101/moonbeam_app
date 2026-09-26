@@ -5,6 +5,46 @@
 
 ---
 
+### 2026-09-25 · Location services: the API choices behind LOCATION.md §6
+Five choices made while building `Place`, `LocationService`, `PlaceSearchService` and `PlaceStore`.
+The screen, the view model and the Location Off dialog are still to come.
+
+- **The one-shot fix is `CLLocationUpdate.liveUpdates()`, stopped after the first location.** It's
+  the async-native path, so there's no delegate bridging for the fix itself. `requestLocation()`
+  would work too, but needs a delegate and a continuation. The `authorizationDenied`,
+  `authorizationRestricted` and `locationUnavailable` flags have to be checked as well: the sequence
+  doesn't *end* when a fix becomes impossible, it just stops yielding, which would hang the caller.
+  Authorization still goes through `CLLocationManager.requestWhenInUseAuthorization()` — the only
+  API that controls *when* the prompt appears, which §3 depends on.
+- **Reverse geocoding is `MKReverseGeocodingRequest`, as §6 requires.** Confirmed against the iOS 26
+  SDK: `MKMapItem.placemark` and `CLGeocoder` are deprecated in 26, and `MKMapItem` gained
+  `location`, `address` and `addressRepresentations`.
+- **`Place.region` is derived by string, because iOS 26 exposes no administrative-area property.**
+  `MKAddressRepresentations` gives `cityName` ("Sydney") and `cityWithContext` ("Sydney, NSW") and
+  nothing between them; the component-wise route was `MKPlacemark.administrativeArea`, the very API
+  §6 tells us to avoid. So `Place.regionComponent` takes whatever `cityWithContext` has beyond the
+  city, and returns `nil` unless the city is confirmed to be the leading component — an unexpected
+  format yields no region rather than a wrong one. Covered by tests, rejection cases included.
+  Worth revisiting if a later SDK adds the property.
+- **`suggestions(for:)` returns an `AsyncThrowingStream`, not the `AsyncStream` §6 specifies.**
+  §3 asks for a "Can't search right now. Check your connection." state, and a non-throwing stream
+  can't tell a failed search from one that matched nothing. LOCATION.md §6 updated to match.
+- **`resolve(_:)` re-searches by address text rather than replaying the `MKLocalSearchCompletion`.**
+  §6 says "via `MKLocalSearch`", which this is: the suggestion's two displayed lines are rejoined
+  into a `naturalLanguageQuery`, filtered to localities. Replaying the completion object would be
+  marginally more precise, but `MKLocalSearchCompletion` isn't `Sendable`, so keeping one would stop
+  `PlaceSuggestion` being a value type that fakes and previews can construct.
+- **The time zone label compares *offsets*, not identifiers.** §5 says "whenever
+  `place.timeZone` ≠ `TimeZone.current`", which reads as identifier equality. Compared that way,
+  "US/Pacific" and "America/Los_Angeles" would label a place as elsewhere while showing identical
+  times. `Place.isInDifferentTimeZone(from:on:)` takes the device zone as a parameter, which also
+  makes it testable — a test process can't change `TimeZone.current`.
+- **Isolation split:** these three services are main-actor isolated (the project default), because
+  `CLLocationManager` and MapKit both expect a single UI-bound home. `Place`, `PlaceSuggestion`,
+  `LocationAuthState` and the MapKit→`Place` mapping stay `nonisolated`, so results cross back into
+  the domain layer — and into `MoonService` — without a hop. Note that a `nonisolated` type's
+  *extensions* don't inherit that: `Place+MapKit.swift` needs its own `nonisolated`.
+
 ### 2026-09-23 · Validate illumination against USNO at local noon, not at the displayed moment
 - **Decision:** `AstronomyEngineMoonService` gains an internal `illumination(at:)`. Tests compare
   USNO's `fracillum` against that helper **at local noon**, and assert the displayed

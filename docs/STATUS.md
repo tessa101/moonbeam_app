@@ -3,7 +3,7 @@
 > A living note on where things stand. Update it at the end of each work session
 > so the next session (you, or Claude) can pick up cold.
 
-_Last updated: 2026-09-25_
+_Last updated: 2026-09-25 (location service layer)_
 
 ## Where things live
 - **Local repo:** `~/app-ideas/moonbeam` (the one true folder)
@@ -21,6 +21,16 @@ _Last updated: 2026-09-25_
   Rise/set **reproduce the JS values exactly** (5:18 PM 105° ESE · 3:37 AM 252° WSW).
 - Toolchain settled: Swift 6 language mode, complete strict concurrency, iOS 26.0 minimum. No source
   changes were needed to satisfy strict concurrency.
+- **Location, step 2 — service layer (2026-09-25).** LOCATION.md §6 built and §7's service tests
+  written: `Place` (now Codable/Hashable with displayName/shortName/time-zone predicate),
+  `PlaceSuggestion`, `LocationAuthState`, `LocationService` + `CoreLocationService` + fake,
+  `PlaceSearchService` + `MapKitPlaceSearchService` + fake, `PlaceStore` +
+  `UserDefaultsPlaceStore` + in-memory fake, and the shared `MKMapItem` → `Place` mapping. Uses the
+  iOS 26 APIs: `MKReverseGeocodingRequest` and `CLLocationUpdate.liveUpdates()`, not `CLGeocoder`.
+  Info.plist carries `NSLocationWhenInUseUsageDescription` and
+  `NSLocationDefaultAccuracyReduced` (both verified in the built app). Builds clean, no warnings.
+  Six API/spec deviations are logged in DECISIONS.md 2026-09-25 and folded back into LOCATION.md.
+  **No UI yet** — the view model, screen and dialog are the next slice.
 
 ## Next
 1. [x] Push to GitHub (docs + Xcode project are on `main`)
@@ -29,6 +39,8 @@ _Last updated: 2026-09-25_
    - `moonbeam-appTests` (Swift Testing, app-hosted, shared scheme): **22 tests / 91 cases, all
      passing.** MoonPhase angle→name incl. wraparound, CompassFormatter sector edges, and
      AstronomyEngineMoonService against the §5 Mar Vista row.
+   - Since the location work (2026-09-25) the target holds **62 tests / 139 cases across 7 suites**.
+     The 40 new ones have **not been run yet** — Tessa is running them.
    - **Validated against USNO:** rise and set times within ±2 min (engine 17:18:30 / 03:37:09 vs
      USNO 17:19 / 03:37), illumination at local noon within ±1% (90.9% vs USNO's 91%), and phase
      name. Azimuths have no USNO equivalent — USNO publishes none, which is why we calculate on
@@ -54,6 +66,13 @@ _Last updated: 2026-09-25_
    - Spec: **[LOCATION.md](LOCATION.md)** (decided 2026-09-25). Place model, CoreLocation one-shot fix,
      MapKit city search, last-viewed persistence, custom "location off" dialog, place time zones.
    - Plain functional screen for now; visual design comes later (design-led).
+   - [x] §6 service layer + §7 service tests + Info.plist keys (see Done, above)
+   - [ ] `LocationViewModel`: the §3 launch logic and §4 permission branches, plus the 10-second
+     fetch timeout, which the service deliberately leaves to the caller. `FakeLocationService.fixDelay`
+     exists to exercise it.
+   - [ ] `LocationScreen` + `LocationOffDialog` (3 variants), and the app-name constant from §9
+   - [ ] Wire the screen to the moon table, replacing `SpikeMoonTableViewModel`'s hardcoded
+     Mar Vista fixture
 
 ## Open questions
 - ~~Minimum iOS version (suggested 26+)~~ **Settled 2026-09-23:** deployment target is 26.0, and

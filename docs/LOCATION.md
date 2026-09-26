@@ -111,20 +111,41 @@ Follow the existing pattern: protocol + concrete implementation + fake for tests
 ```
 Models/
   Place.swift                   // name, locality, region, country, coordinate, timeZone; Codable, Sendable, Hashable
-Services/
-  LocationService.swift         // protocol + CoreLocationService
-  PlaceSearchService.swift      // protocol + MapKitPlaceSearchService
-  PlaceStore.swift              // protocol + UserDefaultsPlaceStore
-Features/Location/
+  PlaceSuggestion.swift         // one type-ahead row: title + subtitle, no coordinates yet
+Services/Location/              // grouped like the existing Services/Moon/
+  LocationAuthState.swift       // the five states in §4, mapped from CLAuthorizationStatus
+  LocationService.swift         // protocol (+ LocationError)
+  CoreLocationService.swift
+  FakeLocationService.swift
+  PlaceSearchService.swift      // protocol (+ PlaceSearchError)
+  MapKitPlaceSearchService.swift
+  FakePlaceSearchService.swift
+  PlaceStore.swift              // protocol
+  UserDefaultsPlaceStore.swift
+  InMemoryPlaceStore.swift
+  Place+MapKit.swift            // MKMapItem → Place; shared by the two MapKit services
+Features/Location/              // still to build
   LocationViewModel.swift       // @Observable, @MainActor; owns launch logic + permission state
   LocationScreen.swift          // functional SwiftUI screen (visuals come later)
   LocationOffDialog.swift       // custom dialog, 3 variants
 ```
 
+The three services are **main-actor isolated** (the project default): they drive
+`CLLocationManager` and MapKit. The models and the MapKit mapping are `nonisolated`, so a resolved
+`Place` reaches `MoonService` without a hop.
+
 ### `Place`
-- `displayName` → "Sydney, NSW, Australia" (omit missing parts)
+- `displayName` → "Sydney, NSW, Australia" (omit missing parts, and skip `locality` when it just
+  repeats `name`, which is the usual case for a city search)
 - `shortName` → "Sydney"
-- `isCurrentLocation: Bool` (not persisted as truth; used for UI)
+- `isCurrentLocation: Bool` (not persisted as truth; used for UI). Excluded from `Codable` *and*
+  from `==`/`hash`, so a saved place and the same place freshly detected compare equal — the
+  "Back to {City}" chip in §3 depends on that comparison
+- `coordinate` is stored as `latitude`/`longitude` (so `Codable` needs no custom coding) and exposed
+  as a computed `CLLocationCoordinate2D` in `Place+MapKit.swift`, which keeps the model
+  Foundation-only
+- `isInDifferentTimeZone(from:on:)` is the §5 label decision, comparing **offsets** rather than
+  identifiers, with the device zone passed in — see DECISIONS.md 2026-09-25
 
 ### `LocationService`
 - `var authorizationState: LocationAuthState { get }` (enum: notDetermined, authorized, denied, restricted, servicesOff)
@@ -134,13 +155,24 @@ Features/Location/
   - Info.plist: `NSLocationWhenInUseUsageDescription` = "Moonbeam uses your location to show when and where the moon rises and sets near you."
   - Info.plist: `NSLocationDefaultAccuracyReduced` = `YES` (defaults the Precise toggle off; city-level is enough)
   - One-shot request; no continuous updates, no background mode
-  - Reverse geocoding: on iOS 26 use **MapKit's geocoding requests** (`MKReverseGeocodingRequest`) rather than the deprecated `CLGeocoder`. Check the exact API against the current SDK.
-  - Time zone comes from the resulting map item or placemark
+  - Reverse geocoding: `MKReverseGeocodingRequest(location:)` → `await request.mapItems`. Confirmed
+    against the iOS 26 SDK, where `MKMapItem.placemark` and `CLGeocoder` are both deprecated
+  - The fix itself comes from `CLLocationUpdate.liveUpdates()`, stopped after the first location
+  - Time zone comes from `MKMapItem.timeZone`, and a map item **without** one fails the mapping
+    rather than falling back to the device's — a silent fallback would show the wrong times
+  - No timeout here: the 10-second fallback in §3 is a launch policy, so it belongs to the view model
 
 ### `PlaceSearchService`
-- Wraps `MKLocalSearchCompleter` (result types limited to addresses/cities)
-- `func suggestions(for query: String) -> AsyncStream<[PlaceSuggestion]>` (debounce ~250 ms)
-- `func resolve(_ suggestion: PlaceSuggestion) async throws -> Place` (via `MKLocalSearch`)
+- Wraps `MKLocalSearchCompleter`, with `resultTypes = .address` and
+  `MKAddressFilter(including: [.locality, .subLocality])` — cities and neighbourhoods, no cafés, no
+  street numbers, no whole states
+- `func suggestions(for query: String) -> AsyncThrowingStream<[PlaceSuggestion], any Error>`
+  (debounce ~250 ms). **Throwing**, not a plain `AsyncStream`: §3's "Can't search right now" state
+  needs a failure channel, which a non-throwing stream doesn't have. An empty query yields one
+  empty batch and finishes, so clearing the field clears the list
+- `func resolve(_ suggestion: PlaceSuggestion) async throws -> Place` — an `MKLocalSearch` over the
+  suggestion's two lines rejoined as a `naturalLanguageQuery`, rather than replaying the
+  `MKLocalSearchCompletion` (which isn't `Sendable`). See DECISIONS.md 2026-09-25
 
 ### `PlaceStore`
 - `var lastViewed: Place? { get set }`
@@ -149,6 +181,14 @@ Features/Location/
 ## 7. Tests (Swift Testing)
 
 Use fakes for `LocationService`, `PlaceSearchService`, `PlaceStore`.
+
+> **Done so far (2026-09-25):** the service and model tests — `PlaceTests`, `PlaceTimeZoneTests`,
+> `PlaceStoreTests`, `PlaceSearchServiceTests`, `LocationServiceTests`. The view model tests below
+> land with the view model.
+>
+> `CoreLocationService` itself is not directly tested: it needs a device fix and a live geocoder.
+> What *is* tested is the decision inside it — `LocationAuthState(status:servicesEnabled:)`, which
+> is where the §4 table actually lives.
 
 **LocationViewModel launch logic**
 - First launch, no saved place → empty state, "Use my location" visible, no permission request made
