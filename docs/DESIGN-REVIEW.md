@@ -26,6 +26,7 @@ _Started: 2026-09-26_
 ## Moon table (Task #4, not built yet)
 - [ ] Table layout: rise time + direction, set time + direction, phase, illumination %
 - [ ] **No moonrise / no moonset today** state (Mar Vista 2026-10-03 exercises it)
+  - Can't be checked in the app until there's date picking (or open the app on Oct 3). Consider a date picker, even a dev-only one, so edge-case days can be checked in the UI
 - [ ] How to signal that illumination/phase are for **tonight's local midnight**
 - [ ] Time zone label placement in the table
 - [ ] Compass direction format ("105° ESE"): degrees, letters, or both?
