@@ -32,10 +32,19 @@ _Started: 2026-09-26_
 ## Moon table (Task #4, not built yet)
 - [ ] Table layout: rise time + direction, set time + direction, phase, illumination %
 - [ ] **No moonrise / no moonset today** state (Mar Vista 2026-10-03 exercises it)
-  - Can't be checked in the app until there's date picking (or open the app on Oct 3). Consider a date picker, even a dev-only one, so edge-case days can be checked in the UI
+  - ~~Can't be checked in the app until there's date picking~~ Date picking is built (Step 3): pick Oct 3 to see it
+- [ ] **"No moonrise today" / "No moonset today" on other days.** Wrong once the selected day isn't today (e.g. "No moonrise on Oct 3"?). Not reworded in Step 3
 - [ ] How to signal that illumination/phase are for **tonight's local midnight**
 - [ ] Time zone label placement in the table
 - [ ] Compass direction format ("105° ESE"): degrees, letters, or both?
+
+## Date control and calendar sheet (Step 3, built plain; DATE.md §9)
+- [ ] **Copy that assumes "tonight"** when another date is picked: the screen prompt "Where are you watching the moon tonight?" and the midnight note (e.g. "Oct 3 · at midnight")
+- [ ] **Today chip placement:** beside the field or under it, and whether the chip or the field's "Today ·" prefix is enough on its own
+- [ ] **Arrow styling and hit areas; the field's chevron.** At default size on an iPhone 17, "Tomorrow · Sun, Sep 27, 2026" wraps onto two lines, so the chip drops to its own row. The chip's tap target is 34 pt tall
+- [ ] **Show the time zone in the date** when the place's day differs from the device's?
+- [ ] **Calendar sheet header:** Today · title · Cancel, plus Done after the month/year wheel. Check it's clear and fits at large text sizes. Also check that six-row months fit the medium detent (it scrolls)
+- [ ] **App left open across the place's midnight:** the day only moves on the next foreground (Decision 1). Revisit if it's noticed
 
 ## Accessibility (part of the design pass)
 - [ ] Dynamic Type up to the largest accessibility sizes, on every screen

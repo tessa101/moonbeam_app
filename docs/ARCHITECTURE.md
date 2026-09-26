@@ -3,7 +3,7 @@
 > *How* Moonbeam is built. Start small and write down the patterns so they stay consistent.
 > Sections marked **TBD** get filled in after the first spike.
 
-_Last updated: 2026-09-25_
+_Last updated: 2026-09-26_
 
 ---
 
@@ -28,7 +28,7 @@ Xcode project: `moonbeam-app/moonbeam-app.xcodeproj`. Source lives in `moonbeam-
 moonbeam-app/moonbeam-app/
 ├── App/                 # @main entry, dependency wiring
 ├── Features/
-│   ├── Location/        # LocationViewModel, LocationScreen, LocationOffDialog
+│   ├── Location/        # LocationViewModel, LocationScreen, LocationOffDialog, DateControl, CalendarSheet
 │   └── MoonTable/       # MoonTableView, MoonTableViewModel
 ├── Services/
 │   ├── Moon/            # MoonService protocol + AstronomyEngineMoonService
@@ -117,7 +117,16 @@ anywhere) with different failure modes. See LOCATION.md.
 
 - The view model is `@Observable` and exposes `enum State { idle, loading, loaded(MoonDay), failed(String) }`.
 - The view switches on `state`, with no scattered booleans.
-- **TBD:** date selection state (V1.1).
+- **Date selection** (DATE.md, Step 3): `LocationViewModel.daySelection: DaySelection`, a value
+  type in `Models/`:
+  - `.today` follows the place's current day. `.day(year:month:day:)` is a picked calendar day in
+    the **place's** time zone, not a moment in time. The day math uses a Gregorian calendar,
+    anchored at local noon and moved with `date(byAdding: .day)`, and stays within today ±366.
+  - The moon table is built for `daySelection.startOfDay(in: place.timeZone, now:)`. It's rebuilt on
+    a place change, a day change, and a foreground after the place's midnight (following today only).
+  - The time zone label samples local noon on the selected day.
+  - The selection isn't persisted: every launch opens on today.
+  - The view model takes the clock as `now: () -> Date`, so tests can pin it.
 
 ## 6. Persistence
 

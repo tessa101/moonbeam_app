@@ -4,7 +4,7 @@
 > If code and this doc disagree, one of them is wrong, so fix it on purpose.
 > Items marked **TBD** are open questions to resolve before they block work.
 
-_Last updated: 2026-09-23_
+_Last updated: 2026-09-26_
 
 ---
 
@@ -60,7 +60,7 @@ to catch a moonrise over the ocean or a skyline, you need the **time** and the
 | Lunar phase (name) | ✅ | e.g. "Waxing Gibbous" |
 | Illumination % | ✅ | Whole-number percent |
 | Current location (GPS) | ➖ | V1.1, needs permission UX |
-| Date picker | ➖ | V1.1 |
+| Date picker | ✅ | Built in Step 3 (DATE.md): ‹ / › by day, month calendar, Today chip; today ±366 days in the place's time zone |
 | Saved locations | ➖ | Later |
 
 ## 7. Requirements

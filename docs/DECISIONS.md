@@ -5,6 +5,46 @@
 
 ---
 
+### 2026-09-26 · Step 3: date selection (DATE.md)
+- **Decision 1: the midnight rollover happens only when the app comes back to the foreground.**
+  `sceneDidBecomeActive()` moves a following-today selection to the place's new day. Nothing moves it
+  while the app stays open in the foreground; the next foreground or day action catches up. A timer
+  to the place's next midnight would need a second, injectable time source to test. DATE.md §3 is
+  amended to match.
+- **Decision 2: `SpikeMoonTableViewModel.init(…, today:)` → `day:`.** It keeps the day, and `dayText`
+  formats it rather than `Date()`. Once the day is selectable, the table isn't always for today.
+- **Decision 3: the time zone label follows the selected day, sampled at local noon.** Both the
+  "different zone?" check and the abbreviation use `daySelection.noon(in:now:)`, not `now()`. A picked
+  day across a DST change gets that day's label (Sydney on Nov 25 → AEDT), and Phoenix shows one after
+  LA falls back. Noon, not midnight, because DST changes happen overnight: noon has the offset for
+  nearly all of the day, so LA's changeover day (Nov 1) counts as after the change.
+- **Decision 4: the calendar sheet's month/year wheel moves a highlight, not the selection.** In
+  the simulator, the graphical `DatePicker`'s wheel changed its selection (Sep 27 → Oct 27), and the
+  sheet, which closes on a pick, closed as soon as the wheel moved. A change that keeps the day
+  number, or clamps it to the month's last day, is now a draft (`calendarDraft`). The sheet stays
+  open and a Done button confirms it. Any other change is a tap on a new day, which picks and closes
+  (DATE.md §2). The ambiguous case, the same day number in another month, also waits for Done.
+  Considered: Done for every pick (an extra tap, against §2), and leaving the wheel as it was.
+- **Tapping the already-selected date doesn't close the sheet.** The picker doesn't report a tap on
+  its current selection (checked in the simulator). Cancel or a drag closes it. DATE.md §2 is struck
+  through to match.
+- **`DaySelection` anchors every day at local noon.** Noon always exists, and midnight doesn't in
+  zones whose DST starts at 00:00 (Santiago, 2026-09-06). Days move with `date(byAdding: .day)`,
+  never by 86,400 s. Range: today ±366 in the place's zone, clamped on every move and resolve, so a
+  picked day that drifts out of range (rollover, city change) lands on the nearest end.
+- **A picked day stays `.day` even when it becomes today** (rollover or city change), as §3 says.
+  The Today chip and the "Today ·" prefix come from the resolved day, so they're still correct.
+- **Date label formatting lives in `Formatting/DayLabelFormatter`**, not in the view model. The
+  relative word comes from the offset from the *place's* today, so `Date.RelativeFormatStyle` (whose
+  today is the device's) doesn't fit. Tests pin `en_US`.
+- **The date field's accessibility: label "Date", with the date as its value.** VoiceOver reads the
+  new value after each adjustable swipe, and taps on ‹ / › / Today post an announcement. This
+  replaces the single `dateAccessibilityLabel` in DATE.md §4.
+- **`FakeMoonService` added**, the last service without a fake. It records `requestedDates`, so
+  tests check which day reached the service.
+- **Sydney 2026-09-23 and Mar Vista 2026-10-03 through the view model are engine-derived guards**
+  (±2 min), because ASTRONOMY.md §5 has no USNO rows for them yet.
+
 ### 2026-09-26 · Step 2.1: search sheet with recent cities (SEARCH-RECENTS.md)
 - **Decision A: the sheet's "Use my location" row closes the sheet, then runs the main-screen
   flow.** The flow starts from the sheet's `onDismiss`, not from the tap. SwiftUI can't present

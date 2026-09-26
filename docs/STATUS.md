@@ -3,7 +3,7 @@
 > A living note on where things stand. Update it at the end of each work session
 > so the next session (you, or Claude) can pick up cold.
 
-_Last updated: 2026-09-26 (Step 2.1: search sheet with recent cities)_
+_Last updated: 2026-09-26 (Step 3: date selection)_
 
 ## Where things live
 - **Local repo:** `~/app-ideas/moonbeam` (the one true folder)
@@ -53,6 +53,25 @@ _Last updated: 2026-09-26 (Step 2.1: search sheet with recent cities)_
     warnings. Sheet auto-focus was checked in the iPhone 17 simulator (keyboard comes up on open)
     and on device by Tessa (field focused on open). Decisions are in DECISIONS.md 2026-09-26.
   - **Device QA pending** (see Next, item 5).
+- **Step 3 — date selection (2026-09-26).** Spec: [DATE.md](DATE.md), plan and as-built notes in §10.
+  Commits 2e64a8d → 52e3281, plus the docs.
+  - `DaySelection` (`.today` / picked day, calendar-day math in the place's zone, noon anchor, ±366)
+  - `DayLabelFormatter` ("Today · Sat, Sep 26, 2026" and the spoken form)
+  - `FakeMoonService`
+  - Day selection in `LocationViewModel`, rolling over on foreground only
+  - The time zone label sampled at local noon on the selected day
+  - `DateControl` and `CalendarSheet`
+  - The spike table now formats its own day (`today:` → `day:`)
+  - Decisions 1–4 are in DECISIONS.md 2026-09-26, including the calendar wheel draft and Done
+  - **178 tests / 271 cases across 14 suites, all passing** in Xcode's runner on the iPhone 17
+    simulator. No build warnings.
+  - Checked in the iPhone 17 simulator:
+    - ‹ / › update the label, chip and table
+    - the sheet fits at medium for a five-row month
+    - the wheel keeps the sheet open, and Done appears
+    - a day tap picks the day and closes the sheet
+    - Oct 3 in Westminster shows "No moonrise today"
+  - **Device QA pending** (see Next, item 6).
 
 ## Next
 1. [x] Push to GitHub (docs + Xcode project are on `main`)
@@ -114,6 +133,19 @@ _Last updated: 2026-09-26 (Step 2.1: search sheet with recent cities)_
      - VoiceOver and Dynamic Type in the sheet
    - [ ] Time zone label says "GMT+10" for Sydney in `en_US`, not "AEST" (the system abbreviation;
      see DECISIONS.md). Decide in the design pass whether that's acceptable
+
+6. [ ] **Step 3 device QA, by hand** (DATE.md §7). Not verified by the agent:
+   - VoiceOver:
+     - the date field reads "Date, Today, Saturday, …" and swipe up/down moves a day
+     - ‹ / › announce the new date and read "dimmed" at ±366
+     - the chip reads "Go to today"
+   - Dynamic Type at accessibility sizes: the chip moves under the row, and the sheet opens at large
+   - A six-row month (e.g. January 2027) in the calendar sheet at medium
+   - Mar Vista on Oct 3 shows the no-moonrise state (covered by a unit test; not yet seen in the app)
+   - Following today across the place's midnight: background the app, then foreground it after midnight
+   - Relaunch opens on today
+   - The run destination was switched to the iPhone 17 simulator for tests, because the test target
+     has no development team for the "T2 iPhone" device
 
 Design-pass items (visuals, copy, a11y) are tracked in **[DESIGN-REVIEW.md](DESIGN-REVIEW.md)**.
 
