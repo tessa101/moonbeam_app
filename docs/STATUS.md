@@ -95,6 +95,8 @@ _Last updated: 2026-09-25 (location view model, screen and dialog)_
    - [ ] Time zone label says "GMT+10" for Sydney in `en_US`, not "AEST" (the system abbreviation;
      see DECISIONS.md). Decide in the design pass whether that's acceptable
 
+Design-pass items (visuals, copy, a11y) are tracked in **[DESIGN-REVIEW.md](DESIGN-REVIEW.md)**.
+
 ## Open questions
 - ~~Minimum iOS version (suggested 26+)~~ **Settled 2026-09-23:** deployment target is 26.0, and
   Swift 6 with complete strict concurrency is on. Both built and ran clean. Project *and* target
