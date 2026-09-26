@@ -3,7 +3,7 @@
 > A living note on where things stand. Update it at the end of each work session
 > so the next session (you, or Claude) can pick up cold.
 
-_Last updated: 2026-09-23_
+_Last updated: 2026-09-25_
 
 ## Where things live
 - **Local repo:** `~/app-ideas/moonbeam` (the one true folder)
@@ -49,6 +49,11 @@ _Last updated: 2026-09-23_
 4. [ ] Build the SwiftUI table
    - Design first (Tessa): table layout, and the **"no moonrise / no moonset today"** state, which the
      Oct 3 row above will exercise. Bring a sketch or Figma link, then spec it for the agent.
+
+5. [ ] Location: detect + search (Step 2)
+   - Spec: **[LOCATION.md](LOCATION.md)** (decided 2026-09-25). Place model, CoreLocation one-shot fix,
+     MapKit city search, last-viewed persistence, custom "location off" dialog, place time zones.
+   - Plain functional screen for now; visual design comes later (design-led).
 
 ## Open questions
 - ~~Minimum iOS version (suggested 26+)~~ **Settled 2026-09-23:** deployment target is 26.0, and

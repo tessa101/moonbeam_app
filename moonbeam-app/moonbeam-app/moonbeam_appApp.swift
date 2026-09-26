@@ -16,7 +16,10 @@ struct moonbeam_appApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            // Spike UI wiring; replaced in task #4.
+            ContentView(
+                viewModel: SpikeMoonTableViewModel(moonService: AstronomyEngineMoonService())
+            )
         }
     }
 }
