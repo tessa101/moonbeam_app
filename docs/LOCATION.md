@@ -124,8 +124,8 @@ Services/Location/              // grouped like the existing Services/Moon/
   UserDefaultsPlaceStore.swift
   InMemoryPlaceStore.swift
   Place+MapKit.swift            // MKMapItem → Place; shared by the two MapKit services
-Features/Location/              // still to build
-  LocationViewModel.swift       // @Observable, @MainActor; owns launch logic + permission state
+Features/Location/
+  LocationViewModel.swift       // @Observable, @MainActor; owns launch logic, permission state + the 10 s timeout
   LocationScreen.swift          // functional SwiftUI screen (visuals come later)
   LocationOffDialog.swift       // custom dialog, 3 variants
 ```
@@ -160,6 +160,9 @@ The three services are **main-actor isolated** (the project default): they drive
   - The fix itself comes from `CLLocationUpdate.liveUpdates()`, stopped after the first location
   - Time zone comes from `MKMapItem.timeZone`, and a map item **without** one fails the mapping
     rather than falling back to the device's — a silent fallback would show the wrong times
+  - The name is `cityName`, else the first component of `cityWithContext`, else the mapping fails
+    (`couldNotIdentifyPlace`). **Never** `mapItem.name`, which for a reverse geocode is a street
+    address. Search results may fall back to `mapItem.name`. See `Place.placeName(...)`
   - No timeout here: the 10-second fallback in §3 is a launch policy, so it belongs to the view model
 
 ### `PlaceSearchService`
@@ -184,7 +187,8 @@ Use fakes for `LocationService`, `PlaceSearchService`, `PlaceStore`.
 
 > **Done so far (2026-09-25):** the service and model tests — `PlaceTests`, `PlaceTimeZoneTests`,
 > `PlaceStoreTests`, `PlaceSearchServiceTests`, `LocationServiceTests`. The view model tests below
-> land with the view model.
+> are in `LocationViewModelTests`, plus the suggestion-list states and a check that the timeout
+> cancels the fix.
 >
 > `CoreLocationService` itself is not directly tested: it needs a device fix and a live geocoder.
 > What *is* tested is the decision inside it — `LocationAuthState(status:servicesEnabled:)`, which

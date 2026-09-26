@@ -9,6 +9,15 @@ import SwiftUI
 
 @main
 struct moonbeam_appApp: App {
+    /// The one place the real services are chosen; everything below receives
+    /// them through initializers.
+    @State private var locationViewModel = LocationViewModel(
+        locationService: CoreLocationService(),
+        placeSearch: MapKitPlaceSearchService(),
+        placeStore: UserDefaultsPlaceStore(),
+        moonService: AstronomyEngineMoonService()
+    )
+
     // Astronomy Engine spike scaffolding; remove with MoonTableSpike.
     init() {
         MoonTableSpike.run()
@@ -16,10 +25,9 @@ struct moonbeam_appApp: App {
 
     var body: some Scene {
         WindowGroup {
-            // Spike UI wiring; replaced in task #4.
-            ContentView(
-                viewModel: SpikeMoonTableViewModel(moonService: AstronomyEngineMoonService())
-            )
+            // The chosen place drives the spike moon table (ContentView)
+            // until the designed table replaces it in task #4.
+            LocationScreen(viewModel: locationViewModel)
         }
     }
 }

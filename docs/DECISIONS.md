@@ -5,6 +5,36 @@
 
 ---
 
+### 2026-09-25 · Location view model, screen and dialog: the calls LOCATION.md left open
+- **The 10 s timeout cancels the fix; it doesn't just stop waiting.** `LocationViewModel` runs
+  `currentPlace()` in its own task, with a watchdog that cancels it when the timeout fires.
+  Cancelling is what ends `CLLocationUpdate.liveUpdates()`. If the view model only stopped
+  awaiting, updates would keep running in the background. Tested with `FakeLocationService`,
+  which now records cancelled fixes.
+- **A launch detection doesn't overwrite the last-viewed place. Picks do.** §3 says that picking
+  any place ("search, detect, or chip") makes it last-viewed. That covers a "Use my location" tap,
+  but not the automatic fix at launch. If launch saved it, the "Back to {City}" chip would be gone
+  by the next launch. So the chip reduces to one rule: show it when `lastViewed != place`.
+- **A current location is never named after `mapItem.name`.** For a reverse geocode, that's the
+  nearest street address. Without `cityName`, the mapping uses the first component of
+  `cityWithContext`. With neither, it fails, and `CoreLocationService` throws
+  `couldNotIdentifyPlace`. Search results keep the `mapItem.name` fallback, because there it names
+  the locality the user picked. The rule is `Place.placeName(...)`, tested without MapKit. Because
+  the mapping never produces a `locality` that differs from `name`, the "Mar Vista, Los Angeles"
+  display-name test was dropped.
+- **The time zone label uses the system abbreviation, which isn't always "AEST".** In `en_US`,
+  `TimeZone.abbreviation(for:)` gives "GMT+10" for Sydney. Apple only has short names for zones
+  the locale commonly uses. That's still unambiguous, so no hand-kept abbreviation table.
+- **Refusing at the system prompt ends there.** No Location Off dialog follows straight away. The
+  user just answered, so the dialog would nag. The next tap shows it.
+- **A failed fix after a tap shows a message: "Couldn't find your location. Try again, or search
+  for a city."** §3 only covers failures at launch, which fall back quietly. A tap that did
+  nothing visible for up to 10 s would read as broken. Placeholder copy, for the design pass.
+- **One dialog title for all three variants.** §4 gives only "Location is off for {AppName}".
+- **Foreground re-check is transition-based.** Any change from not authorized to authorized while
+  the app was in the background triggers a fetch, whether or not the user got to Settings through
+  the dialog. Returns from the system prompt are skipped, so they don't start a second fetch.
+
 ### 2026-09-25 · Location services: the API choices behind LOCATION.md §6
 Five choices made while building `Place`, `LocationService`, `PlaceSearchService` and `PlaceStore`.
 The screen, the view model and the Location Off dialog are still to come.

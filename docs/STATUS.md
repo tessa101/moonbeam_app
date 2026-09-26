@@ -3,7 +3,7 @@
 > A living note on where things stand. Update it at the end of each work session
 > so the next session (you, or Claude) can pick up cold.
 
-_Last updated: 2026-09-25 (location service layer)_
+_Last updated: 2026-09-25 (location view model, screen and dialog)_
 
 ## Where things live
 - **Local repo:** `~/app-ideas/moonbeam` (the one true folder)
@@ -31,6 +31,16 @@ _Last updated: 2026-09-25 (location service layer)_
   `NSLocationDefaultAccuracyReduced` (both verified in the built app). Builds clean, no warnings.
   Six API/spec deviations are logged in DECISIONS.md 2026-09-25 and folded back into LOCATION.md.
   **No UI yet** — the view model, screen and dialog are the next slice.
+- **Location, step 2 — view model + screen (2026-09-25).** `LocationViewModel` (§3 launch logic,
+  §4 permission branches, and the 10 s timeout, which *cancels* the fix when it fires),
+  `LocationScreen` (plain, unstyled) and `LocationOffDialog` (denied / services-off / restricted),
+  plus `AppInfo.name` as the single app-name constant. The app now opens on the location screen,
+  and picking a place loads the existing spike moon table (`ContentView`) for it. Review fixes from
+  the service-layer commit: a current location is never named after `mapItem.name` (a street
+  address). The mapping uses `cityName`, then `cityWithContext`'s first component, then fails. The
+  unreachable "Mar Vista, Los Angeles" display-name test was dropped. **87 tests / 171 cases,
+  8 suites, all passing** in Xcode's runner. Builds with no warnings. Decisions are in
+  DECISIONS.md 2026-09-25 ("Location view model, screen and dialog").
 
 ## Next
 1. [x] Push to GitHub (docs + Xcode project are on `main`)
@@ -39,8 +49,8 @@ _Last updated: 2026-09-25 (location service layer)_
    - `moonbeam-appTests` (Swift Testing, app-hosted, shared scheme): **22 tests / 91 cases, all
      passing.** MoonPhase angle→name incl. wraparound, CompassFormatter sector edges, and
      AstronomyEngineMoonService against the §5 Mar Vista row.
-   - Since the location work (2026-09-25) the target holds **62 tests / 139 cases across 7 suites**.
-     The 40 new ones have **not been run yet** — Tessa is running them.
+   - Since the location work (2026-09-25) the target holds **87 tests / 171 cases across 8 suites**,
+     all passing in Xcode's runner.
    - **Validated against USNO:** rise and set times within ±2 min (engine 17:18:30 / 03:37:09 vs
      USNO 17:19 / 03:37), illumination at local noon within ±1% (90.9% vs USNO's 91%), and phase
      name. Azimuths have no USNO equivalent — USNO publishes none, which is why we calculate on
@@ -67,12 +77,23 @@ _Last updated: 2026-09-25 (location service layer)_
      MapKit city search, last-viewed persistence, custom "location off" dialog, place time zones.
    - Plain functional screen for now; visual design comes later (design-led).
    - [x] §6 service layer + §7 service tests + Info.plist keys (see Done, above)
-   - [ ] `LocationViewModel`: the §3 launch logic and §4 permission branches, plus the 10-second
-     fetch timeout, which the service deliberately leaves to the caller. `FakeLocationService.fixDelay`
-     exists to exercise it.
-   - [ ] `LocationScreen` + `LocationOffDialog` (3 variants), and the app-name constant from §9
-   - [ ] Wire the screen to the moon table, replacing `SpikeMoonTableViewModel`'s hardcoded
-     Mar Vista fixture
+   - [x] `LocationViewModel`: §3 launch logic, §4 permission branches, 10 s timeout (cancels the fix)
+   - [x] `LocationScreen` + `LocationOffDialog` (3 variants), and `AppInfo.name` from §9
+   - [x] Wire the screen to the moon table. The app passes the chosen place into
+     `SpikeMoonTableViewModel`. Its Mar Vista fixture is now only a default for previews
+   - [ ] **§8 on a device or simulator, by hand.** Not verified by the agent. Tests cover the logic;
+     these need a person:
+     - fresh install shows no permission prompt until "Use my location" is tapped
+     - real MapKit search + pick, without ever granting location
+     - relaunch with location on shows the current city, with "Back to {City}" for a different
+       saved city
+     - tapping into a filled field selects all its text (`TextField(text:selection:)` set on
+       focus; the tap that focuses could still move the caret, so check this one first); (x) clears
+     - each dialog variant appears; "Open Settings" lands on Moonbeam's settings page
+     - granting in Settings and returning fetches automatically
+     - Dynamic Type at the largest sizes, and VoiceOver on the screen and dialog
+   - [ ] Time zone label says "GMT+10" for Sydney in `en_US`, not "AEST" (the system abbreviation;
+     see DECISIONS.md). Decide in the design pass whether that's acceptable
 
 ## Open questions
 - ~~Minimum iOS version (suggested 26+)~~ **Settled 2026-09-23:** deployment target is 26.0, and

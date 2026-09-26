@@ -31,6 +31,11 @@ final class FakeLocationService: LocationService {
     private(set) var requestAuthorizationCount = 0
     private(set) var currentPlaceCount = 0
 
+    /// Fixes that were cancelled mid-flight. The view model's timeout has to
+    /// *cancel* the fix — stopping location updates — not merely stop waiting
+    /// for it, and this is how a test tells the two apart.
+    private(set) var cancelledFixCount = 0
+
     /// True if the system prompt was never triggered — what the "no permission
     /// prompt at launch" test in §7 asserts.
     var didRequestAuthorization: Bool { requestAuthorizationCount > 0 }
@@ -59,7 +64,12 @@ final class FakeLocationService: LocationService {
         currentPlaceCount += 1
 
         if fixDelay > .zero {
-            try await Task.sleep(for: fixDelay)
+            do {
+                try await Task.sleep(for: fixDelay)
+            } catch {
+                cancelledFixCount += 1
+                throw error
+            }
         }
 
         return try placeResult.get()
