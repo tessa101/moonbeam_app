@@ -13,6 +13,7 @@ _Started: 2026-09-26_
 - [ ] **Suggestions list states:** no results ("No matching cities") and network error ("Can't search right now. Check your connection.")
 - [ ] **First-launch empty state:** does the empty field + prompt feel inviting, or does it need something moon-y?
 - [ ] **Detected location shows the city** ("Los Angeles", not "Mar Vista"). Revisit if neighborhoods feel more personal
+- [ ] **Search field shows the city with a "Change" / "Edit" button.** Tapping the button or anywhere on the field opens the search sheet (Tessa, 2026-09-26)
 - [x] ~~**Select-all on tap + clear (x):** confirm the interaction feels right once styled~~ Superseded: the main-screen field now opens the search sheet (SEARCH-RECENTS.md §1)
 
 ## Search sheet (Step 2.1, built plain; SEARCH-RECENTS.md §7)
@@ -45,6 +46,8 @@ _Started: 2026-09-26_
 - [ ] **Show the time zone in the date** when the place's day differs from the device's?
 - [ ] **Calendar sheet header:** Today · title · Cancel, plus Done after the month/year wheel. Check it's clear and fits at large text sizes. Also check that six-row months fit the medium detent (it scrolls)
 - [ ] **App left open across the place's midnight:** the day only moves on the next foreground (Decision 1). Revisit if it's noticed
+- [ ] **Custom look for ‹ / › and the calendar sheet**, or keep the system style? (Tessa, 2026-09-26)
+- [ ] **Relative-day chips always visible** (Today, Tomorrow, …), with the selected one highlighted, instead of a Today chip that only appears off today (Tessa, 2026-09-26)
 
 ## Accessibility (part of the design pass)
 - [ ] Dynamic Type up to the largest accessibility sizes, on every screen
