@@ -13,8 +13,10 @@ import Foundation
 final class InMemoryPlaceStore: PlaceStore {
 
     var lastViewed: Place?
+    var recents: [Place]
 
-    init(lastViewed: Place? = nil) {
+    init(lastViewed: Place? = nil, recents: [Place] = []) {
         self.lastViewed = lastViewed
+        self.recents = recents
     }
 }

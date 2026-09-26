@@ -101,6 +101,48 @@ nonisolated struct Place: Codable, Hashable, Sendable {
         timeZone.secondsFromGMT(for: date) != deviceTimeZone.secondsFromGMT(for: date)
     }
 
+    // MARK: - Same city
+
+    /// How close two places must be to count as one city regardless of name
+    /// (SEARCH-RECENTS.md §3: "coordinates within ~1 km").
+    static let sameCityRadiusMeters = 1_000.0
+
+    /// Mean Earth radius; plenty accurate for a ~1 km threshold.
+    private static let earthRadiusMeters = 6_371_000.0
+
+    private static let degreesPerHalfTurn = 180.0
+
+    /// Whether two places are the same city for recents dedupe.
+    ///
+    /// Looser than `==` on purpose: a re-picked search result rarely has
+    /// identical coordinates. `==` stays exact because the "Back to {City}"
+    /// chip depends on it. Compares `name` rather than `locality`, since
+    /// `locality` is often nil and neighbourhoods (Mar Vista) keep their own
+    /// name (SEARCH-RECENTS.md §8).
+    func isSameCity(as other: Place) -> Bool {
+        let sameNames = name == other.name
+            && region == other.region
+            && country == other.country
+        return sameNames || distanceMeters(to: other) <= Self.sameCityRadiusMeters
+    }
+
+    /// Great-circle (haversine) distance. Kept here rather than using
+    /// `CLLocation` so the model layer stays free of CoreLocation.
+    private func distanceMeters(to other: Place) -> Double {
+        let lat1 = Self.radians(latitude)
+        let lat2 = Self.radians(other.latitude)
+        let deltaLat = lat2 - lat1
+        let deltaLon = Self.radians(other.longitude - longitude)
+
+        let a = sin(deltaLat / 2) * sin(deltaLat / 2)
+            + cos(lat1) * cos(lat2) * sin(deltaLon / 2) * sin(deltaLon / 2)
+        return 2 * Self.earthRadiusMeters * asin(min(1, a.squareRoot()))
+    }
+
+    private static func radians(_ degrees: Double) -> Double {
+        degrees * .pi / degreesPerHalfTurn
+    }
+
     // MARK: - Codable
 
     /// `isCurrentLocation` is absent, so a decoded place is never "current"

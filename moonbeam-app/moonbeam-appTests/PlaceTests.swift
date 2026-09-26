@@ -77,6 +77,96 @@ nonisolated struct PlaceTests {
         #expect(decoded.isCurrentLocation == false)
     }
 
+    // MARK: - isSameCity (SEARCH-RECENTS.md §3, §8)
+
+    /// ~0.0045° of latitude is ~500 m; ~0.0135° is ~1.5 km.
+    private static let latitudeFor500Meters = 0.0045
+    private static let latitudeFor1500Meters = 0.0135
+
+    private static func sydney(latitudeOffset: Double) -> Place {
+        Place(
+            name: sydney.name,
+            locality: sydney.locality,
+            region: sydney.region,
+            country: sydney.country,
+            latitude: sydney.latitude + latitudeOffset,
+            longitude: sydney.longitude,
+            timeZone: sydney.timeZone
+        )
+    }
+
+    @Test("A place is the same city as itself")
+    func sameCityAsItself() {
+        #expect(Self.sydney.isSameCity(as: Self.sydney))
+    }
+
+    /// Recents dedupe must survive a re-pick with slightly different
+    /// coordinates, which `==` doesn't.
+    @Test("Same name, region and country ~500 m apart is the same city, but not ==")
+    func sameCityNearbyCoordinates() {
+        let nearby = Self.sydney(latitudeOffset: Self.latitudeFor500Meters)
+
+        #expect(nearby.isSameCity(as: Self.sydney))
+        #expect(nearby != Self.sydney)
+    }
+
+    /// Names match, so distance doesn't matter (e.g. a city centroid vs a
+    /// suburb result that MapKit names after the city).
+    @Test("Same name, region and country far apart is still the same city")
+    func sameCityByNameAlone() {
+        #expect(Self.sydney(latitudeOffset: 1).isSameCity(as: Self.sydney))
+    }
+
+    /// Mar Vista keeps its own name but sits inside Los Angeles.
+    @Test("Different names within 1 km are the same city")
+    func sameCityByDistanceAlone() {
+        let losAngeles = Place(
+            name: "Los Angeles", region: "CA", country: "United States",
+            latitude: 34.00, longitude: -118.43, timeZone: .gmt
+        )
+        let marVista = Place(
+            name: "Mar Vista", region: "CA", country: "United States",
+            latitude: 34.00 + Self.latitudeFor500Meters, longitude: -118.43, timeZone: .gmt
+        )
+
+        #expect(marVista.isSameCity(as: losAngeles))
+        #expect(losAngeles.isSameCity(as: marVista))
+    }
+
+    @Test("Different names more than 1 km apart are different cities")
+    func differentCityBeyondRadius() {
+        let base = Place(name: "Here", latitude: 10, longitude: 10, timeZone: .gmt)
+        let other = Place(
+            name: "There", latitude: 10 + Self.latitudeFor1500Meters, longitude: 10, timeZone: .gmt
+        )
+
+        #expect(!other.isSameCity(as: base))
+    }
+
+    /// Portland, OR and Portland, ME: same name, different region.
+    @Test("Same name in a different region is a different city")
+    func sameNameDifferentRegion() {
+        let oregon = Place(
+            name: "Portland", region: "OR", country: "United States",
+            latitude: 45.52, longitude: -122.68, timeZone: .gmt
+        )
+        let maine = Place(
+            name: "Portland", region: "ME", country: "United States",
+            latitude: 43.66, longitude: -70.26, timeZone: .gmt
+        )
+
+        #expect(!oregon.isSameCity(as: maine))
+    }
+
+    /// Longitude wraps: two points either side of the antimeridian are close.
+    @Test("Distance is measured across the antimeridian")
+    func sameCityAcrossAntimeridian() {
+        let west = Place(name: "West", latitude: 0, longitude: 179.999, timeZone: .gmt)
+        let east = Place(name: "East", latitude: 0, longitude: -179.999, timeZone: .gmt)
+
+        #expect(west.isSameCity(as: east))
+    }
+
     // MARK: - Codable
 
     /// The time zone is the part that matters: it drives every displayed time,
