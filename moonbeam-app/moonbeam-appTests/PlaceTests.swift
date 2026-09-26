@@ -32,21 +32,6 @@ nonisolated struct PlaceTests {
         #expect(Self.sydney.displayName == "Sydney, NSW, Australia")
     }
 
-    @Test("displayName keeps a locality that differs from the name")
-    func displayNameWithDistinctLocality() {
-        let marVista = Place(
-            name: "Mar Vista",
-            locality: "Los Angeles",
-            region: "CA",
-            country: "United States",
-            latitude: 34.00,
-            longitude: -118.43,
-            timeZone: .gmt
-        )
-
-        #expect(marVista.displayName == "Mar Vista, Los Angeles, CA, United States")
-    }
-
     @Test("displayName omits missing parts")
     func displayNameOmitsMissingParts() {
         let singapore = Place(
@@ -104,6 +89,66 @@ nonisolated struct PlaceTests {
         #expect(decoded == Self.sydney)
         #expect(decoded.timeZone.identifier == "Australia/Sydney")
         #expect(decoded.displayName == "Sydney, NSW, Australia")
+    }
+
+    // MARK: - MapKit name mapping
+
+    /// A reverse geocode's `mapItem.name` is the nearest address, so a
+    /// current location must never be named after it.
+    @Test("A current location without a city name uses cityWithContext, never the map item's name")
+    func currentLocationNeverUsesTheMapItemName() {
+        #expect(
+            Place.placeName(
+                cityName: nil,
+                cityWithContext: "Sydney, NSW",
+                mapItemName: "1 Macquarie St",
+                isCurrentLocation: true
+            ) == "Sydney"
+        )
+        // Nothing city-like at all: no name, so the mapping fails and
+        // CoreLocationService throws couldNotIdentifyPlace.
+        #expect(
+            Place.placeName(
+                cityName: nil,
+                cityWithContext: nil,
+                mapItemName: "1 Macquarie St",
+                isCurrentLocation: true
+            ) == nil
+        )
+        #expect(
+            Place.placeName(
+                cityName: "  ",
+                cityWithContext: " , NSW",
+                mapItemName: "1 Macquarie St",
+                isCurrentLocation: true
+            ) == nil
+        )
+    }
+
+    /// A search result's map item names the locality that was searched for,
+    /// so it keeps the fallback.
+    @Test("A search result without a city name falls back to the map item's name")
+    func searchResultKeepsTheMapItemNameFallback() {
+        #expect(
+            Place.placeName(
+                cityName: nil,
+                cityWithContext: "Mar Vista, CA",
+                mapItemName: "Mar Vista",
+                isCurrentLocation: false
+            ) == "Mar Vista"
+        )
+    }
+
+    @Test("The city name wins for both sources", arguments: [true, false])
+    func cityNameWins(isCurrentLocation: Bool) {
+        #expect(
+            Place.placeName(
+                cityName: "Sydney",
+                cityWithContext: "Sydney, NSW",
+                mapItemName: "1 Macquarie St",
+                isCurrentLocation: isCurrentLocation
+            ) == "Sydney"
+        )
     }
 
     // MARK: - MapKit region mapping

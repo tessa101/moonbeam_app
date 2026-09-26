@@ -30,22 +30,33 @@ nonisolated extension Place {
     /// Builds a `Place` from a map item returned by reverse geocoding or a
     /// local search.
     ///
-    /// Fails when the item has no name or, more importantly, no time zone: the
-    /// whole app formats in the place's zone, so a place without one would
-    /// silently show the wrong times. MapKit populates `timeZone` for
-    /// geocoding and search results as a convenience.
+    /// Fails when the item has no usable name or, more importantly, no time
+    /// zone: the whole app formats in the place's zone, so a place without one
+    /// would silently show the wrong times. MapKit populates `timeZone` for
+    /// geocoding and search results as a convenience. `CoreLocationService`
+    /// turns a failure into `LocationError.couldNotIdentifyPlace`.
     init?(mapItem: MKMapItem, isCurrentLocation: Bool = false) {
         let address = mapItem.addressRepresentations
-        let cityName = address?.cityName
 
-        guard let name = (cityName ?? mapItem.name)?.trimmed, !name.isEmpty else { return nil }
+        guard
+            let name = Self.placeName(
+                cityName: address?.cityName,
+                cityWithContext: address?.cityWithContext,
+                mapItemName: mapItem.name,
+                isCurrentLocation: isCurrentLocation
+            )
+        else { return nil }
         guard let timeZone = mapItem.timeZone else { return nil }
 
+        // The city the name came from, when it came from a city at all (a
+        // search result can fall back to the map item's own name).
+        let cityName = address?.cityName?.trimmed
+            ?? (isCurrentLocation ? name : nil)
         let coordinate = mapItem.location.coordinate
 
         self.init(
             name: name,
-            locality: cityName?.trimmed,
+            locality: cityName,
             region: Self.regionComponent(cityWithContext: address?.cityWithContext, cityName: cityName),
             country: address?.regionName?.trimmed,
             latitude: coordinate.latitude,
@@ -53,6 +64,33 @@ nonisolated extension Place {
             timeZone: timeZone,
             isCurrentLocation: isCurrentLocation
         )
+    }
+
+    /// Chooses the name a mapped place goes by, or `nil` if there isn't a
+    /// safe one.
+    ///
+    /// The city comes first. After that the two sources differ:
+    /// - a **current location** never uses `mapItemName`: for a reverse
+    ///   geocode that's the nearest address ("1600 Main St"), which would put
+    ///   the user's street in the search field and in storage. It falls back
+    ///   to the leading component of `cityWithContext` instead, and to nothing
+    ///   at all after that
+    /// - a **search result** can use `mapItemName`: it's the name of the
+    ///   locality the user searched for and picked
+    static func placeName(
+        cityName: String?,
+        cityWithContext: String?,
+        mapItemName: String?,
+        isCurrentLocation: Bool
+    ) -> String? {
+        if let city = cityName?.trimmed { return city }
+
+        guard isCurrentLocation else { return mapItemName?.trimmed }
+
+        return cityWithContext?
+            .split(separator: ",")
+            .first
+            .flatMap { String($0).trimmed }
     }
 
     /// Extracts the administrative area ("NSW") from MapKit's address parts.

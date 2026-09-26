@@ -28,6 +28,7 @@ Xcode project: `moonbeam-app/moonbeam-app.xcodeproj`. Source lives in `moonbeam-
 moonbeam-app/moonbeam-app/
 ├── App/                 # @main entry, dependency wiring
 ├── Features/
+│   ├── Location/        # LocationViewModel, LocationScreen, LocationOffDialog
 │   └── MoonTable/       # MoonTableView, MoonTableViewModel
 ├── Services/
 │   ├── Moon/            # MoonService protocol + AstronomyEngineMoonService
@@ -43,7 +44,7 @@ moonbeam-appTests/       # Swift Testing, app-hosted: formatters, models, servic
 ```swift
 struct Place: Codable, Hashable, Sendable {
     let name: String            // "Sydney"
-    let locality: String?       // "Sydney" — the city, when it differs from name
+    let locality: String?       // "Sydney" — the city; repeats name, or nil if MapKit has none
     let region: String?         // "NSW"
     let country: String?        // "Australia"
     let latitude: Double

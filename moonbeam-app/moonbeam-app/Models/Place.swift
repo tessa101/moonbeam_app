@@ -23,8 +23,9 @@ nonisolated struct Place: Codable, Hashable, Sendable {
     /// it can be a neighbourhood when that's what the user searched for.
     let name: String
 
-    /// The city `name` sits in, when MapKit knows one and it differs from
-    /// `name` (e.g. name "Mar Vista", locality "Los Angeles").
+    /// The city, when MapKit reports one. The MapKit mapping always names a
+    /// place after its city when there is one, so in practice this either
+    /// repeats `name` or is `nil`; `displayName` skips the repeat.
     let locality: String?
 
     /// State, province or other primary administrative area, e.g. "NSW".
