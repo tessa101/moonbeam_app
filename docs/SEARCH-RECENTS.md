@@ -1,7 +1,7 @@
 # Step 2.1 Change: Search sheet with recent cities
 
-**Status:** Ready to build · **Decided:** 2026-09-26 · **Owner:** Tessa
-**Amends:** Step 2 location spec (`docs/LOCATION.md`). Update LOCATION.md to match when this lands.
+**Status:** Built 2026-09-26 (commits 648f049 → 3e9d695); device QA pending · **Decided:** 2026-09-26 · **Owner:** Tessa
+**Amends:** Step 2 location spec (`docs/LOCATION.md`), which now points here and strikes through what this supersedes.
 
 ---
 
@@ -122,7 +122,7 @@ Swipe-to-delete on a recent row. No "Clear all" in V1.
 - `Services/Location/PlaceStore.swift`: `recents` + shared cap/dedupe/remove extension
 - `Services/Location/UserDefaultsPlaceStore.swift`: new `recentPlaces` key + one-time migration
 - `Services/Location/InMemoryPlaceStore.swift`: `recents` storage
-- `Models/Place.swift`: add `isSameCity(as:)`. **Leave `==` unchanged** (the "Back to {City}" chip depends on it)
+- `Models/Place.swift`: add `isSameCity(as:)`. **Leave `==` unchanged** (`removeRecent` relies on exact equality to delete only the swiped row)
 - `Features/Location/LocationViewModel.swift`: remove search state; add `isSearchPresented`, `presentSearch()`, `select(_ place:)`; `choose`/`goBack` add to recents; `show()` stops writing a search field
 - `Features/Location/LocationScreen.swift`: field → button that opens the sheet; remove select-all and (x)
 - `moonbeam-appTests/LocationViewModelTests.swift`: move search tests to the sheet test file; add flow tests
@@ -137,11 +137,12 @@ protocol PlaceStore {
 
 extension PlaceStore {
     static var maximumRecents: Int { 8 }
-    mutating func addRecent(_ place: Place)    // dedupe via isSameCity → move to front → cap
-    mutating func removeRecent(_ place: Place)
+    func addRecent(_ place: Place)    // dedupe via isSameCity → move to front → cap
+    func removeRecent(_ place: Place) // exact ==, so a swipe deletes only its own row
 }
 ```
 Deliberate deviation from §4's `recents { get }`: the settable requirement lets both stores share one implementation of cap and dedupe.
+**As built:** `PlaceStore` is class-only (`AnyObject`), so the helpers aren't `mutating` and callers can hold the store in a `let` (DECISIONS.md 2026-09-26).
 
 ### `isSameCity(as:)`
 Same `name` + `region` + `country`, **or** coordinates within ~1 km. Uses `name` rather than `locality` because `locality` is often nil and neighbourhoods (Mar Vista) keep their own name.
@@ -166,7 +167,7 @@ enum ListState: Equatable {
 - Whether the old `lastViewed` was detected can't be known (`isCurrentLocation` isn't persisted), so it's seeded regardless, per §4. Worst case: one detected city appears once and can be swiped away.
 
 ### Known edge cases (accepted)
-- The chip can add a detected place to recents when `lastViewed` came from an earlier session's "Use my location" (flag isn't persisted). Rare; accepted.
+- ~~The chip can add a detected place to recents.~~ Moot: the chip is removed (Decision C). Remaining case: the one-time migration may seed a detected city (see Migration).
 - ~~Possible existing bug: `backToPlace` compares by exact coordinates.~~ Moot: the chip is removed (Decision C).
 
 ### Docs to update in the final step
@@ -177,3 +178,5 @@ LOCATION.md §2 (recents no longer out of scope), §3 select-all and (x) (supers
 2. `SearchSheetViewModel` + tests
 3. `SearchSheet` UI + wiring into `LocationViewModel`/`LocationScreen` + flow tests
 4. Docs + commit
+
+Also shipped: Decision C, removing the chip (a137f08), between steps 3 and 4.

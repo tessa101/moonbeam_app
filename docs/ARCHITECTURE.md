@@ -121,9 +121,14 @@ anywhere) with different failure modes. See LOCATION.md.
 
 ## 6. Persistence
 
-One thing: the last-viewed place, via `PlaceStore` → `UserDefaults` (LOCATION.md §6). Stored as a
-JSON *array* capped at one entry, so the deferred recent-searches feature becomes a cap change
-rather than a migration. **TBD:** saved places in SwiftData, if that feature happens.
+Two lists, via `PlaceStore` → `UserDefaults`, each stored as a JSON array:
+- **Last-viewed place** (`lastViewedPlaces`, capped at 1; LOCATION.md §6). Can be a detected
+  location; launch falls back to it when location is off or fails.
+- **Recent cities** (`recentPlaces`, capped at 8, picked places only; SEARCH-RECENTS.md §3, §8).
+  Seeded once from the last-viewed place on first run after Step 2.1.
+
+They're separate because the last-viewed place can be detected and recents can't.
+**TBD:** saved places in SwiftData, if that feature happens.
 
 ## 7. Apple frameworks
 

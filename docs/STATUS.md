@@ -50,8 +50,8 @@ _Last updated: 2026-09-26 (Step 2.1: search sheet with recent cities)_
   - Decisions A–C: the location row closes the sheet first; the row is hidden when viewing the
     detected location; the "Back to {City}" chip is removed
   - **129 tests / 217 cases across 10 suites, all passing** in Xcode's runner, with no build
-    warnings. Sheet auto-focus was checked in the iPhone 17 simulator: the keyboard comes up on
-    open. Decisions are in DECISIONS.md 2026-09-26.
+    warnings. Sheet auto-focus was checked in the iPhone 17 simulator (keyboard comes up on open)
+    and on device by Tessa (field focused on open). Decisions are in DECISIONS.md 2026-09-26.
   - **Device QA pending** (see Next, item 5).
 
 ## Next
@@ -103,7 +103,7 @@ _Last updated: 2026-09-26 (Step 2.1: search sheet with recent cities)_
      - Dynamic Type at the largest sizes, and VoiceOver on the screen and dialog
    - [x] Step 2.1 search sheet + recents (SEARCH-RECENTS.md), built and unit-tested
    - [ ] **Step 2.1 device QA, by hand** (SEARCH-RECENTS.md §6):
-     - tapping the main-screen field opens the sheet with the field focused and keyboard up
+     - [x] tapping the main-screen field opens the sheet with the field focused (confirmed on device 2026-09-26)
      - recents appear with no typing; 1 character filters them; 2+ shows type-ahead; clearing returns to recents
      - picking dismisses the sheet, loads the moon and moves that city to the top of recents
      - max 8, no duplicates, swipe to delete, recents survive a relaunch
