@@ -101,6 +101,10 @@ struct DateControl: View {
                 announceDate()
             }
             .buttonStyle(.bordered)
+            // NFR4: the bordered capsule is ~34 pt tall. Pad the tap area to
+            // 44 pt without changing how it looks.
+            .frame(minHeight: Self.minimumHitTarget)
+            .contentShape(Rectangle())
             .accessibilityLabel("Go to today")
         }
     }
