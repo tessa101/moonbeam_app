@@ -67,13 +67,14 @@ _Last updated: 2026-09-26 (Step 3: date selection)_
   - Review follow-ups (07478c7 → b4e5b8e, plus the docs):
     - shorter date label ("Sun, Sep 27"; year only in another year)
     - 44 pt tap target for the Today chip
-    - date field fills the row; Today chip always visible and disabled on today; location button
-      above the date control
+    - date field fills the row; location button above the date control
+    - Today chip removed from the date row; back to today is the calendar sheet's Today button,
+      disabled on today
     - no duplicate city/date in the table
-  - **180 tests / 274 cases across 14 suites, all passing** in Xcode's runner on the iPhone 17
+  - **179 tests / 273 cases across 14 suites, all passing** in Xcode's runner on the iPhone 17
     simulator. No build warnings.
   - Checked in the iPhone 17 simulator:
-    - ‹ / › update the label, chip and table
+    - ‹ / › update the label and table
     - the sheet fits at medium for a five-row month
     - the wheel keeps the sheet open, and Done appears
     - a day tap picks the day and closes the sheet
@@ -145,8 +146,8 @@ _Last updated: 2026-09-26 (Step 3: date selection)_
    - VoiceOver:
      - the date field reads "Date, Today, Saturday, …" and swipe up/down moves a day
      - ‹ / › announce the new date and read "dimmed" at ±366
-     - the chip reads "Go to today", and "dimmed" on today
-   - Dynamic Type at accessibility sizes: the chip moves under the row, and the sheet opens at large
+     - the calendar sheet's Today button reads "dimmed" on today
+   - Dynamic Type at accessibility sizes: the date row stays usable, and the sheet opens at large
    - A six-row month (e.g. January 2027) in the calendar sheet at medium
    - Mar Vista on Oct 3 shows the no-moonrise state (covered by a unit test; not yet seen in the app)
    - Following today across the place's midnight: background the app, then foreground it after midnight

@@ -82,7 +82,7 @@ struct LocationViewModelDayTests {
 
     // MARK: - Default state
 
-    @Test("Starts on today with the Today chip disabled, and the service gets today")
+    @Test("Starts on today with Today disabled, and the service gets today")
     func startsOnToday() throws {
         let clock = TestClock(try Self.date(2026, 9, 26, hour: 20, in: Self.losAngelesZone))
         let service = FakeMoonService()
@@ -110,9 +110,9 @@ struct LocationViewModelDayTests {
         #expect(relaunched.daySelection == .today)
     }
 
-    // MARK: - Previous, next, Today chip
+    // MARK: - Previous and next
 
-    @Test("Next day: spoken as Tomorrow, chip enabled, service gets Sep 27 in the place's zone")
+    @Test("Next day: spoken as Tomorrow, Today enabled, service gets Sep 27 in the place's zone")
     func nextDay() throws {
         let clock = TestClock(try Self.date(2026, 9, 26, hour: 20, in: Self.losAngelesZone))
         let service = FakeMoonService()
@@ -142,22 +142,6 @@ struct LocationViewModelDayTests {
         #expect(!viewModel.dateLabel.contains("Yesterday"))
         #expect(viewModel.dateAccessibilityValue.hasPrefix("Yesterday, "))
         #expect(!viewModel.isOnToday)
-    }
-
-    @Test("Today chip returns to today and disables itself")
-    func todayChip() throws {
-        let clock = TestClock(try Self.date(2026, 9, 26, hour: 20, in: Self.losAngelesZone))
-        let service = FakeMoonService()
-        let viewModel = Self.makeViewModel(clock: clock, moonService: service)
-        viewModel.select(Self.marVista)
-        viewModel.nextDay()
-        viewModel.nextDay()
-
-        viewModel.goToToday()
-
-        #expect(viewModel.daySelection == .today)
-        #expect(viewModel.isOnToday)
-        #expect(service.requestedDates.last == (try Self.date(2026, 9, 26, hour: 0, in: Self.losAngelesZone)))
     }
 
     // MARK: - Calendar sheet
@@ -239,18 +223,24 @@ struct LocationViewModelDayTests {
         #expect(!viewModel.isCalendarPresented)
     }
 
-    @Test("The sheet's Today button returns to today and closes the sheet")
+    /// The only way back to today (the main-screen chip was removed in the
+    /// Step 3 review). Enabled off today, disabled once there.
+    @Test("The sheet's Today button returns to today, closes the sheet, and is then disabled")
     func calendarTodayButton() throws {
         let clock = TestClock(try Self.date(2026, 9, 26, hour: 20, in: Self.losAngelesZone))
-        let viewModel = Self.makeViewModel(clock: clock)
+        let service = FakeMoonService()
+        let viewModel = Self.makeViewModel(clock: clock, moonService: service)
         viewModel.select(Self.marVista)
         viewModel.select(day: DateComponents(year: 2026, month: 10, day: 3))
         viewModel.presentCalendar()
+        #expect(!viewModel.isOnToday)
 
         viewModel.goToToday()
 
         #expect(viewModel.daySelection == .today)
         #expect(!viewModel.isCalendarPresented)
+        #expect(viewModel.isOnToday)
+        #expect(service.requestedDates.last == (try Self.date(2026, 9, 26, hour: 0, in: Self.losAngelesZone)))
     }
 
     // MARK: - Calendar sheet: the month/year wheel

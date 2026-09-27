@@ -333,9 +333,10 @@ final class LocationViewModel {
         )
     }
 
-    /// The selected day is the place's today, so the Today chip is disabled.
-    /// Reads the resolved day rather than the case, so a picked day that has
-    /// become today counts too. With no place there's nothing to go back to.
+    /// The selected day is the place's today, so the calendar sheet's Today
+    /// button is disabled. Reads the resolved day rather than the case, so a
+    /// picked day that has become today counts too. With no place there's
+    /// nothing to go back to.
     var isOnToday: Bool {
         guard let place else { return true }
         return selectedDayOffset(for: place) == 0
@@ -359,8 +360,8 @@ final class LocationViewModel {
         moveDay(by: 1)
     }
 
-    /// The Today chip, and the calendar sheet's Today button, which closes
-    /// the sheet like any other pick.
+    /// The calendar sheet's Today button, the only "back to today" control.
+    /// Closes the sheet like any other pick.
     func goToToday() {
         setDaySelection(.today)
         calendarDraft = nil

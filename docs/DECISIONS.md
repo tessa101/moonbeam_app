@@ -31,6 +31,11 @@
   shape, and the chip's place is learnable. `showsTodayChip` → `isOnToday`, with the meaning
   inverted. With no place it's `true`, so the chip is disabled (the control is hidden then anyway).
   VoiceOver reads it as "Go to today, dimmed".
+- **The Today chip is removed from the date row** (supersedes "always visible, disabled on today"
+  above). The row is just ‹ [field] ›, and going back to today is the calendar sheet's Today button,
+  which is disabled when the selected day is already today (`isOnToday`). The trade-off: back to
+  today is now two taps (open the calendar, then Today). That's logged in DESIGN-REVIEW.md, to
+  revisit with the relative-day chips idea.
 - **Location screen order:** prompt → search field → "Use my location" → finding/failed status →
   date control → time zone label → moon table. The location button and its status now sit with
   the search field they're the alternative to, and the date control sits directly above what it

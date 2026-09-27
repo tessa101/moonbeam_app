@@ -41,7 +41,7 @@ _Started: 2026-09-26_
 
 ## Date control and calendar sheet (Step 3, built plain; DATE.md §9)
 - [ ] **Copy that assumes "tonight"** when another date is picked: the screen prompt "Where are you watching the moon tonight?" and the midnight note (e.g. "Oct 3 · at midnight")
-- [x] ~~**Today chip placement**~~ Now always visible beside ›, and dimmed (disabled) on today, so the row keeps its shape (Step 3 review, 2026-09-26). The field's "Today ·" prefix is gone
+- [ ] Getting back to today takes two taps (open calendar → Today). Revisit with the relative-day chips idea.
 - [ ] **Arrow styling and hit areas; the field's chevron**
 - [ ] **Show the time zone in the date** when the place's day differs from the device's?
 - [ ] **Calendar sheet header:** Today · title · Cancel, plus Done after the month/year wheel. Check it's clear and fits at large text sizes. Also check that six-row months fit the medium detent (it scrolls)

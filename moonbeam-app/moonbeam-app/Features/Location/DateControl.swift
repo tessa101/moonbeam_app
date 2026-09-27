@@ -5,8 +5,8 @@
 
 import SwiftUI
 
-/// The date row under the city: ‹ [📅 Sun, Sep 27 ⌄] › (Today), with the
-/// Today chip always shown and disabled on today (DATE.md §1, §5).
+/// The date row under the city: ‹ [📅 Sun, Sep 27 ⌄] › (DATE.md §1, §5).
+/// Going back to today is the calendar sheet's Today button.
 ///
 /// The field fills the space between the arrows, so the row doesn't shift as
 /// the date text changes length.
@@ -17,26 +17,12 @@ struct DateControl: View {
 
     let viewModel: LocationViewModel
 
-    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
-
-    /// DATE.md §5: at least 44×44 pt for ‹, › and the chip.
+    /// DATE.md §5: at least 44×44 pt for ‹ and ›.
     private static let minimumHitTarget: CGFloat = 44
-
-    var body: some View {
-        // At accessibility text sizes the row can't fit the chip too, so the
-        // chip moves under it.
-        let layout = dynamicTypeSize.isAccessibilitySize
-            ? AnyLayout(VStackLayout(alignment: .leading))
-            : AnyLayout(HStackLayout())
-        layout {
-            dayRow
-            todayChip
-        }
-    }
 
     // MARK: - Row
 
-    private var dayRow: some View {
+    var body: some View {
         HStack(spacing: 4) {
             arrowButton("Previous day", systemImage: "chevron.left", enabled: viewModel.canGoBack) {
                 viewModel.previousDay()
@@ -95,28 +81,11 @@ struct DateControl: View {
         .disabled(!enabled)
     }
 
-    // MARK: - Today chip
-
-    /// Always shown, so the row keeps its shape. Disabled (dimmed, and read
-    /// as dimmed by VoiceOver) when already on today.
-    private var todayChip: some View {
-        Button("Today") {
-            viewModel.goToToday()
-            announceDate()
-        }
-        .buttonStyle(.bordered)
-        // NFR4: the bordered capsule is ~34 pt tall. Pad the tap area to
-        // 44 pt without changing how it looks.
-        .frame(minHeight: Self.minimumHitTarget)
-        .contentShape(Rectangle())
-        .disabled(viewModel.isOnToday)
-        .accessibilityLabel("Go to today")
-    }
-
     // MARK: - Accessibility
 
-    /// DATE.md §5: changing the day announces the new date. The adjustable
-    /// field doesn't need this, since VoiceOver reads its new value.
+    /// DATE.md §5: changing the day with ‹ or › announces the new date. The
+    /// adjustable field doesn't need this, since VoiceOver reads its new
+    /// value.
     private func announceDate() {
         AccessibilityNotification.Announcement(viewModel.dateAccessibilityValue).post()
     }

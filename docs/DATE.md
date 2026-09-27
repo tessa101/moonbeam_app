@@ -16,14 +16,14 @@
 Placed directly under the city name, above the moon table (sketch #3).
 
 ```
- ‹   [📅  Sat, Sep 26  ⌄]   ›      (Today)
+ ‹   [📅  Sat, Sep 26  ⌄]   ›
 ```
 
 - **Field (center):** calendar icon + date label + chevron. It fills the space between ‹ and ›, with the label centred, so its width doesn't change with the date text. Tapping it opens the calendar sheet (§2).
 - **Previous ‹ / Next › buttons** on either side of the field: move one day back or forward. The moon data updates right away. No animation in this step (swipe/card transitions are V2, §7).
-- **Today chip:** always visible, beside ›. Tapping it goes back to today. **Disabled (dimmed) when the selected day is already today** in the place's time zone (Step 3 review, 2026-09-26; it used to be hidden then). At accessibility text sizes it moves under the row. Tap target at least 44 pt.
+- **No Today chip on the main screen** (removed in the Step 3 review, 2026-09-26). The row is just ‹ [field] ›. Going back to today is the calendar sheet's **Today** button (§2): open the calendar, then tap Today.
 - **Label format** (shortened in the Step 3 review, 2026-09-26):
-  - Weekday, month and day: `Sun, Sep 27`. No relative word; the Today chip covers being off today.
+  - Weekday, month and day: `Sun, Sep 27`. No relative word.
   - The year only when the day is in a different year from the place's today: `Mon, Jan 4, 2027`.
   - The VoiceOver value keeps the relative word and the year: "Tomorrow, Sunday, September 27, 2026" (§5).
   - Use the device locale's date format (`Date.FormatStyle`). "Today" and the year are the place's (§3), not the device's.
@@ -44,7 +44,7 @@ Placed directly under the city name, above the moon table (sketch #3).
 - **Two modes:**
   - **Following today** (default): the selection tracks the place's today. Changing city recalculates it (switching to Sydney can move the label from Sep 26 to Sep 27). When the app comes back to the foreground after the place's midnight, it moves to the new day. It doesn't move while the app stays open in the foreground; the next foreground or day action catches up (Decision 1, 2026-09-26).
   - **Picked date**: set by ‹, ›, or the calendar. Stays on that calendar day when the city changes (Oct 3 in LA → Oct 3 in Sydney).
-  - Landing on the place's today with ‹/› or the calendar goes back to "following today". The Today chip does the same.
+  - Landing on the place's today with ‹/› or the calendar goes back to "following today". The calendar sheet's Today button does the same.
 - **Past dates are allowed** (within the range).
 - **Not saved:** every launch opens on today. The picked date lives only for the session.
 - **Illumination/phase** keep FR5: sampled at the end of the **selected** day in the place's time zone (ASTRONOMY.md §3). Nothing changes in the engine.
@@ -64,7 +64,7 @@ Placed directly under the city name, above the moon table (sketch #3).
   - `private(set) var daySelection: DaySelection = .today`
   - `func previousDay()`, `func nextDay()`, `func goToToday()`, `func select(day: DateComponents)`
   - `var isCalendarPresented = false`
-  - Computed: `dateLabel`, `dateAccessibilityValue` (as built: a value, not a label; see §10), `isOnToday` (as built: disables the chip; was `showsTodayChip`), `canGoBack`, `canGoForward`
+  - Computed: `dateLabel`, `dateAccessibilityValue` (as built: a value, not a label; see §10), `isOnToday` (as built: disables the calendar sheet's Today button; was `showsTodayChip`), `canGoBack`, `canGoForward`
   - Passes `daySelection.startOfDay(in: place.timeZone, now:)` to `MoonService.moonDay(for:on:)` wherever it passes today now.
   - Recompute on place change and in `sceneDidBecomeActive()` (the midnight rollover in §3).
 - **Inject a clock** (`now: () -> Date`, default `Date.init`) into the view model so tests can pin "now".
@@ -76,7 +76,7 @@ Placed directly under the city name, above the moon table (sketch #3).
 - ‹ / › buttons: labels **"Previous day"** / **"Next day"**; at least 44×44 pt hit targets; disabled state announced.
 - Date field: button, label **"Date"**, value e.g. **"Today, Saturday, September 26, 2026"** (the relative word and year are always spoken, even though the visible label is short), hint **"Opens calendar"**.
 - Also give the field `.accessibilityAdjustableAction` so VoiceOver swipe up/down moves one day. That's the VoiceOver version of ‹/› (and of swiping later).
-- Today chip: label **"Go to today"**.
+- Calendar sheet Today button: disabled (read as dimmed) when the selected day is already today.
 - Changing the day announces the new date (the moon table updates with it).
 
 ## 6. Tests (Swift Testing, fixed clock + fakes as before)
@@ -89,9 +89,9 @@ Placed directly under the city name, above the moon table (sketch #3).
 - Clamps at ±366 days
 
 **LocationViewModel**
-- Starts on `.today`; Today chip disabled
-- Next day → spoken "Tomorrow, …", chip enabled, `MoonService` called with Sep 27 in the place's time zone
-- Today chip → `.today`, chip disabled
+- Starts on `.today`; the sheet's Today button disabled
+- Next day → spoken "Tomorrow, …", Today enabled, `MoonService` called with Sep 27 in the place's time zone
+- The sheet's Today button → `.today`, sheet closed, Today disabled
 - Calendar pick sets the day and closes the sheet; Cancel changes nothing; picking today → `.today`
 - City change while following today → follows the new city's today; while on a picked date → same calendar day in the new city
 - `sceneDidBecomeActive` after the place's midnight: following today → advances; picked date → unchanged
@@ -107,7 +107,7 @@ Placed directly under the city name, above the moon table (sketch #3).
 - [ ] Date control shows under the city with ‹ and ›; the default label is "Today · {date}"
 - [ ] ‹ / › change the day by one and the moon data updates
 - [ ] Tapping the field opens a month calendar; tapping a date sets it and closes the sheet
-- [ ] Today chip is always visible, enabled only off today, and one tap returns to today
+- [ ] The calendar sheet's Today button is enabled only off today, and one tap returns to today
 - [ ] "Today" is the place's today, not the device's
 - [ ] Past dates work; range is ±366 days with the buttons disabled at the ends
 - [ ] Relaunch opens on today
@@ -124,7 +124,7 @@ Placed directly under the city name, above the moon table (sketch #3).
 ## 9. For DESIGN-REVIEW.md
 
 - Copy that assumes "tonight" when another date is picked: screen prompt "Where are you watching the moon tonight?" and the midnight note → e.g. "Oct 3 · at midnight"
-- ~~Today chip placement: beside the field vs. under it; whether the chip or the field's "Today ·" prefix is enough on its own~~ Settled in the Step 3 review: always visible beside ›, dimmed on today; the prefix is gone
+- ~~Today chip placement: beside the field vs. under it; whether the chip or the field's "Today ·" prefix is enough on its own~~ Settled in the Step 3 review: the chip was removed; Today is in the calendar sheet, and the prefix is gone
 - Arrow styling and hit areas; the field's chevron
 - Should the date show the time zone when the place's day differs from the device's?
 
@@ -182,9 +182,9 @@ nonisolated enum DaySelection: Equatable, Sendable {
 
 ### Deviations from §4
 - **Formatting** lives in `Formatting/DayLabelFormatter`, with the locale injectable. The view model exposes `dateLabel` and `dateAccessibilityValue`.
-- **Date field accessibility:** the label is "Date", the value is "Today, Saturday, September 26, 2026", and the hint is "Opens calendar". As an adjustable element, VoiceOver reads the new value after each swipe. Taps on ‹ / › and the chip post an announcement.
+- **Date field accessibility:** the label is "Date", the value is "Today, Saturday, September 26, 2026", and the hint is "Opens calendar". As an adjustable element, VoiceOver reads the new value after each swipe. Taps on ‹ / › post an announcement.
 - **Sheet API:** `calendarDate` (get/set), `calendarRange`, `calendarTimeZone`, `calendarDraft`, `showsCalendarDone` and `confirmCalendarDraft()` let the view bind the picker without doing calendar math.
-- **Picked days stay `.day`** even when they become today (rollover or city change). The chip and the prefix come from the resolved day.
+- **Picked days stay `.day`** even when they become today (rollover or city change). `isOnToday` comes from the resolved day.
 - **Value tests** for Sydney 2026-09-23 and Mar Vista 2026-10-03 are engine-derived regression guards.
 - **View model tests** are in their own suite (`LocationViewModelDayTests`). `LocationViewModelTests` is unchanged.
 
@@ -201,4 +201,5 @@ nonisolated enum DaySelection: Equatable, Sendable {
 - `66cfa63`: shorter date label (§1).
 - `b4e5b8e`: 44 pt tap target for the Today chip.
 - Steady date field, persistent Today chip, and location button placement (see DECISIONS.md).
+- Today chip removed from the date row; Today lives only in the calendar sheet.
 - Docs, including the same-day-number case in DECISIONS.md.

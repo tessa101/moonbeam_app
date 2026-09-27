@@ -38,7 +38,9 @@ struct CalendarSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
+                    // The only way back to today; nothing to do when already there.
                     Button("Today", action: viewModel.goToToday)
+                        .disabled(viewModel.isOnToday)
                 }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Cancel") {
