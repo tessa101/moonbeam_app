@@ -333,11 +333,12 @@ final class LocationViewModel {
         )
     }
 
-    /// Only off the place's today. Reads the resolved day rather than the
-    /// case, so a picked day that has become today hides it too.
-    var showsTodayChip: Bool {
-        guard let place else { return false }
-        return selectedDayOffset(for: place) != 0
+    /// The selected day is the place's today, so the Today chip is disabled.
+    /// Reads the resolved day rather than the case, so a picked day that has
+    /// become today counts too. With no place there's nothing to go back to.
+    var isOnToday: Bool {
+        guard let place else { return true }
+        return selectedDayOffset(for: place) == 0
     }
 
     var canGoBack: Bool {

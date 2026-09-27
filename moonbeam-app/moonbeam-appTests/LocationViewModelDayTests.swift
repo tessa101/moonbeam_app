@@ -82,7 +82,7 @@ struct LocationViewModelDayTests {
 
     // MARK: - Default state
 
-    @Test("Starts on today with no Today chip, and the service gets today")
+    @Test("Starts on today with the Today chip disabled, and the service gets today")
     func startsOnToday() throws {
         let clock = TestClock(try Self.date(2026, 9, 26, hour: 20, in: Self.losAngelesZone))
         let service = FakeMoonService()
@@ -91,7 +91,7 @@ struct LocationViewModelDayTests {
         viewModel.select(Self.marVista)
 
         #expect(viewModel.daySelection == .today)
-        #expect(!viewModel.showsTodayChip)
+        #expect(viewModel.isOnToday)
         #expect(!viewModel.dateLabel.contains("Today"))
         #expect(viewModel.dateAccessibilityValue.hasPrefix("Today, "))
         #expect(service.requestedDates.last == (try Self.date(2026, 9, 26, hour: 0, in: Self.losAngelesZone)))
@@ -112,7 +112,7 @@ struct LocationViewModelDayTests {
 
     // MARK: - Previous, next, Today chip
 
-    @Test("Next day: spoken as Tomorrow, chip shown, service gets Sep 27 in the place's zone")
+    @Test("Next day: spoken as Tomorrow, chip enabled, service gets Sep 27 in the place's zone")
     func nextDay() throws {
         let clock = TestClock(try Self.date(2026, 9, 26, hour: 20, in: Self.losAngelesZone))
         let service = FakeMoonService()
@@ -125,7 +125,7 @@ struct LocationViewModelDayTests {
         #expect(viewModel.daySelection == .day(year: 2026, month: 9, day: 27))
         #expect(!viewModel.dateLabel.contains("Tomorrow"))
         #expect(viewModel.dateAccessibilityValue.hasPrefix("Tomorrow, "))
-        #expect(viewModel.showsTodayChip)
+        #expect(!viewModel.isOnToday)
         #expect(service.requestedDates.last == sep27)
         #expect(viewModel.moonTable?.day == sep27)
     }
@@ -141,10 +141,10 @@ struct LocationViewModelDayTests {
         #expect(viewModel.daySelection == .day(year: 2026, month: 9, day: 25))
         #expect(!viewModel.dateLabel.contains("Yesterday"))
         #expect(viewModel.dateAccessibilityValue.hasPrefix("Yesterday, "))
-        #expect(viewModel.showsTodayChip)
+        #expect(!viewModel.isOnToday)
     }
 
-    @Test("Today chip returns to today and hides itself")
+    @Test("Today chip returns to today and disables itself")
     func todayChip() throws {
         let clock = TestClock(try Self.date(2026, 9, 26, hour: 20, in: Self.losAngelesZone))
         let service = FakeMoonService()
@@ -156,7 +156,7 @@ struct LocationViewModelDayTests {
         viewModel.goToToday()
 
         #expect(viewModel.daySelection == .today)
-        #expect(!viewModel.showsTodayChip)
+        #expect(viewModel.isOnToday)
         #expect(service.requestedDates.last == (try Self.date(2026, 9, 26, hour: 0, in: Self.losAngelesZone)))
     }
 
@@ -235,7 +235,7 @@ struct LocationViewModelDayTests {
         viewModel.select(day: DateComponents(year: 2026, month: 9, day: 26))
 
         #expect(viewModel.daySelection == .today)
-        #expect(!viewModel.showsTodayChip)
+        #expect(viewModel.isOnToday)
         #expect(!viewModel.isCalendarPresented)
     }
 
@@ -367,7 +367,7 @@ struct LocationViewModelDayTests {
         #expect(!viewModel.isCalendarPresented)
         #expect(!viewModel.canGoBack)
         #expect(!viewModel.canGoForward)
-        #expect(!viewModel.showsTodayChip)
+        #expect(viewModel.isOnToday)
     }
 
     // MARK: - City change (DATE.md §3)

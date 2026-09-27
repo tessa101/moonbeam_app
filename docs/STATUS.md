@@ -67,6 +67,8 @@ _Last updated: 2026-09-26 (Step 3: date selection)_
   - Review follow-ups (07478c7 → b4e5b8e, plus the docs):
     - shorter date label ("Sun, Sep 27"; year only in another year)
     - 44 pt tap target for the Today chip
+    - date field fills the row; Today chip always visible and disabled on today; location button
+      above the date control
     - no duplicate city/date in the table
   - **180 tests / 274 cases across 14 suites, all passing** in Xcode's runner on the iPhone 17
     simulator. No build warnings.
@@ -143,7 +145,7 @@ _Last updated: 2026-09-26 (Step 3: date selection)_
    - VoiceOver:
      - the date field reads "Date, Today, Saturday, …" and swipe up/down moves a day
      - ‹ / › announce the new date and read "dimmed" at ±366
-     - the chip reads "Go to today"
+     - the chip reads "Go to today", and "dimmed" on today
    - Dynamic Type at accessibility sizes: the chip moves under the row, and the sheet opens at large
    - A six-row month (e.g. January 2027) in the calendar sheet at medium
    - Mar Vista on Oct 3 shows the no-moonrise state (covered by a unit test; not yet seen in the app)

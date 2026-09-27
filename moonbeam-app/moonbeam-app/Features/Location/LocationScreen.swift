@@ -25,23 +25,25 @@ struct LocationScreen: View {
 
                 searchButton
 
-                // DATE.md §1: under the city, above the moon table.
-                if viewModel.place != nil {
-                    DateControl(viewModel: viewModel)
-                }
-
-                if viewModel.isLocating {
-                    ProgressView("Finding your location…")
-                }
-
+                // Location controls and their status stay together, under
+                // the search field that they're the alternative to.
                 if viewModel.showsUseMyLocation {
                     Button("Use my location") {
                         Task { await viewModel.useMyLocation() }
                     }
                 }
 
+                if viewModel.isLocating {
+                    ProgressView("Finding your location…")
+                }
+
                 if viewModel.locationFailed {
                     Text("Couldn't find your location. Try again, or search for a city.")
+                }
+
+                // DATE.md §1: above the time zone label and the moon table.
+                if viewModel.place != nil {
+                    DateControl(viewModel: viewModel)
                 }
 
                 if let timeZoneLabel = viewModel.timeZoneLabel {

@@ -23,6 +23,18 @@
   the wheel (the day number is kept, and the month changes), so Decision 4's detection treats it as
   a draft and shows Done instead of closing. It's one extra tap in an uncommon case. A custom
   calendar (DATE.md §8, V2) would report taps directly and remove the guess.
+- **The date field fills the space between ‹ and ›, with the label centred.** Its width no longer
+  follows the date text, so the arrows and chip don't shift as you step through days. The row
+  switches to stacked (chip under the row) only at accessibility text sizes, so the default-size
+  `ViewThatFits` fallback is gone.
+- **The Today chip is always visible, and disabled on today** instead of hidden. The row keeps one
+  shape, and the chip's place is learnable. `showsTodayChip` → `isOnToday`, with the meaning
+  inverted. With no place it's `true`, so the chip is disabled (the control is hidden then anyway).
+  VoiceOver reads it as "Go to today, dimmed".
+- **Location screen order:** prompt → search field → "Use my location" → finding/failed status →
+  date control → time zone label → moon table. The location button and its status now sit with
+  the search field they're the alternative to, and the date control sits directly above what it
+  changes.
 
 ### 2026-09-26 · Step 3: date selection (DATE.md)
 - **Decision 1: the midnight rollover happens only when the app comes back to the foreground.**

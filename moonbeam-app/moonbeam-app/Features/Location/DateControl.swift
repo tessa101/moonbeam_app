@@ -5,8 +5,11 @@
 
 import SwiftUI
 
-/// The date row under the city: ‹ [📅 Today · Sat, Sep 26, 2026 ⌄] › and a
-/// Today chip when off today (DATE.md §1, §5).
+/// The date row under the city: ‹ [📅 Sun, Sep 27 ⌄] › (Today), with the
+/// Today chip always shown and disabled on today (DATE.md §1, §5).
+///
+/// The field fills the space between the arrows, so the row doesn't shift as
+/// the date text changes length.
 ///
 /// Plain visuals, like the rest of Step 2. All decisions live in
 /// `LocationViewModel`; this view only lays out and announces.
@@ -14,21 +17,20 @@ struct DateControl: View {
 
     let viewModel: LocationViewModel
 
-    /// DATE.md §5: at least 44×44 pt for ‹ and ›.
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+
+    /// DATE.md §5: at least 44×44 pt for ‹, › and the chip.
     private static let minimumHitTarget: CGFloat = 44
 
     var body: some View {
-        // At large Dynamic Type sizes the row won't fit on one line, so the
+        // At accessibility text sizes the row can't fit the chip too, so the
         // chip moves under it.
-        ViewThatFits(in: .horizontal) {
-            HStack {
-                dayRow
-                todayChip
-            }
-            VStack(alignment: .leading) {
-                dayRow
-                todayChip
-            }
+        let layout = dynamicTypeSize.isAccessibilitySize
+            ? AnyLayout(VStackLayout(alignment: .leading))
+            : AnyLayout(HStackLayout())
+        layout {
+            dayRow
+            todayChip
         }
     }
 
@@ -57,6 +59,8 @@ struct DateControl: View {
                 Image(systemName: "chevron.down")
                     .accessibilityHidden(true)
             }
+            // Fill the space between the arrows, content centred.
+            .frame(maxWidth: .infinity)
             .padding(8)
             .background(.quaternary, in: RoundedRectangle(cornerRadius: 8))
         }
@@ -93,20 +97,20 @@ struct DateControl: View {
 
     // MARK: - Today chip
 
-    @ViewBuilder
+    /// Always shown, so the row keeps its shape. Disabled (dimmed, and read
+    /// as dimmed by VoiceOver) when already on today.
     private var todayChip: some View {
-        if viewModel.showsTodayChip {
-            Button("Today") {
-                viewModel.goToToday()
-                announceDate()
-            }
-            .buttonStyle(.bordered)
-            // NFR4: the bordered capsule is ~34 pt tall. Pad the tap area to
-            // 44 pt without changing how it looks.
-            .frame(minHeight: Self.minimumHitTarget)
-            .contentShape(Rectangle())
-            .accessibilityLabel("Go to today")
+        Button("Today") {
+            viewModel.goToToday()
+            announceDate()
         }
+        .buttonStyle(.bordered)
+        // NFR4: the bordered capsule is ~34 pt tall. Pad the tap area to
+        // 44 pt without changing how it looks.
+        .frame(minHeight: Self.minimumHitTarget)
+        .contentShape(Rectangle())
+        .disabled(viewModel.isOnToday)
+        .accessibilityLabel("Go to today")
     }
 
     // MARK: - Accessibility
