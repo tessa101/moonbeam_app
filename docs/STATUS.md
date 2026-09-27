@@ -61,9 +61,14 @@ _Last updated: 2026-09-26 (Step 3: date selection)_
   - Day selection in `LocationViewModel`, rolling over on foreground only
   - The time zone label sampled at local noon on the selected day
   - `DateControl` and `CalendarSheet`
-  - The spike table now formats its own day (`today:` → `day:`)
+  - The spike table is built for the selected day (`today:` → `day:`). After the review it no longer
+    repeats the city or date, which the search field and date control already show
   - Decisions 1–4 are in DECISIONS.md 2026-09-26, including the calendar wheel draft and Done
-  - **178 tests / 271 cases across 14 suites, all passing** in Xcode's runner on the iPhone 17
+  - Review follow-ups (07478c7 → b4e5b8e, plus the docs):
+    - shorter date label ("Sun, Sep 27"; year only in another year)
+    - 44 pt tap target for the Today chip
+    - no duplicate city/date in the table
+  - **180 tests / 274 cases across 14 suites, all passing** in Xcode's runner on the iPhone 17
     simulator. No build warnings.
   - Checked in the iPhone 17 simulator:
     - ‹ / › update the label, chip and table

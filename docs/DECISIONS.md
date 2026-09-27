@@ -5,6 +5,25 @@
 
 ---
 
+### 2026-09-26 · Step 3 review follow-ups
+- **The moon table no longer shows the city or the date.** The search field shows the city and
+  the date control shows the day, so `ContentView` doesn't repeat them. This removes
+  `SpikeMoonTableViewModel.dayText` from Decision 2 below. `day` stays, because the rollover check
+  compares against it.
+- **Shorter date label: "Sun, Sep 27", with the year only in a different year** from the place's
+  today ("Mon, Jan 4, 2027"), and no relative word. The chip already says you're off today, and the
+  long "Tomorrow · Sun, Sep 27, 2026" wrapped onto two lines at default size. The VoiceOver value
+  keeps the relative word and year. The year is compared in the place's zone and in the calendar
+  the label is written in.
+- **Today chip tap target is 44 pt (NFR4), and it looks the same.** The bordered capsule gets a
+  44 pt minimum-height frame and a rectangular content shape. A tap just above the visible capsule
+  registers (checked in the simulator).
+- **Accepted for now: the same day number after browsing with the month arrows waits for Done.**
+  Sep 27 selected → arrow to October → tap Oct 27: to the picker this looks exactly like turning
+  the wheel (the day number is kept, and the month changes), so Decision 4's detection treats it as
+  a draft and shows Done instead of closing. It's one extra tap in an uncommon case. A custom
+  calendar (DATE.md §8, V2) would report taps directly and remove the guess.
+
 ### 2026-09-26 · Step 3: date selection (DATE.md)
 - **Decision 1: the midnight rollover happens only when the app comes back to the foreground.**
   `sceneDidBecomeActive()` moves a following-today selection to the place's new day. Nothing moves it

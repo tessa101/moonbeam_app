@@ -42,7 +42,7 @@ _Started: 2026-09-26_
 ## Date control and calendar sheet (Step 3, built plain; DATE.md §9)
 - [ ] **Copy that assumes "tonight"** when another date is picked: the screen prompt "Where are you watching the moon tonight?" and the midnight note (e.g. "Oct 3 · at midnight")
 - [ ] **Today chip placement:** beside the field or under it, and whether the chip or the field's "Today ·" prefix is enough on its own
-- [ ] **Arrow styling and hit areas; the field's chevron.** At default size on an iPhone 17, "Tomorrow · Sun, Sep 27, 2026" wraps onto two lines, so the chip drops to its own row. The chip's tap target is 34 pt tall
+- [ ] **Arrow styling and hit areas; the field's chevron**
 - [ ] **Show the time zone in the date** when the place's day differs from the device's?
 - [ ] **Calendar sheet header:** Today · title · Cancel, plus Done after the month/year wheel. Check it's clear and fits at large text sizes. Also check that six-row months fit the medium detent (it scrolls)
 - [ ] **App left open across the place's midnight:** the day only moves on the next foreground (Decision 1). Revisit if it's noticed

@@ -16,16 +16,17 @@
 Placed directly under the city name, above the moon table (sketch #3).
 
 ```
- ‹   [📅  Today · Sat, Sep 26, 2026  ⌄]   ›      (Today)
+ ‹   [📅  Sat, Sep 26  ⌄]   ›      (Today)
 ```
 
 - **Field (center):** calendar icon + date label + chevron. Tapping it opens the calendar sheet (§2).
 - **Previous ‹ / Next › buttons** on either side of the field: move one day back or forward. The moon data updates right away. No animation in this step (swipe/card transitions are V2, §7).
 - **Today chip:** shown only when the selected day **isn't** today in the place's time zone. Tapping it goes back to today. Hidden when already on today.
-- **Label format:**
-  - Relative word + date when it applies: `Today · Sat, Sep 26, 2026`, `Tomorrow · Sun, Sep 27, 2026`, `Yesterday · Fri, Sep 25, 2026`
-  - Otherwise just the date: `Sat, Oct 3, 2026`
-  - Use the device locale's date format (`Date.FormatStyle`); the relative words follow the place's "today" (§3), not the device's.
+- **Label format** (shortened in the Step 3 review, 2026-09-26):
+  - Weekday, month and day: `Sun, Sep 27`. No relative word; the Today chip covers being off today.
+  - The year only when the day is in a different year from the place's today: `Mon, Jan 4, 2027`.
+  - The VoiceOver value keeps the relative word and the year: "Tomorrow, Sunday, September 27, 2026" (§5).
+  - Use the device locale's date format (`Date.FormatStyle`). "Today" and the year are the place's (§3), not the device's.
 - **Range:** today ±366 days. The ‹ or › button is disabled at the limit.
 
 ## 2. Calendar sheet
@@ -73,7 +74,7 @@ Placed directly under the city name, above the moon table (sketch #3).
 ## 5. Accessibility (build now, polish in the design pass)
 
 - ‹ / › buttons: labels **"Previous day"** / **"Next day"**; at least 44×44 pt hit targets; disabled state announced.
-- Date field: button, label e.g. **"Date: Today, Saturday, September 26, 2026"**, hint **"Opens calendar"**.
+- Date field: button, label **"Date"**, value e.g. **"Today, Saturday, September 26, 2026"** (the relative word and year are always spoken, even though the visible label is short), hint **"Opens calendar"**.
 - Also give the field `.accessibilityAdjustableAction` so VoiceOver swipe up/down moves one day. That's the VoiceOver version of ‹/› (and of swiping later).
 - Today chip: label **"Go to today"**.
 - Changing the day announces the new date (the moon table updates with it).
@@ -194,3 +195,9 @@ nonisolated enum DaySelection: Equatable, Sendable {
    b. `d7c197e` day selection in `LocationViewModel`, and the time zone label on the selected day
 4. `52e3281` date control and calendar sheet UI, plus the wheel draft and Done found in the simulator check
 5. Docs
+
+**Review follow-ups (2026-09-26):**
+- `07478c7`: the moon table no longer repeats the city and date; `dayText` is removed.
+- `66cfa63`: shorter date label (§1).
+- `b4e5b8e`: 44 pt tap target for the Today chip.
+- Docs, including the same-day-number case in DECISIONS.md.
