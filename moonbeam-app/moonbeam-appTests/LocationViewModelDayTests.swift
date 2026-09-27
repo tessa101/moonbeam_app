@@ -92,7 +92,7 @@ struct LocationViewModelDayTests {
 
         #expect(viewModel.daySelection == .today)
         #expect(!viewModel.showsTodayChip)
-        #expect(viewModel.dateLabel.hasPrefix("Today · "))
+        #expect(!viewModel.dateLabel.contains("Today"))
         #expect(viewModel.dateAccessibilityValue.hasPrefix("Today, "))
         #expect(service.requestedDates.last == (try Self.date(2026, 9, 26, hour: 0, in: Self.losAngelesZone)))
     }
@@ -112,7 +112,7 @@ struct LocationViewModelDayTests {
 
     // MARK: - Previous, next, Today chip
 
-    @Test("Next day: Tomorrow label, chip shown, service gets Sep 27 in the place's zone")
+    @Test("Next day: spoken as Tomorrow, chip shown, service gets Sep 27 in the place's zone")
     func nextDay() throws {
         let clock = TestClock(try Self.date(2026, 9, 26, hour: 20, in: Self.losAngelesZone))
         let service = FakeMoonService()
@@ -123,13 +123,14 @@ struct LocationViewModelDayTests {
 
         let sep27 = try Self.date(2026, 9, 27, hour: 0, in: Self.losAngelesZone)
         #expect(viewModel.daySelection == .day(year: 2026, month: 9, day: 27))
-        #expect(viewModel.dateLabel.hasPrefix("Tomorrow · "))
+        #expect(!viewModel.dateLabel.contains("Tomorrow"))
+        #expect(viewModel.dateAccessibilityValue.hasPrefix("Tomorrow, "))
         #expect(viewModel.showsTodayChip)
         #expect(service.requestedDates.last == sep27)
         #expect(viewModel.moonTable?.day == sep27)
     }
 
-    @Test("Previous day: Yesterday label")
+    @Test("Previous day: spoken as Yesterday")
     func previousDay() throws {
         let clock = TestClock(try Self.date(2026, 9, 26, hour: 20, in: Self.losAngelesZone))
         let viewModel = Self.makeViewModel(clock: clock)
@@ -138,7 +139,8 @@ struct LocationViewModelDayTests {
         viewModel.previousDay()
 
         #expect(viewModel.daySelection == .day(year: 2026, month: 9, day: 25))
-        #expect(viewModel.dateLabel.hasPrefix("Yesterday · "))
+        #expect(!viewModel.dateLabel.contains("Yesterday"))
+        #expect(viewModel.dateAccessibilityValue.hasPrefix("Yesterday, "))
         #expect(viewModel.showsTodayChip)
     }
 
@@ -172,8 +174,21 @@ struct LocationViewModelDayTests {
 
         #expect(viewModel.daySelection == .day(year: 2026, month: 10, day: 3))
         #expect(!viewModel.isCalendarPresented)
-        #expect(viewModel.dateLabel.hasSuffix("2026"))
-        #expect(!viewModel.dateLabel.contains(" · "))
+        // Same year as today, so the visible label has no year; the spoken
+        // value always does.
+        #expect(!viewModel.dateLabel.contains("2026"))
+        #expect(viewModel.dateAccessibilityValue.hasSuffix("2026"))
+    }
+
+    @Test("A day in another year shows the year in the label")
+    func otherYearShowsTheYear() throws {
+        let clock = TestClock(try Self.date(2026, 9, 26, hour: 20, in: Self.losAngelesZone))
+        let viewModel = Self.makeViewModel(clock: clock)
+        viewModel.select(Self.marVista)
+
+        viewModel.select(day: DateComponents(year: 2027, month: 1, day: 4))
+
+        #expect(viewModel.dateLabel.contains("2027"))
     }
 
     /// What the graphical picker does: sets a `Date` somewhere in the day.
@@ -368,7 +383,7 @@ struct LocationViewModelDayTests {
         viewModel.select(Self.sydney)
 
         #expect(viewModel.daySelection == .today)
-        #expect(viewModel.dateLabel.hasPrefix("Today · "))
+        #expect(viewModel.dateAccessibilityValue.hasPrefix("Today, "))
         #expect(service.requestedDates.last == (try Self.date(2026, 9, 27, hour: 0, in: Self.sydneyZone)))
     }
 

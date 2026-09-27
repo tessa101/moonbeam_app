@@ -309,19 +309,20 @@ final class LocationViewModel {
 
     // MARK: - Day selection (DATE.md)
 
-    /// The date control's label: "Today · Sat, Sep 26, 2026". Empty with no
-    /// place; the control is hidden then.
+    /// The date control's label: "Sun, Sep 27", with the year only when it
+    /// differs from the place's today. Empty with no place; the control is
+    /// hidden then.
     var dateLabel: String {
         guard let place else { return "" }
         return dayLabelFormatter.label(
             for: selectedStartOfDay(for: place),
-            dayOffset: selectedDayOffset(for: place),
+            today: now(),
             timeZone: place.timeZone
         )
     }
 
-    /// The date field's accessibility value: "Today, Saturday, September 26,
-    /// 2026". It's a value, not the label, so VoiceOver reads the new date
+    /// The date field's accessibility value: "Tomorrow, Sunday, September
+    /// 27, 2026". It's a value, not the label, so VoiceOver reads the new date
     /// after each adjustable swipe (DATE.md §5).
     var dateAccessibilityValue: String {
         guard let place else { return "" }
