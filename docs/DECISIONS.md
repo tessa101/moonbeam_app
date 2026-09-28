@@ -8,7 +8,8 @@
 ### 2026-09-28 · App name: Moon Signal (working name)
 - **Display name is "Moon Signal" for now**, replacing the working name "Moonbeam". The location
   permission prompt already uses it (96e5042). `AppInfo.name` and the home-screen display name
-  still need to follow; the repo, project and target names (`moonbeam`, `moonbeam-app`) stay as-is.
+  (`INFOPLIST_KEY_CFBundleDisplayName`) now follow; the repo, project and target names
+  (`moonbeam`, `moonbeam-app`) stay as-is.
 - Still revisitable; final name to confirm with the design partner.
 
 ### 2026-09-28 · Compass: moon-up, data model, iPhone-only, 16-point names
