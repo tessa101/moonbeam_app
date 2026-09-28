@@ -46,8 +46,8 @@
 
 ### Orientation
 
-- **App locked to portrait for v1** (Info.plist). A rotating screen makes the compass hard to read and complicates heading.
-- **v1 is iPhone-only** (`TARGETED_DEVICE_FAMILY = 1`, was `1,2`). Portrait-locking iPad would fight iPad multitasking; iPad support is a later step.
+- **App locked to portrait for v1** (`INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait`; built). A rotating screen makes the compass hard to read and complicates heading.
+- **v1 is iPhone-only** (`TARGETED_DEVICE_FAMILY = 1`, was `1,2`, on the app and test targets; the iPad orientation key is removed; built). Portrait-locking iPad would fight iPad multitasking; iPad support is a later step.
 - Revisitable: upgrade path is allowing rotation and setting the heading orientation to match the device. Logged in DESIGN-REVIEW.md as a deliberate choice (WCAG 1.3.4 permits orientation lock where essential; a compass qualifies).
 
 ## 2. When the compass shows
