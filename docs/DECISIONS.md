@@ -26,6 +26,14 @@
   proves it.
 - **Bearing copy is whole degrees then letters ("72° ENE"), rounded so 359.6° reads "0°".** Same
   order as the moon table. The letters use the unrounded azimuth, as the table does.
+- **4.3b wiring: `LocationViewModel` owns the compass** (`let compass`) and takes a
+  `headingService` in its initializer. Every place and day change already goes through
+  `reloadMoonTable()`, which now also pushes the context. The permission prompt and
+  `sceneDidBecomeActive()` push it too. A new `sceneDidEnterBackground()` forwards to the compass.
+- **The detected place is remembered for the session** (not persisted) from the last successful
+  fix, including a launch fix that doesn't replace the saved place. A later failed fix keeps it.
+
+### 2026-09-28 · Step 4.2: HeadingService
 
 ### 2026-09-28 · Step 4.2: HeadingService
 - **Delegate API wrapped in an `AsyncStream`.** CoreLocation has no async heading sequence (checked

@@ -109,7 +109,8 @@ private func previewViewModel(dayOffset: Int) -> LocationViewModel {
         locationService: FakeLocationService(),
         placeSearch: FakePlaceSearchService(),
         placeStore: InMemoryPlaceStore(),
-        moonService: FakeMoonService()
+        moonService: FakeMoonService(),
+        headingService: FakeHeadingService()
     )
     viewModel.select(SpikeMoonTableViewModel.marVista)
     for _ in 0..<dayOffset {

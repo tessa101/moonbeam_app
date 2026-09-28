@@ -131,6 +131,8 @@ protocol PlaceStore {                                          // @MainActor
   while location runs (COMPASS.md §1). A session also ends if its stream is cancelled or
   dropped, so an abandoned stream can't leave the sensors on.
 - All five get fake implementations for SwiftUI previews and tests.
+- `CompassViewModel` is owned by `LocationViewModel` and fed a `CompassContext`. It never reads
+  location state itself, and it takes rise/set bearings from the moon table's own `MoonDay`.
 
 `GeocodingService` from the first draft of this doc was superseded by `LocationService` +
 `PlaceSearchService`: the spec calls for two distinct jobs (detect where you are, search for

@@ -92,6 +92,11 @@ final class LocationViewModel {
     /// (SEARCH-RECENTS.md §1).
     private(set) var searchSheet: SearchSheetViewModel?
 
+    /// The compass under the moon table (COMPASS.md). Fed a
+    /// `CompassContext` on every place, day or permission change, so this
+    /// stays the only owner of that state.
+    let compass: CompassViewModel
+
     // MARK: - Dependencies
 
     private let locationService: any LocationService
@@ -124,6 +129,11 @@ final class LocationViewModel {
     /// authorized" (fetch) from "still authorized" (leave alone).
     @ObservationIgnored private var lastSeenAuthState: LocationAuthState
 
+    /// The last place a location fix found this session. A searched city
+    /// matching it counts as "where you are" for the compass
+    /// (COMPASS.md §2). Kept when you then search elsewhere; not persisted.
+    @ObservationIgnored private var detectedPlace: Place?
+
     // MARK: - Init
 
     /// - Parameters:
@@ -137,6 +147,7 @@ final class LocationViewModel {
         placeSearch: any PlaceSearchService,
         placeStore: any PlaceStore,
         moonService: any MoonService,
+        headingService: any HeadingService,
         fetchTimeout: Duration = LocationViewModel.defaultFetchTimeout,
         deviceTimeZone: TimeZone = .current,
         now: @escaping () -> Date = Date.init
@@ -149,6 +160,7 @@ final class LocationViewModel {
         self.deviceTimeZone = deviceTimeZone
         self.now = now
         lastSeenAuthState = locationService.authorizationState
+        compass = CompassViewModel(headingService: headingService, moonService: moonService, now: now)
     }
 
     // MARK: - Derived state
@@ -209,6 +221,7 @@ final class LocationViewModel {
             let state = await locationService.requestAuthorization()
             isRequestingPermission = false
             lastSeenAuthState = state
+            updateCompass()
             // A refusal at the prompt ends here: the user has just answered,
             // so following up with the Location Off dialog would nag.
             if state.isAuthorized {
@@ -227,9 +240,14 @@ final class LocationViewModel {
 
     /// Call when the scene becomes active. §4: coming back from Settings with
     /// permission newly granted fetches without another tap. Also where the
-    /// selected day rolls over past the place's midnight (DATE.md §3).
+    /// selected day rolls over past the place's midnight (DATE.md §3), and
+    /// where the compass re-checks permission and restarts its sensors.
     func sceneDidBecomeActive() async {
         refreshDayIfNeeded()
+        // Permission may have changed in Settings; the compass hides or shows
+        // its hint before anything else.
+        updateCompass()
+        compass.sceneDidBecomeActive()
 
         guard !isRequestingPermission else { return }
 
@@ -241,6 +259,12 @@ final class LocationViewModel {
         locationOffDialog = nil
         guard !isLocating else { return }
         await locate(userInitiated: true)
+    }
+
+    /// Call when the scene moves to the background: the compass stops its
+    /// sensors (COMPASS.md §1).
+    func sceneDidEnterBackground() {
+        compass.sceneDidEnterBackground()
     }
 
     func dismissLocationOffDialog() {
@@ -492,7 +516,10 @@ final class LocationViewModel {
         reloadMoonTable()
     }
 
+    /// Every place and day change comes through here, so this is also where
+    /// the compass hears about them.
     private func reloadMoonTable() {
+        defer { updateCompass() }
         guard let place else {
             moonTable = nil
             return
@@ -501,6 +528,20 @@ final class LocationViewModel {
             moonService: moonService,
             place: place,
             day: selectedStartOfDay(for: place)
+        )
+    }
+
+    /// The compass's targets come from the table's own `MoonDay`, so the two
+    /// always agree and the moon service isn't asked twice.
+    private func updateCompass() {
+        compass.update(
+            CompassContext(
+                place: place,
+                detectedPlace: detectedPlace,
+                authState: locationService.authorizationState,
+                moonDay: moonTable?.moonDay,
+                isToday: isOnToday
+            )
         )
     }
 
@@ -525,6 +566,7 @@ final class LocationViewModel {
         do {
             let detected = try await currentPlaceWithTimeout()
             guard !Task.isCancelled else { return }
+            detectedPlace = detected
             // Launch detection isn't a pick, so it doesn't replace the saved
             // place.
             show(detected, remember: userInitiated)

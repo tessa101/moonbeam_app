@@ -75,6 +75,7 @@ struct LocationViewModelDayTests {
             placeSearch: FakePlaceSearchService(),
             placeStore: InMemoryPlaceStore(),
             moonService: moonService,
+            headingService: FakeHeadingService(),
             deviceTimeZone: losAngelesZone,
             now: { clock.now }
         )

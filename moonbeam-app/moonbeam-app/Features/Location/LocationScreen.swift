@@ -117,7 +117,8 @@ struct LocationScreen: View {
             locationService: FakeLocationService(),
             placeSearch: FakePlaceSearchService(),
             placeStore: InMemoryPlaceStore(),
-            moonService: AstronomyEngineMoonService()
+            moonService: AstronomyEngineMoonService(),
+            headingService: FakeHeadingService()
         )
     )
 }
@@ -128,7 +129,8 @@ struct LocationScreen: View {
             locationService: FakeLocationService(authorizationState: .denied),
             placeSearch: FakePlaceSearchService(),
             placeStore: InMemoryPlaceStore(lastViewed: SpikeMoonTableViewModel.marVista),
-            moonService: AstronomyEngineMoonService()
+            moonService: AstronomyEngineMoonService(),
+            headingService: FakeHeadingService()
         )
     )
 }

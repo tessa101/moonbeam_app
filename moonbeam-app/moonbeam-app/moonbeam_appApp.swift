@@ -15,7 +15,8 @@ struct moonbeam_appApp: App {
         locationService: CoreLocationService(),
         placeSearch: MapKitPlaceSearchService(),
         placeStore: UserDefaultsPlaceStore(),
-        moonService: AstronomyEngineMoonService()
+        moonService: AstronomyEngineMoonService(),
+        headingService: CoreLocationHeadingService()
     )
 
     // Astronomy Engine spike scaffolding; remove with MoonTableSpike.

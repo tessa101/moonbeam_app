@@ -76,6 +76,7 @@ struct LocationViewModelTests {
             placeSearch: search,
             placeStore: store,
             moonService: AstronomyEngineMoonService(),
+            headingService: FakeHeadingService(),
             fetchTimeout: fetchTimeout,
             deviceTimeZone: losAngelesZone,
             now: { referenceDate }
