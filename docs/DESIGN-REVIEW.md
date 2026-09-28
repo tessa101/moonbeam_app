@@ -49,6 +49,14 @@ _Started: 2026-09-26_
 - [ ] **Custom look for ‹ / › and the calendar sheet**, or keep the system style? (Tessa, 2026-09-26)
 - [ ] **Relative-day chips always visible** (Today, Tomorrow, …), with the selected one highlighted, instead of a Today chip that only appears off today (Tessa, 2026-09-26)
 
+## Compass (Step 4; COMPASS.md)
+- [ ] **Portrait lock.** App is locked to portrait for v1 so the compass stays readable and heading stays simple (COMPASS.md §1, decision F). Deliberate choice under WCAG 1.3.4 (orientation essential for a compass). Revisit landscape later; upgrade path is allowing rotation and matching the heading orientation to the device
+- [ ] **Enable-location hint** (location off): copy, placement, and whether it opens the Location Off dialog or the system prompt. Built as a plain placeholder
+- [ ] **Other-city state:** fully hidden, or a quiet note ("Compass is available at your current location")?
+- [ ] **Lock feedback:** visual treatment of the lock state; haptics are a fast-follow
+- [ ] **Low-accuracy state:** look and copy; 15° threshold to tune on device
+- [ ] Layout under the moon table, dial styling, typography (wireframe pending)
+
 ## Accessibility (part of the design pass)
 - [ ] Dynamic Type up to the largest accessibility sizes, on every screen
 - [ ] VoiceOver labels and reading order (e.g. "ESE" read as "east-southeast", time zone read in full)
