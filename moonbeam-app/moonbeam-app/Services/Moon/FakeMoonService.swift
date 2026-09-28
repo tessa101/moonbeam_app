@@ -9,8 +9,9 @@ import Foundation
 ///
 /// Records every date it's asked for, so a test can check which day reached
 /// the service (DATE.md §6: "`MoonService` called with Sep 27 in the place's
-/// time zone"). Returns the same scripted rise, set and phase for any place
-/// and day. Use `AstronomyEngineMoonService` where the values matter.
+/// time zone"). Returns the same scripted rise, set, phase and position for
+/// any place and moment. Use `AstronomyEngineMoonService` where the values
+/// matter.
 ///
 /// `nonisolated` to match the protocol. Not `Sendable`: it's mutable and
 /// meant to be used from one place, the main actor in the tests.
@@ -29,10 +30,17 @@ nonisolated final class FakeMoonService: MoonService {
     var phaseAngle: Double
     var illumination: Double
 
+    /// Returned by `moonPosition(for:at:)`. Change it between calls to have
+    /// the moon rise or set while the compass is on screen.
+    var position: MoonPosition
+
     // MARK: - Record
 
     /// Every `date` passed to `moonDay(for:on:)`, oldest first.
     private(set) var requestedDates: [Date] = []
+
+    /// Every `date` passed to `moonPosition(for:at:)`, oldest first.
+    private(set) var requestedPositionDates: [Date] = []
 
     // MARK: - Init
 
@@ -40,12 +48,14 @@ nonisolated final class FakeMoonService: MoonService {
         rise: MoonEvent? = nil,
         set: MoonEvent? = nil,
         phaseAngle: Double = FakeMoonService.fullMoonPhaseAngle,
-        illumination: Double = FakeMoonService.fullyLit
+        illumination: Double = FakeMoonService.fullyLit,
+        position: MoonPosition = MoonPosition(azimuth: 0, isUp: false)
     ) {
         self.rise = rise
         self.set = set
         self.phaseAngle = phaseAngle
         self.illumination = illumination
+        self.position = position
     }
 
     // MARK: - MoonService
@@ -60,5 +70,10 @@ nonisolated final class FakeMoonService: MoonService {
             phaseAngle: phaseAngle,
             illumination: illumination
         )
+    }
+
+    func moonPosition(for place: Place, at date: Date) -> MoonPosition {
+        requestedPositionDates.append(date)
+        return position
     }
 }

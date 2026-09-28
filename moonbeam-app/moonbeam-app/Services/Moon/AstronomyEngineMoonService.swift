@@ -32,6 +32,13 @@ nonisolated struct AstronomyEngineMoonService: MoonService {
 
     private static let nanosecondsPerSecond = 1_000_000_000.0
 
+    /// How far back `moonPosition(for:at:)` looks for the latest rise and
+    /// set. The moon rises and sets about daily at V1 latitudes; a lunar
+    /// month leaves room for high latitudes, where it can stay up or down
+    /// for days. Backward searches stop at the first event, so the width
+    /// costs nothing in the usual case.
+    private static let moonUpLookbackDays = 30.0
+
     // MARK: - MoonService
 
     func moonDay(for place: Place, on date: Date) -> MoonDay {
@@ -84,6 +91,43 @@ nonisolated struct AstronomyEngineMoonService: MoonService {
         )
     }
 
+    /// "Up" is "the latest rise is later than the latest set", both found by
+    /// the same rise/set search the moon table uses (COMPASS.md §3). An
+    /// altitude > 0° check was rejected: it measures the disc's centre, while
+    /// rise/set use the upper edge, so it would disagree with the table for a
+    /// minute or two at every rise and set.
+    func moonPosition(for place: Place, at date: Date) -> MoonPosition {
+        let observer = Astronomy_MakeObserver(
+            place.latitude,
+            place.longitude,
+            Self.observerHeightMeters
+        )
+        var now = Self.astroTime(from: date)
+        let horizontal = Self.horizontal(at: &now, observer: observer)
+
+        let lastRise = Self.latestEvent(direction: DIRECTION_RISE, observer: observer, before: now)
+        let lastSet = Self.latestEvent(direction: DIRECTION_SET, observer: observer, before: now)
+
+        let isUp: Bool
+        switch (lastRise, lastSet) {
+        case let (rise?, set?):
+            isUp = rise.ut > set.ut
+        case (.some, nil):
+            isUp = true
+        case (nil, .some):
+            isUp = false
+        case (nil, nil):
+            // No event in the whole lookback: circumpolar or never rising,
+            // so there's no rise/set boundary to disagree with.
+            isUp = (horizontal?.altitude ?? 0) > 0
+        }
+
+        return MoonPosition(
+            azimuth: horizontal?.azimuth.wrappedIntoDegreeCircle ?? 0,
+            isUp: isUp
+        )
+    }
+
     // MARK: - Illumination at an arbitrary moment
 
     /// The lit fraction of the disc, `0.0...1.0`, at a specific instant.
@@ -122,29 +166,54 @@ nonisolated struct AstronomyEngineMoonService: MoonService {
         guard search.status == ASTRO_SUCCESS else { return nil }
 
         var eventTime = search.time
+        guard let horizon = horizontal(at: &eventTime, observer: observer) else { return nil }
 
-        // Equatorial coordinates of date, then horizontal coordinates with
-        // standard refraction, to match the USNO rise/set definition.
+        return MoonEvent(
+            date: date(from: search.time),
+            azimuth: horizon.azimuth.wrappedIntoDegreeCircle
+        )
+    }
+
+    /// The most recent rise or set before `time`, or `nil` if none falls in
+    /// the lookback. A negative `limitDays` makes the search run backward.
+    private static func latestEvent(
+        direction: astro_direction_t,
+        observer: astro_observer_t,
+        before time: astro_time_t
+    ) -> astro_time_t? {
+        let search = Astronomy_SearchRiseSetEx(
+            BODY_MOON,
+            observer,
+            direction,
+            time,
+            -moonUpLookbackDays,
+            metersAboveGround
+        )
+        return search.status == ASTRO_SUCCESS ? search.time : nil
+    }
+
+    /// The moon's horizontal coordinates at `time`: equatorial coordinates
+    /// of date, then horizontal with standard refraction, to match the USNO
+    /// rise/set definition.
+    private static func horizontal(
+        at time: inout astro_time_t,
+        observer: astro_observer_t
+    ) -> astro_horizon_t? {
         let equatorial = Astronomy_Equator(
             BODY_MOON,
-            &eventTime,
+            &time,
             observer,
             EQUATOR_OF_DATE,
             ABERRATION
         )
         guard equatorial.status == ASTRO_SUCCESS else { return nil }
 
-        let horizon = Astronomy_Horizon(
-            &eventTime,
+        return Astronomy_Horizon(
+            &time,
             observer,
             equatorial.ra,
             equatorial.dec,
             REFRACTION_NORMAL
-        )
-
-        return MoonEvent(
-            date: date(from: search.time),
-            azimuth: horizon.azimuth.wrappedIntoDegreeCircle
         )
     }
 
