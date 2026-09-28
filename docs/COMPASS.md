@@ -125,6 +125,7 @@ nonisolated protocol MoonService {
 - iPad support
 - "I'm here" manual override for users who keep location off (magnetic heading + bundled magnetic-declination model)
 - AR view (point the camera to "see" the moon) — no scope yet, just noted
+- **Expire the detected place after N hours.** v1 keeps the last detected place for the whole session, and a failed fix doesn't clear it (DECISIONS.md 2026-09-28, Step 4.3). Edge case: you're detected in LA, travel with the app backgrounded (not terminated), then a fix fails in the new city. A searched "Los Angeles" would still show the compass, with LA's bearings, though you're no longer there. Fix: give the detected place a timestamp and stop counting it after N hours (N TBD)
 
 ---
 
