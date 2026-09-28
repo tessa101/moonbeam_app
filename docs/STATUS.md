@@ -87,9 +87,13 @@ _Last updated: 2026-09-28 (Step 4: compass, through 4.3)_
   - Portrait lock and iPhone-only
   - 4.3a `CompassViewModel`: §2 visibility, targets, lock/hold/release, 30 s Moon refresh, sensor lifecycle
   - 4.3b `LocationViewModel` owns and feeds the compass (detected place, permission, selected day's `MoonDay`)
-  - **Not built yet:** the compass view (4.4), and `LocationScreen`'s background hook and scroll-visibility
-    reporting that come with it. Until then the sensors never start in the app.
-  - **274 tests / 405 cases across 19 suites, all passing** in Xcode's runner on the iPhone 17 simulator.
+  - Moon table uses the shared bearing formatter (359.6° reads "0° N" in both)
+  - 4.4 `CompassView` + `CompassDial` (plain) under the moon table; placeholder hint and low-accuracy
+    text; VoiceOver labels from the view model. `LocationScreen` reports on-screen via
+    `onScrollVisibilityChange`/`onDisappear` and forwards `.background`.
+  - Checked in previews (locked, low accuracy, no compass, location off; AX 3 in dark mode). The app
+    launches in the iPhone 17 simulator with no errors. The live compass needs a device.
+  - **276 tests / 407 cases across 19 suites, all passing** in Xcode's runner on the iPhone 17 simulator.
   - **Device QA pending** (see Next, item 7).
 
 ## Next
@@ -164,12 +168,16 @@ _Last updated: 2026-09-28 (Step 4: compass, through 4.3)_
      - Test target has no development team, so tests run on the iPhone 17 simulator only. Set a team
        under Signing & Capabilities to run tests on "T2 iPhone"
 
-7. [ ] **Step 4 device QA, by hand** (COMPASS.md). Needs the compass view (4.4); the simulator has no compass.
+7. [ ] **Step 4 device QA, by hand** (COMPASS.md). The compass view is built (4.4); the simulator has no compass.
    1. **Check first:** true heading is valid under **approximate location**. `Info.plist` sets
       `NSLocationDefaultAccuracyReduced`; if iOS withholds `trueHeading` then, every reading is low
       accuracy and the compass never locks. With Precise Location off for Moon Signal, the heading
       should read and lock normally.
    2. The app stays in portrait when the phone is rotated.
+   3. **Right after moonrise, the Moonrise and Moon targets overlap** (the moon is still where it
+      rose). Note which label wins, and whether that's confusing. Expected per `CompassLock`: the
+      nearer one wins, an exact tie goes to Moonrise, and once locked it holds until you turn more
+      than 8° away. So it may stay "Moonrise" while the moon drifts from the rise point.
 
 Design-pass items (visuals, copy, a11y) are tracked in **[DESIGN-REVIEW.md](DESIGN-REVIEW.md)**.
 

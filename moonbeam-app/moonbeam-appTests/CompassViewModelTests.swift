@@ -449,6 +449,22 @@ struct CompassViewModelTests {
         #expect(harness.viewModel.lockText == nil)
     }
 
+    @Test("Target rows read the target's name and bearing, spoken in words")
+    func targetRowCopy() {
+        let viewModel = Self.makeHarness().viewModel
+        let moonset = CompassTarget(kind: .moonset, azimuth: Self.setAzimuth)
+
+        #expect(viewModel.targetText(for: moonset) == "Moonset · 288° WNW")
+        #expect(viewModel.targetAccessibilityLabel(for: moonset) == "Moonset, 288 degrees west-northwest")
+    }
+
+    @Test("Placeholder copy for the hint and low accuracy")
+    func placeholderCopy() {
+        #expect(CompassViewModel.locationOffHint == "Turn on location to use the compass.")
+        #expect(CompassViewModel.turnOnLocationTitle == "Turn On Location")
+        #expect(CompassViewModel.lowAccuracyText == "Compass accuracy is low")
+    }
+
     @Test("Low accuracy: no lock, and VoiceOver says so")
     func lowAccuracyNoLock() async {
         let harness = Self.makeRunningHarness()

@@ -43,6 +43,17 @@ final class CompassViewModel {
     /// moon's azimuth moves about a quarter of a degree a minute.
     static let defaultMoonRefreshInterval = Duration.seconds(30)
 
+    // MARK: - Placeholder copy (final copy is in the design pass)
+
+    /// In place of the compass when location is off (COMPASS.md §2).
+    static let locationOffHint = "Turn on location to use the compass."
+
+    /// Leads into the existing Location Off flow.
+    static let turnOnLocationTitle = "Turn On Location"
+
+    /// Shown, and read by VoiceOver, while the heading can't be trusted.
+    static let lowAccuracyText = "Compass accuracy is low"
+
     // MARK: - Observed state
 
     private(set) var visibility: Visibility = .hidden
@@ -117,13 +128,22 @@ final class CompassViewModel {
 
     /// "Moonrise · 72° ENE": the target's own bearing, not the heading's.
     var lockText: String? {
-        guard let lockedTarget else { return nil }
-        return "\(Self.name(of: lockedTarget.kind)) · \(formatter.bearing(for: lockedTarget.azimuth))"
+        lockedTarget.map(targetText(for:))
     }
 
     var headingAccessibilityLabel: String {
-        guard !isLowAccuracy, let heading else { return "Compass accuracy is low" }
+        guard !isLowAccuracy, let heading else { return Self.lowAccuracyText }
         return "Heading \(formatter.spokenBearing(for: heading))"
+    }
+
+    /// A target row: "Moonset · 288° WNW".
+    func targetText(for target: CompassTarget) -> String {
+        "\(Self.name(of: target.kind)) · \(formatter.bearing(for: target.azimuth))"
+    }
+
+    /// "Moonset, 288 degrees west-northwest".
+    func targetAccessibilityLabel(for target: CompassTarget) -> String {
+        "\(Self.name(of: target.kind)), \(formatter.spokenBearing(for: target.azimuth))"
     }
 
     /// "Pointing at moonrise, 72 degrees east-northeast".

@@ -57,6 +57,13 @@ _Started: 2026-09-26_
 - [ ] **Lock feedback:** visual treatment of the lock state; haptics are a fast-follow
 - [ ] **Low-accuracy state:** look and copy; 15° threshold to tune on device
 - [ ] Layout under the moon table, dial styling, typography (wireframe pending)
+- [ ] **Plain dial as built (4.4)**, things to decide in the design pass:
+  - the N/E/S/W letters rotate with the dial, so they read sideways or upside down
+  - target dots are unlabelled (the rows below name them), and the locked dot is just bigger and tinted
+  - at AX sizes the top indicator grows and sits close to the "Compass" header
+  - no animation, to avoid a long spin across 359° → 0°
+- [ ] **Placeholder copy (4.4):** hint "Turn on location to use the compass." + "Turn On Location"; low accuracy "Compass accuracy is low" (no calibration advice)
+- [ ] **Moonrise / Moon overlap** right after moonrise: which label should win (device QA, STATUS.md Next 7.3)
 
 ## Accessibility (part of the design pass)
 - [ ] Dynamic Type up to the largest accessibility sizes, on every screen

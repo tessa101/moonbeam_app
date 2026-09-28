@@ -14,7 +14,7 @@ nonisolated struct CompassTarget: Equatable, Sendable {
 
     /// Declared in tie-break order: if two targets are exactly as near, the
     /// earlier one wins the lock.
-    enum Kind: CaseIterable, Sendable {
+    enum Kind: CaseIterable, Hashable, Sendable {
         case moonrise
         case moonset
         case moon

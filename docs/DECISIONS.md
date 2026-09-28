@@ -5,6 +5,21 @@
 
 ---
 
+### 2026-09-28 · Step 4.4: compass view (plain)
+- **"On screen" comes from `onScrollVisibilityChange` and `onDisappear` only, not `onAppear`.**
+  The main screen's stack isn't lazy, so `onAppear` fires on insertion even with the compass below
+  the fold, which would start the sensors off screen. `onScrollVisibilityChange` also fires on
+  appearing if already past its threshold (checked in the SwiftUI docs), so it covers insertion.
+  `onDisappear` covers removal.
+- **Only `.background` stops the sensors;** `.inactive` (Control Center, the permission prompt) doesn't.
+- **The hint's button runs `useMyLocation()`**, the existing flow: the system prompt if not yet
+  asked, otherwise the Location Off dialog.
+- **One VoiceOver element for the heading.** In low accuracy it reads "Compass accuracy is low"
+  rather than an untrustworthy number, and it's marked "updates frequently". The dial is
+  decorative (hidden from VoiceOver); the lock label and target rows carry the same information.
+- **Copy lives in `CompassViewModel`** (placeholders and row text), so the view holds no strings of
+  its own except the "Compass" header.
+
 ### 2026-09-28 · Step 4.3: compass view model
 - **`CompassViewModel` is fed, not wired.** `LocationViewModel` pushes a `CompassContext` (place,
   detected place, permission state, the selected day's `MoonDay`, is-today). The compass never reads

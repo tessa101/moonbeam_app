@@ -54,6 +54,11 @@ struct LocationScreen: View {
                 if let moonTable = viewModel.moonTable {
                     ContentView(viewModel: moonTable)
                 }
+
+                // COMPASS.md §1: at the bottom, below the moon table.
+                if viewModel.compass.visibility != .hidden {
+                    compass
+                }
             }
             .padding()
         }
@@ -61,8 +66,16 @@ struct LocationScreen: View {
             await viewModel.start()
         }
         .onChange(of: scenePhase) { _, phase in
-            guard phase == .active else { return }
-            Task { await viewModel.sceneDidBecomeActive() }
+            switch phase {
+            case .active:
+                Task { await viewModel.sceneDidBecomeActive() }
+            case .background:
+                viewModel.sceneDidEnterBackground()
+            default:
+                // Inactive (Control Center, the permission prompt) keeps the
+                // compass running; only the background stops it (§1).
+                break
+            }
         }
         .sheet(item: $viewModel.locationOffDialog, onDismiss: viewModel.locationOffDialogDidDismiss) { variant in
             LocationOffDialog(
@@ -102,6 +115,28 @@ struct LocationScreen: View {
         .buttonStyle(.plain)
         .accessibilityLabel(LocationViewModel.searchPlaceholder)
         .accessibilityValue(viewModel.place?.shortName ?? "")
+    }
+
+    // MARK: - Compass
+
+    /// Reports whether the compass is on screen, which (with foreground and
+    /// visibility) decides whether its sensors run (COMPASS.md §1).
+    ///
+    /// The stack isn't lazy, so `onAppear` fires on insertion even when the
+    /// compass is below the fold. It isn't used for "on screen", or the
+    /// sensors would start off screen. `onScrollVisibilityChange` also fires
+    /// on appearing when already past its threshold, which covers insertion.
+    /// `onDisappear` covers removal.
+    private var compass: some View {
+        CompassView(viewModel: viewModel.compass) {
+            Task { await viewModel.useMyLocation() }
+        }
+        .onScrollVisibilityChange { isVisible in
+            viewModel.compass.setOnScreen(isVisible)
+        }
+        .onDisappear {
+            viewModel.compass.setOnScreen(false)
+        }
     }
 
     // MARK: - Actions
