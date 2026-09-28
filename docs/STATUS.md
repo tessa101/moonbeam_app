@@ -162,4 +162,4 @@ Design-pass items (visuals, copy, a11y) are tracked in **[DESIGN-REVIEW.md](DESI
 - ~~Show illumination for the current time or for local midnight?~~ **Settled 2026-09-23:** tonight's
   local midnight, i.e. the end of the selected day. See DECISIONS.md and PRODUCT FR5
 - Primary persona (confirm with design partner)
-- Display name "Moonbeam" (project name is `moonbeam-app`)
+- Display name "Moon Signal" for now, was "Moonbeam" (project name stays `moonbeam-app`). `AppInfo.name` still says "Moonbeam" — to update
