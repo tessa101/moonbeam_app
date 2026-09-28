@@ -142,7 +142,7 @@ _Last updated: 2026-09-26 (Step 3: date selection)_
    - [ ] Time zone label says "GMT+10" for Sydney in `en_US`, not "AEST" (the system abbreviation;
      see DECISIONS.md). Decide in the design pass whether that's acceptable
 
-6. [ ] **Step 3 device QA, by hand** (DATE.md §7). Pushed 2026-09-28 (`6f13dd0`). Quick checks on the phone:
+6. [x] **Step 3 device QA, by hand** (DATE.md §7). Pushed 2026-09-28 (`6f13dd0`). **Passed on "T2 iPhone" 2026-09-28:**
    - ‹ / › move a day; tapping the date opens the calendar; tapping a day picks it and closes; the month/year wheel shows Done
    - Mar Vista on Oct 3 shows the no-moonrise state (pick Oct 3, or open the app that day)
    - Relaunch opens on today

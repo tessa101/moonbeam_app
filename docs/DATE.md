@@ -1,6 +1,6 @@
 # Step 3: Date selection
 
-**Status:** Built 2026-09-26 (commits 2e64a8d → 52e3281, docs in the commit after); device QA pending · **Decided:** 2026-09-26 · **Owner:** Tessa
+**Status:** Built 2026-09-26 (commits 2e64a8d → 52e3281, docs in the commit after; review fixes through 6f13dd0); device QA passed 2026-09-28 (a11y checks deferred to the design pass) · **Decided:** 2026-09-26 · **Owner:** Tessa
 **Fills:** PRODUCT.md UC5 / "Date picker" (V1.1), ARCHITECTURE.md §5 "TBD: date selection state"
 **Unblocks:** ASTRONOMY.md §5 USNO rows checked in the UI; the Mar Vista 2026-10-03 no-moonrise day (DESIGN-REVIEW.md, Moon table)
 
