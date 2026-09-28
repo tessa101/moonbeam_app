@@ -142,18 +142,16 @@ _Last updated: 2026-09-26 (Step 3: date selection)_
    - [ ] Time zone label says "GMT+10" for Sydney in `en_US`, not "AEST" (the system abbreviation;
      see DECISIONS.md). Decide in the design pass whether that's acceptable
 
-6. [ ] **Step 3 device QA, by hand** (DATE.md §7). Not verified by the agent:
-   - VoiceOver:
-     - the date field reads "Date, Today, Saturday, …" and swipe up/down moves a day
-     - ‹ / › announce the new date and read "dimmed" at ±366
-     - the calendar sheet's Today button reads "dimmed" on today
-   - Dynamic Type at accessibility sizes: the date row stays usable, and the sheet opens at large
-   - A six-row month (e.g. January 2027) in the calendar sheet at medium
-   - Mar Vista on Oct 3 shows the no-moonrise state (covered by a unit test; not yet seen in the app)
-   - Following today across the place's midnight: background the app, then foreground it after midnight
+6. [ ] **Step 3 device QA, by hand** (DATE.md §7). Pushed 2026-09-28 (`6f13dd0`). Quick checks on the phone:
+   - ‹ / › move a day; tapping the date opens the calendar; tapping a day picks it and closes; the month/year wheel shows Done
+   - Mar Vista on Oct 3 shows the no-moonrise state (pick Oct 3, or open the app that day)
    - Relaunch opens on today
-   - The run destination was switched to the iPhone 17 simulator for tests, because the test target
-     has no development team for the "T2 iPhone" device
+   - **Deferred** (Tessa, 2026-09-28):
+     - VoiceOver and Dynamic Type checks for the date row and sheet → DESIGN-REVIEW.md, Accessibility
+     - Six-row month at the medium detent → DESIGN-REVIEW.md, Date control ("Calendar sheet header")
+     - Background → foreground across the place's midnight (covered by unit tests; rare in practice)
+     - Test target has no development team, so tests run on the iPhone 17 simulator only. Set a team
+       under Signing & Capabilities to run tests on "T2 iPhone"
 
 Design-pass items (visuals, copy, a11y) are tracked in **[DESIGN-REVIEW.md](DESIGN-REVIEW.md)**.
 

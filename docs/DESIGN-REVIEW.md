@@ -56,6 +56,7 @@ _Started: 2026-09-26_
 - [ ] Touch targets ≥ 44 pt (clear button, "Use my location", Cancel)
 - [ ] Reduce Motion, if any animation is added
 - [ ] Dark mode (people use this app at night)
+- [ ] **Date row + calendar sheet (Step 3, deferred from device QA):** the date field reads "Date, Today, Saturday, …" and VoiceOver swipe up/down moves a day; ‹ / › announce the new date and read "dimmed" at ±366; the sheet's Today button reads "dimmed" on today; at accessibility text sizes the row stays usable and the sheet opens at large
 
 ## Brand / product
 - [ ] Display name "Moonbeam" (lives in `AppInfo.name`)
