@@ -29,6 +29,7 @@ moonbeam-app/moonbeam-app/
 ├── App/                 # @main entry, dependency wiring
 ├── Features/
 │   ├── Location/        # LocationViewModel, LocationScreen, LocationOffDialog, DateControl, CalendarSheet
+│   ├── Compass/         # CompassViewModel, CompassLock, CompassTarget, CompassContext
 │   └── MoonTable/       # MoonTableView, MoonTableViewModel
 ├── Services/
 │   ├── Moon/            # MoonService protocol + AstronomyEngineMoonService

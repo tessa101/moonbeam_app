@@ -5,6 +5,28 @@
 
 ---
 
+### 2026-09-28 · Step 4.3: compass view model
+- **`CompassViewModel` is fed, not wired.** `LocationViewModel` pushes a `CompassContext` (place,
+  detected place, permission state, the selected day's `MoonDay`, is-today). The compass never reads
+  location state itself, so `LocationViewModel` stays the one owner of place, day and permission.
+- **Moonrise and moonset targets come from the table's own `MoonDay`**, not a second
+  `moonDay(for:on:)` call. The compass can't disagree with the table, and the existing tests that
+  count moon-service calls are unaffected.
+- **Sensors run only while shown, on screen and in the foreground.** A task iterates the heading
+  stream for as long as they run, which is what holds it. Stopping clears the reading and lock, so
+  a stale heading is never shown.
+- **The "Moon" ticker runs only with the sensors.** Each tick recomputes the moon's azimuth and
+  whether it's up. Foreground and "selection became today" recompute at once. The sleep is injected
+  so tests fire ticks by hand.
+- **Lock rules live in a pure `CompassLock`.** Acquire ≤ 5° (inclusive), release > 8°, nearest
+  wins, an exact tie goes to moonrise, then moonset, then moon. A locked target that disappears
+  (the moon sets, a new day has no moonrise) is released.
+- **Visibility with location on but nothing detected is hidden.** A searched city can only be
+  "where you are" by matching a detected place (§2). If detection failed or hasn't run, nothing
+  proves it.
+- **Bearing copy is whole degrees then letters ("72° ENE"), rounded so 359.6° reads "0°".** Same
+  order as the moon table. The letters use the unrounded azimuth, as the table does.
+
 ### 2026-09-28 · Step 4.2: HeadingService
 - **Delegate API wrapped in an `AsyncStream`.** CoreLocation has no async heading sequence (checked
   against iOS 26 docs), and `CLLocationUpdate.liveUpdates()` carries no heading. `start()` returns

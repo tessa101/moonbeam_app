@@ -105,4 +105,28 @@ nonisolated struct CompassFormatterTests {
         #expect(formatter.abbreviation(for: 105.0) == "ESE")
         #expect(formatter.abbreviation(for: 252.0) == "WSW")
     }
+
+    // MARK: - Bearing (compass heading and lock copy)
+
+    /// COMPASS.md §1 examples, in the table's degrees-then-letters order.
+    @Test("Bearing is whole degrees then the 16-point name", arguments: [
+        (72.0, "72° ENE"),
+        (288.0, "288° WNW"),
+        (140.0, "140° SE"),
+        (105.4, "105° ESE"),
+        (0.0, "0° N")
+    ])
+    func bearing(azimuth: Double, expected: String) {
+        #expect(formatter.bearing(for: azimuth) == expected)
+    }
+
+    @Test("Bearing never reads 360°", arguments: [359.6, 360.0, 719.8])
+    func bearingWrapsToZero(azimuth: Double) {
+        #expect(formatter.bearing(for: azimuth) == "0° N")
+    }
+
+    @Test("Spoken bearing spells out the direction")
+    func spokenBearing() {
+        #expect(formatter.spokenBearing(for: 72.0) == "72 degrees east-northeast")
+    }
 }

@@ -5,7 +5,8 @@
 
 import Foundation
 
-/// Turns an azimuth into a 16-point compass abbreviation and a spoken name.
+/// Turns an azimuth into a 16-point compass abbreviation and a spoken name,
+/// or a whole-degree bearing ("72° ENE") for the compass.
 ///
 /// Sectors are `compassSectorWidth` wide and centred on their heading, so N
 /// spans 348.75°–11.25° rather than starting at 0°. See ASTRONOMY.md §3.
@@ -17,6 +18,8 @@ nonisolated struct CompassFormatter {
     // MARK: - Constants
 
     static let compassSectorWidth = 22.5
+
+    private static let fullTurnDegrees = 360.0
 
     private static let abbreviations = [
         "N", "NNE", "NE", "ENE",
@@ -43,6 +46,25 @@ nonisolated struct CompassFormatter {
     /// `"east-southeast"`.
     func spokenName(for azimuth: Double) -> String {
         Self.spokenNames[Self.sectorIndex(for: azimuth)]
+    }
+
+    /// Whole degrees then the abbreviation, for example `"72° ENE"`: the
+    /// compass's heading and lock copy, in the moon table's order
+    /// (COMPASS.md §1).
+    func bearing(for azimuth: Double) -> String {
+        "\(Self.wholeDegrees(azimuth).formatted())° \(abbreviation(for: azimuth))"
+    }
+
+    /// The spoken form of `bearing(for:)`, for example
+    /// `"72 degrees east-northeast"`.
+    func spokenBearing(for azimuth: Double) -> String {
+        "\(Self.wholeDegrees(azimuth).formatted()) degrees \(spokenName(for: azimuth))"
+    }
+
+    /// Rounded to a whole degree in `0..<360`, so 359.6° reads "0°", not
+    /// "360°".
+    private static func wholeDegrees(_ azimuth: Double) -> Int {
+        Int(azimuth.wrappedIntoDegreeCircle.rounded()) % Int(fullTurnDegrees)
     }
 
     /// Index of the 16-point sector containing `azimuth`.
