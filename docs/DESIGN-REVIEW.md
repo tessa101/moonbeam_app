@@ -51,6 +51,7 @@ _Started: 2026-09-26_
 
 ## Compass (Step 4; COMPASS.md)
 - [ ] **Portrait lock.** App is locked to portrait for v1 so the compass stays readable and heading stays simple (COMPASS.md §1, decision F). Deliberate choice under WCAG 1.3.4 (orientation essential for a compass). Revisit landscape later; upgrade path is allowing rotation and matching the heading orientation to the device
+- [ ] **iPhone-only for v1** (COMPASS.md §1). iPad dropped so the portrait lock doesn't fight iPad multitasking; revisit with landscape
 - [ ] **Enable-location hint** (location off): copy, placement, and whether it opens the Location Off dialog or the system prompt. Built as a plain placeholder
 - [ ] **Other-city state:** fully hidden, or a quiet note ("Compass is available at your current location")?
 - [ ] **Lock feedback:** visual treatment of the lock state; haptics are a fast-follow

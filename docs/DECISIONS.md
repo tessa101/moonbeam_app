@@ -5,6 +5,20 @@
 
 ---
 
+### 2026-09-28 · Compass: moon-up, data model, iPhone-only, 16-point names
+- **Moon-up = latest rise is after latest set**, both from the moon table's own rise/set search
+  (upper limb, standard refraction), searched back from now. The compass can't disagree with the
+  table, and it covers a moon that rose last night.
+- **Data model is additive only:** new `MoonPosition` (azimuth, isUp) and
+  `MoonService.moonPosition(for:at:)`. Rise/set bearings already existed in `MoonEvent.azimuth`.
+  Plus a new `HeadingService` protocol (CoreLocation + fake).
+- **v1 is iPhone-only** (`TARGETED_DEVICE_FAMILY` 1,2 → 1), so the portrait lock doesn't fight
+  iPad multitasking.
+- **16-point direction names on the compass**, from `CompassFormatter`, same as the table.
+- **Considered:** altitude > 0° for moon-up (measures the centre, so it's off from the table by a
+  minute or two at each rise and set); portrait-locked iPad; 8-point names like Apple's Compass
+  (one bearing would get two names on one screen).
+
 ### 2026-09-26 · Step 3 review follow-ups
 - **The moon table no longer shows the city or the date.** The search field shows the city and
   the date control shows the day, so `ContentView` doesn't repeat them. This removes
