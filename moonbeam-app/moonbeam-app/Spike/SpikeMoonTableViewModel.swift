@@ -93,10 +93,11 @@ final class SpikeMoonTableViewModel {
 
     // MARK: - Helpers
 
+    /// The bearing comes from the same formatter as the compass, so the two
+    /// can never show one azimuth differently (359.6° is "0° N" in both).
     private func text(for event: MoonEvent?, missing: String) -> String {
         guard let event else { return missing }
-        let degrees = event.azimuth.formatted(.number.precision(.fractionLength(0)))
-        return "\(time(event.date)) · \(degrees)° \(compass.abbreviation(for: event.azimuth))"
+        return "\(time(event.date)) · \(compass.bearing(for: event.azimuth))"
     }
 
     private func accessibilityLabel(

@@ -89,7 +89,7 @@ _Last updated: 2026-09-28 (Step 4: compass, through 4.3)_
   - 4.3b `LocationViewModel` owns and feeds the compass (detected place, permission, selected day's `MoonDay`)
   - **Not built yet:** the compass view (4.4), and `LocationScreen`'s background hook and scroll-visibility
     reporting that come with it. Until then the sensors never start in the app.
-  - **272 tests / 400 cases across 19 suites, all passing** in Xcode's runner on the iPhone 17 simulator.
+  - **274 tests / 405 cases across 19 suites, all passing** in Xcode's runner on the iPhone 17 simulator.
   - **Device QA pending** (see Next, item 7).
 
 ## Next

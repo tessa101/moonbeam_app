@@ -26,6 +26,10 @@
   proves it.
 - **Bearing copy is whole degrees then letters ("72° ENE"), rounded so 359.6° reads "0°".** Same
   order as the moon table. The letters use the unrounded azimuth, as the table does.
+- **The moon table now uses the same `CompassFormatter.bearing(for:)`** (review follow-up), so the
+  table and compass can't disagree. Two visible changes in the table: 359.6° reads "0° N", not
+  "360° N". An exact half degree now rounds half away from zero (72.5° → "73°"), where the table
+  used to round half to even ("72°"), matching the compass.
 - **4.3b wiring: `LocationViewModel` owns the compass** (`let compass`) and takes a
   `headingService` in its initializer. Every place and day change already goes through
   `reloadMoonTable()`, which now also pushes the context. The permission prompt and
