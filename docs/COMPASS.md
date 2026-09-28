@@ -96,6 +96,7 @@ nonisolated protocol MoonService {
 
 - `AstronomyEngineMoonService` and `FakeMoonService` both implement it.
 - New `HeadingService` protocol (CoreLocation + fake): true heading, accuracy, and start/stop that also drives the continuous location updates true heading needs. No new dependency.
+- Readings are a new value type, `HeadingReading` (`trueHeading: Double?`, `accuracy: Double?`, derived `isLowAccuracy`), built in 4.2. `nil` means CoreLocation reported the value as invalid. There's no magnetic field, so nothing can fall back to magnetic.
 
 ## 5. Open questions
 

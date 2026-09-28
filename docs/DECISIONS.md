@@ -5,6 +5,24 @@
 
 ---
 
+### 2026-09-28 · Step 4.2: HeadingService
+- **Delegate API wrapped in an `AsyncStream`.** CoreLocation has no async heading sequence (checked
+  against iOS 26 docs), and `CLLocationUpdate.liveUpdates()` carries no heading. `start()` returns
+  the stream; `stop()` finishes it.
+- **Heading and location updates share one manager and one session**, started and stopped
+  together. It's a separate manager from `CoreLocationService`'s, so stopping the compass can't
+  cut off a location fetch in flight. Location runs at kilometre accuracy, since true heading
+  only needs a rough position for declination.
+- **A cancelled or dropped stream ends the session** (via `onTermination`), guarded by a session
+  counter so a late termination can't stop a newer session. The consumer must keep the stream
+  while it wants readings.
+- **No compass hardware → neither sensor starts** and the stream yields one `.unavailable`. This is
+  the simulator path, and it's tested for real.
+- **Only `headingFailure` and `denied` errors mean "unavailable".** A transient "location unknown"
+  is ignored, so the compass doesn't flicker into low accuracy.
+- **Low accuracy = no true heading, unknown accuracy, or accuracy > 15°.** Exactly 15° is still
+  usable ("worse than 15°", COMPASS.md §1). Lives on `HeadingReading` as a named constant.
+
 ### 2026-09-28 · App name: Moon Signal (working name)
 - **Display name is "Moon Signal" for now**, replacing the working name "Moonbeam". The location
   permission prompt already uses it (96e5042). `AppInfo.name` and the home-screen display name

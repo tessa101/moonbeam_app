@@ -32,6 +32,7 @@ moonbeam-app/moonbeam-app/
 │   └── MoonTable/       # MoonTableView, MoonTableViewModel
 ├── Services/
 │   ├── Moon/            # MoonService protocol + AstronomyEngineMoonService
+│   ├── Heading/         # HeadingService + CoreLocationHeadingService and fake
 │   └── Location/        # LocationService, PlaceSearchService, PlaceStore + real and fake impls
 ├── Models/              # Plain value types
 ├── Formatting/          # Compass, time, and percent formatters
@@ -76,6 +77,17 @@ struct MoonDay: Equatable {
     let phaseAngle: Double      // 0–360
     let illumination: Double    // 0.0–1.0
 }
+
+struct MoonPosition: Equatable {    // compass "Moon" target (COMPASS.md §4)
+    let azimuth: Double         // degrees from true north
+    let isUp: Bool              // latest rise after latest set, same search as the table
+}
+
+struct HeadingReading: Equatable, Sendable {
+    let trueHeading: Double?    // 0..<360 true north; nil = unavailable (never magnetic)
+    let accuracy: Double?       // degrees; nil = unknown
+    var isLowAccuracy: Bool     // no heading, unknown accuracy, or accuracy > 15°
+}
 ```
 
 Models are plain values with no formatting logic. `Formatting/` turns them into strings.
@@ -85,6 +97,13 @@ Models are plain values with no formatting logic. `Formatting/` turns them into 
 ```swift
 protocol MoonService {                                         // nonisolated
     func moonDay(for place: Place, on date: Date) -> MoonDay   // sync, pure, fast
+    func moonPosition(for place: Place, at date: Date) -> MoonPosition  // an instant, not a day
+}
+
+protocol HeadingService {                                      // @MainActor
+    var isRunning: Bool { get }
+    func start() -> AsyncStream<HeadingReading>  // starts heading + location together
+    func stop()                                  // stops both, finishes the stream
 }
 
 protocol LocationService {                                     // @MainActor
@@ -107,7 +126,10 @@ protocol PlaceStore {                                          // @MainActor
 - The location services are async, can fail, and are the only network-touching code. They're
   main-actor isolated because `CLLocationManager` and MapKit expect a single, UI-bound home;
   the models they return stay `nonisolated` so results cross back out freely.
-- All four get fake implementations for SwiftUI previews and tests.
+- `HeadingService` pairs heading with location updates because true heading is only valid
+  while location runs (COMPASS.md §1). A session also ends if its stream is cancelled or
+  dropped, so an abandoned stream can't leave the sensors on.
+- All five get fake implementations for SwiftUI previews and tests.
 
 `GeocodingService` from the first draft of this doc was superseded by `LocationService` +
 `PlaceSearchService`: the spec calls for two distinct jobs (detect where you are, search for
