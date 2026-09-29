@@ -52,6 +52,10 @@ final class CoreLocationService: LocationService {
         )
     }
 
+    var isPreciseLocationOff: Bool {
+        manager.accuracyAuthorization == .reducedAccuracy
+    }
+
     func requestAuthorization() async -> LocationAuthState {
         let current = authorizationState
         guard current == .notDetermined else { return current }

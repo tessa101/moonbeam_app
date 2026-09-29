@@ -40,8 +40,19 @@ final class CoreLocationHeadingService: HeadingService {
 
     private(set) var isRunning = false
 
+    /// Decides when the running session needs restarting (4.8, 4.9). Fresh
+    /// for each session.
+    private var monitor = HeadingSessionMonitor()
+
     init() {
         manager.desiredAccuracy = Self.locationAccuracy
+        // The default (true) lets iOS pause location updates when the phone
+        // is still, which is exactly how a compass is held. For When In Use
+        // apps a pause "ends access to location changes until the app ...
+        // restart[s] those updates", and true heading goes with it: the
+        // 2026-09-29 stuck-low-accuracy bug. Sessions only run in the
+        // foreground with the compass on screen, so there's no battery case.
+        manager.pausesLocationUpdatesAutomatically = false
     }
 
     // MARK: - HeadingService
@@ -58,7 +69,10 @@ final class CoreLocationHeadingService: HeadingService {
             Task { @MainActor in self?.stop(session: current) }
         }
 
-        let observer = HeadingObserver(continuation: continuation)
+        monitor = HeadingSessionMonitor()
+        let observer = HeadingObserver(continuation: continuation) { [weak self] event in
+            Task { @MainActor in self?.handle(event, session: current) }
+        }
         self.observer = observer
 
         // No compass hardware: start neither sensor, so they stay paired.
@@ -95,11 +109,33 @@ final class CoreLocationHeadingService: HeadingService {
         guard ended == session else { return }
         stop()
     }
+
+    // MARK: - Self-healing (4.8, 4.9)
+
+    /// Acts on the monitor's answer, for the current session only.
+    private func handle(_ event: HeadingSessionMonitor.Event, session eventSession: Int) {
+        guard isRunning, eventSession == session else { return }
+
+        switch monitor.handle(event) {
+        case .none:
+            break
+        case .restartLocationUpdates:
+            manager.stopUpdatingLocation()
+            manager.startUpdatingLocation()
+        case .restartSession:
+            manager.stopUpdatingHeading()
+            manager.stopUpdatingLocation()
+            manager.startUpdatingLocation()
+            manager.startUpdatingHeading()
+        }
+    }
 }
 
 // MARK: - Delegate bridging
 
-/// Forwards heading callbacks into the session's stream as `HeadingReading`s.
+/// Forwards heading callbacks into the session's stream as `HeadingReading`s,
+/// and session events (raw readings, pauses, authorization changes) to the
+/// service's `HeadingSessionMonitor`.
 ///
 /// `nonisolated` because the imported delegate protocol has no actor
 /// annotation. `CLHeading` is mapped to a `Sendable` `HeadingReading` here, so
@@ -109,8 +145,17 @@ private nonisolated final class HeadingObserver: NSObject, CLLocationManagerDele
 
     private let continuation: AsyncStream<HeadingReading>.Continuation
 
-    init(continuation: AsyncStream<HeadingReading>.Continuation) {
+    /// Session events for `HeadingSessionMonitor`: raw readings, pauses and
+    /// authorization changes. Plain values only, so they cross to the main
+    /// actor safely.
+    private let onEvent: @Sendable (HeadingSessionMonitor.Event) -> Void
+
+    init(
+        continuation: AsyncStream<HeadingReading>.Continuation,
+        onEvent: @escaping @Sendable (HeadingSessionMonitor.Event) -> Void
+    ) {
         self.continuation = continuation
+        self.onEvent = onEvent
         super.init()
     }
 
@@ -125,6 +170,27 @@ private nonisolated final class HeadingObserver: NSObject, CLLocationManagerDele
                 rawAccuracy: newHeading.headingAccuracy
             )
         )
+        onEvent(.reading(
+            rawTrueHeading: newHeading.trueHeading,
+            rawMagneticHeading: newHeading.magneticHeading,
+            at: newHeading.timestamp
+        ))
+    }
+
+    /// Shouldn't happen with automatic pausing off, but if iOS pauses anyway
+    /// the session restarts location updates rather than sitting stuck.
+    nonisolated func locationManagerDidPauseLocationUpdates(_ manager: CLLocationManager) {
+        onEvent(.locationUpdatesPaused)
+    }
+
+    /// Also fires once when the delegate is set, which the monitor treats as
+    /// the starting state.
+    nonisolated func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
+        let status = manager.authorizationStatus
+        onEvent(.authorizationChanged(
+            isAuthorized: status == .authorizedWhenInUse || status == .authorizedAlways,
+            isPrecise: manager.accuracyAuthorization == .fullAccuracy
+        ))
     }
 
     /// A heading failure (e.g. strong magnetic interference) or lost

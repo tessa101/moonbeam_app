@@ -21,6 +21,12 @@ protocol LocationService {
     /// The current permission state, read fresh each time. Cheap.
     var authorizationState: LocationAuthState { get }
 
+    /// Precise Location is off for the app (`accuracyAuthorization` is
+    /// `.reducedAccuracy`). Not a permission state: the moon maths is fine
+    /// with approximate location (§4). The compass uses it to explain low
+    /// accuracy (COMPASS.md §1, 4.10). Read fresh each time.
+    var isPreciseLocationOff: Bool { get }
+
     /// Shows the system prompt when the state is `notDetermined`, and returns
     /// the state the user settled on. A no-op returning the current state
     /// otherwise — iOS only ever prompts once.

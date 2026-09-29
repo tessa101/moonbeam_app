@@ -20,16 +20,24 @@ struct CompassView: View {
     let onTurnOnLocation: () -> Void
 
     var body: some View {
-        switch viewModel.visibility {
-        case .here, .nearby:
-            compass
-        case .far:
-            Text(CompassViewModel.farMessage)
-                .foregroundStyle(.secondary)
-        case .locationOff:
-            locationOffHint
-        case .hidden:
-            EmptyView()
+        VStack(alignment: .leading) {
+            switch viewModel.visibility {
+            case .here, .nearby:
+                compass
+            case .far:
+                Text(CompassViewModel.farMessage)
+                    .foregroundStyle(.secondary)
+            case .locationOff:
+                locationOffHint
+            case .hidden:
+                EmptyView()
+            }
+
+            // In every state, including hidden: "the compass is gone" is
+            // one of the things it has to diagnose (4.8).
+            #if DEBUG
+            debugReadout
+            #endif
         }
     }
 
@@ -92,6 +100,22 @@ struct CompassView: View {
         .accessibilityLabel(viewModel.headingAccessibilityLabel)
         .accessibilityAddTraits(.updatesFrequently)
     }
+
+    // MARK: - DEBUG readout
+
+    #if DEBUG
+    /// Device diagnosis only (4.8/4.9); compiled out of release builds.
+    private var debugReadout: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            ForEach(viewModel.debugReadout, id: \.self) { line in
+                Text(line)
+            }
+        }
+        .font(.caption.monospaced())
+        .foregroundStyle(.secondary)
+        .padding(.top)
+    }
+    #endif
 
     // MARK: - Location off (§2)
 

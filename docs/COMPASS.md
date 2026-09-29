@@ -38,6 +38,8 @@
   - **Otherwise** (poor accuracy, cause unknown): "Move away from metal or magnets, or wave your phone in a figure 8"
   - Placeholder copy. No ⓘ / sheet for now; revisit in the design pass if more causes or detail are needed.
 - **Stuck low accuracy is a bug, not a reason (4.9):** device test 2026-09-29 showed "Compass accuracy is low" that only cleared after toggling Settings › Moon Signal › Location off/on. Fixed at the sensor level (with the 4.8 overnight bug), not explained to the user.
+  - *As built:* iOS's automatic pause of location updates is off. For When In Use apps a pause ends location updates until the app restarts them, and true heading goes with them; a phone held still for a compass is exactly when iOS pauses. A `HeadingSessionMonitor` restarts location updates when readings keep a magnetic heading but no true heading for 5 s (at most every 10 s), or on a pause. It restarts the whole session when authorization or Precise Location changes while it's running.
+  - *4.8 (compass gone after overnight):* the likely path is the app relaunching, the launch fix failing, and "Nothing detected" never being retried. Now each foreground retries detection quietly while authorized with nothing detected. It's detection only, so the place never changes and a failure shows nothing.
 
 ### Targets & refresh
 

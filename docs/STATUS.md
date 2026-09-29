@@ -98,7 +98,7 @@ _Last updated: 2026-09-29 (Step 4: compass, through 4.7)_
     - 4.6 proximity states (Here / Nearby ≤ 60 mi / Far); Turn On Location from the compass hint
       keeps the searched city, including after Settings
     - 4.7 target rows removed; the dial reads its targets to VoiceOver
-  - **294 tests / 425 cases across 19 suites, all passing** in Xcode's runner on the iPhone 17 simulator.
+  - **311 tests / 442 cases across 20 suites, all passing** in Xcode's runner on the iPhone 17 simulator.
   - **Device QA pending** (see Next, item 7).
 
 ## Next
@@ -199,11 +199,15 @@ _Last updated: 2026-09-29 (Step 4: compass, through 4.7)_
         now reads its targets to VoiceOver. **Check on device:** with VoiceOver on, swipe to the
         dial and hear "Targets: moonrise, …; moon, …"
    5. **Device test 2026-09-29 (Tessa), next fixes** — blocks the next TestFlight build:
-      - [ ] **4.8 + 4.9** Sensors stuck: "Compass accuracy is low" until Settings › Moon Signal ›
+      - [x] **4.8 + 4.9** Sensors stuck: "Compass accuracy is low" until Settings › Moon Signal ›
         Location was toggled off/on; and the compass gone after an overnight background. Likely one
         root cause (sensors not restarted on auth/accuracy change or foreground). Reproduce in a test,
         then fix. DEBUG-only readout (heading, accuracy, accuracyAuthorization, visibility, targets,
-        lock, sensors running, haptic count) to diagnose on device
+        lock, sensors running, haptic count) to diagnose on device.
+        **Built** (DECISIONS.md 2026-09-29 "4.8 + 4.9"). **Check on device:**
+        - hold the phone still on the compass for a few minutes: accuracy stays good
+        - leave it backgrounded overnight: the compass is back in the morning
+        - if either fails, send the DEBUG readout lines (accuracyAuthorization, detected, sensors)
       - [ ] **Haptic** still missing after a lock (System Haptics on)
       - [ ] **4.10** Inline low-accuracy reason (COMPASS.md §1 Accuracy)
 

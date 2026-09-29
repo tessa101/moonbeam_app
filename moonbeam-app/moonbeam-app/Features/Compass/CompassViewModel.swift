@@ -96,6 +96,16 @@ final class CompassViewModel {
 
     private(set) var lockedKind: CompassTarget.Kind?
 
+    /// The heading and location sensors are running.
+    private(set) var isSensing = false
+
+    /// From the context: Precise Location is off for the app.
+    private(set) var isPreciseLocationOff = false
+
+    /// From the context: something has been detected this session. Only the
+    /// DEBUG readout uses it, to tell "Nothing detected" apart (4.8).
+    private(set) var hasDetectedPlace = false
+
     /// Goes up by one each time a lock is acquired, including a switch
     /// straight from one target to another. The view plays the haptic when
     /// it changes (COMPASS.md §1, 4.5), so release and holding stay silent.
@@ -209,6 +219,8 @@ final class CompassViewModel {
     /// that becomes today gets its "Moon" target straight away.
     func update(_ context: CompassContext) {
         self.context = context
+        isPreciseLocationOff = context.isPreciseLocationOff
+        hasDetectedPlace = context.detectedPlace != nil
         visibility = Self.visibility(for: context)
         nearbyNote = visibility == .nearby ? context.place.map { "Directions for \($0.shortName)" } : nil
         rebuildTargets()
@@ -233,6 +245,31 @@ final class CompassViewModel {
         isInForeground = false
         updateSensors()
     }
+
+    // MARK: - DEBUG readout (device diagnosis, 4.8/4.9)
+
+    #if DEBUG
+    /// Plain lines for the DEBUG-only readout under the compass, so a device
+    /// test shows why it's in the state it's in. Never in release builds.
+    var debugReadout: [String] {
+        let heading = reading?.trueHeading.map { String(format: "%.1f° true", $0) } ?? "none"
+        let accuracy = reading?.accuracy.map { String(format: "±%.1f°", $0) } ?? "unknown"
+        let targetList = targets.isEmpty
+            ? "none"
+            : targets.map { "\(Self.name(of: $0.kind).lowercased()) \(Int($0.azimuth.rounded()))" }
+                .joined(separator: ", ")
+        return [
+            "heading: \(heading)",
+            "accuracy: \(accuracy)\(isLowAccuracy ? " (low)" : "")",
+            "accuracyAuthorization: \(isPreciseLocationOff ? "reduced" : "full")",
+            "visibility: \(visibility)",
+            "detected: \(hasDetectedPlace ? "yes" : "no")",
+            "targets: \(targetList)",
+            "lock: \(lockedKind.map { Self.name(of: $0).lowercased() } ?? "none")",
+            "sensors: \(isSensing ? "running" : "stopped")",
+        ]
+    }
+    #endif
 
     // MARK: - Visibility (COMPASS.md §2)
 
@@ -321,6 +358,7 @@ final class CompassViewModel {
         guard headingTask == nil else { return }
 
         let stream = headingService.start()
+        isSensing = true
         headingTask = Task { [weak self] in
             for await reading in stream {
                 self?.apply(reading)
@@ -350,6 +388,7 @@ final class CompassViewModel {
         headingService.stop()
         headingTask?.cancel()
         headingTask = nil
+        isSensing = false
         moonRefreshTask?.cancel()
         moonRefreshTask = nil
 

@@ -55,8 +55,10 @@ struct LocationScreen: View {
                     ContentView(viewModel: moonTable)
                 }
 
-                // COMPASS.md §1: at the bottom, below the moon table.
-                if viewModel.compass.visibility != .hidden {
+                // COMPASS.md §1: at the bottom, below the moon table. DEBUG
+                // builds keep it in every state for its diagnostic readout;
+                // the sensors still only run when it's shown.
+                if viewModel.compass.visibility != .hidden || Self.showsDebugReadout {
                     compass
                 }
             }
@@ -118,6 +120,12 @@ struct LocationScreen: View {
     }
 
     // MARK: - Compass
+
+    #if DEBUG
+    private static let showsDebugReadout = true
+    #else
+    private static let showsDebugReadout = false
+    #endif
 
     /// Reports whether the compass is on screen, which (with foreground and
     /// visibility) decides whether its sensors run (COMPASS.md §1).

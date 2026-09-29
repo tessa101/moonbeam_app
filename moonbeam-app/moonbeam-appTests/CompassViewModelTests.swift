@@ -619,6 +619,41 @@ struct CompassViewModelTests {
         #expect(viewModel.targetText(for: moonset) == "Moonset · 288° WNW")
     }
 
+    // MARK: - DEBUG readout (4.8/4.9)
+
+    @Test("The DEBUG readout shows accuracy authorization, detection and sensor state")
+    func debugReadout() async {
+        let harness = Self.makeHarness()
+        var context = Self.context()
+        context.isPreciseLocationOff = true
+        harness.viewModel.update(context)
+        harness.viewModel.setOnScreen(true)
+        harness.heading.send(Self.reading(74))
+        await waitUntil { harness.viewModel.lockedKind != nil }
+
+        let readout = harness.viewModel.debugReadout
+
+        #expect(readout.contains("accuracyAuthorization: reduced"))
+        #expect(readout.contains("visibility: here"))
+        #expect(readout.contains("detected: yes"))
+        #expect(readout.contains("sensors: running"))
+        #expect(readout.contains("heading: 74.0° true"))
+        #expect(readout.contains("lock: moonrise"))
+    }
+
+    @Test("The DEBUG readout when stopped and nothing detected")
+    func debugReadoutStopped() {
+        let harness = Self.makeHarness()
+
+        harness.viewModel.update(Self.context(detected: nil))
+
+        let readout = harness.viewModel.debugReadout
+        #expect(readout.contains("accuracyAuthorization: full"))
+        #expect(readout.contains("detected: no"))
+        #expect(readout.contains("sensors: stopped"))
+        #expect(readout.contains("heading: none"))
+    }
+
     // MARK: - Dial VoiceOver label (4.7)
 
     /// With the rows gone, the dial is where VoiceOver hears every target,

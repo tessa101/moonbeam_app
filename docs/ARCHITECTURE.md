@@ -33,7 +33,7 @@ moonbeam-app/moonbeam-app/
 │   └── MoonTable/       # MoonTableView, MoonTableViewModel
 ├── Services/
 │   ├── Moon/            # MoonService protocol + AstronomyEngineMoonService
-│   ├── Heading/         # HeadingService + CoreLocationHeadingService and fake
+│   ├── Heading/         # HeadingService + CoreLocationHeadingService and fake, HeadingSessionMonitor
 │   └── Location/        # LocationService, PlaceSearchService, PlaceStore + real and fake impls
 ├── Models/              # Plain value types
 ├── Formatting/          # Compass, time, and percent formatters
@@ -109,6 +109,7 @@ protocol HeadingService {                                      // @MainActor
 
 protocol LocationService {                                     // @MainActor
     var authorizationState: LocationAuthState { get }
+    var isPreciseLocationOff: Bool { get }                    // accuracyAuthorization == .reducedAccuracy
     func requestAuthorization() async -> LocationAuthState
     func currentPlace() async throws -> Place
 }

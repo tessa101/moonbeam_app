@@ -16,6 +16,8 @@ final class FakeLocationService: LocationService {
 
     var authorizationState: LocationAuthState
 
+    var isPreciseLocationOff = false
+
     /// What the system prompt "decides". Left `nil`, the state doesn't change,
     /// which models a user dismissing the prompt.
     var stateAfterRequest: LocationAuthState?

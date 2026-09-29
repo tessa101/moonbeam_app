@@ -279,7 +279,18 @@ final class LocationViewModel {
         let wasAuthorized = lastSeenAuthState.isAuthorized
         lastSeenAuthState = state
 
-        guard state.isAuthorized, !wasAuthorized else { return }
+        guard state.isAuthorized else { return }
+        guard !wasAuthorized else {
+            // 4.8: authorized all along but nothing detected, e.g. a launch
+            // fix that failed or timed out after an overnight relaunch. The
+            // compass stays hidden until something detects you, so retry
+            // quietly. Detection only: the selected place never changes, and
+            // a failure shows nothing.
+            if detectedPlace == nil, !isLocating {
+                await locate(userInitiated: false, detectionOnly: true)
+            }
+            return
+        }
         locationOffDialog = nil
         guard !isLocating else { return }
         let detectionOnly = detectionOnlyAfterSettings
@@ -565,6 +576,7 @@ final class LocationViewModel {
                 place: place,
                 detectedPlace: detectedPlace,
                 authState: locationService.authorizationState,
+                isPreciseLocationOff: locationService.isPreciseLocationOff,
                 moonDay: moonTable?.moonDay,
                 isToday: isOnToday
             )
@@ -607,7 +619,8 @@ final class LocationViewModel {
             guard !Task.isCancelled else { return }
             if userInitiated {
                 locationFailed = true
-            } else if let lastViewed {
+            } else if !detectionOnly, let lastViewed {
+                // A quiet detection-only retry (4.8) never touches the place.
                 show(lastViewed, remember: false)
             }
         }

@@ -5,6 +5,35 @@
 
 ---
 
+### 2026-09-29 · 4.8 + 4.9: sensors that got stuck, and a compass gone after overnight
+- **Likely root cause of stuck low accuracy (4.9): iOS paused location updates.**
+  `pausesLocationUpdatesAutomatically` defaults to true. Apple's docs say that for When In Use
+  apps a pause "ends access to location changes until the app … restart[s] those updates". True
+  heading is only valid while location updates run, so every reading lost it. Nothing in the
+  session restarted itself; toggling Location in Settings stopped and restarted it, which is why
+  that cleared it. Pausing is now off; sessions only run in the foreground with the compass on screen.
+- **Self-healing anyway: `HeadingSessionMonitor`** (pure, tested). It restarts location updates if
+  a valid magnetic heading keeps arriving without a true heading for 5 s (throttled to once per
+  10 s), or on a pause callback. It restarts the whole session if authorization or Precise
+  Location changes while running. The first authorization callback is the baseline; losing
+  permission is left to `LocationViewModel`, which hides the compass.
+- **Answers to the device-test questions:**
+  - Does the heading manager start before authorization is settled? No. The compass only starts
+    once `LocationViewModel` sees authorized.
+  - Did anything restart it on an authorization change, an `accuracyAuthorization` change, or
+    foreground? Not while running. Foreground only restarted it because background had stopped
+    it. Both are now handled.
+- **4.8 (compass gone after an overnight background):** not reproduced on device. The likely
+  path is iOS terminating the app overnight and the launch fix failing or timing out, so nothing
+  is detected. Before the fix, that was only retried on a permission change. Now each foreground
+  with location authorized and nothing detected retries detection quietly. It's detection only,
+  and a failure neither shows the "couldn't find" message nor switches the place.
+- **`LocationService.isPreciseLocationOff`** (new) reaches the compass through `CompassContext`,
+  for the DEBUG readout now and the 4.10 reason line.
+- **DEBUG readout** under the compass, compiled out of Release (checked). It shows heading,
+  accuracy, `accuracyAuthorization`, visibility, detected, targets, lock and sensors. It's shown
+  in every state, even hidden, since "the compass is gone" is one of the things it diagnoses.
+
 ### 2026-09-29 · Low-accuracy reason shown inline
 - When the compass is in low accuracy, one line under the heading says why: "Precise Location is off"
   (with a Settings button) when `accuracyAuthorization` is reduced, otherwise a metal/magnets +

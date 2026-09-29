@@ -296,6 +296,66 @@ struct LocationViewModelCompassTests {
         #expect(harness.viewModel.locationFailed)
     }
 
+    // MARK: - Recovering on foreground (4.8)
+
+    /// The overnight case: the app relaunched, the launch fix failed, so
+    /// nothing was detected and the compass stayed hidden with nothing to
+    /// retry. The next foreground now retries, detection only.
+    @Test("Foreground with nothing detected retries detection and keeps the place")
+    func foregroundRetriesDetection() async {
+        let harness = Self.makeHarness(
+            detected: nil,
+            store: InMemoryPlaceStore(lastViewed: Self.huntingtonBeach)
+        )
+        await harness.viewModel.start()
+        #expect(harness.viewModel.compass.visibility == .hidden)
+
+        harness.location.placeResult = .success(Self.detectedLosAngeles)
+        await harness.viewModel.sceneDidBecomeActive()
+
+        #expect(harness.location.currentPlaceCount == 2)
+        #expect(harness.viewModel.place == Self.huntingtonBeach)
+        #expect(harness.viewModel.compass.visibility == .nearby)
+    }
+
+    @Test("A failed quiet retry shows nothing and keeps the place")
+    func foregroundRetryFailsQuietly() async {
+        let harness = Self.makeHarness(
+            detected: nil,
+            store: InMemoryPlaceStore(lastViewed: Self.huntingtonBeach)
+        )
+        await harness.viewModel.start()
+
+        await harness.viewModel.sceneDidBecomeActive()
+
+        #expect(harness.viewModel.place == Self.huntingtonBeach)
+        #expect(!harness.viewModel.locationFailed)
+        #expect(harness.viewModel.compass.visibility == .hidden)
+    }
+
+    @Test("Foreground with a place already detected doesn't fetch again")
+    func foregroundWithDetectionDoesNotRefetch() async {
+        let harness = Self.makeHarness()
+        await harness.viewModel.start()
+
+        await harness.viewModel.sceneDidBecomeActive()
+
+        #expect(harness.location.currentPlaceCount == 1)
+    }
+
+    @Test("Precise Location off reaches the compass, and updates on foreground")
+    func preciseLocationFlag() async {
+        let harness = Self.makeHarness()
+        harness.location.isPreciseLocationOff = true
+        await harness.viewModel.start()
+        #expect(harness.viewModel.compass.isPreciseLocationOff)
+
+        harness.location.isPreciseLocationOff = false
+        await harness.viewModel.sceneDidBecomeActive()
+
+        #expect(!harness.viewModel.compass.isPreciseLocationOff)
+    }
+
     // MARK: - Targets follow the selected day
 
     @Test("Moonrise and moonset targets are the selected day's, from the table")
