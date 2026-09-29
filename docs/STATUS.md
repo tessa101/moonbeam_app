@@ -178,6 +178,12 @@ _Last updated: 2026-09-28 (Step 4: compass, through 4.3)_
       rose). Note which label wins, and whether that's confusing. Expected per `CompassLock`: the
       nearer one wins, an exact tie goes to Moonrise, and once locked it holds until you turn more
       than 8° away. So it may stay "Moonrise" while the moon drifts from the rise point.
+   4. **First device test 2026-09-29 (Tessa):** compass works at a basic level. Follow-ups to build,
+      one commit each (COMPASS.md decision log, DECISIONS.md 2026-09-29):
+      - [ ] **4.5** Haptic tap on lock acquire (missing — was a planned fast-follow)
+      - [ ] **4.6** Proximity states: within 60 mi → shown (Nearby note), beyond → hidden (Far message);
+        Turn On Location from the compass hint keeps the searched city
+      - [ ] **4.7** Remove the target rows under the dial (duplicate the moon table)
 
 Design-pass items (visuals, copy, a11y) are tracked in **[DESIGN-REVIEW.md](DESIGN-REVIEW.md)**.
 

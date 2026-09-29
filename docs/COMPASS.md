@@ -1,6 +1,6 @@
 # Step 4: Compass
 
-**Status:** Built, plain v1 (4.1–4.4; device QA pending, STATUS.md Next 7). Wireframe pending — layout/styling in design pass · **Decided:** 2026-09-27, updated 2026-09-28 · **Owner:** Tessa
+**Status:** Built, plain v1 (4.1–4.4). **Follow-ups 4.5–4.7 from first device test (2026-09-29): planned.** Device QA pending, STATUS.md Next 7. Wireframe pending — layout/styling in design pass · **Decided:** 2026-09-27, updated 2026-09-29 · **Owner:** Tessa
 **Fills:** PRODUCT.md — new "Compass" feature
 **Depends on:** Step 2 location (built), Step 3 date selection (built)
 **Unblocks:** turning a rise/set bearing (e.g. 072°) into something you can actually point yourself at
@@ -26,7 +26,8 @@
 - **Nearest target wins** when acquiring a lock; one label at a time.
 - **Hold until release:** once locked, the lock stays on that target until heading moves outside ±8° of it — even if another target becomes nearer. No switching mid-lock.
 - **Lock copy:** target name + that target's bearing, same style as live heading — e.g. **"Moonrise · 72° ENE"**, "Moonset · 288° WNW", "Moon · 140° SE".
-- **What lock does in v1:** visual change + label only. **No haptics in v1** — haptic feedback is a fast-follow once lock works on device (§7).
+- **What lock does:** visual change + label, plus **one firm haptic tap when a lock is acquired** (4.5). No haptic on release or while holding. Follows the system haptics setting.
+- **Readout:** the compass shows only the live heading ("72° ENE") and the lock label. **No target rows under the dial** (4.7) — rise/set bearings are already in the moon table above. Dots on the dial are unlabelled until locked (design pass).
 
 ### Accuracy
 
@@ -54,16 +55,22 @@
 
 The compass only makes sense where you're standing. "Where you are" comes from device location; searching a city can't prove you're in it.
 
-| Location services | Selected place | Compass |
-|---|---|---|
-| On | Detected location | **Shown** |
-| On | Searched city that matches detected city (`isSameCity`) | **Shown** |
-| On | Any other city | **Hidden** |
-| Off / denied / not determined | Any city | **Hidden, with an enable-location hint** |
+The rule is **near**, not **same city** (4.6): moonrise/moonset bearings depend mostly on latitude, and within 60 mi they differ by well under 1° — inside the ±5° lock.
+
+| State | When | Compass | Message (placeholder copy) |
+|---|---|---|---|
+| **Location off** | Off / denied / not determined | Hidden | "Turn on location to use the compass" + **Turn On Location** button |
+| **Here** | Selected place is the detected city (`isSameCity`) | **Shown** | none |
+| **Nearby** | Different city, within **60 mi (~97 km)** of the detected location | **Shown** | "Directions for {City}" |
+| **Far** | More than 60 mi from the detected location | Hidden | "Compass is only available near this location" |
+| **Nothing detected** | Location on, no fix yet / failed with no earlier fix | Hidden | none |
 
 - **Location off → enable to see it.** True-north heading is only valid while location updates run, and magnetic heading alone is ~11–12° off in LA (outside lock tolerance). No manual "I'm here" override in v1.
-- **Enable-location hint:** in place of the compass, a short message along the lines of "Turn on location to use the compass," leading into the existing Location Off flow. **Exact copy, placement, and flow TBD** in the design pass; v1 build uses plain text + a button to the existing Location Off flow.
-- **Other city (location on):** hidden. Whether this state also gets a quiet note is open (§5).
+- **Turn On Location keeps the searched city (4.6).** From the compass hint, the button turns on location and updates *detection only* — it does **not** switch the selected place to the detected one. The states above then apply (Here / Nearby / Far). The main screen's existing "Use my location" button keeps its current behavior.
+- **Nearby note says what it shows, not that it's wrong.** At ≤60 mi the error is under 1°, so no "may not be exact" wording.
+- **Never show the distance** ("25 mi away") — with the city name, a screenshot would reveal roughly where someone is (same reason GPS coordinates were dropped).
+- Distance is measured between the detected location and the selected place's coordinates; neither is ever shown.
+- All copy is placeholder; final copy in the design pass (DESIGN-REVIEW.md).
 - Past and future dates at your location still show the compass — rise/set bearings are useful for planning where to stand.
 
 ## 3. Rules
@@ -101,7 +108,8 @@ nonisolated protocol MoonService {
 ## 5. Open questions
 
 - Enable-location hint: final copy, placement, and whether it opens the existing Location Off dialog or the system prompt (design pass)
-- Other-city state: fully hidden, or a quiet note ("Compass is available at your current location")? v1 build: fully hidden.
+- ~~Other-city state~~ **Settled 2026-09-29:** replaced by the Nearby / Far states (§2, 4.6).
+- Final copy for the Nearby note and Far message (design pass)
 - Wireframe: layout, typography, and how the compass sits under the moon table (design pass — v1 build is plain/unstyled)
 
 ## 6. Tests
@@ -114,13 +122,17 @@ nonisolated protocol MoonService {
 - "Moon" target only present when selected day is today and the moon is up (§3) — including moon-up-since-last-night case
 - "Moon is up" agrees with rise/set times at the boundaries (same horizon definition): down one minute before the table's rise, up one minute after; mirrored at set
 - Lock and heading labels use 16-point names (e.g. 72° → ENE), matching `CompassFormatter`
-- Visibility matrix (§2): shown at detected / same-city; hidden for other city; hint when location off, denied, or not determined
+- Visibility matrix (§2): Here and Nearby shown; Far hidden with message; nothing detected hidden; hint when location off, denied, or not determined
+- 60 mi boundary: just inside → Nearby, just outside → Far (e.g. Huntington Beach from LA = Nearby; San Diego from LA = Far)
+- Nearby note never contains a distance
+- Turn On Location from the compass hint keeps the searched place selected; the main "Use my location" still switches to the detected place
+- Haptic fires once on lock acquire; not on release, not while holding, not on a hold that continues across readings
+- No target rows rendered under the dial
 - 30 s tick adds the "Moon" target when the moon rises and removes it when it sets; foreground triggers an immediate recompute (fake clock)
 - Heading and location updates start/stop together: on show, hide, scroll-out, background
 
 ## 7. V2 (parking lot)
 
-- Haptic feedback on lock (fast-follow)
 - Landscape support (heading orientation matched to device)
 - iPad support
 - "I'm here" manual override for users who keep location off (magnetic heading + bundled magnetic-declination model)
@@ -143,3 +155,7 @@ nonisolated protocol MoonService {
   - G: protocol change pending review — agent to show exact change first
 - **2026-09-28 (Tessa, follow-up defaults):** other-city fully hidden in v1; no target for a missing rise/set; "Moon" target refreshes every 30 s (azimuth + moon-up re-check) and immediately on foreground; heading and its location updates stop together when the compass leaves the screen or the app backgrounds (background-only acceptable for v1 if scroll-out detection is unreliable).
 - **2026-09-28 (Tessa, final four):** `MoonPosition` + `moonPosition(for:at:)` approved (G resolved). Moon-up = latest rise after latest set, via the table's rise/set search (supersedes "from altitude" in C). v1 iPhone-only; portrait lock applies to iPhone. 16-point direction names throughout.
+- **2026-09-29 (Tessa, first device test):** Compass works at a basic level on device. Three follow-ups:
+  - **4.5 Haptics:** one firm tap on lock acquire; none on release. Promoted from fast-follow.
+  - **4.6 Proximity:** "same city" → "within 60 mi". States: Here (no note), Nearby (shown + "Directions for {City}"), Far (hidden + "Compass is only available near this location"). No distance ever shown (privacy). Turn On Location from the compass hint keeps the searched city. Supersedes the 2026-09-28 "other-city fully hidden" default.
+  - **4.7 Remove target rows** under the dial; keep heading readout + lock label. Rows duplicated the moon table.

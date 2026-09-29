@@ -53,13 +53,13 @@ _Started: 2026-09-26_
 - [ ] **Portrait lock.** App is locked to portrait for v1 so the compass stays readable and heading stays simple (COMPASS.md §1, decision F). Deliberate choice under WCAG 1.3.4 (orientation essential for a compass). Revisit landscape later; upgrade path is allowing rotation and matching the heading orientation to the device
 - [ ] **iPhone-only for v1** (COMPASS.md §1). iPad dropped so the portrait lock doesn't fight iPad multitasking; revisit with landscape
 - [ ] **Enable-location hint** (location off): copy, placement, and whether it opens the Location Off dialog or the system prompt. Built as a plain placeholder
-- [ ] **Other-city state:** fully hidden, or a quiet note ("Compass is available at your current location")?
-- [ ] **Lock feedback:** visual treatment of the lock state; haptics are a fast-follow
+- [ ] **Proximity copy (4.6):** Nearby note "Directions for {City}" (alternatives: "You're near {City}", "Close enough — showing directions for {City}"); Far message "Compass is only available near this location". Never include a distance
+- [ ] **Lock feedback:** visual treatment of the lock state; haptic tap on acquire is in 4.5 — check it feels right (strength, not too frequent)
 - [ ] **Low-accuracy state:** look and copy; 15° threshold to tune on device
 - [ ] Layout under the moon table, dial styling, typography (wireframe pending)
 - [ ] **Plain dial as built (4.4)**, things to decide in the design pass:
   - the N/E/S/W letters rotate with the dial, so they read sideways or upside down
-  - target dots are unlabelled (the rows below name them), and the locked dot is just bigger and tinted
+  - **target dots are unlabelled** — the rows that named them were removed in 4.7, so nothing says which dot is which until you lock. Likely fix: small labels or distinct shapes per target. The locked dot is just bigger and tinted
   - at AX sizes the top indicator grows and sits close to the "Compass" header
   - no animation, to avoid a long spin across 359° → 0°
 - [ ] **Placeholder copy (4.4):** hint "Turn on location to use the compass." + "Turn On Location"; low accuracy "Compass accuracy is low" (no calibration advice)

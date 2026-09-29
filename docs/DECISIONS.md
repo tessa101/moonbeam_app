@@ -5,6 +5,19 @@
 
 ---
 
+### 2026-09-29 · Compass follow-ups from first device test (4.5–4.7)
+- **Haptic on lock (4.5):** one firm tap when a lock is acquired; none on release. Promoted from
+  fast-follow now that locking works on device.
+- **Near, not same city (4.6):** the compass shows within 60 mi of the detected location. Rise/set
+  bearings depend mostly on latitude, so within 60 mi they differ by well under 1° (inside the ±5°
+  lock). Nearby shows "Directions for {City}"; Far hides the compass with "Compass is only
+  available near this location". No distance is ever shown (screenshot privacy). Turn On Location
+  from the compass hint updates detection only and keeps the searched city.
+- **Target rows removed (4.7):** they repeated the moon table; the compass keeps the heading
+  readout and lock label.
+- **Considered:** 30 mi radius (too tight for a metro area); "may not be exact" copy for Nearby
+  (undersells a <1° difference); showing the distance (privacy).
+
 ### 2026-09-28 · Step 4.4: compass view (plain)
 - **"On screen" comes from `onScrollVisibilityChange` and `onDisappear` only, not `onAppear`.**
   The main screen's stack isn't lazy, so `onAppear` fires on insertion even with the compass below
