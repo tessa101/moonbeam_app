@@ -33,6 +33,11 @@
 
 - **Low-accuracy state** when device heading accuracy is worse than **15°**, or true heading is unavailable. Locking to ±5° means little beyond that. No lock while in low accuracy; no custom calibration flow.
 - 15° is a starting value — tune after device testing.
+- **Low-accuracy reason, inline (4.10, decided 2026-09-29):** in low accuracy, one plain line under the heading says *why*, so the user can fix it:
+  - **Precise Location off** (`accuracyAuthorization == .reducedAccuracy`): "Precise Location is off" + a button to Settings
+  - **Otherwise** (poor accuracy, cause unknown): "Move away from metal or magnets, or wave your phone in a figure 8"
+  - Placeholder copy. No ⓘ / sheet for now; revisit in the design pass if more causes or detail are needed.
+- **Stuck low accuracy is a bug, not a reason (4.9):** device test 2026-09-29 showed "Compass accuracy is low" that only cleared after toggling Settings › Moon Signal › Location off/on. Fixed at the sensor level (with the 4.8 overnight bug), not explained to the user.
 
 ### Targets & refresh
 
@@ -162,3 +167,4 @@ nonisolated protocol MoonService {
 - **2026-09-29 (Tessa, agent questions before 4.6/4.7):**
   - Settings trip from the compass hint → the fetch on return is detection-only; the main button's is unchanged (§2).
   - With the rows gone, the dial becomes one VoiceOver element that reads its targets ("Targets: moonrise, 72 degrees east-northeast; moon, 140 degrees southeast"). No visible change (4.7).
+- **2026-09-29 (Tessa, device test):** low accuracy got stuck until Location was toggled in Settings → sensor restart bug (4.9, with 4.8). Haptic still missing after a lock. Low-accuracy reason shown **inline** under the heading (4.10); ⓘ sheet deferred to the design pass.

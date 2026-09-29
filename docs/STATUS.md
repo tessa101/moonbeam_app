@@ -198,6 +198,14 @@ _Last updated: 2026-09-29 (Step 4: compass, through 4.7)_
       - [x] **4.7** Remove the target rows under the dial (duplicate the moon table). Built; the dial
         now reads its targets to VoiceOver. **Check on device:** with VoiceOver on, swipe to the
         dial and hear "Targets: moonrise, …; moon, …"
+   5. **Device test 2026-09-29 (Tessa), next fixes** — blocks the next TestFlight build:
+      - [ ] **4.8 + 4.9** Sensors stuck: "Compass accuracy is low" until Settings › Moon Signal ›
+        Location was toggled off/on; and the compass gone after an overnight background. Likely one
+        root cause (sensors not restarted on auth/accuracy change or foreground). Reproduce in a test,
+        then fix. DEBUG-only readout (heading, accuracy, accuracyAuthorization, visibility, targets,
+        lock, sensors running, haptic count) to diagnose on device
+      - [ ] **Haptic** still missing after a lock (System Haptics on)
+      - [ ] **4.10** Inline low-accuracy reason (COMPASS.md §1 Accuracy)
 
 Design-pass items (visuals, copy, a11y) are tracked in **[DESIGN-REVIEW.md](DESIGN-REVIEW.md)**.
 

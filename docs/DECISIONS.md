@@ -5,6 +5,15 @@
 
 ---
 
+### 2026-09-29 · Low-accuracy reason shown inline
+- When the compass is in low accuracy, one line under the heading says why: "Precise Location is off"
+  (with a Settings button) when `accuracyAuthorization` is reduced, otherwise a metal/magnets +
+  figure-8 tip. Placeholder copy.
+- **Considered:** an ⓘ button opening a bottom sheet or floating dialog. Deferred to the design pass;
+  inline keeps the common fix one tap away for testing.
+- Low accuracy that stays stuck until Location is toggled in Settings is treated as a bug (4.9),
+  not something to explain.
+
 ### 2026-09-29 · Compass follow-ups from first device test (4.5–4.7)
 - **Haptic on lock (4.5):** one firm tap when a lock is acquired; none on release. Promoted from
   fast-follow now that locking works on device.
