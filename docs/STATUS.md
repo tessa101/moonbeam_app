@@ -3,7 +3,7 @@
 > A living note on where things stand. Update it at the end of each work session
 > so the next session (you, or Claude) can pick up cold.
 
-_Last updated: 2026-09-28 (Step 4: compass, through 4.3)_
+_Last updated: 2026-09-29 (Step 4: compass, through 4.7)_
 
 ## Where things live
 - **Local repo:** `~/app-ideas/moonbeam` (the one true folder)
@@ -93,6 +93,11 @@ _Last updated: 2026-09-28 (Step 4: compass, through 4.3)_
     `onScrollVisibilityChange`/`onDisappear` and forwards `.background`.
   - Checked in previews (locked, low accuracy, no compass, location off; AX 3 in dark mode). The app
     launches in the iPhone 17 simulator with no errors. The live compass needs a device.
+  - Follow-ups from the first device test (2026-09-29), one commit each:
+    - 4.5 haptic tap on lock acquire
+    - 4.6 proximity states (Here / Nearby ≤ 60 mi / Far); Turn On Location from the compass hint
+      keeps the searched city, including after Settings
+    - 4.7 target rows removed; the dial reads its targets to VoiceOver
   - **294 tests / 425 cases across 19 suites, all passing** in Xcode's runner on the iPhone 17 simulator.
   - **Device QA pending** (see Next, item 7).
 
