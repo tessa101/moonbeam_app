@@ -59,6 +59,10 @@ struct CompassView: View {
                     .accessibilityLabel(viewModel.targetAccessibilityLabel(for: target))
             }
         }
+        // One firm tap per lock acquired (4.5). Release and holding don't
+        // change the count, so they're silent. System feedback follows the
+        // user's System Haptics setting.
+        .sensoryFeedback(.impact(weight: .heavy), trigger: viewModel.lockAcquisitionCount)
     }
 
     /// One element for VoiceOver: the heading, or "Compass accuracy is low"

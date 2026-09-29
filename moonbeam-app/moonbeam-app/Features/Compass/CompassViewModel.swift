@@ -67,6 +67,11 @@ final class CompassViewModel {
 
     private(set) var lockedKind: CompassTarget.Kind?
 
+    /// Goes up by one each time a lock is acquired, including a switch
+    /// straight from one target to another. The view plays the haptic when
+    /// it changes (COMPASS.md §1, 4.5), so release and holding stay silent.
+    private(set) var lockAcquisitionCount = 0
+
     // MARK: - Dependencies
 
     private let headingService: any HeadingService
@@ -249,7 +254,9 @@ final class CompassViewModel {
 
     private func updateLock() {
         let next = CompassLock.next(locked: lockedKind, reading: reading, targets: targets)
-        if next != lockedKind { lockedKind = next }
+        guard next != lockedKind else { return }
+        if next != nil { lockAcquisitionCount += 1 }
+        lockedKind = next
     }
 
     private func apply(_ newReading: HeadingReading) {

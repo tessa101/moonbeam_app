@@ -8,6 +8,11 @@
 ### 2026-09-29 · Compass follow-ups from first device test (4.5–4.7)
 - **Haptic on lock (4.5):** one firm tap when a lock is acquired; none on release. Promoted from
   fast-follow now that locking works on device.
+  - *As built:* `CompassViewModel.lockAcquisitionCount` goes up on each acquire, including a switch
+    straight from one target to another (a new lock). The view plays
+    `.sensoryFeedback(.impact(weight: .heavy))` when it changes. Release, holding, low accuracy and
+    stopping don't change it. SwiftUI plays system feedback, which the System Haptics setting
+    governs. The docs don't say so explicitly, so it's a device QA check.
 - **Near, not same city (4.6):** the compass shows within 60 mi of the detected location. Rise/set
   bearings depend mostly on latitude, so within 60 mi they differ by well under 1° (inside the ±5°
   lock). Nearby shows "Directions for {City}"; Far hides the compass with "Compass is only

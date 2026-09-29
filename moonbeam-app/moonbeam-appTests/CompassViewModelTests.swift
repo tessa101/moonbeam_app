@@ -449,6 +449,66 @@ struct CompassViewModelTests {
         #expect(harness.viewModel.lockText == nil)
     }
 
+    // MARK: - Haptic on lock (4.5)
+
+    @Test("The haptic fires once on acquire, not while holding or on release")
+    func hapticOnAcquireOnly() async {
+        let harness = Self.makeRunningHarness()
+        #expect(harness.viewModel.lockAcquisitionCount == 0)
+
+        harness.heading.send(Self.reading(72))
+        await waitUntil { harness.viewModel.lockedKind == .moonrise }
+        #expect(harness.viewModel.lockAcquisitionCount == 1)
+
+        // Holding across several readings, still within 8°.
+        for heading in [73.0, 76.0, 79.0, 70.0] {
+            harness.heading.send(Self.reading(heading))
+            await waitUntil { harness.viewModel.heading == heading }
+        }
+        #expect(harness.viewModel.lockedKind == .moonrise)
+        #expect(harness.viewModel.lockAcquisitionCount == 1)
+
+        // Release.
+        harness.heading.send(Self.reading(100))
+        await waitUntil { harness.viewModel.lockedKind == nil }
+        #expect(harness.viewModel.lockAcquisitionCount == 1)
+
+        // A fresh acquire taps again.
+        harness.heading.send(Self.reading(72))
+        await waitUntil { harness.viewModel.lockedKind == .moonrise }
+        #expect(harness.viewModel.lockAcquisitionCount == 2)
+    }
+
+    /// Leaving one target and landing on another in a single reading is a
+    /// new lock, so it gets its own tap.
+    @Test("Switching straight to another target taps once")
+    func hapticOnSwitch() async {
+        let harness = Self.makeHarness(position: MoonPosition(azimuth: 82, isUp: true))
+        harness.viewModel.update(Self.context())
+        harness.viewModel.setOnScreen(true)
+        harness.heading.send(Self.reading(72))
+        await waitUntil { harness.viewModel.lockedKind == .moonrise }
+
+        // 9° from moonrise (released), 1° from the moon.
+        harness.heading.send(Self.reading(81))
+        await waitUntil { harness.viewModel.lockedKind == .moon }
+
+        #expect(harness.viewModel.lockAcquisitionCount == 2)
+    }
+
+    @Test("Low accuracy and stopping the sensors don't tap")
+    func noHapticOnLossOfLock() async {
+        let harness = Self.makeRunningHarness()
+        harness.heading.send(Self.reading(72))
+        await waitUntil { harness.viewModel.lockedKind == .moonrise }
+
+        harness.heading.send(Self.reading(72, accuracy: 20))
+        await waitUntil { harness.viewModel.lockedKind == nil }
+        harness.viewModel.setOnScreen(false)
+
+        #expect(harness.viewModel.lockAcquisitionCount == 1)
+    }
+
     @Test("Target rows read the target's name and bearing, spoken in words")
     func targetRowCopy() {
         let viewModel = Self.makeHarness().viewModel

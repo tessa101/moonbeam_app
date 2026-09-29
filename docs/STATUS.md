@@ -93,7 +93,7 @@ _Last updated: 2026-09-28 (Step 4: compass, through 4.3)_
     `onScrollVisibilityChange`/`onDisappear` and forwards `.background`.
   - Checked in previews (locked, low accuracy, no compass, location off; AX 3 in dark mode). The app
     launches in the iPhone 17 simulator with no errors. The live compass needs a device.
-  - **276 tests / 407 cases across 19 suites, all passing** in Xcode's runner on the iPhone 17 simulator.
+  - **279 tests / 410 cases across 19 suites, all passing** in Xcode's runner on the iPhone 17 simulator.
   - **Device QA pending** (see Next, item 7).
 
 ## Next
@@ -180,7 +180,9 @@ _Last updated: 2026-09-28 (Step 4: compass, through 4.3)_
       than 8° away. So it may stay "Moonrise" while the moon drifts from the rise point.
    4. **First device test 2026-09-29 (Tessa):** compass works at a basic level. Follow-ups to build,
       one commit each (COMPASS.md decision log, DECISIONS.md 2026-09-29):
-      - [ ] **4.5** Haptic tap on lock acquire (missing — was a planned fast-follow)
+      - [x] **4.5** Haptic tap on lock acquire. Built; **check on device:** one firm tap per lock,
+        none on release or while holding, and none with Settings › Sounds & Haptics › System
+        Haptics off
       - [ ] **4.6** Proximity states: within 60 mi → shown (Nearby note), beyond → hidden (Far message);
         Turn On Location from the compass hint keeps the searched city
       - [ ] **4.7** Remove the target rows under the dial (duplicate the moon table)
