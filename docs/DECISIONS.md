@@ -90,8 +90,6 @@
   fix, including a launch fix that doesn't replace the saved place. A later failed fix keeps it.
 
 ### 2026-09-28 · Step 4.2: HeadingService
-
-### 2026-09-28 · Step 4.2: HeadingService
 - **Delegate API wrapped in an `AsyncStream`.** CoreLocation has no async heading sequence (checked
   against iOS 26 docs), and `CLLocationUpdate.liveUpdates()` carries no heading. `start()` returns
   the stream; `stop()` finishes it.
