@@ -66,7 +66,7 @@ The rule is **near**, not **same city** (4.6): moonrise/moonset bearings depend 
 | **Nothing detected** | Location on, no fix yet / failed with no earlier fix | Hidden | none |
 
 - **Location off → enable to see it.** True-north heading is only valid while location updates run, and magnetic heading alone is ~11–12° off in LA (outside lock tolerance). No manual "I'm here" override in v1.
-- **Turn On Location keeps the searched city (4.6).** From the compass hint, the button turns on location and updates *detection only* — it does **not** switch the selected place to the detected one. The states above then apply (Here / Nearby / Far). The main screen's existing "Use my location" button keeps its current behavior.
+- **Turn On Location keeps the searched city (4.6).** From the compass hint, the button turns on location and updates *detection only* — it does **not** switch the selected place to the detected one. The states above then apply (Here / Nearby / Far). The main screen's existing "Use my location" button keeps its current behavior. **This includes the trip through Settings** (Tessa, 2026-09-29): if the Location Off dialog was opened from the compass hint, the automatic fetch on return from Settings (LOCATION.md §4) also updates detection only. From the main button, that fetch still switches to the detected place.
 - **Nearby note says what it shows, not that it's wrong.** At ≤60 mi the error is under 1°, so no "may not be exact" wording.
 - **Never show the distance** ("25 mi away") — with the city name, a screenshot would reveal roughly where someone is (same reason GPS coordinates were dropped).
 - Distance is measured between the detected location and the selected place's coordinates; neither is ever shown.
@@ -159,3 +159,6 @@ nonisolated protocol MoonService {
   - **4.5 Haptics:** one firm tap on lock acquire; none on release. Promoted from fast-follow.
   - **4.6 Proximity:** "same city" → "within 60 mi". States: Here (no note), Nearby (shown + "Directions for {City}"), Far (hidden + "Compass is only available near this location"). No distance ever shown (privacy). Turn On Location from the compass hint keeps the searched city. Supersedes the 2026-09-28 "other-city fully hidden" default.
   - **4.7 Remove target rows** under the dial; keep heading readout + lock label. Rows duplicated the moon table.
+- **2026-09-29 (Tessa, agent questions before 4.6/4.7):**
+  - Settings trip from the compass hint → the fetch on return is detection-only; the main button's is unchanged (§2).
+  - With the rows gone, the dial becomes one VoiceOver element that reads its targets ("Targets: moonrise, 72 degrees east-northeast; moon, 140 degrees southeast"). No visible change (4.7).

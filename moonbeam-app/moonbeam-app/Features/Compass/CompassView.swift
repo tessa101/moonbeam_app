@@ -21,8 +21,11 @@ struct CompassView: View {
 
     var body: some View {
         switch viewModel.visibility {
-        case .shown:
+        case .here, .nearby:
             compass
+        case .far:
+            Text(CompassViewModel.farMessage)
+                .foregroundStyle(.secondary)
         case .locationOff:
             locationOffHint
         case .hidden:
@@ -37,6 +40,12 @@ struct CompassView: View {
             Text("Compass")
                 .font(.headline)
                 .accessibilityAddTraits(.isHeader)
+
+            // Nearby only (§2): says which city the bearings are for.
+            if let nearbyNote = viewModel.nearbyNote {
+                Text(nearbyNote)
+                    .foregroundStyle(.secondary)
+            }
 
             CompassDial(
                 heading: viewModel.heading,
@@ -137,10 +146,33 @@ private struct CompassPreview: View {
         isCurrentLocation: true
     )
 
-    static func context(auth: LocationAuthState = .authorized) -> CompassContext {
+    /// About 30 mi from `place`: Nearby.
+    static let huntingtonBeach = Place(
+        name: "Huntington Beach",
+        region: "CA",
+        country: "United States",
+        latitude: 33.66,
+        longitude: -118.00,
+        timeZone: TimeZone(identifier: "America/Los_Angeles") ?? .gmt
+    )
+
+    /// About 110 mi from `place`: Far.
+    static let sanDiego = Place(
+        name: "San Diego",
+        region: "CA",
+        country: "United States",
+        latitude: 32.72,
+        longitude: -117.16,
+        timeZone: TimeZone(identifier: "America/Los_Angeles") ?? .gmt
+    )
+
+    static func context(
+        selected: Place = place,
+        auth: LocationAuthState = .authorized
+    ) -> CompassContext {
         let day = Date()
         return CompassContext(
-            place: place,
+            place: selected,
             detectedPlace: place,
             authState: auth,
             moonDay: MoonDay(
@@ -166,6 +198,17 @@ private struct CompassPreview: View {
 
 #Preview("No compass (simulator)") {
     CompassPreview(context: CompassPreview.context(), reading: .unavailable)
+}
+
+#Preview("Nearby") {
+    CompassPreview(
+        context: CompassPreview.context(selected: CompassPreview.huntingtonBeach),
+        reading: HeadingReading(trueHeading: 74, accuracy: 3)
+    )
+}
+
+#Preview("Far") {
+    CompassPreview(context: CompassPreview.context(selected: CompassPreview.sanDiego), reading: nil)
 }
 
 #Preview("Location off") {

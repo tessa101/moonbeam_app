@@ -170,23 +170,125 @@ struct CompassViewModelTests {
 
     // MARK: - Visibility (§2)
 
-    @Test("Detected location: shown")
+    @Test("Detected location: Here")
     func visibleAtDetectedLocation() {
-        #expect(CompassViewModel.visibility(for: Self.context()) == .shown)
+        #expect(CompassViewModel.visibility(for: Self.context()) == .here)
     }
 
-    @Test("Searched city matching the detected city: shown")
+    @Test("Searched city matching the detected city: Here")
     func visibleAtSameCity() {
         let context = Self.context(place: Self.searchedLosAngeles)
 
-        #expect(CompassViewModel.visibility(for: context) == .shown)
+        #expect(CompassViewModel.visibility(for: context) == .here)
     }
 
-    @Test("Any other city with location on: hidden")
-    func hiddenForOtherCity() {
+    @Test("A city on another continent: Far")
+    func farForOtherContinent() {
         let context = Self.context(place: Self.sydney)
 
-        #expect(CompassViewModel.visibility(for: context) == .hidden)
+        #expect(CompassViewModel.visibility(for: context) == .far)
+    }
+
+    // MARK: - Proximity (§2, 4.6)
+
+    /// ~30 mi from the detected location.
+    private static let huntingtonBeach = Place(
+        name: "Huntington Beach",
+        region: "CA",
+        country: "United States",
+        latitude: 33.66,
+        longitude: -118.00,
+        timeZone: losAngelesZone
+    )
+
+    /// ~110 mi from the detected location.
+    private static let sanDiego = Place(
+        name: "San Diego",
+        region: "CA",
+        country: "United States",
+        latitude: 32.72,
+        longitude: -117.16,
+        timeZone: losAngelesZone
+    )
+
+    /// Due north of the detected location by `degrees` of latitude:
+    /// 0.868° is ~96.52 km (inside 96.56 km), 0.869° ~96.63 km (outside).
+    private static func northOfDetected(byDegrees degrees: Double) -> Place {
+        Place(
+            name: "Test Town",
+            region: "CA",
+            country: "United States",
+            latitude: detectedLosAngeles.latitude + degrees,
+            longitude: detectedLosAngeles.longitude,
+            timeZone: losAngelesZone
+        )
+    }
+
+    @Test("Huntington Beach from LA: Nearby; San Diego from LA: Far")
+    func referenceCities() {
+        #expect(CompassViewModel.visibility(for: Self.context(place: Self.huntingtonBeach)) == .nearby)
+        #expect(CompassViewModel.visibility(for: Self.context(place: Self.sanDiego)) == .far)
+    }
+
+    @Test("60 mi boundary: just inside is Nearby, just outside is Far")
+    func sixtyMileBoundary() {
+        let inside = Self.northOfDetected(byDegrees: 0.868)
+        let outside = Self.northOfDetected(byDegrees: 0.869)
+
+        #expect(inside.distanceMeters(to: Self.detectedLosAngeles) < CompassViewModel.nearbyRadiusMeters)
+        #expect(outside.distanceMeters(to: Self.detectedLosAngeles) > CompassViewModel.nearbyRadiusMeters)
+        #expect(CompassViewModel.visibility(for: Self.context(place: inside)) == .nearby)
+        #expect(CompassViewModel.visibility(for: Self.context(place: outside)) == .far)
+    }
+
+    @Test("The radius is 60 miles")
+    func radiusIsSixtyMiles() {
+        #expect(abs(CompassViewModel.nearbyRadiusMeters - 96_560.64) < 0.01)
+    }
+
+    @Test("Nearby: compass shown, with a note naming the city and no distance")
+    func nearbyNote() throws {
+        let harness = Self.makeHarness()
+        harness.viewModel.update(Self.context(place: Self.huntingtonBeach))
+        harness.viewModel.setOnScreen(true)
+
+        let note = try #require(harness.viewModel.nearbyNote)
+        #expect(note == "Directions for Huntington Beach")
+        #expect(note.rangeOfCharacter(from: .decimalDigits) == nil)
+        #expect(!note.contains("mi") && !note.contains("km"))
+        #expect(harness.heading.isRunning)
+        #expect(!harness.viewModel.targets.isEmpty)
+    }
+
+    @Test("Here has no note")
+    func hereHasNoNote() {
+        let harness = Self.makeHarness()
+        harness.viewModel.update(Self.context(place: Self.searchedLosAngeles))
+
+        #expect(harness.viewModel.nearbyNote == nil)
+    }
+
+    @Test("Far: no compass, no targets, sensors off, and the Far message has no distance")
+    func farHidesCompass() {
+        let harness = Self.makeHarness(position: Self.moonUp)
+        harness.viewModel.update(Self.context(place: Self.sanDiego))
+        harness.viewModel.setOnScreen(true)
+
+        #expect(!harness.viewModel.visibility.showsCompass)
+        #expect(harness.viewModel.targets.isEmpty)
+        #expect(harness.viewModel.nearbyNote == nil)
+        #expect(!harness.heading.isRunning)
+        #expect(CompassViewModel.farMessage.rangeOfCharacter(from: .decimalDigits) == nil)
+    }
+
+    @Test("Moving between two Nearby cities updates the note")
+    func nearbyToNearbyUpdatesNote() {
+        let harness = Self.makeHarness()
+        harness.viewModel.update(Self.context(place: Self.huntingtonBeach))
+
+        harness.viewModel.update(Self.context(place: Self.northOfDetected(byDegrees: 0.5)))
+
+        #expect(harness.viewModel.nearbyNote == "Directions for Test Town")
     }
 
     /// Location is on but detection hasn't found you (yet, or it failed):
@@ -363,7 +465,7 @@ struct CompassViewModelTests {
         harness.viewModel.update(Self.context(place: Self.sydney))
 
         #expect(!harness.heading.isRunning)
-        #expect(harness.viewModel.visibility == .hidden)
+        #expect(harness.viewModel.visibility == .far)
     }
 
     @Test("Losing location permission stops the sensors and shows the hint")

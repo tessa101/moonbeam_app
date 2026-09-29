@@ -129,7 +129,7 @@ struct LocationScreen: View {
     /// `onDisappear` covers removal.
     private var compass: some View {
         CompassView(viewModel: viewModel.compass) {
-            Task { await viewModel.useMyLocation() }
+            Task { await viewModel.turnOnLocationForCompass() }
         }
         .onScrollVisibilityChange { isVisible in
             viewModel.compass.setOnScreen(isVisible)

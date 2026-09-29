@@ -129,7 +129,10 @@ nonisolated struct Place: Codable, Hashable, Sendable {
 
     /// Great-circle (haversine) distance. Kept here rather than using
     /// `CLLocation` so the model layer stays free of CoreLocation.
-    private func distanceMeters(to other: Place) -> Double {
+    ///
+    /// Also what the compass's Nearby / Far states compare against
+    /// (COMPASS.md §2). It's never shown to the user.
+    func distanceMeters(to other: Place) -> Double {
         let lat1 = Self.radians(latitude)
         let lat2 = Self.radians(other.latitude)
         let deltaLat = lat2 - lat1

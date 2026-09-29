@@ -102,36 +102,36 @@ struct LocationViewModelCompassTests {
         #expect(harness.viewModel.compass.visibility == .hidden)
     }
 
-    @Test("Detected location on launch: shown")
+    @Test("Detected location on launch: Here")
     func detectedOnLaunchShown() async {
         let harness = Self.makeHarness()
 
         await harness.viewModel.start()
 
         #expect(harness.viewModel.place?.isCurrentLocation == true)
-        #expect(harness.viewModel.compass.visibility == .shown)
+        #expect(harness.viewModel.compass.visibility == .here)
     }
 
-    @Test("Searching the city you're in: still shown")
+    @Test("Searching the city you're in: still Here")
     func searchedSameCityShown() async {
         let harness = Self.makeHarness()
         await harness.viewModel.start()
 
         harness.viewModel.select(Self.searchedLosAngeles)
 
-        #expect(harness.viewModel.compass.visibility == .shown)
+        #expect(harness.viewModel.compass.visibility == .here)
     }
 
-    @Test("Searching another city: hidden; back to your location: shown")
+    @Test("Searching a far city: Far; back to your location: Here")
     func otherCityHiddenThenBack() async {
         let harness = Self.makeHarness()
         await harness.viewModel.start()
 
         harness.viewModel.select(Self.sydney)
-        #expect(harness.viewModel.compass.visibility == .hidden)
+        #expect(harness.viewModel.compass.visibility == .far)
 
         await harness.viewModel.useMyLocation()
-        #expect(harness.viewModel.compass.visibility == .shown)
+        #expect(harness.viewModel.compass.visibility == .here)
     }
 
     /// Authorized, but the fix failed: nothing proves you're in the saved
@@ -165,7 +165,7 @@ struct LocationViewModelCompassTests {
         #expect(harness.viewModel.compass.visibility == .locationOff)
     }
 
-    @Test("Granting permission at the prompt: the hint gives way to the compass")
+    @Test("Granting at the prompt from the main button: switches to your location, Here")
     func grantAtPrompt() async {
         let harness = Self.makeHarness(
             auth: .notDetermined,
@@ -177,7 +177,7 @@ struct LocationViewModelCompassTests {
 
         await harness.viewModel.useMyLocation()
 
-        #expect(harness.viewModel.compass.visibility == .shown)
+        #expect(harness.viewModel.compass.visibility == .here)
     }
 
     @Test("Permission turned off in Settings: the hint on return, and the sensors stop")
@@ -192,6 +192,108 @@ struct LocationViewModelCompassTests {
 
         #expect(harness.viewModel.compass.visibility == .locationOff)
         #expect(!harness.heading.isRunning)
+    }
+
+    // MARK: - Turn On Location from the compass hint (4.6)
+
+    /// ~30 mi from LA: Nearby once detection finds LA.
+    private static let huntingtonBeach = Place(
+        name: "Huntington Beach",
+        region: "CA",
+        country: "United States",
+        latitude: 33.66,
+        longitude: -118.00,
+        timeZone: losAngelesZone
+    )
+
+    @Test("Compass hint, granted at the prompt: keeps the searched city, and it's Nearby")
+    func hintAtPromptKeepsSearchedCity() async {
+        let harness = Self.makeHarness(
+            auth: .notDetermined,
+            store: InMemoryPlaceStore(lastViewed: Self.huntingtonBeach)
+        )
+        harness.location.stateAfterRequest = .authorized
+        await harness.viewModel.start()
+        #expect(harness.viewModel.compass.visibility == .locationOff)
+
+        await harness.viewModel.turnOnLocationForCompass()
+
+        #expect(harness.viewModel.place == Self.huntingtonBeach)
+        #expect(harness.viewModel.place?.isCurrentLocation == false)
+        #expect(harness.viewModel.compass.visibility == .nearby)
+        #expect(harness.viewModel.compass.nearbyNote == "Directions for Huntington Beach")
+    }
+
+    @Test("Compass hint via Settings: coming back keeps the searched city")
+    func hintViaSettingsKeepsSearchedCity() async {
+        let harness = Self.makeHarness(
+            auth: .denied,
+            store: InMemoryPlaceStore(lastViewed: Self.huntingtonBeach)
+        )
+        await harness.viewModel.start()
+
+        await harness.viewModel.turnOnLocationForCompass()
+        #expect(harness.viewModel.locationOffDialog == .denied)
+
+        // Permission granted in Settings, then back to the app.
+        harness.location.authorizationState = .authorized
+        await harness.viewModel.sceneDidBecomeActive()
+
+        #expect(harness.location.currentPlaceCount == 1)
+        #expect(harness.viewModel.place == Self.huntingtonBeach)
+        #expect(harness.viewModel.compass.visibility == .nearby)
+    }
+
+    @Test("Main button via Settings: coming back still switches to your location")
+    func mainButtonViaSettingsSwitches() async {
+        let harness = Self.makeHarness(
+            auth: .denied,
+            store: InMemoryPlaceStore(lastViewed: Self.huntingtonBeach)
+        )
+        await harness.viewModel.start()
+
+        await harness.viewModel.useMyLocation()
+        harness.location.authorizationState = .authorized
+        await harness.viewModel.sceneDidBecomeActive()
+
+        #expect(harness.viewModel.place == Self.detectedLosAngeles)
+        #expect(harness.viewModel.compass.visibility == .here)
+    }
+
+    /// The main button after a compass-hint dialog: the button's own
+    /// behaviour wins, so the return from Settings switches.
+    @Test("Main button after a compass-hint dialog: the return switches")
+    func mainButtonOverridesHintFlag() async {
+        let harness = Self.makeHarness(
+            auth: .denied,
+            store: InMemoryPlaceStore(lastViewed: Self.huntingtonBeach)
+        )
+        await harness.viewModel.start()
+
+        await harness.viewModel.turnOnLocationForCompass()
+        harness.viewModel.dismissLocationOffDialog()
+        await harness.viewModel.useMyLocation()
+        harness.location.authorizationState = .authorized
+        await harness.viewModel.sceneDidBecomeActive()
+
+        #expect(harness.viewModel.place == Self.detectedLosAngeles)
+    }
+
+    @Test("Compass hint when detection fails: keeps the city, compass stays hidden")
+    func hintDetectionFails() async {
+        let harness = Self.makeHarness(
+            auth: .notDetermined,
+            detected: nil,
+            store: InMemoryPlaceStore(lastViewed: Self.huntingtonBeach)
+        )
+        harness.location.stateAfterRequest = .authorized
+        await harness.viewModel.start()
+
+        await harness.viewModel.turnOnLocationForCompass()
+
+        #expect(harness.viewModel.place == Self.huntingtonBeach)
+        #expect(harness.viewModel.compass.visibility == .hidden)
+        #expect(harness.viewModel.locationFailed)
     }
 
     // MARK: - Targets follow the selected day

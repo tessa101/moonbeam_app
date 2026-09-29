@@ -26,15 +26,26 @@ final class CompassViewModel {
 
     // MARK: - Types
 
-    /// COMPASS.md §2.
+    /// The COMPASS.md §2 states.
     enum Visibility: Equatable {
-        /// No place yet, or a city other than where you are.
+        /// No place yet, or location is on but nothing has been detected.
         case hidden
 
         /// Location isn't authorized: the enable-location hint instead.
         case locationOff
 
-        case shown
+        /// The selected place is the detected city. Compass, no note.
+        case here
+
+        /// A different city within `nearbyRadiusMeters` of the detected
+        /// location. Compass, plus "Directions for {City}".
+        case nearby
+
+        /// Further than that. No compass, just the Far message.
+        case far
+
+        /// Here and Nearby get the live compass (and its sensors).
+        var showsCompass: Bool { self == .here || self == .nearby }
     }
 
     // MARK: - Constants
@@ -42,6 +53,14 @@ final class CompassViewModel {
     /// How often the live "Moon" target is recomputed (COMPASS.md §1). The
     /// moon's azimuth moves about a quarter of a degree a minute.
     static let defaultMoonRefreshInterval = Duration.seconds(30)
+
+    private static let metersPerMile = 1_609.344
+    private static let nearbyRadiusMiles = 60.0
+
+    /// 60 mi (~97 km). Rise/set bearings depend mostly on latitude, so within
+    /// this they differ by well under 1°, inside the ±5° lock (COMPASS.md
+    /// §2). Inclusive.
+    static let nearbyRadiusMeters = nearbyRadiusMiles * metersPerMile
 
     // MARK: - Placeholder copy (final copy is in the design pass)
 
@@ -54,9 +73,19 @@ final class CompassViewModel {
     /// Shown, and read by VoiceOver, while the heading can't be trusted.
     static let lowAccuracyText = "Compass accuracy is low"
 
+    /// In place of the compass beyond the nearby radius. Never a distance:
+    /// with the city name, that would reveal roughly where someone is.
+    static let farMessage = "Compass is only available near this location"
+
     // MARK: - Observed state
 
     private(set) var visibility: Visibility = .hidden
+
+    /// "Directions for Huntington Beach" in the Nearby state, else `nil`.
+    /// Says what it shows, not that it's approximate: at ≤ 60 mi the error
+    /// is under 1°. Never a distance. Stored (not derived from `context`,
+    /// which isn't observed) so moving between two Nearby cities updates it.
+    private(set) var nearbyNote: String?
 
     /// Moonrise and moonset for the selected day (when that day has them),
     /// then the moon if it's today and it's up.
@@ -174,6 +203,7 @@ final class CompassViewModel {
     func update(_ context: CompassContext) {
         self.context = context
         visibility = Self.visibility(for: context)
+        nearbyNote = visibility == .nearby ? context.place.map { "Directions for \($0.shortName)" } : nil
         rebuildTargets()
         updateSensors()
     }
@@ -199,20 +229,22 @@ final class CompassViewModel {
 
     // MARK: - Visibility (COMPASS.md §2)
 
-    /// Only where you're standing: a searched city can't prove you're in it.
+    /// Near where you're standing: a searched city can't prove you're in
+    /// it, so it's measured against the detected location.
     static func visibility(for context: CompassContext) -> Visibility {
         guard let place = context.place else { return .hidden }
         guard context.authState.isAuthorized else { return .locationOff }
-        if place.isCurrentLocation { return .shown }
-        if let detected = context.detectedPlace, place.isSameCity(as: detected) { return .shown }
-        return .hidden
+        if place.isCurrentLocation { return .here }
+        guard let detected = context.detectedPlace else { return .hidden }
+        if place.isSameCity(as: detected) { return .here }
+        return place.distanceMeters(to: detected) <= nearbyRadiusMeters ? .nearby : .far
     }
 
     // MARK: - Targets
 
     private func rebuildTargets() {
         var rebuilt: [CompassTarget] = []
-        if visibility == .shown, let moonDay = context.moonDay {
+        if visibility.showsCompass, let moonDay = context.moonDay {
             if let rise = moonDay.rise {
                 rebuilt.append(CompassTarget(kind: .moonrise, azimuth: rise.azimuth))
             }
@@ -239,7 +271,7 @@ final class CompassViewModel {
 
     /// Only on today, and only while it's up (COMPASS.md §1, §3).
     private func liveMoonTarget() -> CompassTarget? {
-        guard visibility == .shown, context.isToday, let place = context.place else { return nil }
+        guard visibility.showsCompass, context.isToday, let place = context.place else { return nil }
         let position = moonService.moonPosition(for: place, at: now())
         guard position.isUp else { return nil }
         return CompassTarget(kind: .moon, azimuth: position.azimuth)
@@ -267,7 +299,7 @@ final class CompassViewModel {
     // MARK: - Sensors (COMPASS.md §1 Sensor lifecycle)
 
     private var shouldSense: Bool {
-        visibility == .shown && isOnScreen && isInForeground
+        visibility.showsCompass && isOnScreen && isInForeground
     }
 
     private func updateSensors() {

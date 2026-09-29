@@ -18,6 +18,19 @@
   lock). Nearby shows "Directions for {City}"; Far hides the compass with "Compass is only
   available near this location". No distance is ever shown (screenshot privacy). Turn On Location
   from the compass hint updates detection only and keeps the searched city.
+  - *As built:*
+    - `CompassViewModel.Visibility` is now `.hidden / .locationOff / .here / .nearby / .far`, and
+      `showsCompass` is Here or Nearby. The sensors, targets and Moon ticks follow `showsCompass`.
+    - The radius is `nearbyRadiusMeters` = 60 × 1,609.344 m, inclusive. Distance is
+      `Place.distanceMeters(to:)`, the haversine `isSameCity` already used, now internal rather
+      than private. It's measured to the detected place's coordinates (the reverse-geocoded map
+      item nearest the fix).
+    - `nearbyNote` is stored, not derived, so moving between two Nearby cities updates it.
+    - `LocationViewModel.turnOnLocationForCompass()` runs the same permission flow as "Use my
+      location", but a fix only records the detected place. **Settings trip** (Tessa, answering
+      the agent's question): if the dialog came from the compass hint, the automatic fetch on
+      return is detection-only too. Pressing the main button clears that.
+    - A failed detection-only fix shows the existing "Couldn't find your location" message.
 - **Target rows removed (4.7):** they repeated the moon table; the compass keeps the heading
   readout and lock label.
 - **Considered:** 30 mi radius (too tight for a metro area); "may not be exact" copy for Nearby

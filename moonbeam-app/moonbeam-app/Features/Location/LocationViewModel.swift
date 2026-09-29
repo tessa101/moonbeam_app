@@ -134,6 +134,12 @@ final class LocationViewModel {
     /// (COMPASS.md §2). Kept when you then search elsewhere; not persisted.
     @ObservationIgnored private var detectedPlace: Place?
 
+    /// The Location Off dialog was opened from the compass hint, so the fetch
+    /// after coming back from Settings updates detection only and keeps the
+    /// searched city (COMPASS.md §2, 4.6). The main "Use my location" button
+    /// clears it.
+    @ObservationIgnored private var detectionOnlyAfterSettings = false
+
     // MARK: - Init
 
     /// - Parameters:
@@ -214,7 +220,22 @@ final class LocationViewModel {
 
     // MARK: - Permission branches (§4)
 
+    /// The main "Use my location" button: detects and switches to the
+    /// detected place.
     func useMyLocation() async {
+        detectionOnlyAfterSettings = false
+        await runLocationFlow(detectionOnly: false)
+    }
+
+    /// The compass hint's Turn On Location (COMPASS.md §2, 4.6): the same
+    /// permission flow, but a fix only updates detection. The searched city
+    /// stays selected, and Here / Nearby / Far then apply to it. That holds
+    /// for the return from Settings too.
+    func turnOnLocationForCompass() async {
+        await runLocationFlow(detectionOnly: true)
+    }
+
+    private func runLocationFlow(detectionOnly: Bool) async {
         switch locationService.authorizationState {
         case .notDetermined:
             isRequestingPermission = true
@@ -225,15 +246,18 @@ final class LocationViewModel {
             // A refusal at the prompt ends here: the user has just answered,
             // so following up with the Location Off dialog would nag.
             if state.isAuthorized {
-                await locate(userInitiated: true)
+                await locate(userInitiated: true, detectionOnly: detectionOnly)
             }
         case .authorized:
-            await locate(userInitiated: true)
+            await locate(userInitiated: true, detectionOnly: detectionOnly)
         case .denied:
+            detectionOnlyAfterSettings = detectionOnly
             locationOffDialog = .denied
         case .restricted:
+            detectionOnlyAfterSettings = detectionOnly
             locationOffDialog = .restricted
         case .servicesOff:
+            detectionOnlyAfterSettings = detectionOnly
             locationOffDialog = .servicesOff
         }
     }
@@ -258,7 +282,9 @@ final class LocationViewModel {
         guard state.isAuthorized, !wasAuthorized else { return }
         locationOffDialog = nil
         guard !isLocating else { return }
-        await locate(userInitiated: true)
+        let detectionOnly = detectionOnlyAfterSettings
+        detectionOnlyAfterSettings = false
+        await locate(userInitiated: true, detectionOnly: detectionOnly)
     }
 
     /// Call when the scene moves to the background: the compass stops its
@@ -549,17 +575,19 @@ final class LocationViewModel {
 
     /// Runs one fix in a task of its own, so picking a place meanwhile can
     /// cancel it and a late fix can't overwrite the user's choice.
-    private func locate(userInitiated: Bool) async {
+    /// - Parameter detectionOnly: record the fix for the compass without
+    ///   showing it; the selected place stays put (COMPASS.md §2, 4.6).
+    private func locate(userInitiated: Bool, detectionOnly: Bool = false) async {
         locateTask?.cancel()
         let task = Task { [weak self] in
             guard let self else { return }
-            await performLocate(userInitiated: userInitiated)
+            await performLocate(userInitiated: userInitiated, detectionOnly: detectionOnly)
         }
         locateTask = task
         await task.value
     }
 
-    private func performLocate(userInitiated: Bool) async {
+    private func performLocate(userInitiated: Bool, detectionOnly: Bool) async {
         isLocating = true
         locationFailed = false
 
@@ -567,6 +595,11 @@ final class LocationViewModel {
             let detected = try await currentPlaceWithTimeout()
             guard !Task.isCancelled else { return }
             detectedPlace = detected
+            if detectionOnly {
+                updateCompass()
+                isLocating = false
+                return
+            }
             // Launch detection isn't a pick, so it doesn't replace the saved
             // place.
             show(detected, remember: userInitiated)
