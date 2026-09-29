@@ -50,7 +50,8 @@ struct CompassView: View {
             CompassDial(
                 heading: viewModel.heading,
                 targets: viewModel.targets,
-                lockedKind: viewModel.lockedKind
+                lockedKind: viewModel.lockedKind,
+                accessibilityTargets: viewModel.targetsAccessibilityLabel
             )
             .padding(.vertical)
 
@@ -63,10 +64,8 @@ struct CompassView: View {
                     .accessibilityLabel(viewModel.lockAccessibilityLabel ?? lockText)
             }
 
-            ForEach(viewModel.targets, id: \.kind) { target in
-                Text(viewModel.targetText(for: target))
-                    .accessibilityLabel(viewModel.targetAccessibilityLabel(for: target))
-            }
+            // No target rows (4.7): rise/set bearings are in the moon table
+            // above, and VoiceOver reads every target from the dial.
         }
         // One firm tap per lock acquired (4.5). Release and holding don't
         // change the count, so they're silent. System feedback follows the

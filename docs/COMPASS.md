@@ -27,7 +27,7 @@
 - **Hold until release:** once locked, the lock stays on that target until heading moves outside ±8° of it — even if another target becomes nearer. No switching mid-lock.
 - **Lock copy:** target name + that target's bearing, same style as live heading — e.g. **"Moonrise · 72° ENE"**, "Moonset · 288° WNW", "Moon · 140° SE".
 - **What lock does:** visual change + label, plus **one firm haptic tap when a lock is acquired** (4.5). No haptic on release or while holding. Follows the system haptics setting.
-- **Readout:** the compass shows only the live heading ("72° ENE") and the lock label. **No target rows under the dial** (4.7) — rise/set bearings are already in the moon table above. Dots on the dial are unlabelled until locked (design pass).
+- **Readout:** the compass shows only the live heading ("72° ENE") and the lock label. **No target rows under the dial** (4.7) — rise/set bearings are already in the moon table above. Dots on the dial are unlabelled until locked (design pass). **VoiceOver reads the targets from the dial** as one element ("Targets: moonrise, 72 degrees east-northeast; moon, 140 degrees southeast"), since the live moon's bearing appears nowhere else.
 
 ### Accuracy
 

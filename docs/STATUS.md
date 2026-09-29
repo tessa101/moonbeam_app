@@ -93,7 +93,7 @@ _Last updated: 2026-09-28 (Step 4: compass, through 4.3)_
     `onScrollVisibilityChange`/`onDisappear` and forwards `.background`.
   - Checked in previews (locked, low accuracy, no compass, location off; AX 3 in dark mode). The app
     launches in the iPhone 17 simulator with no errors. The live compass needs a device.
-  - **291 tests / 422 cases across 19 suites, all passing** in Xcode's runner on the iPhone 17 simulator.
+  - **294 tests / 425 cases across 19 suites, all passing** in Xcode's runner on the iPhone 17 simulator.
   - **Device QA pending** (see Next, item 7).
 
 ## Next
@@ -190,7 +190,9 @@ _Last updated: 2026-09-28 (Step 4: compass, through 4.3)_
         - far city → the Far message only
         - with location off, the compass hint → prompt or Settings → back still shows the searched city
         - the main "Use my location" still switches to you
-      - [ ] **4.7** Remove the target rows under the dial (duplicate the moon table)
+      - [x] **4.7** Remove the target rows under the dial (duplicate the moon table). Built; the dial
+        now reads its targets to VoiceOver. **Check on device:** with VoiceOver on, swipe to the
+        dial and hear "Targets: moonrise, …; moon, …"
 
 Design-pass items (visuals, copy, a11y) are tracked in **[DESIGN-REVIEW.md](DESIGN-REVIEW.md)**.
 

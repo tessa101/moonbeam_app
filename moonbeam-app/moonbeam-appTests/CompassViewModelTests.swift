@@ -611,13 +611,50 @@ struct CompassViewModelTests {
         #expect(harness.viewModel.lockAcquisitionCount == 1)
     }
 
-    @Test("Target rows read the target's name and bearing, spoken in words")
-    func targetRowCopy() {
+    @Test("A target reads as name and bearing, the lock label's format")
+    func targetTextCopy() {
         let viewModel = Self.makeHarness().viewModel
         let moonset = CompassTarget(kind: .moonset, azimuth: Self.setAzimuth)
 
         #expect(viewModel.targetText(for: moonset) == "Moonset · 288° WNW")
-        #expect(viewModel.targetAccessibilityLabel(for: moonset) == "Moonset, 288 degrees west-northwest")
+    }
+
+    // MARK: - Dial VoiceOver label (4.7)
+
+    /// With the rows gone, the dial is where VoiceOver hears every target,
+    /// including the live moon, which the moon table doesn't have.
+    @Test("The dial reads every target, including the moon, in words")
+    func dialReadsTargets() {
+        let harness = Self.makeHarness(position: Self.moonUp)
+
+        harness.viewModel.update(Self.context())
+
+        #expect(harness.viewModel.targetsAccessibilityLabel == """
+            Targets: moonrise, 72 degrees east-northeast; \
+            moonset, 288 degrees west-northwest; \
+            moon, 140 degrees southeast
+            """)
+    }
+
+    @Test("With no targets the dial has no label, so it's hidden from VoiceOver")
+    func dialLabelWithoutTargets() {
+        let harness = Self.makeHarness()
+
+        harness.viewModel.update(Self.context(place: Self.sanDiego))
+
+        #expect(harness.viewModel.targetsAccessibilityLabel == nil)
+    }
+
+    @Test("The dial label follows the moon as it rises")
+    func dialLabelFollowsMoon() {
+        let harness = Self.makeHarness(position: Self.moonDown)
+        harness.viewModel.update(Self.context())
+        #expect(harness.viewModel.targetsAccessibilityLabel?.contains("moon,") == false)
+
+        harness.moon.position = Self.moonUp
+        harness.viewModel.sceneDidBecomeActive()
+
+        #expect(harness.viewModel.targetsAccessibilityLabel?.hasSuffix("moon, 140 degrees southeast") == true)
     }
 
     @Test("Placeholder copy for the hint and low accuracy")

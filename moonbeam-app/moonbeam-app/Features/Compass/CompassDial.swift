@@ -8,8 +8,10 @@ import SwiftUI
 /// A plain rotating dial (COMPASS.md §1): north, east, south and west,
 /// degree ticks, a dot for each target, and a fixed indicator at the top.
 ///
-/// Deliberately unstyled; the look is the design pass. Decorative for
-/// VoiceOver, since `CompassView`'s text carries the same information.
+/// Deliberately unstyled; the look is the design pass. For VoiceOver it's one
+/// element that reads its targets ("Targets: moonrise, 72 degrees
+/// east-northeast; …"). With the target rows gone (4.7) it's the only place
+/// VoiceOver hears the live moon's bearing. With no targets it's hidden.
 /// Not animated: a turn from 359° to 0° would otherwise spin the long way.
 struct CompassDial: View {
 
@@ -18,6 +20,10 @@ struct CompassDial: View {
 
     let targets: [CompassTarget]
     let lockedKind: CompassTarget.Kind?
+
+    /// `CompassViewModel.targetsAccessibilityLabel`; `nil` hides the dial
+    /// from VoiceOver.
+    var accessibilityTargets: String? = nil
 
     // MARK: - Constants
 
@@ -64,7 +70,9 @@ struct CompassDial: View {
         .aspectRatio(1, contentMode: .fit)
         .frame(maxWidth: Self.maxSize)
         .frame(maxWidth: .infinity)
-        .accessibilityHidden(true)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(accessibilityTargets ?? "")
+        .accessibilityHidden(accessibilityTargets == nil)
     }
 
     // MARK: - Parts

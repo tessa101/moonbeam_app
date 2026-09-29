@@ -33,6 +33,12 @@
     - A failed detection-only fix shows the existing "Couldn't find your location" message.
 - **Target rows removed (4.7):** they repeated the moon table; the compass keeps the heading
   readout and lock label.
+  - *As built:* the `ForEach` of rows and `targetAccessibilityLabel(for:)` are gone; `targetText`
+    stays for the lock label. **Dial VoiceOver** (Tessa, answering the agent's question): the live
+    moon's bearing had no text left anywhere, and the dial was hidden from VoiceOver. So
+    `CompassDial` is now one element labelled with `CompassViewModel.targetsAccessibilityLabel`
+    ("Targets: moonrise, 72 degrees east-northeast; …"). It's hidden when there are no targets. No
+    visible change. This supersedes the 2026-09-28 4.4 note that the dial is decorative.
 - **Considered:** 30 mi radius (too tight for a metro area); "may not be exact" copy for Nearby
   (undersells a <1° difference); showing the distance (privacy).
 

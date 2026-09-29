@@ -170,14 +170,21 @@ final class CompassViewModel {
         return "Heading \(formatter.spokenBearing(for: heading))"
     }
 
-    /// A target row: "Moonset · 288° WNW".
+    /// "Moonset · 288° WNW": the lock label's format.
     func targetText(for target: CompassTarget) -> String {
         "\(Self.name(of: target.kind)) · \(formatter.bearing(for: target.azimuth))"
     }
 
-    /// "Moonset, 288 degrees west-northwest".
-    func targetAccessibilityLabel(for target: CompassTarget) -> String {
-        "\(Self.name(of: target.kind)), \(formatter.spokenBearing(for: target.azimuth))"
+    /// The dial's VoiceOver label: "Targets: moonrise, 72 degrees
+    /// east-northeast; moon, 140 degrees southeast". There are no target rows
+    /// (4.7), so this is how VoiceOver hears each bearing, including the live
+    /// moon's, which the moon table doesn't have. `nil` with no targets.
+    var targetsAccessibilityLabel: String? {
+        guard !targets.isEmpty else { return nil }
+        let parts = targets.map { target in
+            "\(Self.name(of: target.kind).lowercased()), \(formatter.spokenBearing(for: target.azimuth))"
+        }
+        return "Targets: " + parts.joined(separator: "; ")
     }
 
     /// "Pointing at moonrise, 72 degrees east-northeast".
