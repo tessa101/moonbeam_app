@@ -269,6 +269,36 @@ nonisolated struct PlaceTests {
         )
     }
 
+    // MARK: - Named after the tapped row (Step 2.2 fix 3)
+
+    @Test("A resolved place takes the tapped row's name when MapKit's city disagrees")
+    func namedAfterTappedRow() {
+        let resolved = Place(
+            name: "Southwark, London",
+            locality: "Southwark, London",
+            country: "United Kingdom",
+            latitude: 51.50,
+            longitude: -0.08,
+            timeZone: TimeZone(identifier: "Europe/London") ?? .gmt
+        )
+
+        let named = resolved.named(after: PlaceSuggestion(title: "London", subtitle: "England"))
+
+        #expect(named.name == "London")
+        #expect(named.locality == nil)
+        #expect(named.country == "United Kingdom")
+        #expect(named.latitude == resolved.latitude && named.longitude == resolved.longitude)
+        #expect(named.timeZone == resolved.timeZone)
+    }
+
+    @Test("Names that already agree are left alone")
+    func namedAfterMatchingRow() {
+        let named = Self.sydney.named(after: PlaceSuggestion(title: "Sydney, NSW", subtitle: "Australia"))
+
+        #expect(named == Self.sydney)
+        #expect(named.locality == "Sydney")
+    }
+
     // MARK: - MapKit region mapping
 
     /// `Place.regionComponent` exists because iOS 26's

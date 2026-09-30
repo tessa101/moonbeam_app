@@ -66,6 +66,27 @@ nonisolated extension Place {
         )
     }
 
+    /// This place under the name of the row the user tapped, when MapKit's
+    /// city name for it disagrees (Step 2.2 fix 3). "London, England"
+    /// resolves to the right coordinates, but its map item's city is
+    /// "Southwark, London", and the search field has to say what was
+    /// picked. The mismatched city is dropped rather than kept as
+    /// `locality`. Unchanged when the names already agree.
+    func named(after suggestion: PlaceSuggestion) -> Place {
+        let tappedName = PlaceSuggestionRanking.name(of: suggestion)
+        guard !tappedName.isEmpty, tappedName != name else { return self }
+        return Place(
+            name: tappedName,
+            locality: nil,
+            region: region,
+            country: country,
+            latitude: latitude,
+            longitude: longitude,
+            timeZone: timeZone,
+            isCurrentLocation: isCurrentLocation
+        )
+    }
+
     /// Chooses the name a mapped place goes by, or `nil` if there isn't a
     /// safe one.
     ///

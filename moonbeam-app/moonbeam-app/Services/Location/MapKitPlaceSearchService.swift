@@ -78,17 +78,26 @@ final class MapKitPlaceSearchService: PlaceSearchService {
         return stream
     }
 
+    /// Replays the tapped completion (Step 2.2 fix 3), so the row loads
+    /// exactly that place. A fresh text search over the row's two lines
+    /// could land elsewhere: "London, England" came back as Southwark.
+    ///
+    /// The completion never leaves the main actor: the session keeps it,
+    /// keyed by the row's id, and `PlaceSuggestion` stays a plain value.
+    /// The text search is only a fallback, for a row whose query has since
+    /// been replaced.
     func resolve(_ suggestion: PlaceSuggestion) async throws -> Place {
-        // A natural-language search over the suggestion's own two lines. The
-        // completion object could be replayed instead, but it can't cross an
-        // isolation boundary, and rejoined address text resolves city
-        // suggestions just as well while keeping `PlaceSuggestion` a value.
-        // Every level the list can show, or Tokyo, Japan and Mexico City,
-        // which are region-level to MapKit, fail to resolve.
-        let request = MKLocalSearch.Request()
-        request.naturalLanguageQuery = suggestion.searchQuery
+        let request: MKLocalSearch.Request
+        if let completion = session?.completion(for: suggestion.id) {
+            request = MKLocalSearch.Request(completion: completion)
+        } else {
+            // Every level the list can show, or Tokyo, Japan and Mexico
+            // City, which are region-level to MapKit, fail to resolve.
+            request = MKLocalSearch.Request()
+            request.naturalLanguageQuery = suggestion.searchQuery
+            request.addressFilter = Self.anyLevelFilter
+        }
         request.resultTypes = .address
-        request.addressFilter = Self.anyLevelFilter
 
         let response = try await MKLocalSearch(request: request).start()
 
@@ -99,7 +108,7 @@ final class MapKitPlaceSearchService: PlaceSearchService {
             throw PlaceSearchError.incompleteResult
         }
 
-        return place
+        return place.named(after: suggestion)
     }
 }
 
@@ -155,6 +164,12 @@ private final class SuggestionSession {
         continuation.finish()
     }
 
+    /// The completion behind a row, from whichever level returned it. Kept
+    /// after `cancel()`: picking a row ends the stream before it resolves.
+    func completion(for id: PlaceSuggestion.ID) -> MKLocalSearchCompletion? {
+        cities.completions[id] ?? regions.completions[id]
+    }
+
     /// Waits until every level has answered once, so the list doesn't open
     /// with London, ON and then have London, England jump above it. After
     /// that, each refinement goes straight out. A level that failed counts
@@ -182,6 +197,10 @@ private final class LevelCompleter: NSObject, @preconcurrency MKLocalSearchCompl
     private let completer = MKLocalSearchCompleter()
 
     private(set) var suggestions: [PlaceSuggestion] = []
+
+    /// The latest batch's completions by row id, for resolving a pick.
+    private(set) var completions: [PlaceSuggestion.ID: MKLocalSearchCompletion] = [:]
+
     private(set) var error: (any Error)?
 
     /// Results or an error have arrived at least once.
@@ -207,7 +226,10 @@ private final class LevelCompleter: NSObject, @preconcurrency MKLocalSearchCompl
     }
 
     func completerDidUpdateResults(_ completer: MKLocalSearchCompleter) {
-        suggestions = completer.results.map { PlaceSuggestion(title: $0.title, subtitle: $0.subtitle) }
+        let results = completer.results
+        suggestions = results.map { PlaceSuggestion(title: $0.title, subtitle: $0.subtitle) }
+        // First one wins if two rows read the same, matching the list.
+        completions = Dictionary(zip(suggestions.map(\.id), results)) { first, _ in first }
         error = nil
         hasAnswered = true
         onChange?()
@@ -215,6 +237,7 @@ private final class LevelCompleter: NSObject, @preconcurrency MKLocalSearchCompl
 
     func completer(_ completer: MKLocalSearchCompleter, didFailWithError error: any Error) {
         suggestions = []
+        completions = [:]
         self.error = error
         hasAnswered = true
         onChange?()

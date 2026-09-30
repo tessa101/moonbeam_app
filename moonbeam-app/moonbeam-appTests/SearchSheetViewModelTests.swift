@@ -253,6 +253,33 @@ struct SearchSheetViewModelTests {
         #expect(recorder.picked == [Self.sydney])
     }
 
+    /// Step 2.2 fix 3: two rows can share a title; the one tapped is the one
+    /// resolved, not a fresh search for "London".
+    @Test("Tapping the second of two same-named rows resolves exactly that row")
+    func pickingOneOfTwoSameNamedRows() async {
+        let england = PlaceSuggestion(title: "London", subtitle: "England")
+        let ontario = PlaceSuggestion(title: "London", subtitle: "ON, Canada")
+        let londonOntario = Place(
+            name: "London",
+            country: "Canada",
+            latitude: 42.99,
+            longitude: -81.25,
+            timeZone: TimeZone(identifier: "America/Toronto") ?? .gmt
+        )
+        let search = FakePlaceSearchService(
+            suggestionsByQuery: ["London": [england, ontario]],
+            placesBySuggestion: [ontario.id: londonOntario]
+        )
+        let recorder = PickRecorder()
+        let viewModel = Self.makeViewModel(search: search, recorder: recorder)
+
+        await Self.type("London", into: viewModel)
+        await viewModel.pick(ontario)
+
+        #expect(search.resolvedSuggestions == [ontario])
+        #expect(recorder.picked == [londonOntario])
+    }
+
     @Test("A suggestion that won't resolve shows .failed and picks nothing")
     func resolveFailure() async {
         let search = Self.sydneySearch()

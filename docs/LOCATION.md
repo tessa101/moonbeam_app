@@ -204,9 +204,14 @@ The three services are **main-actor isolated** (the project default): they drive
   (debounce ~250 ms). **Throwing**, not a plain `AsyncStream`: §3's "Can't search right now" state
   needs a failure channel, which a non-throwing stream doesn't have. An empty query yields one
   empty batch and finishes, so clearing the field clears the list
-- `func resolve(_ suggestion: PlaceSuggestion) async throws -> Place` — an `MKLocalSearch` over the
+- `func resolve(_ suggestion: PlaceSuggestion) async throws -> Place` — ~~an `MKLocalSearch` over the
   suggestion's two lines rejoined as a `naturalLanguageQuery`, rather than replaying the
-  `MKLocalSearchCompletion` (which isn't `Sendable`). See DECISIONS.md 2026-09-25
+  `MKLocalSearchCompletion` (which isn't `Sendable`). See DECISIONS.md 2026-09-25~~ **Amended
+  2026-09-30 (Step 2.2 fix 3):** replays the tapped `MKLocalSearchCompletion` with
+  `MKLocalSearch.Request(completion:)`. The completion never leaves the main actor: the service's
+  current query keeps it by row id, so `PlaceSuggestion` stays a value. The text search stays as a
+  fallback. The resolved place takes the row's name when MapKit's city disagrees
+  (`Place.named(after:)`: London, England's map item says "Southwark, London")
 
 ### `PlaceStore`
 - `var lastViewed: Place? { get set }`
