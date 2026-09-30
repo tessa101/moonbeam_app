@@ -14,6 +14,7 @@ _Started: 2026-09-26_
 - [ ] **First-launch empty state:** does the empty field + prompt feel inviting, or does it need something moon-y?
 - [ ] **Detected location shows the city** ("Los Angeles", not "Mar Vista"). Revisit if neighborhoods feel more personal
 - [ ] **Search field shows the city with a "Change" / "Edit" button.** Tapping the button or anywhere on the field opens the search sheet (Tessa, 2026-09-26)
+- [ ] **Content scrolls under the status bar** (device, 2026-09-29): when the main screen is scrolled, the prompt and search field slide under the time / Dynamic Island with no background, so the city name overlaps the clock. Needs a safe-area background (material or solid) or a pinned header. Seen on every compass screenshot where the page is scrolled down
 - [x] ~~**Select-all on tap + clear (x):** confirm the interaction feels right once styled~~ Superseded: the main-screen field now opens the search sheet (SEARCH-RECENTS.md §1)
 
 ## Search sheet (Step 2.1, built plain; SEARCH-RECENTS.md §7)
