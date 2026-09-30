@@ -697,6 +697,10 @@ struct CompassViewModelTests {
         #expect(CompassViewModel.locationOffHint == "Turn on location to use the compass.")
         #expect(CompassViewModel.turnOnLocationTitle == "Turn On Location")
         #expect(CompassViewModel.lowAccuracyText == "Compass accuracy is low")
+        #expect(CompassViewModel.preciseLocationOffText == "Precise Location is off")
+        #expect(CompassViewModel.openSettingsTitle == "Open Settings")
+        #expect(CompassViewModel.interferenceTip
+            == "Move away from metal, magnets or a charger, or wave your phone in a figure 8")
     }
 
     /// The device test (2026-09-29): accuracy wandered ±11.8° → ±27.3°
@@ -749,10 +753,13 @@ struct CompassViewModelTests {
 
         #expect(harness.viewModel.isLowAccuracy)
         #expect(harness.viewModel.lockedKind == nil)
-        #expect(harness.viewModel.headingAccessibilityLabel == "Compass accuracy is low")
+        #expect(harness.viewModel.headingAccessibilityLabel == """
+            Compass accuracy is low. \
+            Move away from metal, magnets or a charger, or wave your phone in a figure 8
+            """)
     }
 
-    @Test("No compass (unavailable): low accuracy, no heading text")
+    @Test("No compass (unavailable): low accuracy, no heading text, no reason")
     func unavailableReading() async {
         let harness = Self.makeRunningHarness()
 
@@ -761,6 +768,81 @@ struct CompassViewModelTests {
 
         #expect(harness.viewModel.isLowAccuracy)
         #expect(harness.viewModel.headingText == nil)
+        #expect(harness.viewModel.lowAccuracyReason == nil)
+        #expect(harness.viewModel.headingAccessibilityLabel == "Compass accuracy is low")
+    }
+
+    // MARK: - Low-accuracy reason (4.10)
+
+    @Test("Precise Location off: the reason says so, and VoiceOver reads it")
+    func reasonPreciseLocationOff() async {
+        let harness = Self.makeHarness()
+        var context = Self.context()
+        context.isPreciseLocationOff = true
+        harness.viewModel.update(context)
+        harness.viewModel.setOnScreen(true)
+
+        harness.heading.send(Self.reading(72, accuracy: 30))
+        await waitUntil { harness.viewModel.reading != nil }
+
+        #expect(harness.viewModel.lowAccuracyReason == .preciseLocationOff)
+        #expect(harness.viewModel.lowAccuracyReasonText == "Precise Location is off")
+        #expect(harness.viewModel.headingAccessibilityLabel == "Compass accuracy is low. Precise Location is off")
+    }
+
+    @Test("Precise Location on: the metal, magnets or charger tip")
+    func reasonInterference() async throws {
+        let harness = Self.makeRunningHarness()
+
+        harness.heading.send(Self.reading(72, accuracy: 30))
+        await waitUntil { harness.viewModel.reading != nil }
+
+        #expect(harness.viewModel.lowAccuracyReason == .interference)
+        let tip = try #require(harness.viewModel.lowAccuracyReasonText)
+        #expect(tip.contains("metal"))
+        #expect(tip.contains("magnets"))
+        #expect(tip.contains("charger"))
+        #expect(tip.contains("figure 8"))
+    }
+
+    @Test("Good accuracy: no reason, even with Precise Location off")
+    func noReasonWhenGood() async {
+        let harness = Self.makeHarness()
+        var context = Self.context()
+        context.isPreciseLocationOff = true
+        harness.viewModel.update(context)
+        harness.viewModel.setOnScreen(true)
+
+        harness.heading.send(Self.reading(72, accuracy: 5))
+        await waitUntil { !harness.viewModel.isLowAccuracy }
+
+        #expect(harness.viewModel.lowAccuracyReason == nil)
+        #expect(harness.viewModel.lowAccuracyReasonText == nil)
+    }
+
+    /// Before the first reading it's low only because nothing has arrived
+    /// yet; a tip would flash up on every start.
+    @Test("No reading yet: no reason")
+    func noReasonBeforeFirstReading() {
+        let harness = Self.makeRunningHarness()
+
+        #expect(harness.viewModel.isLowAccuracy)
+        #expect(harness.viewModel.lowAccuracyReason == nil)
+    }
+
+    @Test("The reason follows the hysteresis: gone once accuracy recovers below 20°")
+    func reasonClearsOnRecovery() async {
+        let harness = Self.makeRunningHarness()
+        harness.heading.send(Self.reading(72, accuracy: 30))
+        await waitUntil { harness.viewModel.lowAccuracyReason != nil }
+
+        harness.heading.send(Self.reading(72, accuracy: 22))
+        await waitUntil { harness.viewModel.reading?.accuracy == 22 }
+        #expect(harness.viewModel.lowAccuracyReason == .interference)
+
+        harness.heading.send(Self.reading(72, accuracy: 13))
+        await waitUntil { !harness.viewModel.isLowAccuracy }
+        #expect(harness.viewModel.lowAccuracyReason == nil)
     }
 
     @Test("Changing the day re-checks the lock against the new bearings")

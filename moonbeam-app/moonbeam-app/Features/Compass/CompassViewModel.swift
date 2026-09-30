@@ -48,6 +48,16 @@ final class CompassViewModel {
         var showsCompass: Bool { self == .here || self == .nearby }
     }
 
+    /// Why accuracy is low, so the user can fix it (COMPASS.md §1, 4.10).
+    enum LowAccuracyReason: Equatable {
+        /// Precise Location is off for the app: fixable in Settings.
+        case preciseLocationOff
+
+        /// Cause unknown: most often metal, magnets or a charger nearby,
+        /// or a magnetometer that needs a figure 8.
+        case interference
+    }
+
     // MARK: - Constants
 
     /// How often the live "Moon" target is recomputed (COMPASS.md §1). The
@@ -72,6 +82,17 @@ final class CompassViewModel {
 
     /// Shown, and read by VoiceOver, while the heading can't be trusted.
     static let lowAccuracyText = "Compass accuracy is low"
+
+    /// The low-accuracy reason line, Precise Location off (4.10).
+    static let preciseLocationOffText = "Precise Location is off"
+
+    /// Its button: the app's page in Settings, where Location › Precise
+    /// Location lives.
+    static let openSettingsTitle = "Open Settings"
+
+    /// The low-accuracy reason line, any other cause (4.10). "Charger" added
+    /// after the device test, where charging took accuracy to ±27°.
+    static let interferenceTip = "Move away from metal, magnets or a charger, or wave your phone in a figure 8"
 
     /// In place of the compass beyond the nearby radius. Never a distance:
     /// with the city name, that would reveal roughly where someone is.
@@ -178,8 +199,28 @@ final class CompassViewModel {
     }
 
     var headingAccessibilityLabel: String {
-        guard !isLowAccuracy, let heading else { return Self.lowAccuracyText }
+        guard !isLowAccuracy, let heading else {
+            guard let lowAccuracyReasonText else { return Self.lowAccuracyText }
+            return "\(Self.lowAccuracyText). \(lowAccuracyReasonText)"
+        }
         return "Heading \(formatter.spokenBearing(for: heading))"
+    }
+
+    /// Why accuracy is low (4.10), or `nil`: not low, no reading yet, or no
+    /// compass at all (`.unavailable`), where neither the tip nor Settings
+    /// would help.
+    var lowAccuracyReason: LowAccuracyReason? {
+        guard isLowAccuracy, let reading, reading != .unavailable else { return nil }
+        return isPreciseLocationOff ? .preciseLocationOff : .interference
+    }
+
+    /// The one plain line under the heading that says why.
+    var lowAccuracyReasonText: String? {
+        switch lowAccuracyReason {
+        case .preciseLocationOff: Self.preciseLocationOffText
+        case .interference: Self.interferenceTip
+        case nil: nil
+        }
     }
 
     /// "Moonset · 288° WNW": the lock label's format.
@@ -264,6 +305,7 @@ final class CompassViewModel {
             "heading: \(heading)",
             "accuracy: \(accuracy)\(isLowAccuracy ? " (low)" : "")",
             "accuracyAuthorization: \(isPreciseLocationOff ? "reduced" : "full")",
+            "reason: \(lowAccuracyReason.map { "\($0)" } ?? "none")",
             "visibility: \(visibility)",
             "detected: \(hasDetectedPlace ? "yes" : "no")",
             "targets: \(targetList)",

@@ -19,6 +19,8 @@ struct CompassView: View {
     /// if not yet asked, otherwise the Location Off dialog).
     let onTurnOnLocation: () -> Void
 
+    @Environment(\.openURL) private var openURL
+
     var body: some View {
         VStack(alignment: .leading) {
             switch viewModel.visibility {
@@ -85,20 +87,37 @@ struct CompassView: View {
     /// when it can't be trusted (an untrustworthy number isn't read out).
     private var heading: some View {
         VStack(alignment: .leading, spacing: 4) {
-            if let headingText = viewModel.headingText {
-                Text(headingText)
-                    .font(.largeTitle)
-                    .monospacedDigit()
-                    .foregroundStyle(viewModel.isLowAccuracy ? .secondary : .primary)
+            VStack(alignment: .leading, spacing: 4) {
+                if let headingText = viewModel.headingText {
+                    Text(headingText)
+                        .font(.largeTitle)
+                        .monospacedDigit()
+                        .foregroundStyle(viewModel.isLowAccuracy ? .secondary : .primary)
+                }
+                // One plain line under the heading (4.10): why it's low, so
+                // it can be fixed. The generic line only when the cause
+                // isn't known (no reading yet, no compass).
+                if viewModel.isLowAccuracy {
+                    Text(viewModel.lowAccuracyReasonText ?? CompassViewModel.lowAccuracyText)
+                        .foregroundStyle(.secondary)
+                }
             }
-            if viewModel.isLowAccuracy {
-                Text(CompassViewModel.lowAccuracyText)
-                    .foregroundStyle(.secondary)
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(viewModel.headingAccessibilityLabel)
+            .accessibilityAddTraits(.updatesFrequently)
+
+            // Outside the combined element, so VoiceOver can reach it.
+            if viewModel.lowAccuracyReason == .preciseLocationOff {
+                Button(CompassViewModel.openSettingsTitle, action: openSettings)
             }
         }
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(viewModel.headingAccessibilityLabel)
-        .accessibilityAddTraits(.updatesFrequently)
+    }
+
+    /// The app's page in Settings (Location › Precise Location), as the
+    /// Location Off dialog does.
+    private func openSettings() {
+        guard let url = URL(string: UIApplication.openSettingsURLString) else { return }
+        openURL(url)
     }
 
     // MARK: - DEBUG readout
@@ -191,13 +210,15 @@ private struct CompassPreview: View {
 
     static func context(
         selected: Place = place,
-        auth: LocationAuthState = .authorized
+        auth: LocationAuthState = .authorized,
+        preciseOff: Bool = false
     ) -> CompassContext {
         let day = Date()
         return CompassContext(
             place: selected,
             detectedPlace: place,
             authState: auth,
+            isPreciseLocationOff: preciseOff,
             moonDay: MoonDay(
                 place: place,
                 rise: MoonEvent(date: day, azimuth: 72),
@@ -216,7 +237,11 @@ private struct CompassPreview: View {
 }
 
 #Preview("Low accuracy") {
-    CompassPreview(context: CompassPreview.context(), reading: HeadingReading(trueHeading: 200, accuracy: 25))
+    CompassPreview(context: CompassPreview.context(), reading: HeadingReading(trueHeading: 200, accuracy: 30))
+}
+
+#Preview("Low accuracy, Precise Location off") {
+    CompassPreview(context: CompassPreview.context(preciseOff: true), reading: HeadingReading(trueHeading: 200, accuracy: 30))
 }
 
 #Preview("No compass (simulator)") {

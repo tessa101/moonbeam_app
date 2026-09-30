@@ -98,7 +98,7 @@ _Last updated: 2026-09-29 (Step 4: compass, through 4.7)_
     - 4.6 proximity states (Here / Nearby ≤ 60 mi / Far); Turn On Location from the compass hint
       keeps the searched city, including after Settings
     - 4.7 target rows removed; the dial reads its targets to VoiceOver
-  - **317 tests / 457 cases across 21 suites, all passing** in Xcode's runner on the iPhone 17 simulator.
+  - **322 tests / 462 cases across 21 suites, all passing** in Xcode's runner on the iPhone 17 simulator.
   - **Device QA pending** (see Next, item 7).
 
 ## Next
@@ -214,7 +214,11 @@ _Last updated: 2026-09-29 (Step 4: compass, through 4.7)_
       - [x] **Low accuracy flip-flopping:** DEBUG readout showed real iOS accuracy crossing 15°
         (±11.8° → ±27.3° charging → ±13.4°), not a stuck state. Now hysteresis: enter above 25°,
         leave below 20° (DECISIONS.md 2026-09-29)
-      - [ ] **4.10** Inline low-accuracy reason (COMPASS.md §1 Accuracy)
+      - [x] **4.10** Inline low-accuracy reason (COMPASS.md §1 Accuracy). Built. **Check on device:**
+        - turn Precise Location off for Moon Signal: in low accuracy, "Precise Location is off" +
+          Open Settings, which lands on the app's page
+        - with it on, near a charger or metal: the metal/magnets/charger tip
+        - both lines clear once accuracy is back below ±20°
 
 Design-pass items (visuals, copy, a11y) are tracked in **[DESIGN-REVIEW.md](DESIGN-REVIEW.md)**.
 

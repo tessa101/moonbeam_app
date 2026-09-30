@@ -58,6 +58,16 @@
   inline keeps the common fix one tap away for testing.
 - Low accuracy that stays stuck until Location is toggled in Settings is treated as a bug (4.9),
   not something to explain.
+- *As built (4.10):*
+  - `CompassViewModel.lowAccuracyReason` is `.preciseLocationOff` / `.interference` / `nil`.
+    Precise-off comes from `CompassContext.isPreciseLocationOff`
+    (`LocationService.isPreciseLocationOff`, 337a7f1).
+  - No reason with no reading yet (it would flash on every start) or with `.unavailable` (no
+    compass).
+  - The reason line replaces the generic "Compass accuracy is low" line, which remains when there
+    is no known cause and as the start of the VoiceOver label.
+  - Tip copy gained "or a charger" (Tessa, after the device test).
+  - The DEBUG readout gains a `reason:` line.
 
 ### 2026-09-29 · Compass follow-ups from first device test (4.5–4.7)
 - **Haptic on lock (4.5):** one firm tap when a lock is acquired; none on release. Promoted from
