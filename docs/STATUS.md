@@ -250,7 +250,7 @@ _Last updated: 2026-09-30 (Step 4: compass, 4.11–4.13 built; device checks for
       - **Device test 2026-09-30 1:49 PM (Tessa):** 4.12 new line + Use Precise Location → iOS alert with
         our text works. Two CTAs felt wrong; search misses Singapore/Tokyo, London, ON above London, UK
       - [x] **4.14** built. One button: remove "Always use Precise Location" (COMPASS.md §1). One commit
-      - [ ] **Step 2.2** Search quality (SEARCH-RECENTS.md §0): filter, resolve-the-tapped-row, and ranking
+      - [x] **Step 2.2** built (fixes 1, 3, 2; one commit each). Search quality (SEARCH-RECENTS.md §0): filter, resolve-the-tapped-row, and ranking
         (smart, then closest) all decided. Before/after query table in latest.md. One commit per fix
       - [ ] **4.15** Status bar: main-screen content must not slide under the clock. Use the iOS 26 top
         scroll edge effect (system fade/blur); solid bar background as fallback. One commit.

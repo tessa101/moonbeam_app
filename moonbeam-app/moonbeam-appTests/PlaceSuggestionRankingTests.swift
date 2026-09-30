@@ -67,7 +67,8 @@ nonisolated struct PlaceSuggestionRankingTests {
     func londonLeads() {
         let merged = PlaceSuggestionRanking.merged(
             query: "London",
-            cities: [Self.row("London", "ON, Canada"), Self.row("London, KY", "United States")],
+            localities: [Self.row("London", "ON, Canada"), Self.row("London, KY", "United States")],
+            subLocalities: [],
             regions: [Self.row("London", "England")]
         )
 
@@ -82,12 +83,14 @@ nonisolated struct PlaceSuggestionRankingTests {
     func cityStatesAppear() {
         let tokyo = PlaceSuggestionRanking.merged(
             query: "Tokyo",
-            cities: [Self.row("Little Tokyo", "Los Angeles, CA, United States")],
+            localities: [Self.row("Little Tokyo", "Los Angeles, CA, United States")],
+            subLocalities: [],
             regions: [Self.row("Tokyo", "Japan")]
         )
         let singapore = PlaceSuggestionRanking.merged(
             query: "Singapore",
-            cities: [Self.row("Singapore Polytechnic", "Singapore")],
+            localities: [Self.row("Singapore Polytechnic", "Singapore")],
+            subLocalities: [],
             regions: [Self.row("Singapore")]
         )
 
@@ -101,7 +104,8 @@ nonisolated struct PlaceSuggestionRankingTests {
 
         let merged = PlaceSuggestionRanking.merged(
             query: "Cal",
-            cities: cities,
+            localities: cities,
+            subLocalities: [],
             regions: [Self.row("California", "United States"), Self.row("Calabria", "Italy")]
         )
 
@@ -114,7 +118,8 @@ nonisolated struct PlaceSuggestionRankingTests {
 
         let merged = PlaceSuggestionRanking.merged(
             query: "New York",
-            cities: [city, Self.row("New York Mills, MN", "United States")],
+            localities: [city, Self.row("New York Mills, MN", "United States")],
+            subLocalities: [],
             regions: [Self.row("New York", "United States")]
         )
 
@@ -129,11 +134,48 @@ nonisolated struct PlaceSuggestionRankingTests {
 
         let merged = PlaceSuggestionRanking.merged(
             query: "Hong Kong",
-            cities: [Self.row("Hong Kong", "La Paz, B.C.S., Mexico"), hongKong],
+            localities: [Self.row("Hong Kong", "La Paz, B.C.S., Mexico"), hongKong],
+            subLocalities: [],
             regions: [hongKong]
         )
 
         #expect(merged == [hongKong, Self.row("Hong Kong", "La Paz, B.C.S., Mexico")])
+    }
+
+    /// Step 2.2 fix 2: towns and cities before neighbourhoods and
+    /// landmarks, which stay in the list.
+    @Test("Venice: Venice, Italy and the towns come before Venice Beach and LA's Venice")
+    func localitiesBeforeSubLocalities() {
+        let localities = [Self.row("Venice", "Italy"), Self.row("Venice, CA", "United States")]
+        let subLocalities = [
+            Self.row("Venice Beach", "Santa Monica, CA, United States"),
+            Self.row("Venice", "Los Angeles, CA, United States"),
+        ]
+
+        let merged = PlaceSuggestionRanking.merged(
+            query: "Venice",
+            localities: localities,
+            subLocalities: subLocalities,
+            regions: []
+        )
+
+        #expect(merged == localities + subLocalities)
+    }
+
+    @Test("Regions lead, then towns, then neighbourhoods")
+    func levelOrder() {
+        let merged = PlaceSuggestionRanking.merged(
+            query: "Tokyo",
+            localities: [Self.row("Tokyo", "Santa Izabel Do Pará - PA, Brazil")],
+            subLocalities: [Self.row("Little Tokyo", "Los Angeles, CA, United States")],
+            regions: [Self.row("Tokyo", "Japan")]
+        )
+
+        #expect(merged == [
+            Self.row("Tokyo", "Japan"),
+            Self.row("Tokyo", "Santa Izabel Do Pará - PA, Brazil"),
+            Self.row("Little Tokyo", "Los Angeles, CA, United States"),
+        ])
     }
 
     @Test("A place at both levels is listed once")
@@ -142,7 +184,8 @@ nonisolated struct PlaceSuggestionRankingTests {
 
         let merged = PlaceSuggestionRanking.merged(
             query: "Paris",
-            cities: [paris, Self.row("Paris, TX", "United States")],
+            localities: [paris, Self.row("Paris, TX", "United States")],
+            subLocalities: [],
             regions: [paris]
         )
 

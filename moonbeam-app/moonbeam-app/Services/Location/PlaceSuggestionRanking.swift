@@ -18,18 +18,28 @@ nonisolated enum PlaceSuggestionRanking {
 
     // MARK: - Merge
 
-    /// Name-matched regions first, since a name match is the prominent place
-    /// the user typed; then the cities, in MapKit's order. Duplicates across
+    /// "Smart, then closest" (Step 2.2 fix 2), by level:
+    /// 1. name-matched regions: a name match is the prominent place typed
+    ///    (Tokyo, Japan; London, England)
+    /// 2. towns and cities, in MapKit's order (Venice, Italy; Paris, TX)
+    /// 3. neighbourhoods and landmarks, still listed but below the cities
+    ///    (Venice Beach; Paris in Acton, CA)
+    ///
+    /// Within a level MapKit's own relevance order stands: completions carry
+    /// no coordinates, so there's no distance to break ties with, and
+    /// MapKit already favours nearby places among equals. Duplicates across
     /// levels (Paris, France comes back as both) keep their first position.
     static func merged(
         query: String,
-        cities: [PlaceSuggestion],
+        localities: [PlaceSuggestion],
+        subLocalities: [PlaceSuggestion],
         regions: [PlaceSuggestion]
     ) -> [PlaceSuggestion] {
+        let cities = localities + subLocalities
         let leading = regions.filter { region in
             isNameMatch(region, query: query) && !hasSameNamedCity(as: region, in: cities)
         }
-        return deduplicated(leading + cities)
+        return deduplicated(leading + localities + subLocalities)
     }
 
     // MARK: - Name match

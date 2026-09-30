@@ -21,11 +21,15 @@ final class MapKitPlaceSearchService: PlaceSearchService {
     // MARK: - Constants
 
     /// LOCATION.md §6. Without it, "San Francisco" is 13 network requests
-    /// per level.
+    /// per level, and there are three levels.
     private static let debounceInterval = Duration.milliseconds(250)
 
-    /// Towns, cities and neighbourhoods (§3): no cafés, no street numbers.
-    private static let cityFilter = MKAddressFilter(including: [.locality, .subLocality])
+    /// Towns and cities (§3): no cafés, no street numbers.
+    private static let localityFilter = MKAddressFilter(including: [.locality])
+
+    /// Neighbourhoods and districts, asked for separately so they can be
+    /// listed below the towns and cities (Step 2.2 fix 2).
+    private static let subLocalityFilter = MKAddressFilter(including: [.subLocality])
 
     /// States, counties and countries. Only shown on a name match, which is
     /// how Singapore, Tokyo and London, England get in (Step 2.2).
@@ -33,7 +37,7 @@ final class MapKitPlaceSearchService: PlaceSearchService {
         including: [.administrativeArea, .subAdministrativeArea, .country]
     )
 
-    /// Both of the above, for resolving a row from either.
+    /// All of the above, for resolving a row from any level.
     private static let anyLevelFilter = MKAddressFilter(
         including: [.locality, .subLocality, .administrativeArea, .subAdministrativeArea, .country]
     )
@@ -62,7 +66,8 @@ final class MapKitPlaceSearchService: PlaceSearchService {
         let session = SuggestionSession(
             query: trimmed,
             continuation: continuation,
-            cityFilter: Self.cityFilter,
+            localityFilter: Self.localityFilter,
+            subLocalityFilter: Self.subLocalityFilter,
             regionFilter: Self.regionFilter
         )
         self.session = session
@@ -123,21 +128,26 @@ private final class SuggestionSession {
 
     private let query: String
     private let continuation: AsyncThrowingStream<[PlaceSuggestion], any Error>.Continuation
-    private let cities: LevelCompleter
+    private let localities: LevelCompleter
+    private let subLocalities: LevelCompleter
     private let regions: LevelCompleter
     private var debounce: Task<Void, Never>?
+
+    private var levels: [LevelCompleter] { [localities, subLocalities, regions] }
 
     init(
         query: String,
         continuation: AsyncThrowingStream<[PlaceSuggestion], any Error>.Continuation,
-        cityFilter: MKAddressFilter,
+        localityFilter: MKAddressFilter,
+        subLocalityFilter: MKAddressFilter,
         regionFilter: MKAddressFilter
     ) {
         self.query = query
         self.continuation = continuation
-        cities = LevelCompleter(filter: cityFilter)
+        localities = LevelCompleter(filter: localityFilter)
+        subLocalities = LevelCompleter(filter: subLocalityFilter)
         regions = LevelCompleter(filter: regionFilter)
-        for level in [cities, regions] {
+        for level in levels {
             level.onChange = { [weak self] in self?.levelDidChange() }
         }
     }
@@ -152,37 +162,44 @@ private final class SuggestionSession {
         debounce = Task { [weak self] in
             try? await Task.sleep(for: delay)
             guard !Task.isCancelled, let self else { return }
-            cities.start(query: query)
-            regions.start(query: query)
+            for level in levels {
+                level.start(query: query)
+            }
         }
     }
 
     func cancel() {
         debounce?.cancel()
-        cities.cancel()
-        regions.cancel()
+        for level in levels {
+            level.cancel()
+        }
         continuation.finish()
     }
 
     /// The completion behind a row, from whichever level returned it. Kept
     /// after `cancel()`: picking a row ends the stream before it resolves.
     func completion(for id: PlaceSuggestion.ID) -> MKLocalSearchCompletion? {
-        cities.completions[id] ?? regions.completions[id]
+        levels.lazy.compactMap { $0.completions[id] }.first
     }
 
     /// Waits until every level has answered once, so the list doesn't open
-    /// with London, ON and then have London, England jump above it. After
-    /// that, each refinement goes straight out. A level that failed counts
-    /// as empty; only all of them failing is a failed search.
+    /// with London, ON and then have London, England jump above it, or
+    /// Venice Beach above Venice, Italy. After that, each refinement goes
+    /// straight out. A level that failed counts as empty; only all of them
+    /// failing is a failed search.
     private func levelDidChange() {
-        let levels = [cities, regions]
         guard levels.allSatisfy(\.hasAnswered) else { return }
-        if levels.allSatisfy({ $0.error != nil }), let error = cities.error {
+        if levels.allSatisfy({ $0.error != nil }), let error = localities.error {
             continuation.finish(throwing: error)
             return
         }
         continuation.yield(
-            PlaceSuggestionRanking.merged(query: query, cities: cities.suggestions, regions: regions.suggestions)
+            PlaceSuggestionRanking.merged(
+                query: query,
+                localities: localities.suggestions,
+                subLocalities: subLocalities.suggestions,
+                regions: regions.suggestions
+            )
         )
     }
 }

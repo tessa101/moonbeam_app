@@ -198,8 +198,9 @@ The three services are **main-actor isolated** (the project default): they drive
 - Wraps `MKLocalSearchCompleter`, with `resultTypes = .address`. ~~`MKAddressFilter(including:
   [.locality, .subLocality])` — cities and neighbourhoods, no cafés, no street numbers, no whole
   states~~ **Amended 2026-09-30 (Step 2.2, SEARCH-RECENTS.md §0):** one completer per address level,
-  merged by `PlaceSuggestionRanking`: cities and neighbourhoods as before, plus states, counties and
-  countries **only on a name match**, so Singapore and Tokyo appear but "cal" doesn't offer California
+  merged by `PlaceSuggestionRanking`: states, counties and countries **only on a name match** (so
+  Singapore and Tokyo appear but "cal" doesn't offer California), then towns and cities, then
+  neighbourhoods (three requests per debounced query)
 - `func suggestions(for query: String) -> AsyncThrowingStream<[PlaceSuggestion], any Error>`
   (debounce ~250 ms). **Throwing**, not a plain `AsyncStream`: §3's "Can't search right now" state
   needs a failure channel, which a non-throwing stream doesn't have. An empty query yields one
