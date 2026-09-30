@@ -8,6 +8,11 @@ import MapKit
 /// `PlaceSearchService` backed by `MKLocalSearchCompleter` (type-ahead) and
 /// `MKLocalSearch` (resolve).
 ///
+/// Type-ahead asks MapKit once per address level and merges the batches with
+/// `PlaceSuggestionRanking` (SEARCH-RECENTS.md §0, Step 2.2): cities alone
+/// missed city-states and metro-level cities (Singapore, Tokyo), while
+/// regions and countries have to be kept to a name match.
+///
 /// Main-actor isolated (the project default), which both MapKit types expect:
 /// the completer delivers to its delegate on the main queue and
 /// `MKLocalSearch` documents its completion handler as main-actor.
@@ -15,16 +20,27 @@ final class MapKitPlaceSearchService: PlaceSearchService {
 
     // MARK: - Constants
 
-    /// LOCATION.md §6. Without it, "San Francisco" is 13 network requests.
+    /// LOCATION.md §6. Without it, "San Francisco" is 13 network requests
+    /// per level.
     private static let debounceInterval = Duration.milliseconds(250)
 
-    /// Cities and neighbourhoods only, per §3 — no cafés, no street numbers,
-    /// and no whole states or countries.
-    private static let addressFilter = MKAddressFilter(including: [.locality, .subLocality])
+    /// Towns, cities and neighbourhoods (§3): no cafés, no street numbers.
+    private static let cityFilter = MKAddressFilter(including: [.locality, .subLocality])
+
+    /// States, counties and countries. Only shown on a name match, which is
+    /// how Singapore, Tokyo and London, England get in (Step 2.2).
+    private static let regionFilter = MKAddressFilter(
+        including: [.administrativeArea, .subAdministrativeArea, .country]
+    )
+
+    /// Both of the above, for resolving a row from either.
+    private static let anyLevelFilter = MKAddressFilter(
+        including: [.locality, .subLocality, .administrativeArea, .subAdministrativeArea, .country]
+    )
 
     // MARK: - State
 
-    /// The live query. Replacing it tears down the previous completer, which
+    /// The live query. Replacing it tears down the previous completers, which
     /// is what stops an abandoned query from delivering late results.
     private var session: SuggestionSession?
 
@@ -44,11 +60,13 @@ final class MapKitPlaceSearchService: PlaceSearchService {
         let (stream, continuation) = AsyncThrowingStream<[PlaceSuggestion], any Error>.makeStream()
 
         let session = SuggestionSession(
+            query: trimmed,
             continuation: continuation,
-            addressFilter: Self.addressFilter
+            cityFilter: Self.cityFilter,
+            regionFilter: Self.regionFilter
         )
         self.session = session
-        session.start(query: trimmed, after: Self.debounceInterval)
+        session.start(after: Self.debounceInterval)
 
         // Runs off the main actor when the consumer stops iterating, so the
         // teardown has to hop back. `SuggestionSession` is main-actor
@@ -65,10 +83,12 @@ final class MapKitPlaceSearchService: PlaceSearchService {
         // completion object could be replayed instead, but it can't cross an
         // isolation boundary, and rejoined address text resolves city
         // suggestions just as well while keeping `PlaceSuggestion` a value.
+        // Every level the list can show, or Tokyo, Japan and Mexico City,
+        // which are region-level to MapKit, fail to resolve.
         let request = MKLocalSearch.Request()
         request.naturalLanguageQuery = suggestion.searchQuery
         request.resultTypes = .address
-        request.addressFilter = Self.addressFilter
+        request.addressFilter = Self.anyLevelFilter
 
         let response = try await MKLocalSearch(request: request).start()
 
@@ -85,76 +105,119 @@ final class MapKitPlaceSearchService: PlaceSearchService {
 
 // MARK: - One query
 
-/// One `MKLocalSearchCompleter` query, its delegate, and the stream they feed.
+/// One query across the address levels: a completer per level, the latest
+/// batch from each, and the stream they feed.
 ///
-/// Grouped so all three are torn down together: cancelling stops the debounce
-/// timer, cancels the completer, and finishes the stream.
+/// Grouped so everything is torn down together: cancelling stops the
+/// debounce timer, cancels every completer, and finishes the stream.
 private final class SuggestionSession {
 
-    private let completer = MKLocalSearchCompleter()
-    private let delegate: CompleterDelegate
+    private let query: String
     private let continuation: AsyncThrowingStream<[PlaceSuggestion], any Error>.Continuation
+    private let cities: LevelCompleter
+    private let regions: LevelCompleter
     private var debounce: Task<Void, Never>?
 
     init(
+        query: String,
         continuation: AsyncThrowingStream<[PlaceSuggestion], any Error>.Continuation,
-        addressFilter: MKAddressFilter
+        cityFilter: MKAddressFilter,
+        regionFilter: MKAddressFilter
     ) {
+        self.query = query
         self.continuation = continuation
-        delegate = CompleterDelegate(continuation: continuation)
-
-        completer.delegate = delegate
-        completer.resultTypes = .address
-        completer.addressFilter = addressFilter
+        cities = LevelCompleter(filter: cityFilter)
+        regions = LevelCompleter(filter: regionFilter)
+        for level in [cities, regions] {
+            level.onChange = { [weak self] in self?.levelDidChange() }
+        }
     }
 
     deinit {
         debounce?.cancel()
     }
 
-    /// Waits out the debounce, then hands the query to MapKit. Setting
-    /// `queryFragment` is what starts the search.
-    func start(query: String, after delay: Duration) {
+    /// Waits out the debounce, then hands the query to every level.
+    func start(after delay: Duration) {
+        let query = query
         debounce = Task { [weak self] in
             try? await Task.sleep(for: delay)
             guard !Task.isCancelled, let self else { return }
-            completer.queryFragment = query
+            cities.start(query: query)
+            regions.start(query: query)
         }
     }
 
     func cancel() {
         debounce?.cancel()
-        completer.cancel()
+        cities.cancel()
+        regions.cancel()
         continuation.finish()
+    }
+
+    /// Waits until every level has answered once, so the list doesn't open
+    /// with London, ON and then have London, England jump above it. After
+    /// that, each refinement goes straight out. A level that failed counts
+    /// as empty; only all of them failing is a failed search.
+    private func levelDidChange() {
+        let levels = [cities, regions]
+        guard levels.allSatisfy(\.hasAnswered) else { return }
+        if levels.allSatisfy({ $0.error != nil }), let error = cities.error {
+            continuation.finish(throwing: error)
+            return
+        }
+        continuation.yield(
+            PlaceSuggestionRanking.merged(query: query, cities: cities.suggestions, regions: regions.suggestions)
+        )
     }
 }
 
-// MARK: - Delegate bridging
-
-/// Forwards the completer's delegate callbacks into the stream.
+/// One `MKLocalSearchCompleter` for one address level, and its latest batch.
 ///
-/// `nonisolated` because the imported MapKit protocol carries no actor
-/// annotation, so main-actor methods can't satisfy its requirements. Reading
-/// `completer.results` here is safe: MapKit calls back on the main queue, and
-/// the results are mapped to values before anything leaves the method.
-private nonisolated final class CompleterDelegate: NSObject, MKLocalSearchCompleterDelegate {
+/// Main-actor isolated, with a `@preconcurrency` delegate conformance: MapKit
+/// calls back on the main queue, and the batches have to reach the session
+/// there.
+private final class LevelCompleter: NSObject, @preconcurrency MKLocalSearchCompleterDelegate {
 
-    private let continuation: AsyncThrowingStream<[PlaceSuggestion], any Error>.Continuation
+    private let completer = MKLocalSearchCompleter()
 
-    init(continuation: AsyncThrowingStream<[PlaceSuggestion], any Error>.Continuation) {
-        self.continuation = continuation
+    private(set) var suggestions: [PlaceSuggestion] = []
+    private(set) var error: (any Error)?
+
+    /// Results or an error have arrived at least once.
+    private(set) var hasAnswered = false
+
+    var onChange: (() -> Void)?
+
+    init(filter: MKAddressFilter) {
         super.init()
+        completer.delegate = self
+        completer.resultTypes = .address
+        completer.addressFilter = filter
     }
 
-    nonisolated func completerDidUpdateResults(_ completer: MKLocalSearchCompleter) {
-        let suggestions = completer.results.map {
-            PlaceSuggestion(title: $0.title, subtitle: $0.subtitle)
-        }
-        continuation.yield(suggestions)
+    /// Setting `queryFragment` is what starts the search.
+    func start(query: String) {
+        completer.queryFragment = query
     }
 
-    nonisolated func completer(_ completer: MKLocalSearchCompleter, didFailWithError error: any Error) {
-        continuation.finish(throwing: error)
+    func cancel() {
+        completer.cancel()
+        onChange = nil
+    }
+
+    func completerDidUpdateResults(_ completer: MKLocalSearchCompleter) {
+        suggestions = completer.results.map { PlaceSuggestion(title: $0.title, subtitle: $0.subtitle) }
+        error = nil
+        hasAnswered = true
+        onChange?()
+    }
+
+    func completer(_ completer: MKLocalSearchCompleter, didFailWithError error: any Error) {
+        suggestions = []
+        self.error = error
+        hasAnswered = true
+        onChange?()
     }
 }
 
