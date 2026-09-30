@@ -56,7 +56,7 @@ _Started: 2026-09-26_
 - [ ] **Enable-location hint** (location off): copy, placement, and whether it opens the Location Off dialog or the system prompt. Built as a plain placeholder
 - [ ] **Proximity copy (4.6):** Nearby note "Directions for {City}" (alternatives: "You're near {City}", "Close enough — showing directions for {City}"); Far message "Compass is only available near this location". Never include a distance
 - [ ] **Lock feedback:** visual treatment of the lock state; haptic tap on acquire is in 4.5 — check it feels right (strength, not too frequent)
-- [ ] **Low-accuracy state:** look and copy; 15° threshold to tune on device. **Reason is inline for now (4.10):** "Precise Location is off" + Settings button, or "Move away from metal or magnets, or wave your phone in a figure 8". Decide in the design pass whether an ⓘ bottom sheet or floating dialog with fuller tips is worth adding
+- [ ] **Low-accuracy state:** look and copy. The threshold is now hysteresis: enter above 25°, leave below 20° (was a single 15° line; device test 2026-09-29). Tune further on device if needed. **Reason is inline for now (4.10):** "Precise Location is off" + Settings button, or "Move away from metal or magnets, or wave your phone in a figure 8". Decide in the design pass whether an ⓘ bottom sheet or floating dialog with fuller tips is worth adding
 - [ ] Layout under the moon table, dial styling, typography (wireframe pending)
 - [ ] **Plain dial as built (4.4)**, things to decide in the design pass:
   - the N/E/S/W letters rotate with the dial, so they read sideways or upside down

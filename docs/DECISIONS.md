@@ -5,6 +5,22 @@
 
 ---
 
+### 2026-09-29 · Low-accuracy hysteresis: enter above 25°, leave below 20°
+- **The device readout showed low accuracy was real, not stuck:** sensors running, true heading
+  present, `accuracyAuthorization` full, visibility Here. iOS's reported accuracy went ±11.8°
+  (locked) → ±27.3° (low, phone charging) → ±13.4° (locked). The single 15° line made the
+  compass flip in and out of low accuracy as it wandered.
+- **Now hysteresis, like the lock:** enter low accuracy above 25°, leave only below 20°, and keep
+  the current state in between. It's always low with no true heading or unknown accuracy. The
+  compass starts low (no reading yet), so a first reading has to be under 20°. Stopping the
+  sensors resets it to low.
+- **Model change:** `HeadingReading` loses `isLowAccuracy` and `lowAccuracyThresholdDegrees`. A rule
+  that needs the previous state can't be a property of one reading. The rule is now a pure
+  `CompassAccuracy.isLow(after:wasLow:)`. `CompassViewModel` stores the state, and
+  `CompassLock.next` takes `heading` + `isLowAccuracy` instead of a reading.
+- **Considered:** just raising the single line to 25° (it would still flicker at the edge); a
+  time-averaged accuracy (slower to react, harder to test).
+
 ### 2026-09-29 · 4.8 + 4.9: sensors that got stuck, and a compass gone after overnight
 - **Likely root cause of stuck low accuracy (4.9): iOS paused location updates.**
   `pausesLocationUpdatesAutomatically` defaults to true. Apple's docs say that for When In Use

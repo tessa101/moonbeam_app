@@ -98,7 +98,7 @@ _Last updated: 2026-09-29 (Step 4: compass, through 4.7)_
     - 4.6 proximity states (Here / Nearby ≤ 60 mi / Far); Turn On Location from the compass hint
       keeps the searched city, including after Settings
     - 4.7 target rows removed; the dial reads its targets to VoiceOver
-  - **311 tests / 442 cases across 20 suites, all passing** in Xcode's runner on the iPhone 17 simulator.
+  - **317 tests / 457 cases across 21 suites, all passing** in Xcode's runner on the iPhone 17 simulator.
   - **Device QA pending** (see Next, item 7).
 
 ## Next
@@ -208,7 +208,12 @@ _Last updated: 2026-09-29 (Step 4: compass, through 4.7)_
         - hold the phone still on the compass for a few minutes: accuracy stays good
         - leave it backgrounded overnight: the compass is back in the morning
         - if either fails, send the DEBUG readout lines (accuracyAuthorization, detected, sensors)
-      - [ ] **Haptic** still missing after a lock (System Haptics on)
+      - [x] **Haptic** still missing after a lock (System Haptics on). **Works on the 337a7f1 build
+        (Tessa, 2026-09-29).** That commit didn't touch the haptic path, so the earlier miss is
+        unexplained; watch for it recurring
+      - [x] **Low accuracy flip-flopping:** DEBUG readout showed real iOS accuracy crossing 15°
+        (±11.8° → ±27.3° charging → ±13.4°), not a stuck state. Now hysteresis: enter above 25°,
+        leave below 20° (DECISIONS.md 2026-09-29)
       - [ ] **4.10** Inline low-accuracy reason (COMPASS.md §1 Accuracy)
 
 Design-pass items (visuals, copy, a11y) are tracked in **[DESIGN-REVIEW.md](DESIGN-REVIEW.md)**.

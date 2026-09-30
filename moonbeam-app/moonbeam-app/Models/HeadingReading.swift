@@ -8,6 +8,9 @@ import Foundation
 /// One compass reading: which way the top of the phone points, and how far
 /// to trust it (COMPASS.md §1 Accuracy).
 ///
+/// Just the values. Whether that counts as low accuracy depends on the
+/// previous state too (hysteresis), so the rule lives in `CompassAccuracy`.
+///
 /// True north only (COMPASS.md §3): there's deliberately no magnetic heading
 /// here, so nothing downstream can fall back to one.
 ///
@@ -16,11 +19,6 @@ import Foundation
 nonisolated struct HeadingReading: Equatable, Sendable {
 
     // MARK: - Constants
-
-    /// Accuracy worse than this puts the compass in its low-accuracy state.
-    /// Locking to ±5° means little beyond it. A starting value, to tune on
-    /// device (COMPASS.md §1).
-    static let lowAccuracyThresholdDegrees = 15.0
 
     /// No usable heading: no compass hardware, or CoreLocation reported an
     /// error.
@@ -50,14 +48,5 @@ nonisolated struct HeadingReading: Equatable, Sendable {
             trueHeading: rawTrueHeading < 0 ? nil : rawTrueHeading,
             accuracy: rawAccuracy < 0 ? nil : rawAccuracy
         )
-    }
-
-    // MARK: - Derived
-
-    /// True when the compass can't be trusted enough to lock: no true
-    /// heading, unknown accuracy, or accuracy worse than the threshold.
-    var isLowAccuracy: Bool {
-        guard trueHeading != nil, let accuracy else { return true }
-        return accuracy > Self.lowAccuracyThresholdDegrees
     }
 }

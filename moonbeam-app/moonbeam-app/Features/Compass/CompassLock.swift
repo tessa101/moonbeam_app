@@ -6,14 +6,14 @@
 import Foundation
 
 /// The lock rules from COMPASS.md §1, as a pure function of the current lock,
-/// the latest reading and the targets.
+/// the heading, the accuracy state and the targets.
 ///
 /// - **Acquire** within ±5° of a target; the nearest one wins.
 /// - **Hold** the locked target until the heading is more than ±8° from it,
 ///   even if another target becomes nearer. The 3° gap stops flicker at the
 ///   edge.
-/// - **No lock** in low accuracy: a ±5° lock means little when the heading
-///   could be 15° out.
+/// - **No lock** in low accuracy (`CompassAccuracy`, with its own
+///   hysteresis): a ±5° lock means little when the heading could be 25° out.
 ///
 /// `nonisolated` so it's testable without the main actor.
 nonisolated enum CompassLock {
@@ -28,18 +28,21 @@ nonisolated enum CompassLock {
 
     // MARK: - Rules
 
-    /// The target to be locked onto after `reading`, or `nil` for no lock.
+    /// The target to be locked onto, or `nil` for no lock.
     ///
     /// A locked target that's no longer in `targets` (the moon set, or the
     /// day changed and it has no moonrise) is released.
+    ///
+    /// - Parameters:
+    ///   - heading: true heading, `nil` with none.
+    ///   - isLowAccuracy: the compass's current accuracy state.
     static func next(
         locked: CompassTarget.Kind?,
-        reading: HeadingReading?,
+        heading: Double?,
+        isLowAccuracy: Bool,
         targets: [CompassTarget]
     ) -> CompassTarget.Kind? {
-        guard let reading, !reading.isLowAccuracy, let heading = reading.trueHeading else {
-            return nil
-        }
+        guard !isLowAccuracy, let heading else { return nil }
 
         if let locked,
            let current = targets.first(where: { $0.kind == locked }),

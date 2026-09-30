@@ -94,6 +94,11 @@ final class CompassViewModel {
     /// The latest reading, or `nil` while the sensors are off.
     private(set) var reading: HeadingReading?
 
+    /// Low accuracy, with hysteresis (`CompassAccuracy`): in above 25°, out
+    /// below 20°. Stored because the rule depends on the previous state.
+    /// Starts, and returns to, low whenever there's no reading.
+    private(set) var isLowAccuracy = true
+
     private(set) var lockedKind: CompassTarget.Kind?
 
     /// The heading and location sensors are running.
@@ -156,9 +161,6 @@ final class CompassViewModel {
     // MARK: - Derived state
 
     var heading: Double? { reading?.trueHeading }
-
-    /// No reading yet counts as low accuracy: there's nothing to trust.
-    var isLowAccuracy: Bool { reading?.isLowAccuracy ?? true }
 
     var lockedTarget: CompassTarget? {
         guard let lockedKind else { return nil }
@@ -329,7 +331,12 @@ final class CompassViewModel {
     // MARK: - Lock
 
     private func updateLock() {
-        let next = CompassLock.next(locked: lockedKind, reading: reading, targets: targets)
+        let next = CompassLock.next(
+            locked: lockedKind,
+            heading: reading?.trueHeading,
+            isLowAccuracy: isLowAccuracy,
+            targets: targets
+        )
         guard next != lockedKind else { return }
         if next != nil { lockAcquisitionCount += 1 }
         lockedKind = next
@@ -337,6 +344,8 @@ final class CompassViewModel {
 
     private func apply(_ newReading: HeadingReading) {
         reading = newReading
+        let low = CompassAccuracy.isLow(after: newReading, wasLow: isLowAccuracy)
+        if low != isLowAccuracy { isLowAccuracy = low }
         updateLock()
     }
 
@@ -393,6 +402,7 @@ final class CompassViewModel {
         moonRefreshTask = nil
 
         reading = nil
+        isLowAccuracy = true
         lockedKind = nil
     }
 }

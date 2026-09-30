@@ -87,8 +87,7 @@ struct MoonPosition: Equatable {    // compass "Moon" target (COMPASS.md §4)
 struct HeadingReading: Equatable, Sendable {
     let trueHeading: Double?    // 0..<360 true north; nil = unavailable (never magnetic)
     let accuracy: Double?       // degrees; nil = unknown
-    var isLowAccuracy: Bool     // no heading, unknown accuracy, or accuracy > 15°
-}
+}                               // low accuracy is CompassAccuracy's rule (hysteresis 25°/20°)
 ```
 
 Models are plain values with no formatting logic. `Formatting/` turns them into strings.

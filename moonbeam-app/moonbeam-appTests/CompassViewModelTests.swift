@@ -604,7 +604,7 @@ struct CompassViewModelTests {
         harness.heading.send(Self.reading(72))
         await waitUntil { harness.viewModel.lockedKind == .moonrise }
 
-        harness.heading.send(Self.reading(72, accuracy: 20))
+        harness.heading.send(Self.reading(72, accuracy: 30))
         await waitUntil { harness.viewModel.lockedKind == nil }
         harness.viewModel.setOnScreen(false)
 
@@ -699,11 +699,52 @@ struct CompassViewModelTests {
         #expect(CompassViewModel.lowAccuracyText == "Compass accuracy is low")
     }
 
+    /// The device test (2026-09-29): accuracy wandered ±11.8° → ±27.3°
+    /// (charging) → ±13.4°. With hysteresis, a ±22° reading between good
+    /// ones keeps the lock, and one between bad ones doesn't bring it back.
+    @Test("Accuracy hysteresis through real readings: the lock survives the gap")
+    func accuracyHysteresis() async {
+        let harness = Self.makeRunningHarness()
+
+        harness.heading.send(Self.reading(72, accuracy: 11.8))
+        await waitUntil { harness.viewModel.lockedKind == .moonrise }
+
+        harness.heading.send(Self.reading(73, accuracy: 22))
+        await waitUntil { harness.viewModel.heading == 73 }
+        #expect(!harness.viewModel.isLowAccuracy)
+        #expect(harness.viewModel.lockedKind == .moonrise)
+
+        harness.heading.send(Self.reading(72, accuracy: 27.3))
+        await waitUntil { harness.viewModel.isLowAccuracy }
+        #expect(harness.viewModel.lockedKind == nil)
+
+        harness.heading.send(Self.reading(71, accuracy: 22))
+        await waitUntil { harness.viewModel.heading == 71 }
+        #expect(harness.viewModel.isLowAccuracy)
+        #expect(harness.viewModel.lockedKind == nil)
+
+        harness.heading.send(Self.reading(72, accuracy: 13.4))
+        await waitUntil { !harness.viewModel.isLowAccuracy }
+        #expect(harness.viewModel.lockedKind == .moonrise)
+        #expect(harness.viewModel.lockAcquisitionCount == 2)
+    }
+
+    @Test("Stopping the sensors puts accuracy back to low")
+    func stopResetsAccuracy() async {
+        let harness = Self.makeRunningHarness()
+        harness.heading.send(Self.reading(72, accuracy: 5))
+        await waitUntil { !harness.viewModel.isLowAccuracy }
+
+        harness.viewModel.setOnScreen(false)
+
+        #expect(harness.viewModel.isLowAccuracy)
+    }
+
     @Test("Low accuracy: no lock, and VoiceOver says so")
     func lowAccuracyNoLock() async {
         let harness = Self.makeRunningHarness()
 
-        harness.heading.send(Self.reading(72, accuracy: 20))
+        harness.heading.send(Self.reading(72, accuracy: 30))
         await waitUntil { harness.viewModel.reading != nil }
 
         #expect(harness.viewModel.isLowAccuracy)

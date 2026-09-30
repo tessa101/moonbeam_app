@@ -17,13 +17,6 @@ nonisolated struct CompassLockTests {
     private static let moonrise = CompassTarget(kind: .moonrise, azimuth: 72)
     private static let moonset = CompassTarget(kind: .moonset, azimuth: 80)
 
-    /// Accurate enough to lock.
-    private static let goodAccuracy = 3.0
-
-    private static func reading(_ heading: Double) -> HeadingReading {
-        HeadingReading(trueHeading: heading, accuracy: goodAccuracy)
-    }
-
     // MARK: - Angular distance
 
     @Test(
@@ -45,14 +38,14 @@ nonisolated struct CompassLockTests {
 
     @Test("Acquires within ±5°, inclusive", arguments: [67.0, 72.0, 77.0])
     func acquiresWithinFive(heading: Double) {
-        let lock = CompassLock.next(locked: nil, reading: Self.reading(heading), targets: [Self.moonrise])
+        let lock = CompassLock.next(locked: nil, heading: heading, isLowAccuracy: false, targets: [Self.moonrise])
 
         #expect(lock == .moonrise)
     }
 
     @Test("Doesn't acquire just beyond ±5°", arguments: [66.99, 77.01])
     func doesNotAcquireBeyondFive(heading: Double) {
-        let lock = CompassLock.next(locked: nil, reading: Self.reading(heading), targets: [Self.moonrise])
+        let lock = CompassLock.next(locked: nil, heading: heading, isLowAccuracy: false, targets: [Self.moonrise])
 
         #expect(lock == nil)
     }
@@ -61,7 +54,7 @@ nonisolated struct CompassLockTests {
     func acquiresAcrossNorth() {
         let north = CompassTarget(kind: .moonset, azimuth: 358)
 
-        #expect(CompassLock.next(locked: nil, reading: Self.reading(2), targets: [north]) == .moonset)
+        #expect(CompassLock.next(locked: nil, heading: 2, isLowAccuracy: false, targets: [north]) == .moonset)
     }
 
     @Test("Nearest target wins on acquire")
@@ -69,7 +62,7 @@ nonisolated struct CompassLockTests {
         // 3.5° from moonrise (72), 2.5° from moonset (80).
         let lock = CompassLock.next(
             locked: nil,
-            reading: Self.reading(77.5),
+            heading: 77.5, isLowAccuracy: false,
             targets: [Self.moonrise, Self.moonset]
         )
 
@@ -81,7 +74,7 @@ nonisolated struct CompassLockTests {
         // 4° from each.
         let lock = CompassLock.next(
             locked: nil,
-            reading: Self.reading(76),
+            heading: 76, isLowAccuracy: false,
             targets: [Self.moonset, Self.moonrise]
         )
 
@@ -92,14 +85,14 @@ nonisolated struct CompassLockTests {
 
     @Test("Holds out to ±8°, inclusive", arguments: [64.0, 80.0, 75.0])
     func holdsWithinEight(heading: Double) {
-        let lock = CompassLock.next(locked: .moonrise, reading: Self.reading(heading), targets: [Self.moonrise])
+        let lock = CompassLock.next(locked: .moonrise, heading: heading, isLowAccuracy: false, targets: [Self.moonrise])
 
         #expect(lock == .moonrise)
     }
 
     @Test("Releases just beyond ±8°", arguments: [63.99, 80.01])
     func releasesBeyondEight(heading: Double) {
-        let lock = CompassLock.next(locked: .moonrise, reading: Self.reading(heading), targets: [Self.moonrise])
+        let lock = CompassLock.next(locked: .moonrise, heading: heading, isLowAccuracy: false, targets: [Self.moonrise])
 
         #expect(lock == nil)
     }
@@ -110,7 +103,7 @@ nonisolated struct CompassLockTests {
     func holdsDespiteNearerTarget() {
         let lock = CompassLock.next(
             locked: .moonrise,
-            reading: Self.reading(78),
+            heading: 78, isLowAccuracy: false,
             targets: [Self.moonrise, Self.moonset]
         )
 
@@ -122,7 +115,7 @@ nonisolated struct CompassLockTests {
         // 9° from moonrise (released), 1° from moonset.
         let lock = CompassLock.next(
             locked: .moonrise,
-            reading: Self.reading(81),
+            heading: 81, isLowAccuracy: false,
             targets: [Self.moonrise, Self.moonset]
         )
 
@@ -131,7 +124,7 @@ nonisolated struct CompassLockTests {
 
     @Test("A locked target that's gone is released")
     func goneTargetReleases() {
-        let lock = CompassLock.next(locked: .moon, reading: Self.reading(72), targets: [Self.moonrise])
+        let lock = CompassLock.next(locked: .moon, heading: 72, isLowAccuracy: false, targets: [Self.moonrise])
 
         #expect(lock == .moonrise)
     }
@@ -140,20 +133,17 @@ nonisolated struct CompassLockTests {
 
     @Test("No lock in low accuracy, even dead on target")
     func noLockInLowAccuracy() {
-        let poor = HeadingReading(trueHeading: 72, accuracy: 20)
-
-        #expect(CompassLock.next(locked: nil, reading: poor, targets: [Self.moonrise]) == nil)
-        #expect(CompassLock.next(locked: .moonrise, reading: poor, targets: [Self.moonrise]) == nil)
+        #expect(CompassLock.next(locked: nil, heading: 72, isLowAccuracy: true, targets: [Self.moonrise]) == nil)
+        #expect(CompassLock.next(locked: .moonrise, heading: 72, isLowAccuracy: true, targets: [Self.moonrise]) == nil)
     }
 
-    @Test("No lock with no reading or no true heading")
+    @Test("No lock with no true heading")
     func noLockWithoutHeading() {
-        #expect(CompassLock.next(locked: .moonrise, reading: nil, targets: [Self.moonrise]) == nil)
-        #expect(CompassLock.next(locked: nil, reading: .unavailable, targets: [Self.moonrise]) == nil)
+        #expect(CompassLock.next(locked: .moonrise, heading: nil, isLowAccuracy: false, targets: [Self.moonrise]) == nil)
     }
 
     @Test("No targets, no lock")
     func noTargets() {
-        #expect(CompassLock.next(locked: nil, reading: Self.reading(72), targets: []) == nil)
+        #expect(CompassLock.next(locked: nil, heading: 72, isLowAccuracy: false, targets: []) == nil)
     }
 }

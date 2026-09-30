@@ -31,8 +31,8 @@
 
 ### Accuracy
 
-- **Low-accuracy state** when device heading accuracy is worse than **15°**, or true heading is unavailable. Locking to ±5° means little beyond that. No lock while in low accuracy; no custom calibration flow.
-- 15° is a starting value — tune after device testing.
+- **Low-accuracy state, with hysteresis like the lock:** it **enters** when device heading accuracy is worse than **25°**, and **leaves** only when it's better than **20°**. In between, it keeps its current state. It's always low with no true heading or unknown accuracy. No lock while in low accuracy; no custom calibration flow.
+- *Why (device test 2026-09-29):* the DEBUG readout showed iOS's reported accuracy wandering ±11.8° (locked) → ±27.3° (low, phone charging) → ±13.4° (locked). With the original single 15° line, the compass flipped in and out of low accuracy as it wandered. It wasn't stuck. 25/20 is the new starting value; tune further on device if needed.
 - **Low-accuracy reason, inline (4.10, decided 2026-09-29):** in low accuracy, one plain line under the heading says *why*, so the user can fix it:
   - **Precise Location off** (`accuracyAuthorization == .reducedAccuracy`): "Precise Location is off" + a button to Settings
   - **Otherwise** (poor accuracy, cause unknown): "Move away from metal or magnets, or wave your phone in a figure 8"
@@ -110,7 +110,7 @@ nonisolated protocol MoonService {
 
 - `AstronomyEngineMoonService` and `FakeMoonService` both implement it.
 - New `HeadingService` protocol (CoreLocation + fake): true heading, accuracy, and start/stop that also drives the continuous location updates true heading needs. No new dependency.
-- Readings are a new value type, `HeadingReading` (`trueHeading: Double?`, `accuracy: Double?`, derived `isLowAccuracy`), built in 4.2. `nil` means CoreLocation reported the value as invalid. There's no magnetic field, so nothing can fall back to magnetic.
+- Readings are a new value type, `HeadingReading` (`trueHeading: Double?`, `accuracy: Double?`), built in 4.2. Its derived `isLowAccuracy` moved out to `CompassAccuracy` with the hysteresis (2026-09-29), because the rule needs the previous state. `nil` means CoreLocation reported the value as invalid. There's no magnetic field, so nothing can fall back to magnetic.
 
 ## 5. Open questions
 
@@ -124,7 +124,7 @@ nonisolated protocol MoonService {
 - Fake heading provider (device compass isn't available in the simulator)
 - Lock acquires within ±5°, releases outside ±8°
 - Nearest target wins on acquire; lock holds on current target until release even if another becomes nearer
-- Low-accuracy state when accuracy > 15° or true heading unavailable; no lock in that state
+- Low-accuracy hysteresis: enter above 25°, leave below 20°, keep state in between; always low with no true heading or unknown accuracy; no lock in that state
 - Target bearings pulled from the *selected* day and place, not always today
 - "Moon" target only present when selected day is today and the moon is up (§3) — including moon-up-since-last-night case
 - "Moon is up" agrees with rise/set times at the boundaries (same horizon definition): down one minute before the table's rise, up one minute after; mirrored at set

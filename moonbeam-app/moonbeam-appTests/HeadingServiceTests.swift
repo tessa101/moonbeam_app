@@ -26,46 +26,23 @@ struct HeadingServiceTests {
     /// broken implementation hanging the suite.
     private static let maxYieldsForTermination = 100
 
-    // MARK: - Reading: accuracy
+    // MARK: - Reading values
+    //
+    // Whether a reading counts as low accuracy is `CompassAccuracy`'s rule
+    // (hysteresis), tested in `CompassAccuracyTests`.
 
-    @Test("A good reading is not low accuracy")
+    @Test("A reading keeps its heading and accuracy")
     func goodReading() {
         let reading = HeadingReading(trueHeading: 72, accuracy: 5)
 
         #expect(reading.trueHeading == 72)
-        #expect(!reading.isLowAccuracy)
+        #expect(reading.accuracy == 5)
     }
 
-    /// "Worse than 15°" (COMPASS.md §1): exactly 15° is still usable.
-    @Test(
-        "Low accuracy starts just above 15°",
-        arguments: [(15.0, false), (15.01, true), (14.99, false), (30.0, true)]
-    )
-    func lowAccuracyThreshold(accuracy: Double, expectedLow: Bool) {
-        let reading = HeadingReading(trueHeading: 72, accuracy: accuracy)
-
-        #expect(reading.isLowAccuracy == expectedLow)
-    }
-
-    @Test("The threshold is 15°")
-    func thresholdValue() {
-        #expect(HeadingReading.lowAccuracyThresholdDegrees == 15)
-    }
-
-    @Test("No true heading is low accuracy, however good the accuracy")
-    func noTrueHeadingIsLow() {
-        #expect(HeadingReading(trueHeading: nil, accuracy: 1).isLowAccuracy)
-    }
-
-    @Test("Unknown accuracy is low accuracy")
-    func unknownAccuracyIsLow() {
-        #expect(HeadingReading(trueHeading: 72, accuracy: nil).isLowAccuracy)
-    }
-
-    @Test("Unavailable is low accuracy")
-    func unavailableIsLow() {
-        #expect(HeadingReading.unavailable.isLowAccuracy)
+    @Test("Unavailable has no heading and no accuracy")
+    func unavailableHasNothing() {
         #expect(HeadingReading.unavailable.trueHeading == nil)
+        #expect(HeadingReading.unavailable.accuracy == nil)
     }
 
     // MARK: - Reading: CoreLocation's raw values
@@ -78,17 +55,17 @@ struct HeadingServiceTests {
         let noAccuracy = HeadingReading(rawTrueHeading: 72, rawAccuracy: -1)
 
         #expect(noTrueHeading.trueHeading == nil)
-        #expect(noTrueHeading.isLowAccuracy)
+        #expect(noTrueHeading.accuracy == 5)
+        #expect(noAccuracy.trueHeading == 72)
         #expect(noAccuracy.accuracy == nil)
-        #expect(noAccuracy.isLowAccuracy)
     }
 
-    @Test("Raw zero is a real heading (north), not invalid")
+    @Test("Raw zero is a real heading (north) and a real accuracy, not invalid")
     func rawZeroIsNorth() {
         let north = HeadingReading(rawTrueHeading: 0, rawAccuracy: 0)
 
         #expect(north.trueHeading == 0)
-        #expect(!north.isLowAccuracy)
+        #expect(north.accuracy == 0)
     }
 
     @Test("Heading is kept within 0..<360")
