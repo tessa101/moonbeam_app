@@ -5,6 +5,27 @@
 
 ---
 
+### 2026-09-30 · Search ranks smart, then closest; 4.15 status bar fix now
+- **Ranking (Tessa):** the most prominent / expected place first, distance from the user only as
+  the tiebreak. No more biasing results to the user's area. Fuzzy matching from MapKit is fine.
+  Replaces "ranking waits on Tessa" in Step 2.2 (SEARCH-RECENTS.md §0).
+- **4.15 status bar (Tessa):** the main screen's content slides under the clock with no background.
+  Fix it now with the iOS 26 system treatment: the scroll edge effect at the top (content fades /
+  blurs under the status bar, as in system apps), not a custom header. Final styling stays in the
+  design pass.
+- **Considered:** a solid bar color (fine fallback if the edge effect doesn't apply to a bare
+  `ScrollView`); pinning the prompt + search field as a header (bigger layout change, design pass).
+
+### 2026-09-30 · 4.14: one Precise button; Step 2.2 search quality
+- **4.14 (Tessa):** two CTAs ("Use Precise Location" + "Always use Precise Location") felt wrong.
+  One button now. The temporary alert only offers Don't Allow / Allow Once; that's iOS, and there's
+  no in-app way to make Precise permanent, so "Allow While Using" can't be added there. Permanent
+  Precise stays in Settings.
+- **Step 2.2 (Tessa):** type-ahead misses Singapore and Tokyo and ranks London, ON above London, UK.
+  Approved: widen the filter so city-states and metro-level cities appear (region/country results
+  only on a name match), and resolve the exact tapped row. Ranking change waits on a before/after
+  table from the agent. Spec: SEARCH-RECENTS.md §0.
+
 ### 2026-09-30 · 4.13: place names read "City, ST"
 - **Decision (Tessa):** the search field and compass copy show "Irvine, CA", not "Irvine".
 - **How it scales:** use Apple's locale-aware `cityWithContext` (already stored as `Place.region`)

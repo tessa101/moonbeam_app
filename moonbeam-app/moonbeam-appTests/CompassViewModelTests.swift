@@ -714,7 +714,6 @@ struct CompassViewModelTests {
         #expect(CompassViewModel.preciseLocationOffText(city: "Irvine")
             == "We think you're near Irvine, but the compass needs Precise Location to point the right way.")
         #expect(CompassViewModel.usePreciseLocationTitle == "Use Precise Location")
-        #expect(CompassViewModel.alwaysUsePreciseLocationTitle == "Always use Precise Location")
         #expect(CompassViewModel.preciseConfirmationText == "There you are! The compass is happy now.")
         #expect(CompassViewModel.interferenceTip
             == "Move away from metal, magnets or a charger, or wave your phone in a figure 8")

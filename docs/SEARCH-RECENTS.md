@@ -11,6 +11,31 @@
 **Observed:** Nothing appears until 2 characters are typed, then type-ahead matches show.
 **Change:** Show recents first. Type-ahead takes over once 2 characters are typed.
 
+## 0. Step 2.2: search results quality (device test 2026-09-30, planned)
+
+Device test with type-ahead (Tessa, detected in Irvine):
+- **Singapore** → no Singapore; top hit "Singapur, India". Autofill wrong.
+- **Tokyo** → no Tokyo, Japan.
+- **London** → London, ON (Canada) first; London, UK far down the list.
+- **Paris** → Paris, France then Paris, TX. Good; this is the target behavior.
+
+**Likely causes (from the code, to confirm):**
+1. **The filter drops cities that aren't "localities" in Apple's data.** `MKAddressFilter(including: [.locality, .subLocality])` keeps towns and neighborhoods only. Singapore is a country, and Tokyo is a prefecture-level metropolis (its wards are the localities), so both are filtered out; MapKit then offers the nearest fuzzy match ("Singapur"). Likely the same for Hong Kong, Monaco, Seoul, Beijing, Shanghai.
+2. **Ranking leans toward the user's area.** The completer has no `region`, so MapKit biases toward where the phone is. That lifts London, ON (North America) over London, UK.
+3. **Resolve re-searches instead of using the tapped row.** `resolve` runs a new `MKLocalSearch` on the row's title + subtitle and takes the first hit, which can differ from what was tapped. Should use `MKLocalSearch.Request(completion:)` on the exact completion.
+
+**Behavior we want:**
+- The **most expected (common) place first**: a capital or major city beats a small same-name town, unless the user is right next to the small one.
+- **City-states and metro-level cities appear:** Singapore, Tokyo, Hong Kong, etc. Whole states/countries still shouldn't flood results: a region- or country-level result appears only when the typed text matches its name (case- and accent-insensitive), e.g. "tokyo", "singapore"; "cal" doesn't offer California.
+- **Tapping a row loads exactly that place.**
+- **Spelling:** MapKit's own fuzzy matching is fine (Tessa); no custom spellcheck. Record how typos behave.
+
+**Agent: run the query list before and after, and report it.** Run this query list on device (or simulator with a Irvine location) with the current code, then with each change, and put a before/after table in latest.md:
+Singapore, Tokyo, London, Paris, Hong Kong, Seoul, Venice, Springfield, Portland, Sydney, Mexico City, and typos Singapur, Tokio, Pairs, Lodnon.
+- Fix 1 (filter) and fix 3 (resolve the tapped completion) are approved.
+- **Fix 2 decided (Tessa, 2026-09-30): rank smart, then closest.** The most prominent / expected place wins (London, UK over London, ON; Tokyo, Japan first), and distance from the user only breaks ties between comparable matches. Stop biasing results to the user's area (e.g. a world-wide `region`); if MapKit gives no prominence signal, use its own relevance order as "smart" and distance as the tiebreak. Nearby small towns should still appear in the list, just below the major match. The agent picks the mechanism and proves it with the before/after table.
+- Tests: fake-backed tests for the matching rule (region/country results only on a name match), resolve uses the tapped suggestion, ordering locality-first.
+
 ## 1. Main screen
 
 - The search field on the main screen becomes a **tap target that opens the search sheet**. It shows the current city name (or the placeholder "Search for a city") and doesn't take text input itself.

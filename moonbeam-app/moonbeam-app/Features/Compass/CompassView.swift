@@ -22,8 +22,6 @@ struct CompassView: View {
     /// Use Precise Location: iOS's temporary full-accuracy alert (4.12).
     let onUsePreciseLocation: () -> Void
 
-    @Environment(\.openURL) private var openURL
-
     var body: some View {
         VStack(alignment: .leading) {
             switch viewModel.visibility {
@@ -112,12 +110,12 @@ struct CompassView: View {
             .accessibilityLabel(viewModel.headingAccessibilityLabel)
             .accessibilityAddTraits(.updatesFrequently)
 
-            // Outside the combined element, so VoiceOver can reach them.
+            // Outside the combined element, so VoiceOver can reach it. One
+            // button only (4.14): the alert is iOS's own (Don't Allow /
+            // Allow Once), and permanent Precise lives in Settings.
             if viewModel.offersPreciseLocation {
                 Button(CompassViewModel.usePreciseLocationTitle, action: onUsePreciseLocation)
                     .buttonStyle(.bordered)
-                Button(CompassViewModel.alwaysUsePreciseLocationTitle, action: openSettings)
-                    .font(.subheadline)
             }
         }
         // The aha line is spoken as it appears, wherever VoiceOver is.
@@ -125,13 +123,6 @@ struct CompassView: View {
             guard let confirmation else { return }
             AccessibilityNotification.Announcement(confirmation).post()
         }
-    }
-
-    /// The app's page in Settings (Location › Precise Location), as the
-    /// Location Off dialog does. For "Always use Precise Location".
-    private func openSettings() {
-        guard let url = URL(string: UIApplication.openSettingsURLString) else { return }
-        openURL(url)
     }
 
     // MARK: - DEBUG readout

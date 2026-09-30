@@ -51,7 +51,7 @@ final class CompassViewModel {
     /// Why accuracy is low, so the user can fix it (COMPASS.md §1, 4.10).
     enum LowAccuracyReason: Equatable {
         /// Precise Location is off for the app: fixable in one tap with the
-        /// temporary alert, or for good in Settings (4.12).
+        /// temporary alert (4.12). For good, only in Settings (4.14).
         case preciseLocationOff
 
         /// Cause unknown: most often metal, magnets or a charger nearby,
@@ -93,13 +93,9 @@ final class CompassViewModel {
         "We think you're near \(city), but the compass needs Precise Location to point the right way."
     }
 
-    /// Its button: iOS's temporary full-accuracy alert, one tap and no
-    /// trip to Settings. Lasts this session of use.
+    /// Its only button (4.14): iOS's temporary full-accuracy alert, one tap
+    /// and no trip to Settings. Lasts this session of use.
     static let usePreciseLocationTitle = "Use Precise Location"
-
-    /// Its secondary link: the app's page in Settings, where Location ›
-    /// Precise Location lives, for people who don't want asking each time.
-    static let alwaysUsePreciseLocationTitle = "Always use Precise Location"
 
     /// Replaces the reason line for a moment when Precise Location turns on
     /// with the compass on screen (4.12).
@@ -270,8 +266,8 @@ final class CompassViewModel {
         return lowAccuracyReasonText ?? Self.lowAccuracyText
     }
 
-    /// Use Precise Location and its Settings link show with the Precise
-    /// Location line, and not over the aha line.
+    /// Use Precise Location shows with the Precise Location line, and not
+    /// over the aha line.
     var offersPreciseLocation: Bool {
         lowAccuracyReason == .preciseLocationOff && preciseConfirmation == nil
     }

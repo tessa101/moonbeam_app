@@ -247,6 +247,15 @@ _Last updated: 2026-09-30 (Step 4: compass, 4.11–4.13 built; device checks for
       - [x] **4.13** built: "City, ST" in the search field and compass copy (LOCATION.md "Place name on
         screen", DECISIONS.md 2026-09-30). One commit. **Check on device:** Irvine → "Irvine, CA";
         search Sydney, London, Paris, Tokyo, Singapore and note what each shows
+      - **Device test 2026-09-30 1:49 PM (Tessa):** 4.12 new line + Use Precise Location → iOS alert with
+        our text works. Two CTAs felt wrong; search misses Singapore/Tokyo, London, ON above London, UK
+      - [x] **4.14** built. One button: remove "Always use Precise Location" (COMPASS.md §1). One commit
+      - [ ] **Step 2.2** Search quality (SEARCH-RECENTS.md §0): filter, resolve-the-tapped-row, and ranking
+        (smart, then closest) all decided. Before/after query table in latest.md. One commit per fix
+      - [ ] **4.15** Status bar: main-screen content must not slide under the clock. Use the iOS 26 top
+        scroll edge effect (system fade/blur); solid bar background as fallback. One commit.
+        **Check on device:** scroll the main screen to the compass; the clock stays readable over the
+        moon table and date control, in light and dark mode
 
 Design-pass items (visuals, copy, a11y) are tracked in **[DESIGN-REVIEW.md](DESIGN-REVIEW.md)**.
 
