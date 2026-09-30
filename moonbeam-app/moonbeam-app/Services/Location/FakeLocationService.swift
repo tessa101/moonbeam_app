@@ -18,6 +18,10 @@ final class FakeLocationService: LocationService {
 
     var isPreciseLocationOff = false
 
+    /// What the temporary Precise Location alert "decides": `false` grants
+    /// it. Left `nil`, nothing changes, which models declining.
+    var preciseOffAfterTemporaryRequest: Bool?
+
     /// What the system prompt "decides". Left `nil`, the state doesn't change,
     /// which models a user dismissing the prompt.
     var stateAfterRequest: LocationAuthState?
@@ -32,6 +36,9 @@ final class FakeLocationService: LocationService {
 
     private(set) var requestAuthorizationCount = 0
     private(set) var currentPlaceCount = 0
+
+    /// The purpose key of each temporary Precise Location request.
+    private(set) var temporaryPrecisePurposeKeys: [String] = []
 
     /// Fixes that were cancelled mid-flight. The view model's timeout has to
     /// *cancel* the fix — stopping location updates — not merely stop waiting
@@ -60,6 +67,13 @@ final class FakeLocationService: LocationService {
             authorizationState = stateAfterRequest
         }
         return authorizationState
+    }
+
+    func requestTemporaryPreciseLocation(purposeKey: String) async {
+        temporaryPrecisePurposeKeys.append(purposeKey)
+        if let preciseOffAfterTemporaryRequest {
+            isPreciseLocationOff = preciseOffAfterTemporaryRequest
+        }
     }
 
     func currentPlace() async throws -> Place {

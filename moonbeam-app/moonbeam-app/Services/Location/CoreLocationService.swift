@@ -71,6 +71,13 @@ final class CoreLocationService: LocationService {
         return state
     }
 
+    /// The async form returns after the user answers. It throws when iOS
+    /// doesn't show the alert (already precise, missing key, backgrounded),
+    /// and in each case there's nothing to do but read the state again.
+    func requestTemporaryPreciseLocation(purposeKey: String) async {
+        try? await manager.requestTemporaryFullAccuracyAuthorization(withPurposeKey: purposeKey)
+    }
+
     func currentPlace() async throws -> Place {
         let location = try await currentLocation()
         return try await place(for: location)

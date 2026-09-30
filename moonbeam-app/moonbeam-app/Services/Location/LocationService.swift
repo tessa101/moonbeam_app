@@ -23,14 +23,22 @@ protocol LocationService {
 
     /// Precise Location is off for the app (`accuracyAuthorization` is
     /// `.reducedAccuracy`). Not a permission state: the moon maths is fine
-    /// with approximate location (§4). The compass uses it to explain low
-    /// accuracy (COMPASS.md §1, 4.10). Read fresh each time.
+    /// with approximate location (§4). The compass needs it, and uses it to
+    /// explain low accuracy (COMPASS.md §1, 4.10, 4.12). Read fresh each time.
     var isPreciseLocationOff: Bool { get }
 
     /// Shows the system prompt when the state is `notDetermined`, and returns
     /// the state the user settled on. A no-op returning the current state
     /// otherwise — iOS only ever prompts once.
     func requestAuthorization() async -> LocationAuthState
+
+    /// Asks for Precise Location for this session of use, with iOS's in-app
+    /// alert carrying the purpose string under `purposeKey` in Info.plist's
+    /// `NSLocationTemporaryUsageDescriptionDictionary` (COMPASS.md 4.12).
+    /// Returns once the user has answered. A refusal, or iOS not showing
+    /// the alert, changes nothing; read `isPreciseLocationOff` for the
+    /// outcome.
+    func requestTemporaryPreciseLocation(purposeKey: String) async
 
     /// One-shot fix, reverse geocoded into a `Place` whose
     /// `isCurrentLocation` is `true`.

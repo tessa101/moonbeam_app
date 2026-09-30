@@ -711,8 +711,11 @@ struct CompassViewModelTests {
         #expect(CompassViewModel.locationOffHint == "Turn on location to use the compass.")
         #expect(CompassViewModel.turnOnLocationTitle == "Turn On Location")
         #expect(CompassViewModel.lowAccuracyText == "Compass accuracy is low")
-        #expect(CompassViewModel.preciseLocationOffText == "Precise Location is off")
-        #expect(CompassViewModel.openSettingsTitle == "Open Settings")
+        #expect(CompassViewModel.preciseLocationOffText(city: "Irvine")
+            == "We think you're near Irvine, but the compass needs Precise Location to point the right way.")
+        #expect(CompassViewModel.usePreciseLocationTitle == "Use Precise Location")
+        #expect(CompassViewModel.alwaysUsePreciseLocationTitle == "Always use Precise Location")
+        #expect(CompassViewModel.preciseConfirmationText == "There you are! The compass is happy now.")
         #expect(CompassViewModel.interferenceTip
             == "Move away from metal, magnets or a charger, or wave your phone in a figure 8")
     }
@@ -788,7 +791,7 @@ struct CompassViewModelTests {
 
     // MARK: - Low-accuracy reason (4.10)
 
-    @Test("Precise Location off: the reason says so, and VoiceOver reads it")
+    @Test("Precise Location off: the line names the place, offers the fix, and VoiceOver reads it")
     func reasonPreciseLocationOff() async {
         let harness = Self.makeHarness()
         var context = Self.context()
@@ -796,12 +799,90 @@ struct CompassViewModelTests {
         harness.viewModel.update(context)
         harness.viewModel.setOnScreen(true)
 
-        harness.heading.send(Self.reading(72, accuracy: 30))
+        harness.heading.send(Self.reading(72, accuracy: 81.4))
         await waitUntil { harness.viewModel.reading != nil }
 
+        let line = "We think you're near Los Angeles, but the compass needs Precise Location to point the right way."
         #expect(harness.viewModel.lowAccuracyReason == .preciseLocationOff)
-        #expect(harness.viewModel.lowAccuracyReasonText == "Precise Location is off")
-        #expect(harness.viewModel.headingAccessibilityLabel == "Compass accuracy is low. Precise Location is off")
+        #expect(harness.viewModel.lowAccuracyReasonText == line)
+        #expect(harness.viewModel.statusLineText == line)
+        #expect(harness.viewModel.offersPreciseLocation)
+        #expect(harness.viewModel.headingAccessibilityLabel == "Compass accuracy is low. \(line)")
+    }
+
+    // MARK: - Aha line (4.12)
+
+    /// Shown and on screen, Precise Location off, with a reading from iOS's
+    /// ±81° reduced-accuracy heading.
+    private func makePreciseOffHarness() async -> Harness {
+        let harness = Self.makeHarness()
+        var context = Self.context()
+        context.isPreciseLocationOff = true
+        harness.viewModel.update(context)
+        harness.viewModel.setOnScreen(true)
+        harness.heading.send(Self.reading(72, accuracy: 81.4))
+        await waitUntil { harness.viewModel.reading != nil }
+        return harness
+    }
+
+    @Test("Precise Location turning on while on screen: the aha line replaces the reason, then clears")
+    func ahaOnPreciseOn() async {
+        let harness = await makePreciseOffHarness()
+
+        harness.viewModel.update(Self.context())
+
+        #expect(harness.viewModel.preciseConfirmation == "There you are! The compass is happy now.")
+        #expect(harness.viewModel.statusLineText == "There you are! The compass is happy now.")
+        #expect(!harness.viewModel.offersPreciseLocation)
+
+        await waitUntil { harness.sleeper.requestedDurations.contains(CompassViewModel.preciseConfirmationDuration) }
+        harness.sleeper.fire()
+        await waitUntil { harness.viewModel.preciseConfirmation == nil }
+
+        #expect(harness.viewModel.preciseConfirmation == nil)
+        harness.viewModel.setOnScreen(false)
+        harness.sleeper.cancelAll()
+    }
+
+    @Test("The aha line lasts about 3 s")
+    func ahaDuration() {
+        #expect(CompassViewModel.preciseConfirmationDuration == .seconds(3))
+    }
+
+    @Test("No aha line on an ordinary recovery from low accuracy with Precise on throughout")
+    func noAhaOnAccuracyRecovery() async {
+        let harness = Self.makeRunningHarness()
+        harness.heading.send(Self.reading(72, accuracy: 30))
+        await waitUntil { harness.viewModel.isLowAccuracy && harness.viewModel.reading != nil }
+
+        harness.heading.send(Self.reading(72, accuracy: 5))
+        await waitUntil { !harness.viewModel.isLowAccuracy }
+        harness.viewModel.update(Self.context())
+
+        #expect(harness.viewModel.preciseConfirmation == nil)
+    }
+
+    @Test("No aha line when Precise Location turns on with the compass off screen")
+    func noAhaOffScreen() {
+        let harness = Self.makeHarness()
+        var context = Self.context()
+        context.isPreciseLocationOff = true
+        harness.viewModel.update(context)
+
+        harness.viewModel.update(Self.context())
+
+        #expect(harness.viewModel.preciseConfirmation == nil)
+    }
+
+    @Test("No aha line when Precise Location turns off")
+    func noAhaOnPreciseOff() {
+        let harness = Self.makeRunningHarness()
+        var context = Self.context()
+        context.isPreciseLocationOff = true
+
+        harness.viewModel.update(context)
+
+        #expect(harness.viewModel.preciseConfirmation == nil)
     }
 
     @Test("Precise Location on: the metal, magnets or charger tip")

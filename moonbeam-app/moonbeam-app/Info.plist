@@ -2,7 +2,10 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>NSLocationDefaultAccuracyReduced</key>
-	<true/>
+	<key>NSLocationTemporaryUsageDescriptionDictionary</key>
+	<dict>
+		<key>Compass</key>
+		<string>The compass needs Precise Location to point at the moon. We never see your location, and it's never shown on screen.</string>
+	</dict>
 </dict>
 </plist>

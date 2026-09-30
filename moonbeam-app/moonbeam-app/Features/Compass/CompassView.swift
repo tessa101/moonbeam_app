@@ -19,6 +19,9 @@ struct CompassView: View {
     /// if not yet asked, otherwise the Location Off dialog).
     let onTurnOnLocation: () -> Void
 
+    /// Use Precise Location: iOS's temporary full-accuracy alert (4.12).
+    let onUsePreciseLocation: () -> Void
+
     @Environment(\.openURL) private var openURL
 
     var body: some View {
@@ -97,26 +100,35 @@ struct CompassView: View {
                         .foregroundStyle(viewModel.isLowAccuracy ? .secondary : .primary)
                 }
                 // One plain line under the heading (4.10): why it's low, so
-                // it can be fixed. The generic line only when the cause
-                // isn't known (no reading yet, no compass).
-                if viewModel.isLowAccuracy {
-                    Text(viewModel.lowAccuracyReasonText ?? CompassViewModel.lowAccuracyText)
+                // it can be fixed, or for a moment the aha line (4.12).
+                if let statusLineText = viewModel.statusLineText {
+                    Text(statusLineText)
                         .foregroundStyle(.secondary)
+                        .transition(.opacity)
                 }
             }
+            .animation(.easeInOut, value: viewModel.preciseConfirmation)
             .accessibilityElement(children: .ignore)
             .accessibilityLabel(viewModel.headingAccessibilityLabel)
             .accessibilityAddTraits(.updatesFrequently)
 
-            // Outside the combined element, so VoiceOver can reach it.
-            if viewModel.lowAccuracyReason == .preciseLocationOff {
-                Button(CompassViewModel.openSettingsTitle, action: openSettings)
+            // Outside the combined element, so VoiceOver can reach them.
+            if viewModel.offersPreciseLocation {
+                Button(CompassViewModel.usePreciseLocationTitle, action: onUsePreciseLocation)
+                    .buttonStyle(.bordered)
+                Button(CompassViewModel.alwaysUsePreciseLocationTitle, action: openSettings)
+                    .font(.subheadline)
             }
+        }
+        // The aha line is spoken as it appears, wherever VoiceOver is.
+        .onChange(of: viewModel.preciseConfirmation) { _, confirmation in
+            guard let confirmation else { return }
+            AccessibilityNotification.Announcement(confirmation).post()
         }
     }
 
     /// The app's page in Settings (Location › Precise Location), as the
-    /// Location Off dialog does.
+    /// Location Off dialog does. For "Always use Precise Location".
     private func openSettings() {
         guard let url = URL(string: UIApplication.openSettingsURLString) else { return }
         openURL(url)
@@ -162,7 +174,7 @@ private struct CompassPreview: View {
     var body: some View {
         ScrollView {
             if let viewModel {
-                CompassView(viewModel: viewModel, onTurnOnLocation: {})
+                CompassView(viewModel: viewModel, onTurnOnLocation: {}, onUsePreciseLocation: {})
                     .padding()
             }
         }

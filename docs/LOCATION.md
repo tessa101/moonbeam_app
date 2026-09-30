@@ -172,6 +172,7 @@ The three services are **main-actor isolated** (the project default): they drive
 ### `LocationService`
 - `var authorizationState: LocationAuthState { get }` (enum: notDetermined, authorized, denied, restricted, servicesOff)
 - `func requestAuthorization() async -> LocationAuthState`
+- `var isPreciseLocationOff: Bool { get }` (4.10) and `func requestTemporaryPreciseLocation(purposeKey: String) async` (4.12, COMPASS.md §1): `requestTemporaryFullAccuracyAuthorization`; a refusal changes nothing
 - `func currentPlace() async throws -> Place` (one-shot fix → reverse geocode → `Place`)
 - Implementation notes:
   - Info.plist: `NSLocationWhenInUseUsageDescription` = ~~"Moonbeam uses your location to show when and where the moon rises and sets near you."~~ **Amended 2026-09-30 (COMPASS.md 4.12):** "Moon Signal uses your location to show when and where the moon rises and sets, and to point the compass. Keep Precise Location on so the compass can find the moon." (placeholder)

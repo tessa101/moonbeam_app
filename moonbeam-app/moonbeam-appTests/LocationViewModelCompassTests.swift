@@ -356,6 +356,56 @@ struct LocationViewModelCompassTests {
         #expect(!harness.viewModel.compass.isPreciseLocationOff)
     }
 
+    // MARK: - Use Precise Location (4.12)
+
+    @Test("Use Precise Location asks with the Compass purpose key; granting reaches the compass with the aha line")
+    func usePreciseLocationGranted() async {
+        let harness = Self.makeHarness()
+        harness.location.isPreciseLocationOff = true
+        await harness.viewModel.start()
+        harness.viewModel.compass.setOnScreen(true)
+        harness.location.preciseOffAfterTemporaryRequest = false
+
+        await harness.viewModel.usePreciseLocationForCompass()
+
+        #expect(harness.location.temporaryPrecisePurposeKeys == ["Compass"])
+        #expect(!harness.viewModel.compass.isPreciseLocationOff)
+        #expect(harness.viewModel.compass.preciseConfirmation != nil)
+    }
+
+    @Test("Declining the temporary alert leaves everything as it was")
+    func usePreciseLocationDeclined() async {
+        let harness = Self.makeHarness()
+        harness.location.isPreciseLocationOff = true
+        await harness.viewModel.start()
+        harness.viewModel.compass.setOnScreen(true)
+
+        await harness.viewModel.usePreciseLocationForCompass()
+
+        #expect(harness.location.temporaryPrecisePurposeKeys == ["Compass"])
+        #expect(harness.viewModel.compass.isPreciseLocationOff)
+        #expect(harness.viewModel.compass.preciseConfirmation == nil)
+        #expect(harness.viewModel.place == Self.detectedLosAngeles)
+    }
+
+    /// The purpose key has to exist in Info.plist, or iOS declines without
+    /// showing anything. Tests run hosted in the app, so this is its plist.
+    @Test("Info.plist: Precise on by default, a Compass purpose string, and a prompt that names the compass")
+    func infoPlist() throws {
+        let bundle = Bundle.main
+        #expect(bundle.object(forInfoDictionaryKey: "NSLocationDefaultAccuracyReduced") == nil)
+
+        let purposes = try #require(
+            bundle.object(forInfoDictionaryKey: "NSLocationTemporaryUsageDescriptionDictionary") as? [String: String]
+        )
+        let purpose = try #require(purposes[LocationViewModel.compassPrecisePurposeKey])
+        #expect(purpose.contains("We never see your location"))
+
+        let prompt = try #require(bundle.object(forInfoDictionaryKey: "NSLocationWhenInUseUsageDescription") as? String)
+        #expect(prompt.contains("compass"))
+        #expect(prompt.contains("Precise Location"))
+    }
+
     // MARK: - Targets follow the selected day
 
     @Test("Moonrise and moonset targets are the selected day's, from the table")

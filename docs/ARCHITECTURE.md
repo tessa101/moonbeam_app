@@ -110,6 +110,7 @@ protocol LocationService {                                     // @MainActor
     var authorizationState: LocationAuthState { get }
     var isPreciseLocationOff: Bool { get }                    // accuracyAuthorization == .reducedAccuracy
     func requestAuthorization() async -> LocationAuthState
+    func requestTemporaryPreciseLocation(purposeKey: String) async  // 4.12: in-app alert, this session only
     func currentPlace() async throws -> Place
 }
 

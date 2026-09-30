@@ -138,9 +138,11 @@ struct LocationScreen: View {
     /// on appearing when already past its threshold, which covers insertion.
     /// `onDisappear` covers removal.
     private var compass: some View {
-        CompassView(viewModel: viewModel.compass) {
-            Task { await viewModel.turnOnLocationForCompass() }
-        }
+        CompassView(
+            viewModel: viewModel.compass,
+            onTurnOnLocation: { Task { await viewModel.turnOnLocationForCompass() } },
+            onUsePreciseLocation: { Task { await viewModel.usePreciseLocationForCompass() } }
+        )
         .onScrollVisibilityChange { isVisible in
             viewModel.compass.setOnScreen(isVisible)
         }

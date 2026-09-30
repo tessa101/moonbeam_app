@@ -46,6 +46,11 @@ final class LocationViewModel {
 
     static let searchPlaceholder = "Search for a city"
 
+    /// The compass's key in Info.plist's
+    /// `NSLocationTemporaryUsageDescriptionDictionary` (COMPASS.md 4.12).
+    /// Must match it, or iOS declines the request without showing anything.
+    static let compassPrecisePurposeKey = "Compass"
+
     /// Separates the city from the zone in the §3 label: "Sydney · AEST".
     private static let timeZoneLabelSeparator = " · "
 
@@ -241,6 +246,14 @@ final class LocationViewModel {
     /// for the return from Settings too.
     func turnOnLocationForCompass() async {
         await runLocationFlow(detectionOnly: true)
+    }
+
+    /// The compass's Use Precise Location (COMPASS.md 4.12): iOS's in-app
+    /// alert, then the compass hears the outcome straight away rather than
+    /// at the next foreground. Declining leaves everything as it was.
+    func usePreciseLocationForCompass() async {
+        await locationService.requestTemporaryPreciseLocation(purposeKey: Self.compassPrecisePurposeKey)
+        updateCompass()
     }
 
     private func runLocationFlow(detectionOnly: Bool) async {

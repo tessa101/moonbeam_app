@@ -328,7 +328,7 @@
 				HEADER_SEARCH_PATHS = "$(SRCROOT)/moonbeam-app/Vendor/Astronomy";
 				INFOPLIST_FILE = "moonbeam-app/Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = "Moon Signal";
-				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Moon Signal uses your location to show when and where the moon rises and sets near you.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Moon Signal uses your location to show when and where the moon rises and sets, and to point the compass. Keep Precise Location on so the compass can find the moon.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -367,7 +367,7 @@
 				HEADER_SEARCH_PATHS = "$(SRCROOT)/moonbeam-app/Vendor/Astronomy";
 				INFOPLIST_FILE = "moonbeam-app/Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = "Moon Signal";
-				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Moon Signal uses your location to show when and where the moon rises and sets near you.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Moon Signal uses your location to show when and where the moon rises and sets, and to point the compass. Keep Precise Location on so the compass can find the moon.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;

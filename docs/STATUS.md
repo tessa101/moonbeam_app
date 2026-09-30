@@ -236,7 +236,7 @@ _Last updated: 2026-09-30 (Step 4: compass, device test of 4.8–4.10; 4.11–4.
         - **Check on device:** LA from Irvine shows the new note and no button under the search field;
           La Jolla shows the new Far message; the sheet's row still switches to you; fresh install
           still shows the button and no prompt until it's tapped
-      - [ ] **4.12** (COMPASS.md §1 Accuracy + §3 Privacy wording, DECISIONS.md 2026-09-30). One commit:
+      - [x] **4.12** built (COMPASS.md §1 Accuracy + §3 Privacy wording, DECISIONS.md 2026-09-30). One commit:
         - Remove `NSLocationDefaultAccuracyReduced`; new `NSLocationWhenInUseUsageDescription` text
         - `NSLocationTemporaryUsageDescriptionDictionary` key `Compass`; Use Precise Location →
           temporary full-accuracy request; "Always use Precise Location" → Settings; new reduced line

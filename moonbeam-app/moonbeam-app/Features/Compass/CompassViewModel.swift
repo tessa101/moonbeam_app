@@ -50,7 +50,8 @@ final class CompassViewModel {
 
     /// Why accuracy is low, so the user can fix it (COMPASS.md §1, 4.10).
     enum LowAccuracyReason: Equatable {
-        /// Precise Location is off for the app: fixable in Settings.
+        /// Precise Location is off for the app: fixable in one tap with the
+        /// temporary alert, or for good in Settings (4.12).
         case preciseLocationOff
 
         /// Cause unknown: most often metal, magnets or a charger nearby,
@@ -63,6 +64,9 @@ final class CompassViewModel {
     /// How often the live "Moon" target is recomputed (COMPASS.md §1). The
     /// moon's azimuth moves about a quarter of a degree a minute.
     static let defaultMoonRefreshInterval = Duration.seconds(30)
+
+    /// How long the aha line stays before the normal readout (4.12).
+    static let preciseConfirmationDuration = Duration.seconds(3)
 
     private static let metersPerMile = 1_609.344
     private static let nearbyRadiusMiles = 60.0
@@ -83,12 +87,23 @@ final class CompassViewModel {
     /// Shown, and read by VoiceOver, while the heading can't be trusted.
     static let lowAccuracyText = "Compass accuracy is low"
 
-    /// The low-accuracy reason line, Precise Location off (4.10).
-    static let preciseLocationOffText = "Precise Location is off"
+    /// The low-accuracy reason line, Precise Location off (4.12; replaces
+    /// 4.10's "Precise Location is off"). `city` is the selected place.
+    static func preciseLocationOffText(city: String) -> String {
+        "We think you're near \(city), but the compass needs Precise Location to point the right way."
+    }
 
-    /// Its button: the app's page in Settings, where Location › Precise
-    /// Location lives.
-    static let openSettingsTitle = "Open Settings"
+    /// Its button: iOS's temporary full-accuracy alert, one tap and no
+    /// trip to Settings. Lasts this session of use.
+    static let usePreciseLocationTitle = "Use Precise Location"
+
+    /// Its secondary link: the app's page in Settings, where Location ›
+    /// Precise Location lives, for people who don't want asking each time.
+    static let alwaysUsePreciseLocationTitle = "Always use Precise Location"
+
+    /// Replaces the reason line for a moment when Precise Location turns on
+    /// with the compass on screen (4.12).
+    static let preciseConfirmationText = "There you are! The compass is happy now."
 
     /// The low-accuracy reason line, any other cause (4.10). "Charger" added
     /// after the device test, where charging took accuracy to ±27°.
@@ -139,6 +154,15 @@ final class CompassViewModel {
     /// From the context: Precise Location is off for the app.
     private(set) var isPreciseLocationOff = false
 
+    /// The selected place's name, for the Precise Location line. Stored
+    /// because `context` isn't observed.
+    private(set) var placeName: String?
+
+    /// The aha line while it shows (4.12), else `nil`. Only on Precise
+    /// Location turning on with the compass on screen, never on an ordinary
+    /// recovery from low accuracy, which would make it constant.
+    private(set) var preciseConfirmation: String?
+
     /// From the context: something has been detected this session. Only the
     /// DEBUG readout uses it, to tell "Nothing detected" apart (4.8).
     private(set) var hasDetectedPlace = false
@@ -170,12 +194,15 @@ final class CompassViewModel {
     /// Ticks the "Moon" target refresh while the sensors run.
     @ObservationIgnored private var moonRefreshTask: Task<Void, Never>?
 
+    /// Clears `preciseConfirmation` after its few seconds.
+    @ObservationIgnored private var preciseConfirmationTask: Task<Void, Never>?
+
     // MARK: - Init
 
     /// - Parameters:
     ///   - now: the clock the "Moon" target is computed for.
-    ///   - sleep: the wait between "Moon" refreshes; injectable so tests
-    ///     can tick it by hand.
+    ///   - sleep: the wait between "Moon" refreshes, and before the aha line
+    ///     clears; injectable so tests can tick it by hand.
     init(
         headingService: any HeadingService,
         moonService: any MoonService,
@@ -228,10 +255,25 @@ final class CompassViewModel {
     /// The one plain line under the heading that says why.
     var lowAccuracyReasonText: String? {
         switch lowAccuracyReason {
-        case .preciseLocationOff: Self.preciseLocationOffText
+        case .preciseLocationOff: placeName.map(Self.preciseLocationOffText(city:)) ?? Self.lowAccuracyText
         case .interference: Self.interferenceTip
         case nil: nil
         }
+    }
+
+    /// What the line under the heading shows: the aha line while it's up
+    /// (it replaces the reason), otherwise in low accuracy the reason, or
+    /// the generic line when the cause isn't known. `nil` when all's well.
+    var statusLineText: String? {
+        if let preciseConfirmation { return preciseConfirmation }
+        guard isLowAccuracy else { return nil }
+        return lowAccuracyReasonText ?? Self.lowAccuracyText
+    }
+
+    /// Use Precise Location and its Settings link show with the Precise
+    /// Location line, and not over the aha line.
+    var offersPreciseLocation: Bool {
+        lowAccuracyReason == .preciseLocationOff && preciseConfirmation == nil
     }
 
     /// "Moonset · 288° WNW": the lock label's format.
@@ -272,10 +314,17 @@ final class CompassViewModel {
     /// The place, day or permission changed. Rebuilds the targets, so a day
     /// that becomes today gets its "Moon" target straight away.
     func update(_ context: CompassContext) {
+        let wasPreciseLocationOff = isPreciseLocationOff
         self.context = context
         isPreciseLocationOff = context.isPreciseLocationOff
         hasDetectedPlace = context.detectedPlace != nil
+        placeName = context.place?.shortName
         visibility = Self.visibility(for: context)
+        // Foreground isn't required: coming back from Settings, the context
+        // arrives before the scene counts as active again.
+        if wasPreciseLocationOff, !isPreciseLocationOff, visibility.showsCompass, isOnScreen {
+            showPreciseConfirmation()
+        }
         nearbyNote = nil
         farMessage = nil
         if let place = context.place {
@@ -311,6 +360,25 @@ final class CompassViewModel {
     func sceneDidEnterBackground() {
         isInForeground = false
         updateSensors()
+    }
+
+    // MARK: - Aha line (4.12)
+
+    /// Shows the aha line, then clears it. No haptic of its own: the first
+    /// lock's tap is the payoff.
+    private func showPreciseConfirmation() {
+        preciseConfirmation = Self.preciseConfirmationText
+        preciseConfirmationTask?.cancel()
+        let sleep = sleep
+        preciseConfirmationTask = Task { [weak self] in
+            do {
+                try await sleep(Self.preciseConfirmationDuration)
+            } catch {
+                return
+            }
+            guard !Task.isCancelled else { return }
+            self?.preciseConfirmation = nil
+        }
     }
 
     // MARK: - DEBUG readout (device diagnosis, 4.8/4.9)
