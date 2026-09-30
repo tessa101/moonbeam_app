@@ -154,8 +154,8 @@ final class CompassViewModel {
     /// From the context: Precise Location is off for the app.
     private(set) var isPreciseLocationOff = false
 
-    /// The selected place's name, for the Precise Location line. Stored
-    /// because `context` isn't observed.
+    /// The selected place as "City, ST" (4.13), for the Precise Location
+    /// line. Stored because `context` isn't observed.
     private(set) var placeName: String?
 
     /// The aha line while it shows (4.12), else `nil`. Only on Precise
@@ -318,7 +318,7 @@ final class CompassViewModel {
         self.context = context
         isPreciseLocationOff = context.isPreciseLocationOff
         hasDetectedPlace = context.detectedPlace != nil
-        placeName = context.place?.shortName
+        placeName = context.place?.nameWithRegion
         visibility = Self.visibility(for: context)
         // Foreground isn't required: coming back from Settings, the context
         // arrives before the scene counts as active again.
@@ -331,10 +331,10 @@ final class CompassViewModel {
             switch visibility {
             case .nearby:
                 if let detected = context.detectedPlace {
-                    nearbyNote = Self.nearbyText(detected: detected.shortName, selected: place.shortName)
+                    nearbyNote = Self.nearbyText(detected: detected.nameWithRegion, selected: place.nameWithRegion)
                 }
             case .far:
-                farMessage = Self.farText(selected: place.shortName)
+                farMessage = Self.farText(selected: place.nameWithRegion)
             case .hidden, .locationOff, .here:
                 break
             }

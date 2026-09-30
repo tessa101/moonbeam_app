@@ -49,6 +49,11 @@ Principle: **never force current location.** Looking up a city you're not in is 
 - Unchanged: recents rows (title = city, detail = full `displayName`); the time zone label
   ("Irvine · PDT") stays city-only to stay short. Long names truncate at the tail (design pass).
 - Existing saved places already carry `region`, so recents and last-viewed upgrade with no migration.
+- *As built (4.13):* `Place.nameWithRegion` (derived, no stored change). Used by the search field, its
+  VoiceOver value and launch placeholder, and the compass Nearby / Far / Precise copy. It falls back to
+  the name when `region` is missing, empty or repeats the name. `shortName` stays for recents and the
+  time zone label. **Still to record on device:** what Apple returns for Irvine, Sydney, Toronto, London,
+  Paris, Tokyo, Singapore, Reykjavík and Mexico City (DECISIONS.md 2026-09-30).
 
 ### Search field
 > The main-screen field is now a button that opens the search sheet (SEARCH-RECENTS.md §1–2).

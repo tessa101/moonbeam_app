@@ -52,6 +52,34 @@ nonisolated struct PlaceTests {
         #expect(Self.sydney.shortName == "Sydney")
     }
 
+    // MARK: - "City, ST" (4.13)
+
+    private static func place(_ name: String, region: String?) -> Place {
+        Place(name: name, region: region, latitude: 0, longitude: 0, timeZone: .gmt)
+    }
+
+    @Test(
+        "nameWithRegion is the name plus the first part of the region",
+        arguments: [
+            ("Irvine", "CA", "Irvine, CA"),
+            ("Sydney", "NSW", "Sydney, NSW"),
+            ("Kansas City", "MO, United States", "Kansas City, MO"),
+            ("Paris", "France", "Paris, France"),
+            ("Toronto", " ON , Canada", "Toronto, ON"),
+        ]
+    )
+    func nameWithRegion(name: String, region: String, expected: String) {
+        #expect(Self.place(name, region: region).nameWithRegion == expected)
+    }
+
+    @Test(
+        "nameWithRegion falls back to the name with no usable region",
+        arguments: [nil, "", " , United States", "Singapore"] as [String?]
+    )
+    func nameWithRegionFallsBack(region: String?) {
+        #expect(Self.place("Singapore", region: region).nameWithRegion == "Singapore")
+    }
+
     // MARK: - isCurrentLocation
 
     /// §6: the flag is presentation only and isn't persisted. If it took part

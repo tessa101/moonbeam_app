@@ -118,7 +118,7 @@ struct LocationScreen: View {
         }
         .buttonStyle(.plain)
         .accessibilityLabel(LocationViewModel.searchPlaceholder)
-        .accessibilityValue(viewModel.place?.shortName ?? "")
+        .accessibilityValue(viewModel.place?.nameWithRegion ?? "")
     }
 
     // MARK: - Compass

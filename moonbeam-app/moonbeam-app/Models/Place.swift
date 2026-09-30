@@ -85,8 +85,29 @@ nonisolated struct Place: Codable, Hashable, Sendable {
         return parts.joined(separator: ", ")
     }
 
-    /// "Sydney" — what the main-screen search button and recent rows show.
+    /// "Sydney" — what recent rows and the time zone label show.
     var shortName: String { name }
+
+    /// "Sydney, NSW" — the main-screen search field and the compass copy
+    /// (LOCATION.md "Place name on screen", 4.13).
+    ///
+    /// Only the *first* part of `region`, which is whatever MapKit's
+    /// locale-aware `cityWithContext` had beyond the city, so
+    /// "MO, United States" gives "Kansas City, MO". Federal countries get
+    /// the state or province; elsewhere it may be a country, shown as given.
+    /// No per-country rules. Falls back to the bare name when there's no
+    /// region or it just repeats the name ("Singapore").
+    var nameWithRegion: String {
+        guard
+            let first = region?
+                .split(separator: ",")
+                .first?
+                .trimmingCharacters(in: .whitespaces),
+            !first.isEmpty,
+            first != name
+        else { return name }
+        return "\(name), \(first)"
+    }
 
     // MARK: - Time zones
 

@@ -1,6 +1,6 @@
 # Step 4: Compass
 
-**Status:** Built, plain v1 (4.1–4.4). **Follow-ups 4.5–4.12 built (4.12 on 2026-09-30).** Device QA pending, STATUS.md Next 7. Wireframe pending — layout/styling in design pass · **Decided:** 2026-09-27, updated 2026-09-29 · **Owner:** Tessa
+**Status:** Built, plain v1 (4.1–4.4). **Follow-ups 4.5–4.13 built (4.11–4.13 on 2026-09-30).** Device QA pending, STATUS.md Next 7. Wireframe pending — layout/styling in design pass · **Decided:** 2026-09-27, updated 2026-09-29 · **Owner:** Tessa
 **Fills:** PRODUCT.md — new "Compass" feature
 **Depends on:** Step 2 location (built), Step 3 date selection (built)
 **Unblocks:** turning a rise/set bearing (e.g. 072°) into something you can actually point yourself at

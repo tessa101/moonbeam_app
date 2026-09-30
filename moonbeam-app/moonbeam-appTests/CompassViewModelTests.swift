@@ -253,7 +253,7 @@ struct CompassViewModelTests {
         harness.viewModel.setOnScreen(true)
 
         let note = try #require(harness.viewModel.nearbyNote)
-        #expect(note == "You're in Los Angeles but Huntington Beach is nearby")
+        #expect(note == "You're in Los Angeles, CA but Huntington Beach, CA is nearby")
         #expect(harness.viewModel.farMessage == nil)
         #expect(note.rangeOfCharacter(from: .decimalDigits) == nil)
         #expect(!note.contains("mi") && !note.contains("km"))
@@ -281,7 +281,7 @@ struct CompassViewModelTests {
         #expect(harness.viewModel.nearbyNote == nil)
         #expect(!harness.heading.isRunning)
         let message = try #require(harness.viewModel.farMessage)
-        #expect(message == "You're a bit too far from San Diego to view the compass accurately")
+        #expect(message == "You're a bit too far from San Diego, CA to view the compass accurately")
         #expect(message.rangeOfCharacter(from: .decimalDigits) == nil)
     }
 
@@ -302,7 +302,7 @@ struct CompassViewModelTests {
 
         harness.viewModel.update(Self.context(place: Self.northOfDetected(byDegrees: 0.5)))
 
-        #expect(harness.viewModel.nearbyNote == "You're in Los Angeles but Test Town is nearby")
+        #expect(harness.viewModel.nearbyNote == "You're in Los Angeles, CA but Test Town, CA is nearby")
     }
 
     /// Location is on but detection hasn't found you (yet, or it failed):
@@ -802,7 +802,7 @@ struct CompassViewModelTests {
         harness.heading.send(Self.reading(72, accuracy: 81.4))
         await waitUntil { harness.viewModel.reading != nil }
 
-        let line = "We think you're near Los Angeles, but the compass needs Precise Location to point the right way."
+        let line = "We think you're near Los Angeles, CA, but the compass needs Precise Location to point the right way."
         #expect(harness.viewModel.lowAccuracyReason == .preciseLocationOff)
         #expect(harness.viewModel.lowAccuracyReasonText == line)
         #expect(harness.viewModel.statusLineText == line)

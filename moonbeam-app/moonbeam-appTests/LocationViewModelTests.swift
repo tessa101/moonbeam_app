@@ -121,7 +121,7 @@ struct LocationViewModelTests {
         #expect(viewModel.place == Self.detectedLosAngeles)
         #expect(viewModel.place?.isCurrentLocation == true)
         #expect(viewModel.moonTable?.place == Self.detectedLosAngeles)
-        #expect(viewModel.searchFieldTitle == "Los Angeles")
+        #expect(viewModel.searchFieldTitle == "Los Angeles, CA")
         #expect(!viewModel.showsUseMyLocation)
         #expect(!viewModel.isLocating)
     }
@@ -218,7 +218,7 @@ struct LocationViewModelTests {
         await viewModel.start()
 
         #expect(viewModel.place == Self.sydney)
-        #expect(viewModel.searchFieldTitle == "Sydney")
+        #expect(viewModel.searchFieldTitle == "Sydney, NSW")
         #expect(viewModel.showsUseMyLocation)
         // 4.11: with a place showing, the way back is the sheet's row.
         #expect(!viewModel.showsUseMyLocationButton)
@@ -413,7 +413,7 @@ struct LocationViewModelTests {
 
         #expect(viewModel.place == Self.sydney)
         #expect(viewModel.moonTable?.place == Self.sydney)
-        #expect(viewModel.searchFieldTitle == "Sydney")
+        #expect(viewModel.searchFieldTitle == "Sydney, NSW")
         #expect(!viewModel.isSearchPresented)
         #expect(store.lastViewed == Self.sydney)
         #expect(viewModel.lastViewed == Self.sydney)

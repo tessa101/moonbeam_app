@@ -221,7 +221,7 @@ struct LocationViewModelCompassTests {
         #expect(harness.viewModel.place == Self.huntingtonBeach)
         #expect(harness.viewModel.place?.isCurrentLocation == false)
         #expect(harness.viewModel.compass.visibility == .nearby)
-        #expect(harness.viewModel.compass.nearbyNote == "You're in Los Angeles but Huntington Beach is nearby")
+        #expect(harness.viewModel.compass.nearbyNote == "You're in Los Angeles, CA but Huntington Beach, CA is nearby")
     }
 
     @Test("Compass hint via Settings: coming back keeps the searched city")

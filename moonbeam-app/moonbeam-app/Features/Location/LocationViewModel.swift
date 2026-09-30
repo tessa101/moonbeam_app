@@ -193,14 +193,15 @@ final class LocationViewModel {
     /// §3: while a launch fetch runs, the last-viewed name stands in so the
     /// screen isn't blank.
     var searchPrompt: String {
-        if isLocating, place == nil, let lastViewed { return lastViewed.shortName }
+        if isLocating, place == nil, let lastViewed { return lastViewed.nameWithRegion }
         return Self.searchPlaceholder
     }
 
-    /// What the main-screen search button shows: the current city, or the
-    /// prompt when there isn't one yet (SEARCH-RECENTS.md §1).
+    /// What the main-screen search button shows: the current city as
+    /// "City, ST" (4.13), or the prompt when there isn't one yet
+    /// (SEARCH-RECENTS.md §1).
     var searchFieldTitle: String {
-        place?.shortName ?? searchPrompt
+        place?.nameWithRegion ?? searchPrompt
     }
 
     /// "Sydney · AEST", only when the place's clock differs from the device's

@@ -3,7 +3,7 @@
 > A living note on where things stand. Update it at the end of each work session
 > so the next session (you, or Claude) can pick up cold.
 
-_Last updated: 2026-09-30 (Step 4: compass, device test of 4.8–4.10; 4.11–4.13 planned)_
+_Last updated: 2026-09-30 (Step 4: compass, 4.11–4.13 built; device checks for them pending)_
 
 ## Where things live
 - **Local repo:** `~/app-ideas/moonbeam` (the one true folder)
@@ -244,7 +244,7 @@ _Last updated: 2026-09-30 (Step 4: compass, device test of 4.8–4.10; 4.11–4.
         - **Check on device:** delete and reinstall → the prompt shows Precise On and the new text;
           switch Precise off → the new line; Use Precise Location → iOS alert with our text → aha
           line → lock; relaunch later → asked again (temporary); "Always…" lands on the app's page
-      - [ ] **4.13** "City, ST" in the search field and compass copy (LOCATION.md "Place name on
+      - [x] **4.13** built: "City, ST" in the search field and compass copy (LOCATION.md "Place name on
         screen", DECISIONS.md 2026-09-30). One commit. **Check on device:** Irvine → "Irvine, CA";
         search Sydney, London, Paris, Tokyo, Singapore and note what each shows
 
