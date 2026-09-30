@@ -5,6 +5,50 @@
 
 ---
 
+### 2026-09-30 · 4.13: place names read "City, ST"
+- **Decision (Tessa):** the search field and compass copy show "Irvine, CA", not "Irvine".
+- **How it scales:** use Apple's locale-aware `cityWithContext` (already stored as `Place.region`)
+  and take its first part. US/Canada/Australia and other federal countries get the state or
+  province; elsewhere Apple may give a country or nothing, and we fall back to the city. No
+  per-country rules to maintain.
+- **Considered:** our own table of which countries use states (brittle, never finished); always
+  "City, Country" (reads oddly at home: "Irvine, United States").
+- **To verify on device:** Irvine, Sydney, Toronto, London, Paris, Tokyo, Singapore, Reykjavík,
+  Mexico City. Record what Apple returns in the as-built notes.
+
+### 2026-09-30 · 4.12: Precise Location on by default; ask in context if they opted out
+- **Why:** `NSLocationDefaultAccuracyReduced` made every new install approximate, and with Precise
+  off iOS reports ±81–86° heading accuracy, so the compass never locked out of the box.
+- **Decision (Tessa):** drop the key, so when someone agrees to location the prompt shows Precise
+  **on**; they have to opt out. The permission text says, in that moment, that the compass needs
+  it. For opt-outs, the compass line reads "We think you're near {City}, but the compass needs
+  Precise Location to point the right way" with **Use Precise Location**, which calls
+  `requestTemporaryFullAccuracyAuthorization` (in-app alert, one tap, this session only), plus
+  "Always use Precise Location" → Settings. The privacy reassurance lives in the temporary
+  alert's purpose string. When Precise turns on with the compass visible: "There you are! The
+  compass is happy now." for ~3 s.
+- **Privacy wording:** rules in COMPASS.md §3. Short version: "we never see your location" and
+  "never shown on screen" are true; "never leaves your phone" and "never shared" are not (MapKit
+  goes to Apple); "we don't store it" isn't true yet (last-viewed keeps coordinates on the phone).
+- **Considered:** keeping approximate as the default and only asking in context (more private up
+  front, but every new user hits the warning); Settings link only (most friction).
+- Supersedes the 2026-09-29 note "city-level is enough" (LOCATION.md) and 4.10's Open Settings button.
+
+### 2026-09-30 · 4.11: Nearby/Far copy; main-screen "Use my location" only on first launch
+- **Device test (Tessa):** with a nearby city selected, "Directions for {City}" plus the
+  "Use my location" button under the search field read as confusing and disconnected.
+- **Nearby note:** "You're in {Detected city} but {City} is nearby". **Far message:** "You're a bit
+  too far from {City} to view the compass accurately". Both placeholder; tone revisited in the
+  design pass. Still no distance shown.
+- **Main-screen "Use my location" removed,** except on the empty first-launch state (no place
+  saved), where nothing is selected yet. Everywhere else, tapping the search field opens the sheet,
+  whose "Use my location" row keeps the old button's behavior (switches to the detected place).
+  Amends LOCATION.md ("Use my location" button, launch logic) and SEARCH-RECENTS.md.
+- **Precise Location off:** iOS reports ±81–86° heading accuracy, so the compass never locks.
+  Kept as is: greyed dial, no lock or haptic, "Precise Location is off" + Open Settings.
+- **Considered:** hiding the dial when Precise is off (treat like location off); testing whether
+  the heading itself is wrong or only its reported accuracy. Not now.
+
 ### 2026-09-29 · Low-accuracy hysteresis: enter above 25°, leave below 20°
 - **The device readout showed low accuracy was real, not stuck:** sensors running, true heading
   present, `accuracyAuthorization` full, visibility Here. iOS's reported accuracy went ±11.8°

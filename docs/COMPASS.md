@@ -1,6 +1,6 @@
 # Step 4: Compass
 
-**Status:** Built, plain v1 (4.1–4.4). **Follow-ups 4.5–4.7 from first device test (2026-09-29): planned.** Device QA pending, STATUS.md Next 7. Wireframe pending — layout/styling in design pass · **Decided:** 2026-09-27, updated 2026-09-29 · **Owner:** Tessa
+**Status:** Built, plain v1 (4.1–4.4). **Follow-ups 4.5–4.11 built; 4.12 (Precise default + temporary prompt + aha) planned 2026-09-30.** Device QA pending, STATUS.md Next 7. Wireframe pending — layout/styling in design pass · **Decided:** 2026-09-27, updated 2026-09-29 · **Owner:** Tessa
 **Fills:** PRODUCT.md — new "Compass" feature
 **Depends on:** Step 2 location (built), Step 3 date selection (built)
 **Unblocks:** turning a rise/set bearing (e.g. 072°) into something you can actually point yourself at
@@ -34,10 +34,22 @@
 - **Low-accuracy state, with hysteresis like the lock:** it **enters** when device heading accuracy is worse than **25°**, and **leaves** only when it's better than **20°**. In between, it keeps its current state. It's always low with no true heading or unknown accuracy. No lock while in low accuracy; no custom calibration flow.
 - *Why (device test 2026-09-29):* the DEBUG readout showed iOS's reported accuracy wandering ±11.8° (locked) → ±27.3° (low, phone charging) → ±13.4° (locked). With the original single 15° line, the compass flipped in and out of low accuracy as it wandered. It wasn't stuck. 25/20 is the new starting value; tune further on device if needed.
 - **Low-accuracy reason, inline (4.10, decided 2026-09-29):** in low accuracy, one plain line under the heading says *why*, so the user can fix it:
-  - **Precise Location off** (`accuracyAuthorization == .reducedAccuracy`): "Precise Location is off" + a button to Settings
+  - **Precise Location off** (`accuracyAuthorization == .reducedAccuracy`): "Precise Location is off" + a button to Settings — **superseded by 4.12** (below)
   - **Otherwise** (poor accuracy, cause unknown): "Move away from metal, magnets or a charger, or wave your phone in a figure 8". "Charger" was added after the device test, where charging took accuracy to ±27°.
   - Placeholder copy. No ⓘ / sheet for now; revisit in the design pass if more causes or detail are needed.
   - *As built:* the reason line **replaces** the generic "Compass accuracy is low" line. The generic line shows only when no cause is known: no reading yet, or no compass at all, where neither the tip nor Settings would help. VoiceOver reads the pair: "Compass accuracy is low. Precise Location is off". **Open Settings** sits outside that element so VoiceOver can reach it, and opens the app's page in Settings, where Location › Precise Location lives. The reason follows the hysteresis, so it stays until accuracy is back below 20°.
+- **Precise Location off → no lock (device test 2026-09-30):** iOS still sends a true heading with Precise off, but reports accuracy of ±81–86°. So the compass stays in low accuracy: dial visible and greyed, no lock, no haptic. Right after switching Precise off, readings can stay good for a while; the reduced accuracy shows after a pause or relaunch.
+- **Precise Location is the default, opt-out (4.12, decided 2026-09-30):**
+  - Remove `NSLocationDefaultAccuracyReduced` from Info.plist, so the system permission prompt shows **Precise: On** by default. Users have to opt out.
+  - The permission prompt's text (`NSLocationWhenInUseUsageDescription`) tells them in that moment that the compass needs Precise Location: *"Moon Signal uses your location to show when and where the moon rises and sets, and to point the compass. Keep Precise Location on so the compass can find the moon."* (placeholder)
+  - Existing installs keep whatever they have; people already on approximate get the flow below.
+- **If they opted out: ask in context with a temporary prompt (4.12).** Replaces the 4.10 "Precise Location is off" line and its Open Settings button:
+  - Line: **"We think you're near {City}, but the compass needs Precise Location to point the right way."** {City} is the selected place (Here or Nearby). Placeholder copy.
+  - Button: **"Use Precise Location"** → `requestTemporaryFullAccuracyAuthorization(withPurposeKey:)`. iOS shows an in-app alert with our purpose string; one tap, no trip to Settings. Lasts for this session of use; iOS reverts it later, and the line comes back next time.
+  - Info.plist `NSLocationTemporaryUsageDescriptionDictionary`, key `Compass`: *"The compass needs Precise Location to point at the moon. We never see your location, and it's never shown on screen."* (placeholder; see §3 Privacy wording)
+  - Secondary text link **"Always use Precise Location"** → the app's page in Settings, for people who don't want to be asked every session.
+  - If the user declines the alert, nothing changes: same line, same button.
+- **Aha moment (4.12):** when Precise Location turns on **while the compass is on screen** (from the button above, or on return from Settings), the reason line is replaced for ~3 s by **"There you are! The compass is happy now."** (placeholder), then fades to the normal readout. VoiceOver announces it. It shows **only on that change** (`accuracyAuthorization` reduced → full), never on an ordinary recovery from low accuracy (charger, metal), which would make it constant. No extra haptic; the first lock's tap is the payoff.
 - **Stuck low accuracy is a bug, not a reason (4.9):** device test 2026-09-29 showed "Compass accuracy is low" that only cleared after toggling Settings › Moon Signal › Location off/on. Fixed at the sensor level (with the 4.8 overnight bug), not explained to the user.
   - *As built:* iOS's automatic pause of location updates is off. For When In Use apps a pause ends location updates until the app restarts them, and true heading goes with them; a phone held still for a compass is exactly when iOS pauses. A `HeadingSessionMonitor` restarts location updates when readings keep a magnetic heading but no true heading for 5 s (at most every 10 s), or on a pause. It restarts the whole session when authorization or Precise Location changes while it's running.
   - *4.8 (compass gone after overnight):* the likely path is the app relaunching, the launch fix failing, and "Nothing detected" never being retried. Now each foreground retries detection quietly while authorized with nothing detected. It's detection only, so the place never changes and a failure shows nothing.
@@ -69,12 +81,15 @@ The rule is **near**, not **same city** (4.6): moonrise/moonset bearings depend 
 |---|---|---|---|
 | **Location off** | Off / denied / not determined | Hidden | "Turn on location to use the compass" + **Turn On Location** button |
 | **Here** | Selected place is the detected city (`isSameCity`) | **Shown** | none |
-| **Nearby** | Different city, within **60 mi (~97 km)** of the detected location | **Shown** | "Directions for {City}" |
-| **Far** | More than 60 mi from the detected location | Hidden | "Compass is only available near this location" |
+| **Nearby** | Different city, within **60 mi (~97 km)** of the detected location | **Shown** | "You're in {Detected city} but {City} is nearby" (4.11; was "Directions for {City}") |
+| **Far** | More than 60 mi from the detected location | Hidden | "You're a bit too far from {City} to view the compass accurately" (4.11; was "Compass is only available near this location") |
 | **Nothing detected** | Location on, no fix yet / failed with no earlier fix | Hidden | none |
 
 - **Location off → enable to see it.** True-north heading is only valid while location updates run, and magnetic heading alone is ~11–12° off in LA (outside lock tolerance). No manual "I'm here" override in v1.
 - **Turn On Location keeps the searched city (4.6).** From the compass hint, the button turns on location and updates *detection only* — it does **not** switch the selected place to the detected one. The states above then apply (Here / Nearby / Far). The main screen's existing "Use my location" button keeps its current behavior. **This includes the trip through Settings** (Tessa, 2026-09-29): if the Location Off dialog was opened from the compass hint, the automatic fetch on return from Settings (LOCATION.md §4) also updates detection only. From the main button, that fetch still switches to the detected place.
+- **Main-screen "Use my location" button removed (4.11, 2026-09-30),** except on the empty first-launch state (no place saved yet). Device test: next to the Nearby note it read as confusing and disconnected. Returning to your location is the "Use my location" row in the search sheet (SEARCH-RECENTS.md), which keeps the switch-to-detected behavior. *As built:* the sheet row keeps its old rule (shown whenever the place isn't the detected location); the main button adds "and no place yet". The user can search anywhere; the compass area only says when the place isn't exactly where they are, or why the compass is gone.
+- **City names use "City, ST" (4.13):** {City} and {Detected city} in the Nearby, Far and Precise copy read like "Irvine, CA" (LOCATION.md "Place name on screen").
+- **Nearby/Far name the cities, never the distance.** Showing the detected city is city-level, the same as the search field already shows when viewing your location.
 - **Nearby note says what it shows, not that it's wrong.** At ≤60 mi the error is under 1°, so no "may not be exact" wording.
 - **Never show the distance** ("25 mi away") — with the city name, a screenshot would reveal roughly where someone is (same reason GPS coordinates were dropped).
 - Distance is measured between the detected location and the selected place's coordinates; neither is ever shown.
@@ -82,6 +97,14 @@ The rule is **near**, not **same city** (4.6): moonrise/moonset bearings depend 
 - Past and future dates at your location still show the compass — rise/set bearings are useful for planning where to stand.
 
 ## 3. Rules
+
+- **Privacy wording (4.12 research, 2026-09-30).** What the app may say about location, and why:
+  - **Can say:** "We never see your location" / "we don't collect it": the app has no servers, no analytics and no networking of its own (no `URLSession`, no SDKs). Apple's definition of *collect* is sending data off the device where the developer can access it beyond the real-time request, and Apple says developers aren't responsible for disclosing what Apple's own frameworks (MapKit) collect. The App Store privacy label can be **Data Not Collected**.
+  - **Can say:** "It's never shown on screen": true today (no coordinates, no distance; city names only).
+  - **Can't say:** "never leaves your phone" or "never shared". City search and reverse geocoding (`MKReverseGeocodingRequest`) send it to Apple.
+  - **Can't say (today):** "we don't store it". The detected place is saved on the phone as last-viewed, with the reverse-geocoded coordinates (UserDefaults). It stays on the device, but it is stored.
+  - **Must:** App Review 5.1.1(ii): purpose strings must "clearly and completely describe your use of the data", so the permission text names the compass as well as rise/set. 5.1.5: notify and get consent before using location.
+  - **Revisit these claims** if the app ever adds analytics, crash reporting with location, a backend or a widget that syncs.
 
 - **No GPS coordinates shown, at all.** Rejected as invasive — exact lat/long on screen means any screenshot exposes where someone lives. Only compass bearings/degrees are ever shown.
 - **No elevation shown.** Rejected — elevation only makes sense as a live sensor reading, and the app has no way to detect it.
@@ -117,7 +140,7 @@ nonisolated protocol MoonService {
 
 - Enable-location hint: final copy, placement, and whether it opens the existing Location Off dialog or the system prompt (design pass)
 - ~~Other-city state~~ **Settled 2026-09-29:** replaced by the Nearby / Far states (§2, 4.6).
-- Final copy for the Nearby note and Far message (design pass)
+- Final copy for the Nearby note and Far message (design pass). Far may later add something like "we can still show you the data for the city you searched" or "search for a city near you to see the compass"
 - Wireframe: layout, typography, and how the compass sits under the moon table (design pass — v1 build is plain/unstyled)
 
 ## 6. Tests
@@ -132,7 +155,12 @@ nonisolated protocol MoonService {
 - Lock and heading labels use 16-point names (e.g. 72° → ENE), matching `CompassFormatter`
 - Visibility matrix (§2): Here and Nearby shown; Far hidden with message; nothing detected hidden; hint when location off, denied, or not determined
 - 60 mi boundary: just inside → Nearby, just outside → Far (e.g. Huntington Beach from LA = Nearby; San Diego from LA = Far)
-- Nearby note never contains a distance
+- Nearby note never contains a distance; it names the detected city and the selected city
+- Far message names the selected city
+- Main-screen "Use my location" shown only on the empty first-launch state; the sheet row still switches to the detected place
+- Precise off (reduced): the "We think you're near {City}…" line, Use Precise Location calls the temporary request with purpose key `Compass`, and "Always use Precise Location" opens Settings
+- Declining the temporary alert leaves the state unchanged
+- Aha line appears once on reduced → full while visible, clears after ~3 s; never on a low → good accuracy recovery with full accuracy throughout
 - Turn On Location from the compass hint keeps the searched place selected; the main "Use my location" still switches to the detected place
 - Haptic fires once on lock acquire; not on release, not while holding, not on a hold that continues across readings
 - No target rows rendered under the dial
@@ -171,3 +199,5 @@ nonisolated protocol MoonService {
   - Settings trip from the compass hint → the fetch on return is detection-only; the main button's is unchanged (§2).
   - With the rows gone, the dial becomes one VoiceOver element that reads its targets ("Targets: moonrise, 72 degrees east-northeast; moon, 140 degrees southeast"). No visible change (4.7).
 - **2026-09-29 (Tessa, device test):** low accuracy got stuck until Location was toggled in Settings → sensor restart bug (4.9, with 4.8). Haptic still missing after a lock. Low-accuracy reason shown **inline** under the heading (4.10); ⓘ sheet deferred to the design pass.
+- **2026-09-30 (Tessa, precise flow):** 4.12. Fresh installs have no location until asked; when they agree, Precise defaults **on** (drop `NSLocationDefaultAccuracyReduced`) and the prompt text says the compass needs it. Opt-outs get "We think you're near {City}, but the compass needs Precise Location to point the right way" + **Use Precise Location** (temporary full-accuracy alert carrying the privacy wording) + "Always use Precise Location" → Settings. Aha line "There you are! The compass is happy now." only on reduced → full. Privacy wording rules in §3.
+- **2026-09-30 (Tessa, device test):** 4.10 reasons both seen on device (Precise off; interference while charging). Precise off never locks (±81–86°): keep as is. Location off hides the compass: as specced. Nearby/Far work (LA, Los Feliz, Huntington Beach = Nearby from Irvine; La Jolla = Far). **4.11:** Nearby note → "You're in {Detected city} but {City} is nearby"; Far → "You're a bit too far from {City} to view the compass accurately"; main-screen "Use my location" removed except on the empty first-launch state.

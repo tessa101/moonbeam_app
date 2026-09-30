@@ -27,8 +27,10 @@ struct CompassView: View {
             case .here, .nearby:
                 compass
             case .far:
-                Text(CompassViewModel.farMessage)
-                    .foregroundStyle(.secondary)
+                if let farMessage = viewModel.farMessage {
+                    Text(farMessage)
+                        .foregroundStyle(.secondary)
+                }
             case .locationOff:
                 locationOffHint
             case .hidden:

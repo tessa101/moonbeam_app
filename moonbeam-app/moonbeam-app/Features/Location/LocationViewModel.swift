@@ -171,10 +171,18 @@ final class LocationViewModel {
 
     // MARK: - Derived state
 
-    /// §3: shown whenever the place isn't the detected current location.
-    /// Hidden while a fix is in flight, since tapping it would only restart it.
+    /// The search sheet's "Use my location" row (Decision B): shown whenever
+    /// the place isn't the detected current location. Hidden while a fix is
+    /// in flight, since tapping it would only restart it.
     var showsUseMyLocation: Bool {
         !isLocating && !(place?.isCurrentLocation ?? false)
+    }
+
+    /// The main-screen "Use my location" button: only on the empty
+    /// first-launch state (COMPASS.md 4.11). Next to the Nearby note it read
+    /// as confusing, so everywhere else the sheet's row is the way back.
+    var showsUseMyLocationButton: Bool {
+        place == nil && showsUseMyLocation
     }
 
     /// §3: while a launch fetch runs, the last-viewed name stands in so the

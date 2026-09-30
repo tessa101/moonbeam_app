@@ -26,8 +26,10 @@ struct LocationScreen: View {
                 searchButton
 
                 // Location controls and their status stay together, under
-                // the search field that they're the alternative to.
-                if viewModel.showsUseMyLocation {
+                // the search field that they're the alternative to. The
+                // button is first-launch only (4.11); after that it's the
+                // search sheet's row.
+                if viewModel.showsUseMyLocationButton {
                     Button("Use my location") {
                         Task { await viewModel.useMyLocation() }
                     }

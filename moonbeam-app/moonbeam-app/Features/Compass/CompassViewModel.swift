@@ -38,7 +38,7 @@ final class CompassViewModel {
         case here
 
         /// A different city within `nearbyRadiusMeters` of the detected
-        /// location. Compass, plus "Directions for {City}".
+        /// location. Compass, plus the Nearby note naming both cities.
         case nearby
 
         /// Further than that. No compass, just the Far message.
@@ -94,19 +94,30 @@ final class CompassViewModel {
     /// after the device test, where charging took accuracy to ±27°.
     static let interferenceTip = "Move away from metal, magnets or a charger, or wave your phone in a figure 8"
 
-    /// In place of the compass beyond the nearby radius. Never a distance:
-    /// with the city name, that would reveal roughly where someone is.
-    static let farMessage = "Compass is only available near this location"
+    /// Over the compass in the Nearby state (4.11): names where you are and
+    /// the selected city. Says what it shows, not that it's approximate: at
+    /// ≤ 60 mi the error is under 1°.
+    static func nearbyText(detected: String, selected: String) -> String {
+        "You're in \(detected) but \(selected) is nearby"
+    }
+
+    /// In place of the compass beyond the nearby radius (4.11).
+    static func farText(selected: String) -> String {
+        "You're a bit too far from \(selected) to view the compass accurately"
+    }
 
     // MARK: - Observed state
 
     private(set) var visibility: Visibility = .hidden
 
-    /// "Directions for Huntington Beach" in the Nearby state, else `nil`.
-    /// Says what it shows, not that it's approximate: at ≤ 60 mi the error
-    /// is under 1°. Never a distance. Stored (not derived from `context`,
-    /// which isn't observed) so moving between two Nearby cities updates it.
+    /// `nearbyText` in the Nearby state, else `nil`. Never a distance: with
+    /// the city names, that would reveal roughly where someone is. Stored
+    /// (not derived from `context`, which isn't observed) so moving between
+    /// two Nearby cities updates it.
     private(set) var nearbyNote: String?
+
+    /// `farText` in the Far state, else `nil`. Stored for the same reason.
+    private(set) var farMessage: String?
 
     /// Moonrise and moonset for the selected day (when that day has them),
     /// then the moon if it's today and it's up.
@@ -265,7 +276,20 @@ final class CompassViewModel {
         isPreciseLocationOff = context.isPreciseLocationOff
         hasDetectedPlace = context.detectedPlace != nil
         visibility = Self.visibility(for: context)
-        nearbyNote = visibility == .nearby ? context.place.map { "Directions for \($0.shortName)" } : nil
+        nearbyNote = nil
+        farMessage = nil
+        if let place = context.place {
+            switch visibility {
+            case .nearby:
+                if let detected = context.detectedPlace {
+                    nearbyNote = Self.nearbyText(detected: detected.shortName, selected: place.shortName)
+                }
+            case .far:
+                farMessage = Self.farText(selected: place.shortName)
+            case .hidden, .locationOff, .here:
+                break
+            }
+        }
         rebuildTargets()
         updateSensors()
     }

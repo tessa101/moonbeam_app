@@ -15,7 +15,7 @@
 
 - The search field on the main screen becomes a **tap target that opens the search sheet**. It shows the current city name (or the placeholder "Search for a city") and doesn't take text input itself.
 - **Superseded from Step 2:** "tapping into the field selects all of its text" and the in-field (x) on the main screen. The sheet always opens with an empty field, so neither is needed there.
-- "Use my location" button stays as it is.
+- ~~"Use my location" button stays as it is.~~ **Amended 2026-09-30 (COMPASS.md 4.11):** the main-screen button shows only on the empty first-launch state; the sheet row is the way back to your location.
 - **"Back to {City}" chip removed** (Decision C, 2026-09-26): recents cover it, one extra tap away. `lastViewed` stays, since launch still falls back to it when location is off or fails.
 
 ## 2. Search sheet

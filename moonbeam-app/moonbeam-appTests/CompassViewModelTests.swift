@@ -246,30 +246,32 @@ struct CompassViewModelTests {
         #expect(abs(CompassViewModel.nearbyRadiusMeters - 96_560.64) < 0.01)
     }
 
-    @Test("Nearby: compass shown, with a note naming the city and no distance")
+    @Test("Nearby: compass shown, with a note naming both cities and no distance")
     func nearbyNote() throws {
         let harness = Self.makeHarness()
         harness.viewModel.update(Self.context(place: Self.huntingtonBeach))
         harness.viewModel.setOnScreen(true)
 
         let note = try #require(harness.viewModel.nearbyNote)
-        #expect(note == "Directions for Huntington Beach")
+        #expect(note == "You're in Los Angeles but Huntington Beach is nearby")
+        #expect(harness.viewModel.farMessage == nil)
         #expect(note.rangeOfCharacter(from: .decimalDigits) == nil)
         #expect(!note.contains("mi") && !note.contains("km"))
         #expect(harness.heading.isRunning)
         #expect(!harness.viewModel.targets.isEmpty)
     }
 
-    @Test("Here has no note")
+    @Test("Here has no note and no Far message")
     func hereHasNoNote() {
         let harness = Self.makeHarness()
         harness.viewModel.update(Self.context(place: Self.searchedLosAngeles))
 
         #expect(harness.viewModel.nearbyNote == nil)
+        #expect(harness.viewModel.farMessage == nil)
     }
 
-    @Test("Far: no compass, no targets, sensors off, and the Far message has no distance")
-    func farHidesCompass() {
+    @Test("Far: no compass, no targets, sensors off, and the Far message names the city, no distance")
+    func farHidesCompass() throws {
         let harness = Self.makeHarness(position: Self.moonUp)
         harness.viewModel.update(Self.context(place: Self.sanDiego))
         harness.viewModel.setOnScreen(true)
@@ -278,7 +280,19 @@ struct CompassViewModelTests {
         #expect(harness.viewModel.targets.isEmpty)
         #expect(harness.viewModel.nearbyNote == nil)
         #expect(!harness.heading.isRunning)
-        #expect(CompassViewModel.farMessage.rangeOfCharacter(from: .decimalDigits) == nil)
+        let message = try #require(harness.viewModel.farMessage)
+        #expect(message == "You're a bit too far from San Diego to view the compass accurately")
+        #expect(message.rangeOfCharacter(from: .decimalDigits) == nil)
+    }
+
+    @Test("Leaving Far for Here clears the Far message")
+    func farMessageClears() {
+        let harness = Self.makeHarness()
+        harness.viewModel.update(Self.context(place: Self.sanDiego))
+
+        harness.viewModel.update(Self.context())
+
+        #expect(harness.viewModel.farMessage == nil)
     }
 
     @Test("Moving between two Nearby cities updates the note")
@@ -288,7 +302,7 @@ struct CompassViewModelTests {
 
         harness.viewModel.update(Self.context(place: Self.northOfDetected(byDegrees: 0.5)))
 
-        #expect(harness.viewModel.nearbyNote == "Directions for Test Town")
+        #expect(harness.viewModel.nearbyNote == "You're in Los Angeles but Test Town is nearby")
     }
 
     /// Location is on but detection hasn't found you (yet, or it failed):

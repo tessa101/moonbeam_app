@@ -3,7 +3,7 @@
 > A living note on where things stand. Update it at the end of each work session
 > so the next session (you, or Claude) can pick up cold.
 
-_Last updated: 2026-09-29 (Step 4: compass, through 4.7)_
+_Last updated: 2026-09-30 (Step 4: compass, device test of 4.8–4.10; 4.11–4.13 planned)_
 
 ## Where things live
 - **Local repo:** `~/app-ideas/moonbeam` (the one true folder)
@@ -174,7 +174,7 @@ _Last updated: 2026-09-29 (Step 4: compass, through 4.7)_
        under Signing & Capabilities to run tests on "T2 iPhone"
 
 7. [ ] **Step 4 device QA, by hand** (COMPASS.md). The compass view is built (4.4); the simulator has no compass.
-   1. **Check first:** true heading is valid under **approximate location**. `Info.plist` sets
+   1. [x] **Answered 2026-09-30:** with Precise off, iOS sends a true heading but reports ±81–86°, so the compass stays in low accuracy and never locks. Kept as is (DECISIONS.md 2026-09-30). Original check: true heading is valid under **approximate location**. `Info.plist` sets
       `NSLocationDefaultAccuracyReduced`; if iOS withholds `trueHeading` then, every reading is low
       accuracy and the compass never locks. With Precise Location off for Moon Signal, the heading
       should read and lock normally.
@@ -219,6 +219,34 @@ _Last updated: 2026-09-29 (Step 4: compass, through 4.7)_
           Open Settings, which lands on the app's page
         - with it on, near a charger or metal: the metal/magnets/charger tip
         - both lines clear once accuracy is back below ±20°
+
+   6. **Device test 2026-09-30 (Tessa)** of 4.8–4.10:
+      - [x] 4.10 Precise off → "Precise Location is off" + Open Settings. Appears after a pause or a
+        relaunch, not always right after switching Precise off
+      - [x] 4.10 interference tip comes and goes while charging (`full`, `interference`)
+      - [x] Location off → compass hidden, Turn On Location hint
+      - [x] 4.6 Nearby (LA, Los Feliz, Huntington Beach from Irvine) shows the compass and locks;
+        Far (La Jolla) hides it
+      - [ ] Still to check: phone held still for a few minutes; overnight background; Open Settings
+        lands on the app's page; one haptic per lock
+      - [x] **4.11** built (COMPASS.md §2, DECISIONS.md 2026-09-30). One commit:
+        - Nearby note: "You're in {Detected city} but {City} is nearby"
+        - Far message: "You're a bit too far from {City} to view the compass accurately"
+        - Main-screen "Use my location" only on the empty first-launch state; the sheet row covers the rest
+        - **Check on device:** LA from Irvine shows the new note and no button under the search field;
+          La Jolla shows the new Far message; the sheet's row still switches to you; fresh install
+          still shows the button and no prompt until it's tapped
+      - [ ] **4.12** (COMPASS.md §1 Accuracy + §3 Privacy wording, DECISIONS.md 2026-09-30). One commit:
+        - Remove `NSLocationDefaultAccuracyReduced`; new `NSLocationWhenInUseUsageDescription` text
+        - `NSLocationTemporaryUsageDescriptionDictionary` key `Compass`; Use Precise Location →
+          temporary full-accuracy request; "Always use Precise Location" → Settings; new reduced line
+        - Aha line on reduced → full while visible
+        - **Check on device:** delete and reinstall → the prompt shows Precise On and the new text;
+          switch Precise off → the new line; Use Precise Location → iOS alert with our text → aha
+          line → lock; relaunch later → asked again (temporary); "Always…" lands on the app's page
+      - [ ] **4.13** "City, ST" in the search field and compass copy (LOCATION.md "Place name on
+        screen", DECISIONS.md 2026-09-30). One commit. **Check on device:** Irvine → "Irvine, CA";
+        search Sydney, London, Paris, Tokyo, Singapore and note what each shows
 
 Design-pass items (visuals, copy, a11y) are tracked in **[DESIGN-REVIEW.md](DESIGN-REVIEW.md)**.
 

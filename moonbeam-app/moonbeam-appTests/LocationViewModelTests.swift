@@ -103,6 +103,7 @@ struct LocationViewModelTests {
         #expect(viewModel.moonTable == nil)
         #expect(viewModel.searchFieldTitle == LocationViewModel.searchPlaceholder)
         #expect(viewModel.showsUseMyLocation)
+        #expect(viewModel.showsUseMyLocationButton)
         #expect(!location.didRequestAuthorization)
         #expect(location.currentPlaceCount == 0)
     }
@@ -171,6 +172,7 @@ struct LocationViewModelTests {
 
         #expect(viewModel.place == nil)
         #expect(viewModel.showsUseMyLocation)
+        #expect(viewModel.showsUseMyLocationButton)
     }
 
     /// The timeout has to *cancel* the fix, which is what stops location
@@ -218,12 +220,38 @@ struct LocationViewModelTests {
         #expect(viewModel.place == Self.sydney)
         #expect(viewModel.searchFieldTitle == "Sydney")
         #expect(viewModel.showsUseMyLocation)
+        // 4.11: with a place showing, the way back is the sheet's row.
+        #expect(!viewModel.showsUseMyLocationButton)
         #expect(!location.didRequestAuthorization)
         #expect(location.currentPlaceCount == 0)
         #expect(viewModel.locationOffDialog == nil)
     }
 
     // MARK: - "Use my location" (§4)
+
+    /// COMPASS.md 4.11: the main-screen button is first-launch only; the
+    /// sheet's row keeps the old rule and still switches to you.
+    @Test("With a searched place: no main-screen button, but the sheet row shows and switches")
+    func mainButtonOnlyOnFirstLaunch() async throws {
+        let location = FakeLocationService(
+            authorizationState: .authorized,
+            placeResult: .success(Self.detectedLosAngeles)
+        )
+        let viewModel = Self.makeViewModel(location: location, store: InMemoryPlaceStore(lastViewed: Self.sydney))
+        await viewModel.start()
+        viewModel.select(Self.sydney)
+
+        #expect(!viewModel.showsUseMyLocationButton)
+        viewModel.presentSearch()
+        let sheet = try #require(viewModel.searchSheet)
+        #expect(sheet.showsUseMyLocation)
+
+        sheet.useMyLocation()
+        await viewModel.searchDidDismiss()
+
+        #expect(viewModel.place == Self.detectedLosAngeles)
+        #expect(!viewModel.showsUseMyLocationButton)
+    }
 
     @Test("Not determined: prompts, then fetches when granted")
     func notDeterminedPromptsThenFetches() async {

@@ -37,6 +37,19 @@ Principle: **never force current location.** Looking up a city you're not in is 
 | ~~Last-viewed chip~~ | ~~Back to {City}~~ Removed (SEARCH-RECENTS.md §1, Decision C) |
 | Time zone label (when place ≠ device time zone) | {City} · {TZ abbreviation}, e.g. "Sydney · AEST" |
 
+### Place name on screen: "City, ST" (4.13, 2026-09-30)
+- The main-screen search field and the compass messages show **city + first context part**, e.g.
+  "Irvine, CA", "Sydney, NSW", "Kansas City, MO". Before: city only.
+- The context comes from Apple, not from our own rules: `Place.region` is what MapKit's
+  `cityWithContext` gives beyond the city (already stored since Step 2). Take only its **first**
+  component, so "MO, United States" → "MO".
+- Where Apple gives no state (city-states, some countries) it falls back to the city alone
+  ("Singapore"). Where the first part is a country or a full region name, show it as given
+  ("Paris, France" if that's what Apple returns). No per-country table.
+- Unchanged: recents rows (title = city, detail = full `displayName`); the time zone label
+  ("Irvine · PDT") stays city-only to stay short. Long names truncate at the tail (design pass).
+- Existing saved places already carry `region`, so recents and last-viewed upgrade with no migration.
+
 ### Search field
 > The main-screen field is now a button that opens the search sheet (SEARCH-RECENTS.md §1–2).
 > Suggestions, resolving and the list states below still apply, inside the sheet.
@@ -50,7 +63,8 @@ Principle: **never force current location.** Looking up a city you're not in is 
 - Suggestions list states: typing (results), no results ("No matching cities"), network error ("Can't search right now. Check your connection.").
 
 ### "Use my location" button
-- Shown **below the search field** whenever the current place is *not* the detected current location.
+- ~~Shown **below the search field** whenever the current place is *not* the detected current location.~~
+- **Amended 2026-09-30 (COMPASS.md 4.11):** shown below the search field **only on the empty first-launch state** (no place saved). Otherwise the way back to your location is the "Use my location" row in the search sheet (SEARCH-RECENTS.md), which runs the same §4 flow.
 - Tap behavior depends on permission state (see §4).
 
 ### Launch logic
@@ -64,8 +78,8 @@ Principle: **never force current location.** Looking up a city you're not in is 
 | Permission | Behavior |
 |---|---|
 | Authorized | Fetch current location → field shows current city → moon data loads. ~~If the last-viewed place differs from the current city, show a **"Back to {City}"** chip.~~ (Chip removed: SEARCH-RECENTS.md §1, Decision C.) |
-| Authorized, fetch fails or times out (10 s) | Fall back to last-viewed place (if any). Show "Use my location" so they can retry. |
-| Not determined / denied / restricted / services off | Show last-viewed place if one exists, otherwise the empty first-launch state. "Use my location" is visible. |
+| Authorized, fetch fails or times out (10 s) | Fall back to last-viewed place (if any). Retry is the sheet's "Use my location" row (4.11). |
+| Not determined / denied / restricted / services off | Show last-viewed place if one exists, otherwise the empty first-launch state. "Use my location" is visible on the empty state only; otherwise it's the sheet row (4.11). |
 
 While the fetch is in progress, show the last-viewed place's name as a placeholder, or a small loading state if there's no saved place. Don't show a blank screen.
 
@@ -160,8 +174,9 @@ The three services are **main-actor isolated** (the project default): they drive
 - `func requestAuthorization() async -> LocationAuthState`
 - `func currentPlace() async throws -> Place` (one-shot fix → reverse geocode → `Place`)
 - Implementation notes:
-  - Info.plist: `NSLocationWhenInUseUsageDescription` = "Moonbeam uses your location to show when and where the moon rises and sets near you."
-  - Info.plist: `NSLocationDefaultAccuracyReduced` = `YES` (defaults the Precise toggle off; city-level is enough)
+  - Info.plist: `NSLocationWhenInUseUsageDescription` = ~~"Moonbeam uses your location to show when and where the moon rises and sets near you."~~ **Amended 2026-09-30 (COMPASS.md 4.12):** "Moon Signal uses your location to show when and where the moon rises and sets, and to point the compass. Keep Precise Location on so the compass can find the moon." (placeholder)
+  - Info.plist: ~~`NSLocationDefaultAccuracyReduced` = `YES` (defaults the Precise toggle off; city-level is enough)~~ **Removed 2026-09-30 (4.12):** the compass needs Precise Location, so the prompt defaults it on; users can opt out
+  - Info.plist: `NSLocationTemporaryUsageDescriptionDictionary` with key `Compass` (4.12; text in COMPASS.md §1 Accuracy)
   - One-shot request; no continuous updates, no background mode
   - Reverse geocoding: `MKReverseGeocodingRequest(location:)` → `await request.mapItems`. Confirmed
     against the iOS 26 SDK, where `MKMapItem.placemark` and `CLGeocoder` are both deprecated
