@@ -32,8 +32,6 @@ struct ContentView: View {
             LabeledContent("Illuminated", value: viewModel.illuminationText)
                 .accessibilityElement(children: .combine)
                 .accessibilityLabel(viewModel.illuminationAccessibilityLabel)
-
-            Text("Spike UI — replaced in task #4")
         }
         .padding()
     }

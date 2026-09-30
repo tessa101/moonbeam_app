@@ -193,8 +193,12 @@ reference values. See `ASTRONOMY.md`.
 - No analytics, no third-party SDKs, and no data leaves the device except geocoding queries.
 - Location permission: When In Use only, with a clear purpose string
   (`NSLocationWhenInUseUsageDescription`), requested on tap and never at launch.
-  `NSLocationDefaultAccuracyReduced` is `YES` — city-level is all the moon maths needs.
-- Privacy manifest (`PrivacyInfo.xcprivacy`) added before any TestFlight build.
+  ~~`NSLocationDefaultAccuracyReduced` is `YES` — city-level is all the moon maths needs.~~
+  Removed in 4.12: the compass needs Precise Location, so the prompt defaults it on (COMPASS.md §1).
+- Privacy manifest (`PrivacyInfo.xcprivacy`) in the app target (TestFlight prep, 2026-09-30):
+  tracking off, no collected data types, and one required-reason API, UserDefaults (`CA92.1`: the
+  app's own last-viewed place and recents). Info.plist sets `ITSAppUsesNonExemptEncryption = NO`
+  (no encryption beyond Apple's HTTPS), so App Store Connect doesn't ask per build.
 
 ## 11. Testing
 
