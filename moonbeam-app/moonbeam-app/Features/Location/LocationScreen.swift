@@ -66,6 +66,11 @@ struct LocationScreen: View {
             }
             .padding()
         }
+        // 4.15: content mustn't slide under the clock unreadably. The
+        // system's soft edge effect, as in system apps; styling is the
+        // design pass.
+        .scrollEdgeEffectStyle(.soft, for: .top)
+        .modifier(StatusBarBackdrop())
         .task {
             await viewModel.start()
         }
@@ -155,6 +160,30 @@ struct LocationScreen: View {
 
     private func searchDidDismiss() {
         Task { await viewModel.searchDidDismiss() }
+    }
+}
+
+// MARK: - Status bar (4.15)
+
+/// The fallback for iOS 26 (DECISIONS.md 2026-09-30): the device test on
+/// iOS 26.6.2 showed no edge effect at all for this bare `ScrollView` under
+/// the status bar, so the date control sat crisp behind the clock. There the
+/// status bar gets the system bar material instead. iOS 27 draws the soft
+/// edge effect itself, so it's left alone.
+private struct StatusBarBackdrop: ViewModifier {
+
+    func body(content: Content) -> some View {
+        if #available(iOS 27, *) {
+            content
+        } else {
+            content.safeAreaInset(edge: .top, spacing: 0) {
+                // Zero height: the material fills only the status bar,
+                // since a background extends into the safe area it touches.
+                Color.clear
+                    .frame(height: 0)
+                    .background(.bar)
+            }
+        }
     }
 }
 

@@ -3,7 +3,7 @@
 > A living note on where things stand. Update it at the end of each work session
 > so the next session (you, or Claude) can pick up cold.
 
-_Last updated: 2026-09-30 (Step 4: compass, 4.11–4.13 built; device checks for them pending)_
+_Last updated: 2026-09-30 (4.14, Step 2.2 and 4.15 built; device checks pending)_
 
 ## Where things live
 - **Local repo:** `~/app-ideas/moonbeam` (the one true folder)
@@ -252,8 +252,13 @@ _Last updated: 2026-09-30 (Step 4: compass, 4.11–4.13 built; device checks for
       - [x] **4.14** built. One button: remove "Always use Precise Location" (COMPASS.md §1). One commit
       - [x] **Step 2.2** built (fixes 1, 3, 2; one commit each). Search quality (SEARCH-RECENTS.md §0): filter, resolve-the-tapped-row, and ranking
         (smart, then closest) all decided. Before/after query table in latest.md. One commit per fix
-      - [ ] **4.15** Status bar: main-screen content must not slide under the clock. Use the iOS 26 top
+      - [x] **4.15** built. Status bar: main-screen content must not slide under the clock. Use the iOS 26 top
         scroll edge effect (system fade/blur); solid bar background as fallback. One commit.
+        *As built:* `.scrollEdgeEffectStyle(.soft, for: .top)` on the main `ScrollView`, plus the
+        system bar material behind the status bar **before iOS 27 only** (`StatusBarBackdrop`). Your
+        iOS 26.6.2 screenshot 03 shows no edge effect at all for this bare `ScrollView`, and only an
+        iOS 27 simulator is installed here, so the iOS 26 path is the documented fallback, checked on
+        the simulator by forcing it. Both paths checked in light and dark: the clock stays readable.
         **Check on device:** scroll the main screen to the compass; the clock stays readable over the
         moon table and date control, in light and dark mode
 
