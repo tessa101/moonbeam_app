@@ -91,6 +91,21 @@ nonisolated struct MoonTableFormatterTests {
         #expect(formatter.time(date, in: Self.losAngelesZone) == "6:13\u{202F}AM")
     }
 
+    /// The engine's LA times for Sep 30 and Oct 3, 2026 (21:09:52, 14:26:33),
+    /// which USNO and the brief give as 9:10 and 2:27. Truncating the seconds
+    /// showed 9:09 and 2:26 (5.2 follow-up).
+    @Test("Times round to the nearest minute", arguments: [
+        (21, 9, 52, "9:10\u{202F}PM"),
+        (14, 26, 33, "2:27\u{202F}PM"),
+        (17, 18, 30, "5:19\u{202F}PM"),
+        (17, 18, 29, "5:18\u{202F}PM"),
+        (23, 59, 45, "12:00\u{202F}AM"),
+    ])
+    func timeRoundsToNearestMinute(hour: Int, minute: Int, second: Int, expected: String) throws {
+        let date = try Self.date(2026, 9, 30, hour: hour, minute: minute, second: second, in: Self.losAngelesZone)
+        #expect(formatter.time(date, in: Self.losAngelesZone) == expected)
+    }
+
     @Test("Directions match the compass's bearing", arguments: [359.6, 72.5, 105.0, 0.4])
     func directionMatchesCompass(azimuth: Double) {
         #expect(formatter.direction(for: azimuth) == CompassFormatter().bearing(for: azimuth))
@@ -142,12 +157,15 @@ nonisolated struct MoonTableFormatterTests {
 
     private static func date(
         _ year: Int, _ month: Int, _ day: Int,
-        hour: Int, minute: Int = 0,
+        hour: Int, minute: Int = 0, second: Int = 0,
         in timeZone: TimeZone
     ) throws -> Date {
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = timeZone
-        let components = DateComponents(year: year, month: month, day: day, hour: hour, minute: minute)
+        let components = DateComponents(
+            year: year, month: month, day: day,
+            hour: hour, minute: minute, second: second
+        )
         return try #require(calendar.date(from: components))
     }
 }

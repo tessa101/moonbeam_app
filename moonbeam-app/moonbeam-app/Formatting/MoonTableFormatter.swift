@@ -27,6 +27,8 @@ nonisolated struct MoonTableFormatter {
 
     // MARK: - Constants
 
+    private static let secondsPerMinute: TimeInterval = 60
+
     private static let phaseNames: [MoonPhase: String] = [
         .new: "New Moon",
         .waxingCrescent: "Waxing Crescent",
@@ -91,9 +93,14 @@ nonisolated struct MoonTableFormatter {
         "No \(eventName(event).lowercased()) today"
     }
 
-    /// "9:10 PM" in the place's zone.
+    /// "9:10 PM" in the place's zone, rounded to the nearest minute.
+    ///
+    /// `Date.FormatStyle` drops the seconds, so 21:09:52 would read "9:09";
+    /// USNO and the design brief round, so it reads "9:10". Half a minute
+    /// rounds up (17:18:30 → "5:19", as USNO gives for the §5 reference row).
     func time(_ date: Date, in timeZone: TimeZone) -> String {
-        date.formatted(Date.FormatStyle(locale: locale, timeZone: timeZone).hour().minute())
+        Self.roundedToMinute(date)
+            .formatted(Date.FormatStyle(locale: locale, timeZone: timeZone).hour().minute())
     }
 
     /// "58° ENE", the compass's own formatting so one azimuth never reads two
@@ -130,6 +137,14 @@ nonisolated struct MoonTableFormatter {
     }
 
     // MARK: - Helpers
+
+    /// `date` moved to the nearest whole minute. The reference date is on a
+    /// minute boundary, and every current zone offset is whole minutes, so
+    /// this matches the minute the place's clock shows.
+    private static func roundedToMinute(_ date: Date) -> Date {
+        let minutes = (date.timeIntervalSinceReferenceDate / secondsPerMinute).rounded()
+        return Date(timeIntervalSinceReferenceDate: minutes * secondsPerMinute)
+    }
 
     private func percent(_ fraction: Double) -> String {
         fraction.formatted(.percent.precision(.fractionLength(0)).locale(locale))

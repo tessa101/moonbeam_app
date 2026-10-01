@@ -5,6 +5,16 @@
 
 ---
 
+### 2026-09-30 · 5.2 follow-ups: times round to the minute; degrees in VoiceOver
+- **Rounding (Tessa: 9:09 / 2:26 shown where the brief and USNO give 9:10 / 2:27):** `Date.FormatStyle`
+  drops the seconds, so the engine's LA 21:09:52 read "9:09". The card's times now round to the nearest
+  minute, half a minute up (USNO's convention: the §5 row's 17:18:30 is USNO's 17:19). The spike table
+  truncated too, so this predates 5.2. The engine values and the ±2 min test tolerances are unchanged.
+  A rise at 23:59:45 now reads "12:00 AM"; acceptable, as USNO does the same.
+  `MoonTableSpike`'s console print still truncates; it isn't user-facing.
+- **Considered:** rounding in `AstronomyEngineMoonService` (would change `MoonEvent` for the compass and
+  tests; it's a display rule, so it lives in the formatter).
+
 ### 2026-09-30 · 5.2 moon card: as built
 - **Hairlines:** one, between the phase row and the rise/set row, as the HTML draws it. §3.2 says "three
   rows separated by hairlines"; §9 acceptance is "matches the HTML", so the HTML won. Header → phase is

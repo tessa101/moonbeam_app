@@ -604,16 +604,15 @@ struct LocationViewModelTests {
         sydneyCalendar.timeZone = Self.sydneyZone
         #expect(sydneyCalendar.component(.hour, from: rise.date) == 14)
 
-        var sydneyStyle = Date.FormatStyle.dateTime.hour().minute()
-        sydneyStyle.timeZone = Self.sydneyZone
-        var losAngelesStyle = sydneyStyle
-        losAngelesStyle.timeZone = Self.losAngelesZone
+        // Through the card's formatter, which rounds to the minute; only the
+        // zone is under test here.
+        let formatter = MoonTableFormatter()
         guard case let .time(time, timeZone, _) = moonTable.rise.detail else {
             Issue.record("Expected a moonrise time")
             return
         }
-        #expect(time == rise.date.formatted(sydneyStyle))
-        #expect(time != rise.date.formatted(losAngelesStyle))
+        #expect(time == formatter.time(rise.date, in: Self.sydneyZone))
+        #expect(time != formatter.time(rise.date, in: Self.losAngelesZone))
 
         let abbreviation = try #require(Self.sydneyZone.abbreviation(for: rise.date))
         #expect(timeZone == abbreviation)
