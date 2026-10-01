@@ -5,6 +5,26 @@
 
 ---
 
+### 2026-10-01 · Madlib sentence: "Where will the moon be…", new breaks, default-size fit rule (Tessa)
+- **Copy:** **"Where will the moon be [date] in [city]?"**, the spec's original wording (§3.1), replacing
+  "Where can I find the moon [date] in [place]?". VoiceOver header to match ("Where will the moon be tonight
+  in Los Angeles, CA?"). Supersedes the copy in "Madlib copy, fixed three lines" below.
+- **Three forced lines:** "Where will the moon" / "be 📅 [date]" / "in 📍 [city]?". The block still reserves
+  three full-size lines, so the card doesn't move.
+- **Fit rule, default Dynamic Type size (`.large`) only:** all three lines share one scale, the smallest any
+  line needs to fit on one line, **minimum 0.7× (about 19 pt)**. Below that the scale holds at 0.7 and that line
+  wraps. This replaces 5.3 fix 1's 0.8 minimum, and its "a line that can't fit doesn't set the scale" exception.
+  That exception existed for AX sizes, which no longer shrink.
+- **Every other size (smaller or larger, AX included):** no shrinking. The text scales with Dynamic Type as before,
+  and long lines wrap. At these sizes a token may break between its words, so a city wider than the line wraps at a
+  space instead of inside a word. At the default size tokens stay whole (non-breaking spaces, §3.1).
+- **Always attached:** each icon to its token's first word (non-breaking space); the "?" to the city (no space,
+  and line breaking never breaks before "?", UAX #14). **Not** a U+2060 word joiner: with one, any line that had to
+  shrink never finished laying out (previews hung until it was removed).
+- VoiceOver order unchanged: the sentence (header), then "Date, …" and "Place, …" buttons.
+- **Considered:** keeping the 0.8 exception (lets two lines stay bigger while one wraps, but they no longer match,
+  and the rule asks for one size); shrinking at every non-AX size (would undo a reader's smaller/larger choice).
+
 ### 2026-10-01 · 5.4 compass restyle: as built
 - **Still face, moving marks:** the face doesn't rotate; ticks, letters and target dots are placed at
   azimuth − heading. Letters and ↑/↓ stay upright without counter-rotation, and the face's gradient light
@@ -43,6 +63,7 @@
   on iOS 26, interpolation instead); real buttons laid over the text (token positions unknown once it wraps).
 
 ### 2026-10-01 · Madlib copy, fixed three lines, custom token icons
+- *(Copy and line breaks superseded the same day: see "Madlib sentence: 'Where will the moon be…'" above.)*
 - Sentence copy: **"Where can I find the moon [date] in [place]?"** (was "Where will the moon be…"). Alternative
   recorded, not chosen: "Where will the moon rise and set [on date] in [place]?" (too long).
 - Always three lines with explicit breaks (lead / date token + "in" / place token + "?"), reserving the height so

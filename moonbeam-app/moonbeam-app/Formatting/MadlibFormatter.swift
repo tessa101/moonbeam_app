@@ -7,9 +7,8 @@ import Accessibility
 import Foundation
 
 /// Builds the main screen's madlib sentence (DESIGN-1.1.md §3.1, §3.1a):
-/// "Where can I find the moon / 📅 tonight in / 📍 Los Angeles, CA?", as
-/// three lines of plain words and two tokens, plus what VoiceOver says for
-/// each.
+/// "Where will the moon / be 📅 tonight / in 📍 Los Angeles, CA?", as three
+/// lines of plain words and two tokens, plus what VoiceOver says for each.
 ///
 /// The date token reads "tonight" on the place's today and "on Sat, Oct 3"
 /// otherwise, with the year only in another year (DATE.md's rule, through
@@ -46,7 +45,7 @@ nonisolated struct MadlibFormatter {
         /// from the HTML's SVGs; §3.1a).
         let symbol: String
         /// The token's words. Spaces inside are non-breaking unless breaks
-        /// are allowed (AX sizes, §3.1).
+        /// are allowed (every size but the default).
         let text: String
         /// "Date, tonight" / "Place, Los Angeles, CA". An attributed string
         /// so a region abbreviation is spelled out ("C A").
@@ -55,8 +54,9 @@ nonisolated struct MadlibFormatter {
 
     /// The whole sentence.
     struct Sentence: Equatable {
-        /// Always three lines, broken explicitly (§3.1a): the lead, the date
-        /// + "in", the place + "?". A line may still wrap if it can't fit.
+        /// Always three lines, broken explicitly (§3.1a): the lead, "be" +
+        /// the date, "in" + the place + "?". A line may still wrap if it
+        /// can't fit.
         let lines: [[Part]]
         /// The sentence read as one line, with ordinary spaces and no icons,
         /// for the header element VoiceOver reads before the two buttons.
@@ -78,8 +78,9 @@ nonisolated struct MadlibFormatter {
     /// Keeps a token's words, and its icon, on one line.
     static let nonBreakingSpace = "\u{00A0}"
 
-    private static let lead = "Where can I find the moon"
-    private static let middle = " in"
+    private static let lead = "Where will the moon"
+    private static let dateLead = "be"
+    private static let placeLead = "in"
     private static let end = "?"
 
     private static let tonight = "tonight"
@@ -120,8 +121,9 @@ nonisolated struct MadlibFormatter {
     ///     no place.
     ///   - dayOffset: days from the place's today (0 = today).
     ///   - today: any moment in the place's today, such as now.
-    ///   - allowsBreaksInsideTokens: true at AX sizes, where a token may
-    ///     wrap between its words (§3.1). Its icon always stays attached.
+    ///   - allowsBreaksInsideTokens: true wherever the sentence doesn't
+    ///     shrink (every size but the default), so a long token wraps
+    ///     between its words. Its icon always stays attached.
     func sentence(
         place: Place?,
         standIn: Place? = nil,
@@ -137,18 +139,26 @@ nonisolated struct MadlibFormatter {
         if let place {
             let date = dateToken(place: place, day: day, dayOffset: dayOffset, today: today)
             dateWords = date.text
-            dateLine = [.token(date.withSpaces(space)), .words(Self.middle)]
+            dateLine = [.words(Self.dateLead + " "), .token(date.withSpaces(space))]
         } else {
             dateWords = Self.tonight
-            dateLine = [.words(Self.tonight + Self.middle)]
+            dateLine = [.words(Self.dateLead + " " + Self.tonight)]
         }
 
         let place = placeToken(place ?? standIn)
-        let placeLine: [Part] = [.token(place.withSpaces(space)), .words(Self.end)]
+        let placeLine: [Part] = [
+            .words(Self.placeLead + " "),
+            .token(place.withSpaces(space)),
+            // Straight after the city, no space: line breaking never
+            // breaks before a "?" (UAX #14 class EX), so it stays with the
+            // city. Not a word joiner (U+2060): with one, a line that had to
+            // shrink never finished laying out.
+            .words(Self.end),
+        ]
 
         return Sentence(
             lines: [[.words(Self.lead)], dateLine, placeLine],
-            accessibilityLabel: [Self.lead, dateWords + Self.middle, place.text + Self.end]
+            accessibilityLabel: [Self.lead, Self.dateLead, dateWords, Self.placeLead, place.text + Self.end]
                 .joined(separator: " ")
         )
     }

@@ -102,9 +102,9 @@ nonisolated enum Theme {
         static let sentenceSize: CGFloat = 27
         static let sentence = Font.custom(FontName.youngSerif, size: sentenceSize, relativeTo: .title)
         static let sentenceLineHeightMultiple: CGFloat = 1.5
-        /// The sentence's lines shrink together this far before one wraps
-        /// (§3.1a).
-        static let sentenceMinimumScale: CGFloat = 0.8
+        /// At the default size the sentence's lines shrink together this
+        /// far (about 19 pt) before one wraps (§3.1a).
+        static let sentenceMinimumScale: CGFloat = 0.7
         /// The sentence at an exact size: its three lines share one scale,
         /// applied by the view to the Dynamic Type size of `sentenceSize`
         /// (scaled relative to `.title`, like `sentence`).

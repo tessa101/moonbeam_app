@@ -159,6 +159,10 @@ _Last updated: 2026-10-01 (Step 5.3 madlib sentence built, with §3.1a; 5.2 foll
      simulator; places in the phone's own zone show none, by design (§11 Q3). **Found, not fixed:** the
      recent "Sydney, Australia" resolved to Sydney River, Nova Scotia (search resolve, Step 2.2). Next: 5.4
      compass restyle.
+   - [x] **5.3 sentence revision (2026-10-01, Tessa):** "Where will the moon / be 📅 [date] / in 📍 [city]?".
+     At the default size only, the three lines shrink together (minimum 0.7×) before any wraps; other sizes
+     don't shrink and wrap. 401 tests / 613 cases. Screenshots: `.agent-reports/5.3-sentence-breaks/`.
+     **Check on device:** Irvine, Rancho Santa Margarita and a 2027 date at default and AX3.
    - [x] **5.4 compass restyle (2026-10-01):** heading readout (Young Serif 24 in a 40 pt slot), 220 pt
      dial (gradient face, 15° tick dots, upright N/E/S/W with N amber, ↑/↓ by the rise/set dots, 18 pt
      live Moon dot with no arrow), lock = amber pill + dot ring/glow + dial halo, notes as amber-tint

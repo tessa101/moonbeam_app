@@ -5,14 +5,15 @@
 
 import SwiftUI
 
-/// The main screen's header (DESIGN-1.1.md §3.1, §3.1a): "Where can I find
-/// the moon / 📅 tonight in / 📍 Los Angeles, CA?", where the two amber tokens
+/// The main screen's header (DESIGN-1.1.md §3.1, §3.1a): "Where will the
+/// moon / be 📅 tonight / in 📍 Los Angeles, CA?", where the two amber tokens
 /// open the calendar and the search sheet.
 ///
 /// Always three lines, so the card below never jumps as the date or city
-/// changes length. Each line is one `Text`; all three share one scale
-/// (`MadlibScale`: the smallest any line needs, down to 80%), and a line
-/// that still doesn't fit wraps (§3.1a). Each token is a
+/// changes length. Each line is one `Text`. At the default size all three
+/// share one scale (`MadlibScale`: the smallest any line needs, down to
+/// 70%) and a line wraps only below that; at other sizes nothing shrinks
+/// and long lines wrap (§3.1a). Each token is a
 /// link whose URL an `OpenURLAction` turns back into a view-model call.
 /// VoiceOver would read those as links inside the text, so the text is
 /// replaced, for accessibility only, by the sentence as a header followed
@@ -49,8 +50,10 @@ struct MadlibSentence: View {
     // MARK: - Body
 
     var body: some View {
+        // Where the sentence doesn't shrink, long lines wrap, so a token
+        // may break between its words rather than inside one.
         let sentence = viewModel.madlibSentence(
-            allowsBreaksInsideTokens: dynamicTypeSize.isAccessibilitySize
+            allowsBreaksInsideTokens: !MadlibScale.shrinks(at: dynamicTypeSize)
         )
 
         let scale = MadlibScale.shared(
@@ -58,7 +61,8 @@ struct MadlibSentence: View {
             // A little slack: glyph widths don't scale exactly with point
             // size, and a line scaled to fit to the point can still wrap.
             availableWidth: availableWidth - Self.fitTolerance,
-            minimum: Theme.Fonts.sentenceMinimumScale
+            minimum: Theme.Fonts.sentenceMinimumScale,
+            dynamicTypeSize: dynamicTypeSize
         )
 
         VStack(alignment: .leading, spacing: 0) {
@@ -175,7 +179,7 @@ struct MadlibSentence: View {
 // MARK: - Line
 
 /// One of the sentence's three lines (§3.1a), set at the scale all three
-/// share. It wraps only if it doesn't fit even at that scale.
+/// share. It wraps only if it doesn't fit at that scale.
 private struct SentenceLine: View {
 
     let text: Text
@@ -215,10 +219,45 @@ private struct SentenceLine: View {
         .background(Theme.Colors.bg)
 }
 
+#Preview("Irvine") {
+    MadlibSentence(viewModel: previewViewModel(place: Place.irvine, dayOffset: 0))
+        // The main screen's margin, so lines get the app's width.
+        .padding(.horizontal, Theme.Metrics.screenMargin)
+        .background(Theme.Colors.bg)
+}
+
+#Preview("Rancho Santa Margarita") {
+    MadlibSentence(viewModel: previewViewModel(place: Place.ranchoSantaMargarita, dayOffset: 0))
+        // The main screen's margin, so lines get the app's width.
+        .padding(.horizontal, Theme.Metrics.screenMargin)
+        .background(Theme.Colors.bg)
+}
+
+/// January 4 next year, so the date token carries the year.
+#Preview("Other year") {
+    MadlibSentence(viewModel: previewViewModel(place: Place.ranchoSantaMargarita, day: nextYearDay()))
+        // The main screen's margin, so lines get the app's width.
+        .padding(.horizontal, Theme.Metrics.screenMargin)
+        .background(Theme.Colors.bg)
+}
+
 #Preview("No place") {
     MadlibSentence(viewModel: previewViewModel(place: nil, dayOffset: 0))
         .padding()
         .background(Theme.Colors.bg)
+}
+
+/// January 4 next year.
+private func nextYearDay() -> DateComponents {
+    let year = Calendar.current.component(.year, from: Date()) + 1
+    return DateComponents(year: year, month: 1, day: 4)
+}
+
+/// A view model showing `place` on `day`, as if picked in the calendar.
+private func previewViewModel(place: Place, day: DateComponents) -> LocationViewModel {
+    let viewModel = previewViewModel(place: place, dayOffset: 0)
+    viewModel.select(day: day)
+    return viewModel
 }
 
 /// A view model showing `place`, moved `dayOffset` days from today.

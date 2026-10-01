@@ -120,7 +120,7 @@ struct LocationViewModelTests {
         let sentence = viewModel.madlibSentence(allowsBreaksInsideTokens: false)
 
         #expect(sentence.tokens.map(\.kind) == [.place])
-        #expect(sentence.accessibilityLabel == "Where can I find the moon tonight in a city?")
+        #expect(sentence.accessibilityLabel == "Where will the moon be tonight in a city?")
         #expect(viewModel.showsUseMyLocationButton)
     }
 
@@ -134,7 +134,7 @@ struct LocationViewModelTests {
 
         #expect(sentence.tokens.map(\.kind) == [.date, .place])
         #expect(sentence.tokens.first?.text == "tonight")
-        #expect(sentence.accessibilityLabel == "Where can I find the moon tonight in Sydney, NSW?")
+        #expect(sentence.accessibilityLabel == "Where will the moon be tonight in Sydney, NSW?")
     }
 
     /// LOCATION.md §3: the last-viewed name stands in while the launch fix

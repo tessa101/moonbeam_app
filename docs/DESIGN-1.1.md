@@ -115,6 +115,13 @@ Top to bottom. Replaces the prompt, the search-field button, `DateControl`'s row
   VoiceOver: "Place, choose a city, button".
 
 ### 3.1a Amendments (Tessa, 2026-10-01, after 5.3 device check)
+> **Revised later on 2026-10-01 (Tessa):** the copy goes back to **"Where will the moon be [date] in [city]?"**,
+> on three forced lines **"Where will the moon" / "be 📅 [date]" / "in 📍 [city]?"**. **Fit rule:** at the default
+> Dynamic Type size (`.large`) only, the whole sentence shrinks to one shared scale so each line stays on one line,
+> minimum **0.7×** (~19 pt); only below that does a line wrap. At every other size nothing shrinks and long lines
+> wrap. Icons stay attached to their token's first word, the "?" to the city; VoiceOver order unchanged. The copy,
+> line and scale bullets below are superseded by this (DECISIONS.md 2026-10-01 "Madlib sentence").
+
 - **Copy:** the sentence becomes **"Where can I find the moon [date] in [place]?"** ("Where can I find the moon
   tonight in Los Angeles, CA?", "…on Sat, Oct 3 in…"). VoiceOver label to match. *Recorded alternative, not
   chosen (too long):* "Where will the moon rise and set [on date] in [place]?"
@@ -146,7 +153,9 @@ plain words (no 📅): there's no place's calendar to pick in, and §3.1's examp
 `token.calendar` / `token.pin` symbolsets: the HTML strokes outlined (CoreGraphics), Regular-M only, sized to
 the HTML's px beside 27 pt text. The underline is the system's (SwiftUI can't set 1.5 pt / 7 pt offset).
 On a 402 pt iPhone 17, line 1 ("Where can I find the moon") is a little too wide at 27 pt (358 pt in 354),
-so all three lines sit at ~98%. See DECISIONS.md 2026-10-01 "5.3 madlib sentence".
+so all three lines sit at ~98%. *As revised (later 2026-10-01):* `MadlibScale.shrinks(at:)` is true only at
+`.large`; the scale is clamped to 0.7. "Where will the moon" fits at 27 pt; "in 📍 Rancho Santa Margarita, CA?"
+sets the scale (~0.77). Off `.large`, tokens use ordinary spaces so they can wrap between words. See DECISIONS.md 2026-10-01 "5.3 madlib sentence".
 
 ### 3.2 Moon card
 One card, three rows separated by 1 pt `stroke` hairlines. *As built (5.2):* one hairline, between the
