@@ -70,6 +70,15 @@ Singapore, Tokyo, London, Paris, Hong Kong, Seoul, Venice, Springfield, Portland
 ### Picking a row
 Resolve (if a suggestion) → dismiss the sheet → load moon data → update `lastViewed` and recents (§3).
 
+**Picking a recent** loads the stored `Place` as it is: no search, no resolve (`SearchSheetViewModel.pick(_ recent:)`;
+tested). *Finding 2026-10-01 (5.3):* tapping what looked like the recent "Sydney, Australia" loaded Sydney River,
+NS. The recent path wasn't at fault: "S" had matched every recent (LA, Westminster, Irvine via "United **S**tates"),
+that one-letter list stayed up while "Sydney" was typed, and MapKit's first batch then replaced its rows. Row 3
+became "Sydney River, NS, Canada" just before the tap, so the tap resolved that suggestion. **Fix:** recents on
+screen narrow to the full query before the batch (§8 "List state"), so the Sydney recent is the only recent left
+and a tap on it loads the stored place. A tap can still race a batch that lands at that instant; that's
+inherent to type-ahead.
+
 ### Removing recents
 Swipe-to-delete on a recent row. No "Clear all" in V1.
 
@@ -187,6 +196,7 @@ enum ListState: Equatable {
 }
 ```
 - Going from 1 to 2 characters, keep the filtered recents on screen until the first type-ahead batch arrives (no blank flash during the 250 ms debounce; no loading case needed).
+  - *Amended 2026-10-01 (5.3 finding 2):* the recents on screen **narrow to the full query** at each keystroke (every query word must start a word of the name, region or country). If none match, the list stays as it was (still no blank flash); suggestions already showing are never swapped back. See "Picking a recent" in §2.
 - Queries under the threshold never reach `MKLocalSearchCompleter`.
 - Resolve failures show `.failed` in the sheet; the sheet stays open.
 

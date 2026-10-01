@@ -201,6 +201,64 @@ struct SearchSheetViewModelTests {
         #expect(viewModel.listState == .suggestions([Self.sydneySuggestion]))
     }
 
+    /// The 5.3 simulator case: "S" matches every recent in "United States",
+    /// and that list used to stay up while "Sydney" was typed, until the
+    /// batch swapped its rows for suggestions under the finger (a tap meant
+    /// for the Sydney recent landed on "Sydney River, NS"). Now the recents
+    /// narrow to the full query at once, and that row is the stored place.
+    @Test("Recents on screen narrow to the full query before the first batch")
+    func recentsNarrowToFullQuery() async {
+        let losAngeles = Place(
+            name: "Los Angeles", region: "CA", country: "United States",
+            latitude: 34.05, longitude: -118.24, timeZone: .gmt
+        )
+        let search = Self.sydneySearch()
+        let recorder = PickRecorder()
+        let viewModel = Self.makeViewModel(search: search, recents: [losAngeles, Self.sydney], recorder: recorder)
+
+        await Self.type("S", into: viewModel)
+        #expect(viewModel.listState == .filteredRecents([losAngeles, Self.sydney]))
+
+        viewModel.query = "Sydney"
+        #expect(viewModel.listState == .filteredRecents([Self.sydney]))
+
+        // Tapping that row now: the stored place, with no search or resolve.
+        viewModel.pick(Self.sydney)
+        #expect(recorder.picked == [Self.sydney])
+        #expect(search.resolvedSuggestions.isEmpty)
+    }
+
+    @Test("Several words must each start a word: \"Sydney NSW\" keeps the Sydney recent")
+    func multiWordNarrowing() async {
+        let viewModel = Self.makeViewModel(search: Self.sydneySearch(), recents: [Self.lisbon, Self.sydney])
+
+        await Self.type("S", into: viewModel)
+        viewModel.query = "Sydney NSW"
+
+        #expect(viewModel.listState == .filteredRecents([Self.sydney]))
+    }
+
+    /// §8 still holds: no blank flash when nothing matches the longer query.
+    @Test("No recent matching the full query leaves the list as it was")
+    func noNarrowingMatchKeepsList() async {
+        let viewModel = Self.makeViewModel(search: Self.sydneySearch(), recents: [Self.lisbon, Self.sydney])
+
+        await Self.type("S", into: viewModel)
+        viewModel.query = "Sx"
+
+        #expect(viewModel.listState == .filteredRecents([Self.sydney]))
+    }
+
+    @Test("Suggestions on screen aren't swapped back to recents while typing on")
+    func suggestionsStayWhileTyping() async {
+        let viewModel = Self.makeViewModel(search: Self.sydneySearch(), recents: [Self.sydney])
+
+        await Self.type("Sy", into: viewModel)
+        viewModel.query = "Syd"
+
+        #expect(viewModel.listState == .suggestions([Self.sydneySuggestion]))
+    }
+
     @Test("Clearing the field goes back to recents")
     func clearingGoesBackToRecents() async {
         let search = Self.sydneySearch()

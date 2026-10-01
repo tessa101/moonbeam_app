@@ -126,9 +126,14 @@ final class SearchSheetViewModel {
 
         if showRecentsIfUnderThreshold() { return }
 
-        // Deliberately no state change here: whatever is showing (usually
-        // the filtered recents) stays until the first batch arrives, so the
-        // list doesn't flash blank during the service's debounce (§8).
+        // Whatever is showing stays until the first batch arrives, so the
+        // list doesn't flash blank during the service's debounce (§8). But
+        // recents still on screen are narrowed to the full query: left as
+        // the one-letter list ("S" matches every "United States"), they sat
+        // under the finger until the batch swapped them for other rows, and
+        // a tap meant for a recent could land on a suggestion.
+        narrowShownRecents()
+
         let query = trimmedQuery
         searchTask = Task { [weak self] in
             guard let self else { return }
@@ -151,6 +156,21 @@ final class SearchSheetViewModel {
         return true
     }
 
+    /// At 2+ characters, before the first batch: recents on screen shrink to
+    /// those matching the whole query. If none match, the list is left as
+    /// it is rather than going blank; suggestions are never replaced.
+    private func narrowShownRecents() {
+        switch listState {
+        case .recents, .filteredRecents:
+            let matching = placeStore.recents.filter { Self.place($0, matches: trimmedQuery) }
+            if !matching.isEmpty {
+                listState = .filteredRecents(matching)
+            }
+        case .suggestions, .noResults, .failed:
+            break
+        }
+    }
+
     private func updateSuggestions(for query: String) async {
         do {
             for try await batch in placeSearch.suggestions(for: query) {
@@ -167,12 +187,18 @@ final class SearchSheetViewModel {
 
     /// Case- and diacritic-insensitive prefix match on any word of the name,
     /// region or country, so "s" finds "Sydney" and "n" finds "NSW" (§2).
-    private static func place(_ place: Place, matches prefix: String) -> Bool {
-        [place.name, place.region, place.country]
+    /// With several words ("Sydney NSW"), each must start some word.
+    private static func place(_ place: Place, matches query: String) -> Bool {
+        let words = [place.name, place.region, place.country]
             .compactMap { $0 }
             .flatMap { $0.components(separatedBy: CharacterSet.alphanumerics.inverted) }
-            .contains { word in
-                word.range(of: prefix, options: [.anchored, .caseInsensitive, .diacriticInsensitive]) != nil
+        return query
+            .components(separatedBy: .whitespaces)
+            .filter { !$0.isEmpty }
+            .allSatisfy { prefix in
+                words.contains { word in
+                    word.range(of: prefix, options: [.anchored, .caseInsensitive, .diacriticInsensitive]) != nil
+                }
             }
     }
 }
