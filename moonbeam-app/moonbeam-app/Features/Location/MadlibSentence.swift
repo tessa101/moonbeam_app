@@ -10,8 +10,9 @@ import SwiftUI
 /// open the calendar and the search sheet.
 ///
 /// Always three lines, so the card below never jumps as the date or city
-/// changes length. Each line is one `Text` that first stays on one line,
-/// then shrinks (down to 80%), and only then wraps (§3.1a). Each token is a
+/// changes length. Each line is one `Text`; all three share one scale
+/// (`MadlibScale`: the smallest any line needs, down to 80%), and a line
+/// that still doesn't fit wraps (§3.1a). Each token is a
 /// link whose URL an `OpenURLAction` turns back into a view-model call.
 /// VoiceOver would read those as links inside the text, so the text is
 /// replaced, for accessibility only, by the sentence as a header followed
@@ -24,6 +25,11 @@ struct MadlibSentence: View {
 
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
+    /// Each line's one-line width at full size, by line index, and the width
+    /// the lines get: the inputs to the shared scale.
+    @State private var naturalWidths: [Int: CGFloat] = [:]
+    @State private var availableWidth: CGFloat = 0
+
     // MARK: - Constants
 
     /// Token links use this scheme and the token kind as the host, so the
@@ -33,6 +39,9 @@ struct MadlibSentence: View {
     private static let placeHost = "place"
 
     private static let underlineOpacity = 0.55
+
+    /// Points kept free on the widest line when choosing the shared scale.
+    private static let fitTolerance: CGFloat = 2
 
     private static let dateHint = "Opens the calendar"
     private static let placeHint = "Opens search"
@@ -44,16 +53,38 @@ struct MadlibSentence: View {
             allowsBreaksInsideTokens: dynamicTypeSize.isAccessibilitySize
         )
 
+        let scale = MadlibScale.shared(
+            naturalWidths: Array(naturalWidths.values),
+            // A little slack: glyph widths don't scale exactly with point
+            // size, and a line scaled to fit to the point can still wrap.
+            availableWidth: availableWidth - Self.fitTolerance,
+            minimum: Theme.Fonts.sentenceMinimumScale
+        )
+
         VStack(alignment: .leading, spacing: 0) {
             ForEach(sentence.lines.indices, id: \.self) { index in
-                SentenceLine(text: Self.text(for: sentence.lines[index]))
+                let text = Self.text(for: sentence.lines[index])
+                SentenceLine(text: text, scale: scale)
+                    .background(alignment: .leading) {
+                        // Measures the line at full size on one line. It
+                        // doesn't depend on `scale`, so there's no loop.
+                        text
+                            .font(Theme.Fonts.sentence)
+                            .fixedSize()
+                            .hidden()
+                            .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { width in
+                                naturalWidths[index] = width
+                            }
+                    }
             }
         }
-        .font(Theme.Fonts.sentence)
         .lineHeight(.multiple(factor: Theme.Fonts.sentenceLineHeightMultiple))
         .foregroundStyle(Theme.Colors.textPrimary)
         .tint(Theme.Colors.accent)
         .frame(maxWidth: .infinity, alignment: .leading)
+        .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { width in
+            availableWidth = width
+        }
         .fixedSize(horizontal: false, vertical: true)
         .padding(.horizontal, Theme.Metrics.sentenceInset)
         .environment(\.openURL, OpenURLAction { url in
@@ -143,45 +174,30 @@ struct MadlibSentence: View {
 
 // MARK: - Line
 
-/// One of the sentence's three lines (§3.1a): on one line at full size if it
-/// fits; else on one line shrunk as far as 80%; else wrapped at full size.
-///
-/// The shrinking option is measured by the line set at 80%, so
-/// `ViewThatFits` only picks it when that fits, but it shows the full-size
-/// line scaled just enough for the space it gets.
+/// One of the sentence's three lines (§3.1a), set at the scale all three
+/// share. It wraps only if it doesn't fit even at that scale.
 private struct SentenceLine: View {
 
     let text: Text
+    let scale: CGFloat
 
-    /// A full-size line's height, scaled like the sentence's font, so a
-    /// shrunk line keeps its slot and the card below doesn't move (§3.1a).
+    /// The sentence's size after Dynamic Type. Scaled here rather than by
+    /// `Font.custom(_:size:relativeTo:)`, which rounds a size like 26.6 back
+    /// up to 27, so a line meant to just fit would wrap.
     @ScaledMetric(relativeTo: .title)
-    private var fullLineHeight = Theme.Fonts.sentenceSize * Theme.Fonts.sentenceLineHeightMultiple
+    private var fullSize = Theme.Fonts.sentenceSize
 
-    var body: some View {
-        lineThatFits
-            .frame(minHeight: fullLineHeight)
+    /// A full-size line's height, so a shrunk line keeps its slot and the
+    /// card below doesn't move (§3.1a).
+    private var fullLineHeight: CGFloat {
+        fullSize * Theme.Fonts.sentenceLineHeightMultiple
     }
 
-    private var lineThatFits: some View {
-        ViewThatFits(in: .horizontal) {
-            text
-                .fixedSize()
-
-            text
-                .font(Theme.Fonts.sentenceMinimum)
-                .fixedSize()
-                .hidden()
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .overlay(alignment: .leading) {
-                    text
-                        .lineLimit(1)
-                        .minimumScaleFactor(Theme.Fonts.sentenceMinimumScale)
-                }
-
-            text
-                .fixedSize(horizontal: false, vertical: true)
-        }
+    var body: some View {
+        text
+            .font(Theme.Fonts.sentence(fixedSize: fullSize * scale))
+            .fixedSize(horizontal: false, vertical: true)
+            .frame(minHeight: fullLineHeight)
     }
 }
 

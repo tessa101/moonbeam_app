@@ -126,6 +126,9 @@ Top to bottom. Replaces the prompt, the search-field button, `DateControl`'s row
   - A long city (e.g. "Rancho Santa Margarita, CA") first shrinks on its line (minimum scale ~0.8); only if it
     still doesn't fit does it wrap to a 4th line. Same for a long date ("on Mon, Jan 4, 2027").
   - At AX sizes each of the three lines may wrap (rules in §3.1 and §4 still apply), but the breaks stay.
+  - **One scale for all three lines** (Tessa, 2026-10-01, after the 5.3 screenshots): the lines shrink together,
+    to the smallest scale any line needs (never below 0.8), so line 1 never reads smaller than the others. A line
+    that wouldn't fit even at 0.8 wraps and doesn't set the scale; it's still drawn at the shared scale.
 - **Icons:** match the design's line icons, not SF Symbols `calendar` / `mappin`. Use the HTML's own SVGs as
   **custom symbols** (so they scale with Dynamic Type inside `Text` and take the amber tint): calendar = rounded
   rect (15 × 13.5, r 3) with a header rule and two rings; pin = outline teardrop with a filled centre dot;
@@ -133,15 +136,17 @@ Top to bottom. Replaces the prompt, the search-field button, `DateControl`'s row
   first `<h2>`).
 
 *As built (5.3, with §3.1a):* `MadlibSentence` + `Formatting/MadlibFormatter`. Each line is its own `Text`
-(one line at full size → one line scaled down to 0.8 → wrapped at full size) with a minimum height of one
-full-size line (27 × 1.5, scaled), so the card stays put. Tokens are text links routed by an `OpenURLAction`;
+with a minimum height of one full-size line (27 × 1.5, scaled), so the card stays put. *Shared scale (fix
+after 5.3):* each line's one-line width at full size is measured; `MadlibScale` picks the shared scale (2 pt
+of slack); the font is built at the exact size (`fixedSize:` on the `@ScaledMetric` size), because
+`Font.custom(_:size:relativeTo:)` rounds 26.6 back up to 27 and the line would wrap. Tokens are text links routed by an `OpenURLAction`;
 for VoiceOver the text is replaced by synthetic children (sentence as header, then a `Button` per token), so
 they read "button", in order. Region abbreviations are spelled out ("C A"). With no place, "tonight" is
 plain words (no 📅): there's no place's calendar to pick in, and §3.1's example has none. Icons are the
 `token.calendar` / `token.pin` symbolsets: the HTML strokes outlined (CoreGraphics), Regular-M only, sized to
 the HTML's px beside 27 pt text. The underline is the system's (SwiftUI can't set 1.5 pt / 7 pt offset).
-On a 402 pt iPhone 17, line 1 ("Where can I find the moon") is a little too wide at 27 pt, so it shrinks
-to ~95%. See DECISIONS.md 2026-10-01 "5.3 madlib sentence".
+On a 402 pt iPhone 17, line 1 ("Where can I find the moon") is a little too wide at 27 pt (358 pt in 354),
+so all three lines sit at ~98%. See DECISIONS.md 2026-10-01 "5.3 madlib sentence".
 
 ### 3.2 Moon card
 One card, three rows separated by 1 pt `stroke` hairlines. *As built (5.2):* one hairline, between the

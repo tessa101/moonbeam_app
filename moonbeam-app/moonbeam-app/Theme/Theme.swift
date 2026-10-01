@@ -101,14 +101,15 @@ nonisolated enum Theme {
         static let sentenceSize: CGFloat = 27
         static let sentence = Font.custom(FontName.youngSerif, size: sentenceSize, relativeTo: .title)
         static let sentenceLineHeightMultiple: CGFloat = 1.5
-        /// A long city or date shrinks this far on its line before it wraps
-        /// (§3.1a), and `sentenceMinimum` is the sentence at that scale.
+        /// The sentence's lines shrink together this far before one wraps
+        /// (§3.1a).
         static let sentenceMinimumScale: CGFloat = 0.8
-        static let sentenceMinimum = Font.custom(
-            FontName.youngSerif,
-            size: sentenceSize * sentenceMinimumScale,
-            relativeTo: .title
-        )
+        /// The sentence at an exact size: its three lines share one scale,
+        /// applied by the view to the Dynamic Type size of `sentenceSize`
+        /// (scaled relative to `.title`, like `sentence`).
+        static func sentence(fixedSize size: CGFloat) -> Font {
+            .custom(FontName.youngSerif, fixedSize: size)
+        }
 
         /// Onboarding hero ("Moon Signal").
         static let onboardingHero = Font.custom(FontName.youngSerif, size: 40, relativeTo: .largeTitle)
