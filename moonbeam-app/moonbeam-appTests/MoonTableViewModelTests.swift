@@ -117,7 +117,7 @@ struct MoonTableViewModelTests {
         let table = Self.makeTable(FakeMoonService(rise: event), day: try Self.farDay())
 
         #expect(table.rise.detail == .time("12:00\u{202F}AM", timeZone: nil, direction: "105° ESE"))
-        #expect(table.rise.accessibilityLabel == "Moonrise at 12:00\u{202F}AM, east-southeast")
+        #expect(table.rise.accessibilityLabel == "Moonrise at 12:00\u{202F}AM, east-southeast, 105 degrees")
     }
 
     @Test("Sydney on an LA device: the zone beside the time and in the spoken label")
@@ -130,7 +130,7 @@ struct MoonTableViewModelTests {
         let abbreviation = try #require(Self.sydneyZone.abbreviation(for: date))
 
         #expect(table.rise.detail == .time("11:13\u{202F}PM", timeZone: abbreviation, direction: "66° ENE"))
-        #expect(table.rise.accessibilityLabel == "Moonrise at 11:13\u{202F}PM Sydney time, \(abbreviation), east-northeast")
+        #expect(table.rise.accessibilityLabel == "Moonrise at 11:13\u{202F}PM Sydney time, \(abbreviation), east-northeast, 66 degrees")
     }
 
     // MARK: - Phase

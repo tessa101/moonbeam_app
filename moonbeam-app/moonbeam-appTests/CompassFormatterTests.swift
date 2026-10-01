@@ -129,4 +129,13 @@ nonisolated struct CompassFormatterTests {
     func spokenBearing() {
         #expect(formatter.spokenBearing(for: 72.0) == "72 degrees east-northeast")
     }
+
+    @Test("Spoken degrees alone round like the bearing", arguments: [
+        (57.65, "58 degrees"),
+        (359.6, "0 degrees"),
+        (105.0, "105 degrees"),
+    ])
+    func spokenDegrees(azimuth: Double, expected: String) {
+        #expect(formatter.spokenDegrees(for: azimuth) == expected)
+    }
 }

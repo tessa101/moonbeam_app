@@ -118,10 +118,10 @@ nonisolated struct MoonTableFormatter {
         return place.timeZone.abbreviation(for: date)
     }
 
-    /// "Moonrise at 5:18 PM, east-southeast", plus the zone when shown:
-    /// "Moonrise at 11:13 PM Sydney time, AEST, east-northeast" (the wording
-    /// of the old "Times shown in Sydney time, AEST" label). Directions are
-    /// spoken in full.
+    /// "Moonrise at 5:19 PM, east-southeast, 105 degrees", plus the zone when
+    /// shown: "Moonrise at 11:13 PM Sydney time, AEST, east-northeast, 56
+    /// degrees" (the wording of the old "Times shown in Sydney time, AEST"
+    /// label; §3.2). Directions are spoken in full, then the degrees.
     func accessibilityLabel(
         for event: Event,
         _ moonEvent: MoonEvent?,
@@ -133,7 +133,8 @@ nonisolated struct MoonTableFormatter {
         if let timeZoneAbbreviation {
             time += " \(place.shortName) time, \(timeZoneAbbreviation)"
         }
-        return "\(eventName(event)) at \(time), \(compass.spokenName(for: moonEvent.azimuth))"
+        let direction = "\(compass.spokenName(for: moonEvent.azimuth)), \(compass.spokenDegrees(for: moonEvent.azimuth))"
+        return "\(eventName(event)) at \(time), \(direction)"
     }
 
     // MARK: - Helpers

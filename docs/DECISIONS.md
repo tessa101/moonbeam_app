@@ -12,6 +12,9 @@
   truncated too, so this predates 5.2. The engine values and the ±2 min test tolerances are unchanged.
   A rise at 23:59:45 now reads "12:00 AM"; acceptable, as USNO does the same.
   `MoonTableSpike`'s console print still truncates; it isn't user-facing.
+- **Degrees in VoiceOver (Tessa):** rise/set labels end with the whole degrees after the direction:
+  "Moonrise at 9:10 PM, east-northeast, 58 degrees", as §3.2's example. Same rounding as the visible
+  "58° ENE" (`CompassFormatter.spokenDegrees`). Supersedes "not added" in "5.2 moon card" below.
 - **Considered:** rounding in `AstronomyEngineMoonService` (would change `MoonEvent` for the compass and
   tests; it's a display rule, so it lives in the formatter).
 
@@ -28,7 +31,8 @@
   grows ~22 pt for another zone. Open for Tessa: accept, or shrink/shorten something.
 - **VoiceOver wording:** the spike's labels kept as §3.2 says ("Moonrise at 5:18 PM, east-southeast"),
   plus the zone in the old label's words: "Moonrise at 11:13 PM Sydney time, GMT+10, east-northeast".
-  §3.2's example also has "56 degrees"; not added, since the rule says "unchanged".
+  §3.2's example also has "56 degrees"; not added, since the rule says "unchanged". *(Added in the
+  5.2 follow-ups, above.)*
 - **Spike UI removed:** `ContentView`, `SpikeMoonTableViewModel` and its tests are gone; the card's model is
   `Features/MoonTable/MoonTableViewModel` (text from `Formatting/MoonTableFormatter`). `MoonTableSpike`
   (console print at launch) stays; it isn't spike UI.

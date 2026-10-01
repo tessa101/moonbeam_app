@@ -61,6 +61,13 @@ nonisolated struct CompassFormatter {
         "\(Self.wholeDegrees(azimuth).formatted()) degrees \(spokenName(for: azimuth))"
     }
 
+    /// The whole degrees alone, spoken, for example `"58 degrees"`: the moon
+    /// card's labels put them after the direction ("east-northeast, 58
+    /// degrees"), rounded the same way as `bearing(for:)`.
+    func spokenDegrees(for azimuth: Double) -> String {
+        "\(Self.wholeDegrees(azimuth).formatted()) degrees"
+    }
+
     /// Rounded to a whole degree in `0..<360`, so 359.6° reads "0°", not
     /// "360°".
     private static func wholeDegrees(_ azimuth: Double) -> Int {

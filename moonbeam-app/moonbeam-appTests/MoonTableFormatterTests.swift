@@ -127,14 +127,14 @@ nonisolated struct MoonTableFormatterTests {
 
     // MARK: - Accessibility
 
-    @Test("Spoken label without a zone: time, then the direction in full")
+    @Test("Spoken label without a zone: time, then the direction in full and its degrees")
     func accessibilityWithoutZone() throws {
         let date = try Self.date(2026, 9, 23, hour: 17, minute: 18, in: Self.losAngelesZone)
         let event = MoonEvent(date: date, azimuth: 105)
 
         let label = formatter.accessibilityLabel(for: .rise, event, place: Self.losAngeles, timeZoneAbbreviation: nil)
 
-        #expect(label == "Moonrise at 5:18\u{202F}PM, east-southeast")
+        #expect(label == "Moonrise at 5:18\u{202F}PM, east-southeast, 105 degrees")
     }
 
     @Test("Spoken label with a zone: the place's time and its abbreviation")
@@ -144,7 +144,7 @@ nonisolated struct MoonTableFormatterTests {
 
         let label = formatter.accessibilityLabel(for: .set, event, place: Self.sydney, timeZoneAbbreviation: "AEST")
 
-        #expect(label == "Moonset at 11:13\u{202F}PM Sydney time, AEST, east-northeast")
+        #expect(label == "Moonset at 11:13\u{202F}PM Sydney time, AEST, east-northeast, 66 degrees")
     }
 
     @Test("Spoken label for a missing event")
