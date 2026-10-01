@@ -118,7 +118,16 @@ nonisolated enum Theme {
         static let onboardingTitle = Font.custom(FontName.youngSerif, size: 30, relativeTo: .title)
 
         /// Moonrise/moonset times, the heading readout and the lock pill.
-        static let display = Font.custom(FontName.youngSerif, size: 24, relativeTo: .title2)
+        static let displaySize: CGFloat = 24
+        static let display = Font.custom(FontName.youngSerif, size: displaySize, relativeTo: .title2)
+        /// A time's day period ("PM"), smaller than its digits but in the
+        /// same face and text style, so the two scale together.
+        static let dayPeriodScale: CGFloat = 0.6
+        static let dayPeriod = Font.custom(
+            FontName.youngSerif,
+            size: displaySize * dayPeriodScale,
+            relativeTo: .title2
+        )
 
         /// The phase name.
         static let phaseName = Font.custom(FontName.nunitoSansSemiBold, size: 17, relativeTo: .headline)

@@ -99,8 +99,16 @@ nonisolated struct MoonTableFormatter {
     /// USNO and the design brief round, so it reads "9:10". Half a minute
     /// rounds up (17:18:30 → "5:19", as USNO gives for the §5 reference row).
     func time(_ date: Date, in timeZone: TimeZone) -> String {
-        Self.roundedToMinute(date)
-            .formatted(Date.FormatStyle(locale: locale, timeZone: timeZone).hour().minute())
+        timeText(date, in: timeZone).string
+    }
+
+    /// `time(_:in:)` split into runs, with the day period marked by the
+    /// formatter itself (the `.amPM` date field), so the card can set it
+    /// smaller wherever the locale puts it: after the digits ("9:10 PM"),
+    /// before them ("오후 9:10"), or nowhere ("21:10").
+    func timeText(_ date: Date, in timeZone: TimeZone) -> TimeText {
+        let style = Date.FormatStyle(locale: locale, timeZone: timeZone).hour().minute()
+        return TimeText(style.attributed.format(Self.roundedToMinute(date)))
     }
 
     /// "58° ENE", the compass's own formatting so one azimuth never reads two

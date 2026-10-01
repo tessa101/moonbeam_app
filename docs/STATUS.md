@@ -163,6 +163,10 @@ _Last updated: 2026-10-01 (Step 5.3 madlib sentence built, with §3.1a; 5.2 foll
      At the default size only, the three lines shrink together (minimum 0.7×) before any wraps; other sizes
      don't shrink and wrap. 401 tests / 613 cases. Screenshots: `.agent-reports/5.3-sentence-breaks/`.
      **Check on device:** Irvine, Rancho Santa Margarita and a 2027 date at default and AX3.
+   - [x] **5.2 follow-up, smaller AM/PM (2026-10-01):** the day period is Young Serif at 60% of the time, same
+     colour, on the baseline, found by the `.amPM` date field (works where it comes first or isn't used).
+     At AX3 it wraps under the digits. One deprecation warning, on purpose (DECISIONS.md). 404 tests / 619 cases.
+     Screenshots: `.agent-reports/5.2-ampm/`.
    - [x] **5.4 follow-up, live Moon marker (2026-10-01):** the Moon is a ~20 pt phase glyph (the card's), not a
      dot; locked like the others; VoiceOver "Moon now, west, 275 degrees". 403 tests / 615 cases. Screenshots:
      `.agent-reports/5.4-moon-marker/`. **Check on device:** with the moon up, the marker reads as the moon,

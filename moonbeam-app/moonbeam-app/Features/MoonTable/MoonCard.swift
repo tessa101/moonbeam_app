@@ -188,10 +188,14 @@ struct MoonCard: View {
     /// "11:13 PM AEST", baseline-aligned; the zone wraps under the time when
     /// the two don't fit side by side (§3.2).
     @ViewBuilder
-    private func timeView(_ time: String, timeZone: String?) -> some View {
-        let timeText = Text(time)
+    private func timeView(_ time: TimeText, timeZone: String?) -> some View {
+        // The display font as the base too, so the line is measured for
+        // Young Serif 24, not the body font, and it wraps instead of being
+        // cut short at AX sizes.
+        let timeText = Self.text(for: time)
             .font(Theme.Fonts.display)
             .foregroundStyle(Theme.Colors.textPrimary)
+            .fixedSize(horizontal: false, vertical: true)
 
         if let timeZone {
             let zoneText = Text(timeZone)
@@ -209,6 +213,27 @@ struct MoonCard: View {
             }
         } else {
             timeText
+        }
+    }
+}
+
+// MARK: - Time
+
+private extension MoonCard {
+
+    /// The formatter's space before the day period ("9:10\u{202F}PM").
+    static let narrowNoBreakSpace = "\u{202F}"
+
+    /// One `Text`, so the digits and the smaller day period share a
+    /// baseline. The formatter's no-break space becomes an ordinary one, so
+    /// a time too wide for its column (AX sizes) puts the day period on the
+    /// next line instead of breaking inside it ("8:53 A / M").
+    static func text(for time: TimeText) -> Text {
+        time.runs.reduce(Text(verbatim: "")) { text, run in
+            let words = run.text.replacingOccurrences(of: narrowNoBreakSpace, with: " ")
+            let piece = Text(verbatim: words)
+                .font(run.isDayPeriod ? Theme.Fonts.dayPeriod : Theme.Fonts.display)
+            return Text("\(text)\(piece)")
         }
     }
 }

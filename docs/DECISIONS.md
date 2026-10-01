@@ -5,6 +5,23 @@
 
 ---
 
+### 2026-10-01 · Rise/set times: smaller day period, found by its date field (Tessa)
+- **Look:** "PM" in Young Serif at 60% of the time's 24 pt (`Theme.Fonts.dayPeriod`, relative to `.title2` like
+  the digits, so both scale together), same `textPrimary`, baseline-aligned in one `Text`. Digits and the zone
+  abbreviation unchanged.
+- **How it's found:** `Date.FormatStyle`'s attributed output marks the day period as the `.amPM` date field;
+  `TimeText` splits on that, never on the string "AM"/"PM". Checked: en_US "9:10 PM", ar_EG "٧:١٣ ص" (last),
+  ko_KR "오후 9:10" (first), en_GB / de_DE / ja_JP / zh_CN 24-hour (no day period, nothing shrinks).
+- **Deprecated API, on purpose:** `Date.FormatStyle.attributed` warns ("deprecated in iOS 18: use
+  `attributedStyle`"). Its replacement tags runs with `DateFormatFieldAttribute`, which has no reachable key from
+  Swift here: no `dateFormatField` dynamic member, and subscripting by the attribute type crashes the Swift 6.4
+  compiler. So `attributed` stays, the build has this one warning, and switching is a one-line change once the
+  key is usable.
+- **Wrapping:** the card draws the formatter's narrow no-break space as an ordinary space and gives the
+  concatenated `Text` the display font as its base. Without both, at AX sizes the time was truncated ("10:06…")
+  or broke inside "AM". The plain `time(_:in:)` string (VoiceOver, tests) keeps the formatter's spacing.
+- **Considered:** matching "AM"/"PM" text (fails in ko, ar); `Text(date, format:)` (no per-field styling).
+
 ### 2026-10-01 · §11 Q4 revised: the live Moon marker is a mini phase glyph (Tessa)
 - **Why:** on device, the plain 18 pt Moon dot read as a second moonrise target (same colour and shape as the
   rise/set dots, just bigger).

@@ -116,7 +116,7 @@ struct MoonTableViewModelTests {
         let event = MoonEvent(date: try Self.farDay(), azimuth: 105)
         let table = Self.makeTable(FakeMoonService(rise: event), day: try Self.farDay())
 
-        #expect(table.rise.detail == .time("12:00\u{202F}AM", timeZone: nil, direction: "105° ESE"))
+        #expect(table.rise.detail == .time(Self.time("12:00\u{202F}", "AM"), timeZone: nil, direction: "105° ESE"))
         #expect(table.rise.accessibilityLabel == "Moonrise at 12:00\u{202F}AM, east-southeast, 105 degrees")
     }
 
@@ -129,7 +129,7 @@ struct MoonTableViewModelTests {
         let table = Self.makeTable(FakeMoonService(rise: event), place: Self.sydney, day: date)
         let abbreviation = try #require(Self.sydneyZone.abbreviation(for: date))
 
-        #expect(table.rise.detail == .time("11:13\u{202F}PM", timeZone: abbreviation, direction: "66° ENE"))
+        #expect(table.rise.detail == .time(Self.time("11:13\u{202F}", "PM"), timeZone: abbreviation, direction: "66° ENE"))
         #expect(table.rise.accessibilityLabel == "Moonrise at 11:13\u{202F}PM Sydney time, \(abbreviation), east-northeast, 66 degrees")
     }
 
@@ -152,5 +152,14 @@ struct MoonTableViewModelTests {
     private static func direction(of column: MoonTableViewModel.Column) -> String? {
         guard case let .time(_, _, direction) = column.detail else { return nil }
         return direction
+    }
+
+    /// A 12-hour `en_US` time: the digits (with their narrow space), then
+    /// the day period as its own run.
+    private static func time(_ digits: String, _ dayPeriod: String) -> TimeText {
+        TimeText(runs: [
+            TimeText.Run(text: digits, isDayPeriod: false),
+            TimeText.Run(text: dayPeriod, isDayPeriod: true),
+        ])
     }
 }

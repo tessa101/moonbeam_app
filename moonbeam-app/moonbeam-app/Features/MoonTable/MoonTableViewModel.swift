@@ -22,9 +22,10 @@ final class MoonTableViewModel {
 
         /// What sits under the column label.
         enum Detail: Equatable {
-            /// "9:10 PM", the place's zone abbreviation when it differs from
-            /// the phone's ("AEST"), and "58° ENE".
-            case time(String, timeZone: String?, direction: String)
+            /// "9:10 PM" (its day period marked, to be set smaller), the
+            /// place's zone abbreviation when it differs from the phone's
+            /// ("AEST"), and "58° ENE".
+            case time(TimeText, timeZone: String?, direction: String)
             /// "No moonrise today".
             case missing(String)
         }
@@ -102,7 +103,7 @@ final class MoonTableViewModel {
         }
         let detail: Column.Detail = if let moonEvent {
             .time(
-                formatter.time(moonEvent.date, in: place.timeZone),
+                formatter.timeText(moonEvent.date, in: place.timeZone),
                 timeZone: abbreviation,
                 direction: formatter.direction(for: moonEvent.azimuth)
             )

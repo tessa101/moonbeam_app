@@ -160,7 +160,11 @@ sets the scale (~0.77). Off `.large`, tokens use ordinary spaces so they can wra
 ### 3.2 Moon card
 One card, three rows separated by 1 pt `stroke` hairlines. *As built (5.2):* one hairline, between the
 phase and rise/set rows, as the HTML draws it; the zone wraps under the time at default size on a
-393 pt phone. See DECISIONS.md 2026-09-30 "5.2 moon card".
+393 pt phone. See DECISIONS.md 2026-09-30 "5.2 moon card". *Follow-up (2026-10-01, Tessa):* the day period
+("PM") is Young Serif at 60% of the time's size (`Theme.Fonts.dayPeriod`, 14.4 pt relative to `.title2`), same
+colour, on the digits' baseline. It's found by the formatter's `.amPM` date field (`TimeText`), so it works
+where it comes first (ko "오후 9:10") or isn't used (en_GB "21:10"). The narrower time now lets "GMT+10" sit
+beside it at default size for most times. At AX sizes the day period wraps under the digits.
 
 1. **Header row:** date label left ("Today · Wed, Sep 30" on today, "Sat, Oct 3" otherwise),
    `textSecondary` footnote 600; **‹ ›** right. Behavior as DATE.md (day stepping, ±366, VoiceOver

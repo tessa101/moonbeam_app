@@ -688,8 +688,8 @@ struct LocationViewModelTests {
             Issue.record("Expected a moonrise time")
             return
         }
-        #expect(time == formatter.time(rise.date, in: Self.sydneyZone))
-        #expect(time != formatter.time(rise.date, in: Self.losAngelesZone))
+        #expect(time.string == formatter.time(rise.date, in: Self.sydneyZone))
+        #expect(time.string != formatter.time(rise.date, in: Self.losAngelesZone))
 
         let abbreviation = try #require(Self.sydneyZone.abbreviation(for: rise.date))
         #expect(timeZone == abbreviation)

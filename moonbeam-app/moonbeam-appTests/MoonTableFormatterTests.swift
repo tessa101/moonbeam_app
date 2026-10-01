@@ -91,6 +91,27 @@ nonisolated struct MoonTableFormatterTests {
         #expect(formatter.time(date, in: Self.losAngelesZone) == "6:13\u{202F}AM")
     }
 
+    // MARK: - Day period runs
+
+    /// The day period is found by its `.amPM` field, not by matching "AM":
+    /// it can come last, first, or not at all.
+    @Test("The day period is its own run, wherever the locale puts it", arguments: [
+        ("en_US", ["9:10\u{202F}", "PM"], [false, true]),
+        ("ko_KR", ["오후", " 9:10"], [true, false]),
+        ("en_GB", ["21:10"], [false]),
+        ("de_DE", ["21:10"], [false]),
+    ])
+    func dayPeriodRuns(locale: String, texts: [String], dayPeriods: [Bool]) throws {
+        let formatter = MoonTableFormatter(locale: Locale(identifier: locale))
+        let date = try Self.date(2026, 9, 30, hour: 21, minute: 10, in: Self.losAngelesZone)
+
+        let time = formatter.timeText(date, in: Self.losAngelesZone)
+
+        #expect(time.runs.map(\.text) == texts)
+        #expect(time.runs.map(\.isDayPeriod) == dayPeriods)
+        #expect(time.string == formatter.time(date, in: Self.losAngelesZone))
+    }
+
     /// The engine's LA times for Sep 30 and Oct 3, 2026 (21:09:52, 14:26:33),
     /// which USNO and the brief give as 9:10 and 2:27. Truncating the seconds
     /// showed 9:09 and 2:26 (5.2 follow-up).
