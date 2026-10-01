@@ -75,6 +75,9 @@ _Started: 2026-09-26_
 - [ ] Dark mode (people use this app at night)
 - [ ] **Date row + calendar sheet (Step 3, deferred from device QA):** the date field reads "Date, Today, Saturday, …" and VoiceOver swipe up/down moves a day; ‹ / › announce the new date and read "dimmed" at ±366; the sheet's Today button reads "dimmed" on today; at accessibility text sizes the row stays usable and the sheet opens at large
 
+## Motion and feedback (noted 2026-10-01, Tessa)
+- [ ] **Tap animation on buttons:** a pressed-state animation (e.g. a slight scale/opacity dip) for the primary, secondary and text-link buttons, the ‹ › day buttons and the sentence tokens. Put it in the shared button styles (`PrimaryButtonStyle`, `SecondaryButtonStyle`, `TextLinkButtonStyle`) so every button picks it up; respect Reduce Motion. After the TestFlight build with 5.7
+
 ## Brand / product
 - [ ] Display name: **"Moon Signal"** for now (was "Moonbeam"; DECISIONS.md 2026-09-28). Lives in `AppInfo.name`; confirm final name with design partner
 - [ ] Primary persona (confirm with design partner)

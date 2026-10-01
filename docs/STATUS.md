@@ -3,7 +3,7 @@
 > A living note on where things stand. Update it at the end of each work session
 > so the next session (you, or Claude) can pick up cold.
 
-_Last updated: 2026-10-01 (Step 5.7 onboarding built ahead of 5.5/5.6; Step 5.3 madlib sentence built, with §3.1a; 5.2 follow-ups; Step 5.2 moon card built; 5.1 theme; Design 1.1 settled: DESIGN-1.1.md, Step 5; 4.14, Step 2.2 and 4.15 built; device checks pending)_
+_Last updated: 2026-10-01 (TestFlight build 3 prepared; Step 5.7 onboarding built ahead of 5.5/5.6; Step 5.3 madlib sentence built, with §3.1a; 5.2 follow-ups; Step 5.2 moon card built; 5.1 theme; Design 1.1 settled: DESIGN-1.1.md, Step 5; 4.14, Step 2.2 and 4.15 built; device checks pending)_
 
 ## Where things live
 - **Local repo:** `~/app-ideas/moonbeam` (the one true folder)
@@ -321,6 +321,30 @@ _Last updated: 2026-10-01 (Step 5.7 onboarding built ahead of 5.5/5.6; Step 5.3 
         the simulator by forcing it. Both paths checked in light and dark: the clock stays readable.
         **Check on device:** scroll the main screen to the compass; the clock stays readable over the
         moon table and date control, in light and dark mode
+
+8. [ ] **TestFlight build 3 (1.0 (3), prepared 2026-10-01).** Everything since build 2 (`55b64b3`): Design 1.1
+   5.1–5.4 and 5.7 (theme, moon card, madlib sentence, compass restyle, onboarding), the 5.2/5.4 follow-ups and
+   Step 2.2 fix 4. 5.5 (AX reflow) and 5.6 (pinned compass bar) are **not** in it. Release build checked: CFBundleVersion
+   3, the four fonts + OFL texts and `PrivacyInfo.xcprivacy` in the bundle, `-resetOnboarding` compiled out,
+   `ITSAppUsesNonExemptEncryption` false. 427 tests / 648 cases pass. **Archive and upload are Tessa's** (not done by the agent).
+   **What testers should check:**
+   - **Onboarding needs a fresh install.** An update from build 2 has a saved place or a location answer, so it goes
+     straight to the main screen (by design). Delete the app, then install build 3:
+     - Landing → Get started → upsell; no location prompt until **Use my location** is tapped
+     - **Allow** (and, on a second reinstall, **Allow Once**) → main screen with your city
+     - **Don't Allow** → "That’s okay" → **Got it** → "Where will the moon be tonight in 📍 a city?" with Use my location
+     - **Don't Allow** → **Enable location** → turn location on in Settings → back in the app lands on the main screen
+       with your city
+     - **Search for a city instead** → search sheet, no prompt; Cancel → "a city"; force-quit and relaunch → no onboarding
+   - **Upgrade from build 2** (don't delete): opens on the main screen with the last city; no onboarding
+   - **Main screen look (Design 1.1):** dark theme and fonts; the sentence's 📅 / 📍 tokens open the calendar and the
+     search; the moon card's ‹ ›, phase glyph, rise/set with "PM" smaller; the zone abbreviation for a far city
+   - **Compass:** the new dial; marks move smoothly as you turn; lock pill + one haptic; the live Moon marker reads as
+     the moon, not a second moonrise; low-accuracy and Nearby notes
+   - **Text size:** onboarding at the largest size scrolls and every button can be reached (the main screen's AX
+     layout is 5.5, not in this build)
+   - **VoiceOver:** onboarding titles read as headings; the sentence then "Date, …" / "Place, …" buttons
+   - Known, not fixed: onboarding text scrolls under the clock at large sizes; "That’s okay" copy is placeholder
 
 Design-pass items (visuals, copy, a11y) are tracked in **[DESIGN-REVIEW.md](DESIGN-REVIEW.md)**.
 

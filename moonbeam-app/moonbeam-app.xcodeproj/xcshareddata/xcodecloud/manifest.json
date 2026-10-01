@@ -1,0 +1,9 @@
+{
+  "id" : "e97fc341-549f-4b89-8744-783d0ecc867f",
+  "targets" : [
+    {
+      "id" : "3edbbdb0-1e70-42f4-905a-ce9995cf57b5",
+      "name" : "moonbeam-app"
+    }
+  ]
+}
