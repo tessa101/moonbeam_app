@@ -114,6 +114,35 @@ Top to bottom. Replaces the prompt, the search-field button, `DateControl`'s row
   shows as a secondary button under the sentence; this is the one main-screen spot it stays (4.11).
   VoiceOver: "Place, choose a city, button".
 
+### 3.1a Amendments (Tessa, 2026-10-01, after 5.3 device check)
+- **Copy:** the sentence becomes **"Where can I find the moon [date] in [place]?"** ("Where can I find the moon
+  tonight in Los Angeles, CA?", "…on Sat, Oct 3 in…"). VoiceOver label to match. *Recorded alternative, not
+  chosen (too long):* "Where will the moon rise and set [on date] in [place]?"
+- **Always three lines,** with explicit breaks, so the card never jumps when the date or city changes length:
+  1. "Where can I find the moon"
+  2. 📅 [date] in
+  3. 📍 [place]?
+  - The block reserves three lines' height at every size up to AX; a short city doesn't pull the card up.
+  - A long city (e.g. "Rancho Santa Margarita, CA") first shrinks on its line (minimum scale ~0.8); only if it
+    still doesn't fit does it wrap to a 4th line. Same for a long date ("on Mon, Jan 4, 2027").
+  - At AX sizes each of the three lines may wrap (rules in §3.1 and §4 still apply), but the breaks stay.
+- **Icons:** match the design's line icons, not SF Symbols `calendar` / `mappin`. Use the HTML's own SVGs as
+  **custom symbols** (so they scale with Dynamic Type inside `Text` and take the amber tint): calendar = rounded
+  rect (15 × 13.5, r 3) with a header rule and two rings; pin = outline teardrop with a filled centre dot;
+  stroke 1.7 on a 17 pt grid. Paths are in `design/1.1/Moon Signal Madlib 1.0.dc.html` (the two `<svg>` in the
+  first `<h2>`).
+
+*As built (5.3, with §3.1a):* `MadlibSentence` + `Formatting/MadlibFormatter`. Each line is its own `Text`
+(one line at full size → one line scaled down to 0.8 → wrapped at full size) with a minimum height of one
+full-size line (27 × 1.5, scaled), so the card stays put. Tokens are text links routed by an `OpenURLAction`;
+for VoiceOver the text is replaced by synthetic children (sentence as header, then a `Button` per token), so
+they read "button", in order. Region abbreviations are spelled out ("C A"). With no place, "tonight" is
+plain words (no 📅): there's no place's calendar to pick in, and §3.1's example has none. Icons are the
+`token.calendar` / `token.pin` symbolsets: the HTML strokes outlined (CoreGraphics), Regular-M only, sized to
+the HTML's px beside 27 pt text. The underline is the system's (SwiftUI can't set 1.5 pt / 7 pt offset).
+On a 402 pt iPhone 17, line 1 ("Where can I find the moon") is a little too wide at 27 pt, so it shrinks
+to ~95%. See DECISIONS.md 2026-10-01 "5.3 madlib sentence".
+
 ### 3.2 Moon card
 One card, three rows separated by 1 pt `stroke` hairlines. *As built (5.2):* one hairline, between the
 phase and rise/set rows, as the HTML draws it; the zone wraps under the time at default size on a

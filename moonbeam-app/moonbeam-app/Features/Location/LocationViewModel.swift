@@ -109,6 +109,7 @@ final class LocationViewModel {
     private let deviceTimeZone: TimeZone
     private let now: () -> Date
     private let dayLabelFormatter = DayLabelFormatter()
+    private let madlibFormatter = MadlibFormatter()
 
     // MARK: - Bookkeeping
 
@@ -187,18 +188,41 @@ final class LocationViewModel {
         place == nil && showsUseMyLocation
     }
 
-    /// §3: while a launch fetch runs, the last-viewed name stands in so the
-    /// screen isn't blank.
-    var searchPrompt: String {
-        if isLocating, place == nil, let lastViewed { return lastViewed.nameWithRegion }
-        return Self.searchPlaceholder
+    /// The madlib sentence, the screen's header (DESIGN-1.1.md §3.1): "Where
+    /// will the moon be 📅 tonight in 📍 Los Angeles, CA?". The place token
+    /// is "City, ST" (4.13), or "a city" with no place yet. §3: while a
+    /// launch fetch runs, the last-viewed name stands in so it isn't blank.
+    ///
+    /// - Parameter allowsBreaksInsideTokens: true at AX sizes, where a token
+    ///   may wrap between its words (§3.1).
+    func madlibSentence(allowsBreaksInsideTokens: Bool) -> MadlibFormatter.Sentence {
+        let standIn = isLocating ? lastViewed : nil
+        guard let place else {
+            return madlibFormatter.sentence(
+                place: nil,
+                standIn: standIn,
+                day: now(),
+                dayOffset: 0,
+                today: now(),
+                allowsBreaksInsideTokens: allowsBreaksInsideTokens
+            )
+        }
+        return madlibFormatter.sentence(
+            place: place,
+            day: selectedStartOfDay(for: place),
+            dayOffset: selectedDayOffset(for: place),
+            today: now(),
+            allowsBreaksInsideTokens: allowsBreaksInsideTokens
+        )
     }
 
-    /// What the main-screen search button shows: the current city as
-    /// "City, ST" (4.13), or the prompt when there isn't one yet
-    /// (SEARCH-RECENTS.md §1).
-    var searchFieldTitle: String {
-        place?.nameWithRegion ?? searchPrompt
+    /// A tap on a madlib token: the date opens the calendar, the place opens
+    /// the search sheet (§3.1, SEARCH-RECENTS.md §1).
+    func open(_ token: MadlibFormatter.Token.Kind) {
+        switch token {
+        case .date: presentCalendar()
+        case .place: presentSearch()
+        }
     }
 
     // MARK: - Launch (§3)
@@ -376,9 +400,9 @@ final class LocationViewModel {
 
     // MARK: - Day selection (DATE.md)
 
-    /// The date control's label: "Sun, Sep 27", with the year only when it
-    /// differs from the place's today. Empty with no place; the control is
-    /// hidden then.
+    /// The selected day: "Sun, Sep 27", with the year only when it differs
+    /// from the place's today. The card's header builds on it. Empty with no
+    /// place; the card is hidden then.
     var dateLabel: String {
         guard let place else { return "" }
         return dayLabelFormatter.label(
@@ -400,7 +424,7 @@ final class LocationViewModel {
         )
     }
 
-    /// The date field's accessibility value: "Tomorrow, Sunday, September
+    /// The card header's accessibility value: "Tomorrow, Sunday, September
     /// 27, 2026". It's a value, not the label, so VoiceOver reads the new date
     /// after each adjustable swipe (DATE.md §5).
     var dateAccessibilityValue: String {

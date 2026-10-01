@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<!-- Moon Signal token icon "calendar", outlined from the 1.7-stroke SVG in design/1.1/Moon Signal Madlib 1.0.dc.html (DESIGN-1.1.md §3.1a). Regular-M only. -->
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="3300" height="2200">
+ <g id="Notes">
+  <rect height="2200" id="artboard" style="fill:white;opacity:1" width="3300" x="0" y="0"/>
+  <text style="stroke:none;fill:black;font-family:sans-serif;font-size:13;font-weight:bold;" transform="matrix(1 0 0 1 263 322)">Weight/Scale Variations</text>
+  <text id="template-version" style="stroke:none;fill:black;font-family:sans-serif;font-size:13;" transform="matrix(1 0 0 1 3036 1933)" text-anchor="end">Template v.3.0</text>
+ </g>
+ <g id="Guides">
+  <line id="Baseline-S" style="fill:none;stroke:#27AAE1;opacity:1;stroke-width:0.5;" x1="263" x2="3036" y1="696" y2="696"/>
+  <line id="Capline-S" style="fill:none;stroke:#27AAE1;opacity:1;stroke-width:0.5;" x1="263" x2="3036" y1="625.541" y2="625.541"/>
+  <line id="Baseline-M" style="fill:none;stroke:#27AAE1;opacity:1;stroke-width:0.5;" x1="263" x2="3036" y1="1126" y2="1126"/>
+  <line id="Capline-M" style="fill:none;stroke:#27AAE1;opacity:1;stroke-width:0.5;" x1="263" x2="3036" y1="1055.54" y2="1055.54"/>
+  <line id="Baseline-L" style="fill:none;stroke:#27AAE1;opacity:1;stroke-width:0.5;" x1="263" x2="3036" y1="1556" y2="1556"/>
+  <line id="Capline-L" style="fill:none;stroke:#27AAE1;opacity:1;stroke-width:0.5;" x1="263" x2="3036" y1="1485.54" y2="1485.54"/>
+  <line id="left-margin-Regular-M" style="fill:none;stroke:#00AEEF;stroke-width:0.5;opacity:1.0;" x1="1400.000" x2="1400.000" y1="1030.79" y2="1150.12"/>
+  <line id="right-margin-Regular-M" style="fill:none;stroke:#00AEEF;stroke-width:0.5;opacity:1.0;" x1="1465.490" x2="1465.490" y1="1030.79" y2="1150.12"/>
+ </g>
+ <g id="Symbols">
+  <g id="Regular-M" transform="matrix(1 0 0 1 1400.000 1126)">
+   <path d="M22.353 -63.367L43.137 -63.367L43.137 -66.700L49.804 -66.700L49.804 -63.367L50.392 -63.367C58.731 -63.367 65.490 -56.607 65.490 -48.269L65.490 -18.857C65.490 -10.519 58.731 -3.759 50.392 -3.759L15.098 -3.759C6.760 -3.759 0.000 -10.519 0.000 -18.857L0.000 -48.269C0.000 -56.607 6.760 -63.367 15.098 -63.367L15.686 -63.367L15.686 -66.700L22.353 -66.700ZM6.667 -39.053L6.667 -18.857C6.667 -14.200 10.442 -10.426 15.098 -10.426L50.392 -10.426C55.049 -10.426 58.824 -14.200 58.824 -18.857L58.824 -39.053ZM49.804 -56.700L49.804 -53.367L43.137 -53.367L43.137 -56.700L22.353 -56.700L22.353 -53.367L15.686 -53.367L15.686 -56.700L15.098 -56.700C10.442 -56.700 6.667 -52.925 6.667 -48.269L6.667 -45.720L58.824 -45.720L58.824 -48.269C58.824 -52.925 55.049 -56.700 50.392 -56.700Z"/>
+  </g>
+ </g>
+</svg>

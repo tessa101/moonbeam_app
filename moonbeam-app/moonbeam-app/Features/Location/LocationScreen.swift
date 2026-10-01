@@ -7,9 +7,10 @@ import SwiftUI
 
 /// Picks the place, then shows its moon table (LOCATION.md §3).
 ///
-/// Functional and deliberately unstyled: the visual design is a later,
-/// design-led pass. All decisions live in `LocationViewModel`, including
-/// which sheet opens after another has finished closing.
+/// Being restyled to Design 1.1 step by step (DESIGN-1.1.md §7): the madlib
+/// sentence and moon card are done; the compass follows in 5.4. All
+/// decisions live in `LocationViewModel`, including which sheet opens after
+/// another has finished closing.
 struct LocationScreen: View {
 
     @Bindable var viewModel: LocationViewModel
@@ -18,50 +19,49 @@ struct LocationScreen: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 12) {
-                Text("Where are you watching the moon tonight?")
-                    .font(.headline)
-                    .accessibilityAddTraits(.isHeader)
-
-                searchButton
+            VStack(alignment: .leading, spacing: 0) {
+                // DESIGN-1.1.md §3.1: the sentence is the header; its tokens
+                // open the calendar and the search sheet.
+                MadlibSentence(viewModel: viewModel)
 
                 // Location controls and their status stay together, under
-                // the search field that they're the alternative to. The
-                // button is first-launch only (4.11); after that it's the
-                // search sheet's row.
-                if viewModel.showsUseMyLocationButton {
-                    Button("Use my location") {
-                        Task { await viewModel.useMyLocation() }
+                // the sentence whose place token they're the alternative to.
+                // The button is the no-place state only (4.11, §11 Q2);
+                // after that it's the search sheet's row.
+                VStack(alignment: .leading, spacing: Theme.Metrics.sentenceToCard) {
+                    if viewModel.showsUseMyLocationButton {
+                        Button("Use my location") {
+                            Task { await viewModel.useMyLocation() }
+                        }
+                        .buttonStyle(.secondary)
+                    }
+
+                    if viewModel.isLocating {
+                        ProgressView("Finding your location…")
+                    }
+
+                    if viewModel.locationFailed {
+                        Text("Couldn't find your location. Try again, or search for a city.")
+                    }
+
+                    // §3.2. The place's zone sits beside each time.
+                    if let moonTable = viewModel.moonTable {
+                        MoonCard(viewModel: viewModel, table: moonTable)
                     }
                 }
-
-                if viewModel.isLocating {
-                    ProgressView("Finding your location…")
-                }
-
-                if viewModel.locationFailed {
-                    Text("Couldn't find your location. Try again, or search for a city.")
-                }
-
-                // Opens the calendar until 5.3's date token replaces it.
-                if viewModel.place != nil {
-                    DateControl(viewModel: viewModel)
-                }
-
-                // DESIGN-1.1.md §3.2. The place's zone now sits beside each
-                // time, replacing the separate "Sydney · AEST" line.
-                if let moonTable = viewModel.moonTable {
-                    MoonCard(viewModel: viewModel, table: moonTable)
-                }
+                .padding(.top, Theme.Metrics.sentenceToCard)
 
                 // COMPASS.md §1: at the bottom, below the moon card. DEBUG
                 // builds keep it in every state for its diagnostic readout;
                 // the sensors still only run when it's shown.
                 if viewModel.compass.visibility != .hidden || Self.showsDebugReadout {
                     compass
+                        .padding(.top, Theme.Metrics.cardToCompass)
                 }
             }
-            .padding()
+            .padding(.horizontal, Theme.Metrics.screenMargin)
+            .padding(.top, Theme.Metrics.contentTopSpacing)
+            .padding(.bottom, Theme.Metrics.screenMargin)
         }
         // 4.15: content mustn't slide under the clock unreadably. The
         // system's soft edge effect, as in system apps; styling is the
@@ -101,27 +101,6 @@ struct LocationScreen: View {
         .sheet(isPresented: $viewModel.isCalendarPresented) {
             CalendarSheet(viewModel: viewModel)
         }
-    }
-
-    // MARK: - Search button
-
-    /// Looks like a field but only opens the sheet; typing happens there
-    /// (SEARCH-RECENTS.md §1).
-    private var searchButton: some View {
-        Button(action: viewModel.presentSearch) {
-            HStack {
-                Image(systemName: "magnifyingglass")
-                    .accessibilityHidden(true)
-                Text(viewModel.searchFieldTitle)
-                    .foregroundStyle(viewModel.place == nil ? .secondary : .primary)
-                Spacer(minLength: 0)
-            }
-            .padding(8)
-            .background(.quaternary, in: RoundedRectangle(cornerRadius: 8))
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel(LocationViewModel.searchPlaceholder)
-        .accessibilityValue(viewModel.place?.nameWithRegion ?? "")
     }
 
     // MARK: - Compass

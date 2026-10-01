@@ -1,0 +1,234 @@
+//
+//  MadlibFormatter.swift
+//  moonbeam-app
+//
+
+import Accessibility
+import Foundation
+
+/// Builds the main screen's madlib sentence (DESIGN-1.1.md §3.1, §3.1a):
+/// "Where can I find the moon / 📅 tonight in / 📍 Los Angeles, CA?", as
+/// three lines of plain words and two tokens, plus what VoiceOver says for
+/// each.
+///
+/// The date token reads "tonight" on the place's today and "on Sat, Oct 3"
+/// otherwise, with the year only in another year (DATE.md's rule, through
+/// `DayLabelFormatter`). With no place yet the place token reads "a city"
+/// and the date is plain words: there's no place's calendar to pick a day
+/// in, and the design draws no 📅 there (§11 Q2).
+///
+/// `nonisolated` because it's a pure mapping over its inputs.
+nonisolated struct MadlibFormatter {
+
+    // MARK: - Types
+
+    /// One run of the sentence.
+    enum Part: Equatable {
+        /// Plain words in `textPrimary`.
+        case words(String)
+        /// An amber, underlined, tappable token.
+        case token(Token)
+    }
+
+    /// A tappable token: what it opens, its icon and text, and its spoken
+    /// button label.
+    struct Token: Equatable {
+
+        enum Kind: Equatable {
+            /// Opens the calendar sheet.
+            case date
+            /// Opens the search sheet.
+            case place
+        }
+
+        let kind: Kind
+        /// The custom symbol drawn before the first word (asset catalog,
+        /// from the HTML's SVGs; §3.1a).
+        let symbol: String
+        /// The token's words. Spaces inside are non-breaking unless breaks
+        /// are allowed (AX sizes, §3.1).
+        let text: String
+        /// "Date, tonight" / "Place, Los Angeles, CA". An attributed string
+        /// so a region abbreviation is spelled out ("C A").
+        let accessibilityLabel: AttributedString
+    }
+
+    /// The whole sentence.
+    struct Sentence: Equatable {
+        /// Always three lines, broken explicitly (§3.1a): the lead, the date
+        /// + "in", the place + "?". A line may still wrap if it can't fit.
+        let lines: [[Part]]
+        /// The sentence read as one line, with ordinary spaces and no icons,
+        /// for the header element VoiceOver reads before the two buttons.
+        let accessibilityLabel: String
+
+        /// The tokens in reading order, for VoiceOver's buttons.
+        var tokens: [Token] {
+            lines.joined().compactMap { part in
+                if case let .token(token) = part { token } else { nil }
+            }
+        }
+    }
+
+    // MARK: - Constants
+
+    static let dateSymbol = "token.calendar"
+    static let placeSymbol = "token.pin"
+
+    /// Keeps a token's words, and its icon, on one line.
+    static let nonBreakingSpace = "\u{00A0}"
+
+    private static let lead = "Where can I find the moon"
+    private static let middle = " in"
+    private static let end = "?"
+
+    private static let tonight = "tonight"
+    private static let datePrefix = "on "
+    private static let noPlace = "a city"
+
+    private static let dateLabelPrefix = "Date, "
+    private static let placeLabelPrefix = "Place, "
+    private static let noPlaceLabel = "choose a city"
+
+    /// Region parts up to this long, all capitals, are abbreviations ("CA",
+    /// "NSW") and get spelled out; longer ones ("England") are words.
+    private static let maximumAbbreviationLength = 3
+
+    // MARK: - Configuration
+
+    let locale: Locale
+
+    private let dayLabels: DayLabelFormatter
+
+    /// - Parameter locale: injectable so tests can pin `en_US`.
+    init(locale: Locale = .autoupdatingCurrent) {
+        self.locale = locale
+        dayLabels = DayLabelFormatter(locale: locale)
+    }
+
+    // MARK: - Sentence
+
+    /// The sentence for `place` on `day`.
+    ///
+    /// - Parameters:
+    ///   - place: `nil` before any place is chosen.
+    ///   - standIn: with no place, a name for the place token anyway: the
+    ///     last-viewed place while the launch fix runs, so the sentence
+    ///     isn't "a city" for a moment (LOCATION.md §3). The date stays
+    ///     plain words.
+    ///   - day: the selected day's start in the place's zone; ignored with
+    ///     no place.
+    ///   - dayOffset: days from the place's today (0 = today).
+    ///   - today: any moment in the place's today, such as now.
+    ///   - allowsBreaksInsideTokens: true at AX sizes, where a token may
+    ///     wrap between its words (§3.1). Its icon always stays attached.
+    func sentence(
+        place: Place?,
+        standIn: Place? = nil,
+        day: Date,
+        dayOffset: Int,
+        today: Date,
+        allowsBreaksInsideTokens: Bool
+    ) -> Sentence {
+        let space = allowsBreaksInsideTokens ? " " : Self.nonBreakingSpace
+
+        let dateLine: [Part]
+        let dateWords: String
+        if let place {
+            let date = dateToken(place: place, day: day, dayOffset: dayOffset, today: today)
+            dateWords = date.text
+            dateLine = [.token(date.withSpaces(space)), .words(Self.middle)]
+        } else {
+            dateWords = Self.tonight
+            dateLine = [.words(Self.tonight + Self.middle)]
+        }
+
+        let place = placeToken(place ?? standIn)
+        let placeLine: [Part] = [.token(place.withSpaces(space)), .words(Self.end)]
+
+        return Sentence(
+            lines: [[.words(Self.lead)], dateLine, placeLine],
+            accessibilityLabel: [Self.lead, dateWords + Self.middle, place.text + Self.end]
+                .joined(separator: " ")
+        )
+    }
+
+    // MARK: - Tokens
+
+    private func dateToken(place: Place, day: Date, dayOffset: Int, today: Date) -> Token {
+        let text: String
+        let spoken: String
+        if dayOffset == 0 {
+            text = Self.tonight
+            spoken = Self.tonight
+        } else {
+            text = Self.datePrefix + dayLabels.label(for: day, today: today, timeZone: place.timeZone)
+            spoken = dayLabels.spokenLabel(for: day, today: today, timeZone: place.timeZone)
+        }
+        return Token(
+            kind: .date,
+            symbol: Self.dateSymbol,
+            text: text,
+            accessibilityLabel: AttributedString(Self.dateLabelPrefix + spoken)
+        )
+    }
+
+    private func placeToken(_ place: Place?) -> Token {
+        guard let place else {
+            return Token(
+                kind: .place,
+                symbol: Self.placeSymbol,
+                text: Self.noPlace,
+                accessibilityLabel: AttributedString(Self.placeLabelPrefix + Self.noPlaceLabel)
+            )
+        }
+        return Token(
+            kind: .place,
+            symbol: Self.placeSymbol,
+            text: place.nameWithRegion,
+            accessibilityLabel: Self.placeLabel(for: place)
+        )
+    }
+
+    /// "Place, Los Angeles, CA" with "CA" spelled out, so VoiceOver says
+    /// "C A" (§3.1) rather than guessing at a word.
+    private static func placeLabel(for place: Place) -> AttributedString {
+        var label = AttributedString(placeLabelPrefix + place.name)
+        let full = place.nameWithRegion
+        guard full != place.name else { return label }
+
+        // `nameWithRegion` is "name, region"; split off the ", " so only
+        // the region itself is spelled out, not the comma.
+        let rest = full.dropFirst(place.name.count)
+        let region = rest.drop { !$0.isLetter }
+        label.append(AttributedString(String(rest.prefix(rest.count - region.count))))
+        var regionRun = AttributedString(String(region))
+        if isAbbreviation(region) {
+            regionRun.accessibilitySpeechSpellsOutCharacters = true
+        }
+        label.append(regionRun)
+        return label
+    }
+
+    private static func isAbbreviation(_ text: Substring) -> Bool {
+        !text.isEmpty
+            && text.count <= maximumAbbreviationLength
+            && text.allSatisfy { $0.isUppercase && $0.isLetter }
+    }
+}
+
+// MARK: - Spaces
+
+nonisolated private extension MadlibFormatter.Token {
+
+    /// The same token with its inner spaces replaced, so it wraps as a unit
+    /// (non-breaking) or freely (ordinary spaces).
+    func withSpaces(_ space: String) -> Self {
+        Self(
+            kind: kind,
+            symbol: symbol,
+            text: text.replacingOccurrences(of: " ", with: space),
+            accessibilityLabel: accessibilityLabel
+        )
+    }
+}

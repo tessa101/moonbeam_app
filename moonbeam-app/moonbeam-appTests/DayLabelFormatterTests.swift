@@ -66,6 +66,20 @@ nonisolated struct DayLabelFormatterTests {
 
     /// Dec 31 → Jan 1: the year appears as soon as the day crosses it, in
     /// either direction.
+    // MARK: - Madlib date token, spoken (DESIGN-1.1.md §3.1)
+
+    @Test("Spoken token date: full names, the year only in another year", arguments: [
+        (2026, 10, 3, "Saturday, October 3"),
+        (2026, 9, 29, "Tuesday, September 29"),
+        (2027, 1, 4, "Monday, January 4, 2027"),
+    ])
+    func spokenLabel(year: Int, month: Int, day: Int, expected: String) throws {
+        let today = try Self.date(2026, 9, 30, hour: 12, in: Self.losAngeles)
+        let selected = try Self.date(year, month, day, hour: 0, in: Self.losAngeles)
+
+        #expect(formatter.spokenLabel(for: selected, today: today, timeZone: Self.losAngeles) == expected)
+    }
+
     @Test("Year boundary: Dec 31 → Jan 1 and back")
     func yearBoundary() throws {
         let newYearsEve = try Self.date(2026, 12, 31, hour: 0, in: Self.losAngeles)

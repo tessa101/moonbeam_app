@@ -72,7 +72,7 @@ Placed directly under the city name, above the moon table (sketch #3).
   - Passes `daySelection.startOfDay(in: place.timeZone, now:)` to `MoonService.moonDay(for:on:)` wherever it passes today now.
   - Recompute on place change and in `sceneDidBecomeActive()` (the midnight rollover in §3).
 - **Inject a clock** (`now: () -> Date`, default `Date.init`) into the view model so tests can pin "now".
-- New `Features/Location/DateControl.swift` (row) and `Features/Location/CalendarSheet.swift`. Plain visuals, same as the rest of Step 2.
+- New `Features/Location/DateControl.swift` (row) and `Features/Location/CalendarSheet.swift`. Plain visuals, same as the rest of Step 2. *(Design 1.1: ‹ › moved to the moon card in 5.2; `DateControl` removed in 5.3, replaced by the madlib date token, which opens the calendar. DESIGN-1.1.md §3.1.)*
 - Update ARCHITECTURE.md §5 (replace the TBD) and PRODUCT.md §6 ("Date picker" → built) when this lands.
 
 ## 5. Accessibility (build now, polish in the design pass)

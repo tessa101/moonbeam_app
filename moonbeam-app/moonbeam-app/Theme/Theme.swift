@@ -65,6 +65,19 @@ nonisolated enum Theme {
 
         /// ‹ › (§2): a 32 pt circle inside the 44 pt hit area.
         static let stepButtonSize: CGFloat = 32
+
+        /// The main screen (§2 "Spacing"): side margins, the gap under the
+        /// status bar, and the gaps between the sentence, card and compass.
+        static let screenMargin: CGFloat = 20
+        static let contentTopSpacing: CGFloat = 12
+        static let sentenceToCard: CGFloat = 20
+        static let cardToCompass: CGFloat = 24
+        /// The sentence sits a little further in than the card (the HTML's
+        /// `h2` margin).
+        static let sentenceInset: CGFloat = 4
+
+        /// Secondary buttons (§2): capsule, full width.
+        static let secondaryButtonHeight: CGFloat = 52
     }
 
     // MARK: - Fonts
@@ -85,8 +98,17 @@ nonisolated enum Theme {
     /// `relativeTo:`, except the dial's ↑/↓, which the spec fixes.
     enum Fonts {
         /// The madlib sentence. Line height is `sentenceLineHeightMultiple`.
-        static let sentence = Font.custom(FontName.youngSerif, size: 27, relativeTo: .title)
+        static let sentenceSize: CGFloat = 27
+        static let sentence = Font.custom(FontName.youngSerif, size: sentenceSize, relativeTo: .title)
         static let sentenceLineHeightMultiple: CGFloat = 1.5
+        /// A long city or date shrinks this far on its line before it wraps
+        /// (§3.1a), and `sentenceMinimum` is the sentence at that scale.
+        static let sentenceMinimumScale: CGFloat = 0.8
+        static let sentenceMinimum = Font.custom(
+            FontName.youngSerif,
+            size: sentenceSize * sentenceMinimumScale,
+            relativeTo: .title
+        )
 
         /// Onboarding hero ("Moon Signal").
         static let onboardingHero = Font.custom(FontName.youngSerif, size: 40, relativeTo: .largeTitle)
@@ -102,6 +124,8 @@ nonisolated enum Theme {
         static let body = Font.custom(FontName.nunitoSansRegular, size: 17, relativeTo: .body)
         /// Primary button titles.
         static let button = Font.custom(FontName.nunitoSansBold, size: 17, relativeTo: .body)
+        /// Secondary button titles (Nunito 600 in the HTML).
+        static let secondaryButton = Font.custom(FontName.nunitoSansSemiBold, size: 17, relativeTo: .body)
         /// Text links ("Search for a city instead").
         static let link = Font.custom(FontName.nunitoSansSemiBold, size: 16, relativeTo: .callout)
         /// The illumination line and directions ("58° ENE").

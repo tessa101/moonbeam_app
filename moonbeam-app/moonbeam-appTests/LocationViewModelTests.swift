@@ -90,6 +90,83 @@ struct LocationViewModelTests {
         )
     }
 
+    /// The madlib place token's words with ordinary spaces ("Sydney, NSW").
+    private static func placeTokenText(_ viewModel: LocationViewModel) -> String? {
+        viewModel.madlibSentence(allowsBreaksInsideTokens: true).tokens.last?.text
+    }
+
+    // MARK: - Madlib sentence (DESIGN-1.1.md §3.1)
+
+    @Test("The date token opens the calendar; the place token opens search")
+    func tokensOpenTheirSheets() async {
+        let viewModel = Self.makeViewModel()
+        await viewModel.start()
+        viewModel.select(Self.sydney)
+
+        viewModel.open(.date)
+        #expect(viewModel.isCalendarPresented)
+        viewModel.isCalendarPresented = false
+
+        viewModel.open(.place)
+        #expect(viewModel.isSearchPresented)
+        #expect(viewModel.searchSheet != nil)
+    }
+
+    @Test("No place: only the place token, reading \"a city\"; the date is plain words")
+    func noPlaceSentence() async {
+        let viewModel = Self.makeViewModel()
+        await viewModel.start()
+
+        let sentence = viewModel.madlibSentence(allowsBreaksInsideTokens: false)
+
+        #expect(sentence.tokens.map(\.kind) == [.place])
+        #expect(sentence.accessibilityLabel == "Where can I find the moon tonight in a city?")
+        #expect(viewModel.showsUseMyLocationButton)
+    }
+
+    @Test("With a place: the date token, then the place token")
+    func placeSentence() async {
+        let viewModel = Self.makeViewModel()
+        await viewModel.start()
+        viewModel.select(Self.sydney)
+
+        let sentence = viewModel.madlibSentence(allowsBreaksInsideTokens: true)
+
+        #expect(sentence.tokens.map(\.kind) == [.date, .place])
+        #expect(sentence.tokens.first?.text == "tonight")
+        #expect(sentence.accessibilityLabel == "Where can I find the moon tonight in Sydney, NSW?")
+    }
+
+    /// LOCATION.md §3: the last-viewed name stands in while the launch fix
+    /// runs, as the old search field did.
+    @Test("While the launch fix runs, the last-viewed place stands in for the place token")
+    func lastViewedStandsInWhileLocating() async {
+        let location = FakeLocationService(
+            authorizationState: .authorized,
+            placeResult: .success(Self.detectedLosAngeles)
+        )
+        location.fixDelay = Self.hangingFixDelay
+        let viewModel = Self.makeViewModel(
+            location: location,
+            store: InMemoryPlaceStore(lastViewed: Self.sydney),
+            fetchTimeout: Self.hangingFixDelay
+        )
+
+        let launch = Task { await viewModel.start() }
+        while !viewModel.isLocating {
+            await Task.yield()
+        }
+
+        #expect(viewModel.place == nil)
+        #expect(Self.placeTokenText(viewModel) == "Sydney, NSW")
+        // Still no date token: there's no place's day to pick yet.
+        #expect(viewModel.madlibSentence(allowsBreaksInsideTokens: true).tokens.map(\.kind) == [.place])
+
+        // Picking a place stops the fix, so the launch finishes now.
+        viewModel.select(Self.sydney)
+        await launch.value
+    }
+
     // MARK: - Launch (§3)
 
     @Test("First launch: empty state, button visible, no permission request")
@@ -101,7 +178,7 @@ struct LocationViewModelTests {
 
         #expect(viewModel.place == nil)
         #expect(viewModel.moonTable == nil)
-        #expect(viewModel.searchFieldTitle == LocationViewModel.searchPlaceholder)
+        #expect(Self.placeTokenText(viewModel) == "a city")
         #expect(viewModel.showsUseMyLocation)
         #expect(viewModel.showsUseMyLocationButton)
         #expect(!location.didRequestAuthorization)
@@ -121,7 +198,7 @@ struct LocationViewModelTests {
         #expect(viewModel.place == Self.detectedLosAngeles)
         #expect(viewModel.place?.isCurrentLocation == true)
         #expect(viewModel.moonTable?.place == Self.detectedLosAngeles)
-        #expect(viewModel.searchFieldTitle == "Los Angeles, CA")
+        #expect(Self.placeTokenText(viewModel) == "Los Angeles, CA")
         #expect(!viewModel.showsUseMyLocation)
         #expect(!viewModel.isLocating)
     }
@@ -218,7 +295,7 @@ struct LocationViewModelTests {
         await viewModel.start()
 
         #expect(viewModel.place == Self.sydney)
-        #expect(viewModel.searchFieldTitle == "Sydney, NSW")
+        #expect(Self.placeTokenText(viewModel) == "Sydney, NSW")
         #expect(viewModel.showsUseMyLocation)
         // 4.11: with a place showing, the way back is the sheet's row.
         #expect(!viewModel.showsUseMyLocationButton)
@@ -413,7 +490,7 @@ struct LocationViewModelTests {
 
         #expect(viewModel.place == Self.sydney)
         #expect(viewModel.moonTable?.place == Self.sydney)
-        #expect(viewModel.searchFieldTitle == "Sydney, NSW")
+        #expect(Self.placeTokenText(viewModel) == "Sydney, NSW")
         #expect(!viewModel.isSearchPresented)
         #expect(store.lastViewed == Self.sydney)
         #expect(viewModel.lastViewed == Self.sydney)

@@ -3,7 +3,7 @@
 > A living note on where things stand. Update it at the end of each work session
 > so the next session (you, or Claude) can pick up cold.
 
-_Last updated: 2026-09-30 (Step 5.2 moon card built; 5.1 theme; Design 1.1 settled: DESIGN-1.1.md, Step 5; 4.14, Step 2.2 and 4.15 built; device checks pending)_
+_Last updated: 2026-10-01 (Step 5.3 madlib sentence built, with §3.1a; 5.2 follow-ups; Step 5.2 moon card built; 5.1 theme; Design 1.1 settled: DESIGN-1.1.md, Step 5; 4.14, Step 2.2 and 4.15 built; device checks pending)_
 
 ## Where things live
 - **Local repo:** `~/app-ideas/moonbeam` (the one true folder)
@@ -145,6 +145,20 @@ _Last updated: 2026-09-30 (Step 5.2 moon card built; 5.1 theme; Design 1.1 settl
      cases pass. Screenshots: `.agent-reports/design-1.1/`. **Open for Tessa:** the zone wraps under the
      time at default size (DECISIONS.md "5.2 moon card"). **For 5.4:** `tick` → `#807075`
      (DESIGN-1.1.md §2, §7). Next: 5.3 madlib sentence.
+   - [x] **5.2 follow-ups (2026-09-30):** rise/set times round to the nearest minute (were truncated: LA
+     9:09 / 2:26 → 9:10 / 2:27, matching USNO); rise/set VoiceOver labels end with the degrees
+     ("east-northeast, 58 degrees"). Zone wrapping under the time accepted (Tessa).
+   - [x] **5.3 madlib sentence (2026-10-01), with §3.1a:** "Where can I find the moon / 📅 tonight in /
+     📍 Los Angeles, CA?" on three fixed lines (a long city shrinks to 0.8 before wrapping; the card doesn't
+     move). Tokens open the calendar and search sheets; VoiceOver reads the sentence, then "Date, tonight,
+     button", "Place, Los Angeles, C A, button". No place: "a city" token + Use my location (secondary
+     button). Custom `token.calendar` / `token.pin` symbols from the HTML. `DateControl` and the search-field
+     button are gone. `MadlibFormatter`, `MadlibSentence`, `SecondaryButtonStyle`. 388 tests / 594 cases.
+     Screenshots: `.agent-reports/design-1.1/5.3-*`. **Time zone check (Tessa's report):** the zone still
+     shows beside/under the times for Sydney (GMT+10), London (GMT+1) and Sydney River (ADT) in the
+     simulator; places in the phone's own zone show none, by design (§11 Q3). **Found, not fixed:** the
+     recent "Sydney, Australia" resolved to Sydney River, Nova Scotia (search resolve, Step 2.2). Next: 5.4
+     compass restyle.
 
 5. [ ] Location: detect + search (Step 2)
    - Spec: **[LOCATION.md](LOCATION.md)** (decided 2026-09-25). Place model, CoreLocation one-shot fix,

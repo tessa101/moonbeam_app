@@ -78,6 +78,19 @@ nonisolated struct DayLabelFormatter {
         return word + Self.spokenSeparator + date
     }
 
+    /// "Saturday, October 3", or "Monday, January 4, 2027" in another year:
+    /// the madlib date token's spoken form off today (DESIGN-1.1.md §3.1;
+    /// on today it says "tonight"). The year follows the visible label's
+    /// rule, and there's no relative word, as in §3.1's example.
+    func spokenLabel(for day: Date, today: Date, timeZone: TimeZone) -> String {
+        let style = dateStyle(timeZone: timeZone)
+            .weekday(.wide).month(.wide).day()
+        guard isSameYear(day, today, timeZone: timeZone) else {
+            return day.formatted(style.year())
+        }
+        return day.formatted(style)
+    }
+
     // MARK: - Helpers
 
     /// The words DATE.md §5 uses when spoken; other offsets get none.

@@ -28,7 +28,7 @@ Xcode project: `moonbeam-app/moonbeam-app.xcodeproj`. Source lives in `moonbeam-
 moonbeam-app/moonbeam-app/
 ├── App/                 # @main entry, dependency wiring
 ├── Features/
-│   ├── Location/        # LocationViewModel, LocationScreen, LocationOffDialog, DateControl, CalendarSheet
+│   ├── Location/        # LocationViewModel, LocationScreen, MadlibSentence, LocationOffDialog, CalendarSheet
 │   ├── Compass/         # CompassView, CompassDial, CompassViewModel, CompassLock, CompassTarget, CompassContext
 │   └── MoonTable/       # MoonCard, MoonTableViewModel, PhaseGlyph, PhaseGlyphGeometry
 ├── Services/
@@ -36,8 +36,8 @@ moonbeam-app/moonbeam-app/
 │   ├── Heading/         # HeadingService + CoreLocationHeadingService and fake, HeadingSessionMonitor
 │   └── Location/        # LocationService, PlaceSearchService, PlaceStore + real and fake impls
 ├── Models/              # Plain value types
-├── Formatting/          # Compass, day label and moon table (phase, %, time, zone) formatters
-├── Theme/               # Design 1.1 tokens (Theme), ScreenBackground
+├── Formatting/          # Compass, day label, madlib sentence and moon table (phase, %, time, zone) formatters
+├── Theme/               # Design 1.1 tokens (Theme), ScreenBackground, SecondaryButtonStyle
 ├── Resources/Fonts/     # Young Serif, Nunito Sans (OFL), listed in UIAppFonts
 └── Vendor/Astronomy/    # astronomy.c, astronomy.h, VERSION
 moonbeam-appTests/       # Swift Testing, app-hosted: formatters, models, service vs ASTRONOMY.md §5

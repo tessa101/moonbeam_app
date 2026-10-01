@@ -5,6 +5,32 @@
 
 ---
 
+### 2026-10-01 · 5.3 madlib sentence: as built
+- **VoiceOver "button", in order:** the sentence is one set of `Text` lines with link tokens (wraps like
+  text; taps via `OpenURLAction`). VoiceOver would read links inside a text, so `.accessibilityChildren`
+  replaces it with the sentence as a header, then a real `Button` per token ("Date, tonight", "Place, Los
+  Angeles, C A"), with hints. Checked in the simulator's accessibility tree.
+- **Spoken region:** an all-caps region of up to 3 letters ("CA", "NSW") is spelled out via the
+  `accessibilitySpeechSpellsOutCharacters` attribute; words ("England") aren't.
+- **No place:** "tonight" is plain words, not a token: a day needs a place's calendar, and §3.1's example
+  draws no 📅 there. While the launch fix runs, the last-viewed city stands in for "a city" (LOCATION.md §3,
+  as the old search field did).
+- **Shrink before wrap (§3.1a):** per line, `ViewThatFits` over: full size on one line; one line scaled
+  as far as 0.8 (measured by the line at 0.8, shown scaled just enough); wrapped. Each line keeps a
+  full-size line's height so the card doesn't move.
+- **Custom symbols:** SF Symbols templates can't hold strokes, so the HTML's 1.7 strokes were outlined with
+  CoreGraphics (`copy(strokingWithWidth:)` + `union`) into Regular-M symbolsets. Scaled with Dynamic Type
+  and tinted amber inside `Text`.
+- **Considered:** one `Text` with `\n` breaks (can't shrink one line); `Text` + concatenation (deprecated
+  on iOS 26, interpolation instead); real buttons laid over the text (token positions unknown once it wraps).
+
+### 2026-10-01 · Madlib copy, fixed three lines, custom token icons
+- Sentence copy: **"Where can I find the moon [date] in [place]?"** (was "Where will the moon be…"). Alternative
+  recorded, not chosen: "Where will the moon rise and set [on date] in [place]?" (too long).
+- Always three lines with explicit breaks (lead / date token + "in" / place token + "?"), reserving the height so
+  the card doesn't jump; a long city shrinks before wrapping. DESIGN-1.1.md §3.1a.
+- Token icons drawn from the design's SVGs as custom symbols, not SF `calendar` / `mappin`.
+
 ### 2026-09-30 · 5.2 follow-ups: times round to the minute; degrees in VoiceOver
 - **Rounding (Tessa: 9:09 / 2:26 shown where the brief and USNO give 9:10 / 2:27):** `Date.FormatStyle`
   drops the seconds, so the engine's LA 21:09:52 read "9:09". The card's times now round to the nearest
