@@ -34,15 +34,18 @@ struct moonbeam_appApp: App {
             headingService: CoreLocationHeadingService()
         )
         _locationViewModel = State(initialValue: location)
-        _onboardingViewModel = State(
-            initialValue: OnboardingViewModel(
-                locationService: locationService,
-                placeStore: placeStore,
-                onboardingStore: onboardingStore,
-                // How onboarding ended decides how the main screen starts.
-                onFinish: { [weak location] outcome in location?.onboardingDidFinish(outcome) }
-            )
+        let onboarding = OnboardingViewModel(
+            locationService: locationService,
+            placeStore: placeStore,
+            onboardingStore: onboardingStore,
+            // How onboarding ended decides how the main screen starts.
+            onFinish: { [weak location] outcome in location?.onboardingDidFinish(outcome) }
         )
+        #if DEBUG
+        // -forceOnboarding / -onboardingPage (DECISIONS.md 2026-10-01).
+        onboarding.applyDebugLaunchArguments(ProcessInfo.processInfo.arguments)
+        #endif
+        _onboardingViewModel = State(initialValue: onboarding)
     }
 
     var body: some Scene {
@@ -53,7 +56,14 @@ struct moonbeam_appApp: App {
                     OnboardingView(viewModel: onboardingViewModel)
                 } else {
                     // The chosen place drives the moon card.
+                    #if DEBUG
+                    LocationScreen(
+                        viewModel: locationViewModel,
+                        onShowOnboarding: { onboardingViewModel.debugShow() }
+                    )
+                    #else
                     LocationScreen(viewModel: locationViewModel)
+                    #endif
                 }
             }
             // Design 1.1 defaults for any text a step hasn't styled yet,

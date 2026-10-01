@@ -5,6 +5,29 @@
 
 ---
 
+### 2026-10-01 · DEBUG onboarding trigger for testing (Tessa)
+- **Why:** onboarding only shows on a fresh install, so testing it means deleting the app. A temporary DEBUG
+  button/launch argument lets us see it any time (and on TestFlight-style device builds from Xcode).
+- **Launch arguments (DEBUG only, not in Release, like `-resetOnboarding`):**
+  - `-forceOnboarding`: show onboarding regardless of saved place, permission and the completed flag.
+  - `-onboardingPage landing|upsell|declined`: start on that page (default landing).
+  - Neither changes any stored state: no flag written, no place cleared, no permission touched. Finishing
+    onboarding in a forced run returns to the normal app as usual but leaves `onboardingCompleted` as it was.
+- **Also:** a small "Show onboarding" button in a DEBUG-only spot on the main screen, for devices where launch
+  arguments are awkward. It opens the same forced flow. Compiled out of Release (check with `strings`, as for
+  `-resetOnboarding`). **Temporary:** remove before the 1.0 App Store build.
+- **Tests:** a DEBUG-only unit test per argument; the forced run never writes the store.
+- **As built:** `OnboardingViewModel.applyDebugLaunchArguments(_:)` (called by the app at launch) and
+  `debugShow(startingAt:)` (the button, at the bottom of the main screen under the compass readout, text-link
+  style). A forced run skips the completed-flag write on every exit; everything else (outcome, return to the main
+  screen, `start()`) is as usual. `-onboardingPage` alone also picks the page of a natural first run, but doesn't
+  make it forced. Unknown page names mean the landing.
+  - **(new) Forced "That's okay" while location is allowed** stays up: its Settings-return rule would otherwise
+    close it the moment the scene became active. A real Settings return in a forced run (denied at the prompt,
+    then allowed) still goes back to the app.
+  - Release check (`strings`): `-forceOnboarding`, `-onboardingPage`, "Show onboarding" and the DEBUG method names:
+    0 hits; the Debug binary has them; control `onboardingCompleted` present.
+
 ### 2026-10-01 · 5.8 moon arc: as built
 - **Data:** new `MoonPass` model (rise, set, azimuths every 15 min, unwrapped) and
   `MoonService.moonPass(for:containing:)`: the latest rise before the moment to the next set after it, with the

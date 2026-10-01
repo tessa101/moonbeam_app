@@ -3,7 +3,7 @@
 > A living note on where things stand. Update it at the end of each work session
 > so the next session (you, or Claude) can pick up cold.
 
-_Last updated: 2026-10-01 (Moon Signal app icon in; 5.8 moon arc built; next: DEBUG onboarding trigger, tap animation, then 5.5; TestFlight build 3 uploaded with 5.7; moon arc decided (option B, 5.8); Step 5.7 onboarding built ahead of 5.5/5.6; Step 5.3 madlib sentence built, with §3.1a; 5.2 follow-ups; Step 5.2 moon card built; 5.1 theme; Design 1.1 settled: DESIGN-1.1.md, Step 5; 4.14, Step 2.2 and 4.15 built; device checks pending)_
+_Last updated: 2026-10-01 (DEBUG onboarding trigger built; Moon Signal app icon in; 5.8 moon arc built; next: DEBUG onboarding trigger, tap animation, then 5.5; TestFlight build 3 uploaded with 5.7; moon arc decided (option B, 5.8); Step 5.7 onboarding built ahead of 5.5/5.6; Step 5.3 madlib sentence built, with §3.1a; 5.2 follow-ups; Step 5.2 moon card built; 5.1 theme; Design 1.1 settled: DESIGN-1.1.md, Step 5; 4.14, Step 2.2 and 4.15 built; device checks pending)_
 
 ## Where things live
 - **Local repo:** `~/app-ideas/moonbeam` (the one true folder)
@@ -204,6 +204,10 @@ _Last updated: 2026-10-01 (Moon Signal app icon in; 5.8 moon arc built; next: DE
      **Open:** cross-day passes (see DECISIONS.md "5.8 moon arc"); halo vs arc looks fine in the screenshot
      (it barely shows past the face); pinned bar (5.6).
      **Next:** (1) DEBUG onboarding trigger; (2) tap animation; (3) 5.5 AX reflow, then 5.6.
+   - [x] **DEBUG onboarding trigger (2026-10-01):** `-forceOnboarding`, `-onboardingPage landing|upsell|declined`,
+     and a DEBUG-only Show onboarding button at the bottom of the main screen. No stored state changes (checked
+     in the simulator's defaults too). Absent from Release (`strings`). **Temporary: remove before the 1.0 App
+     Store build.** Screenshots: `.agent-reports/debug-onboarding/`. 458 tests / 683 cases.
    - [x] **App icon (2026-10-01):** the Moon Signal design replaces the placeholder (`MoonSignal-AppIcon-*`):
      Dark in both the default and dark slots (the app is dark-only, so there's no light design), Tinted for
      tinted. **Check on device:** home screen in default, dark and tinted. Not in TestFlight build 3.

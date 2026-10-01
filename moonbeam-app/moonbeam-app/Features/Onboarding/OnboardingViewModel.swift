@@ -16,6 +16,10 @@ import Observation
 /// Every exit marks onboarding completed, then hands its `Outcome` to
 /// `onFinish`, which the app routes to `LocationViewModel` so the main
 /// screen starts in the right state.
+///
+/// DEBUG builds can also force it (DECISIONS.md 2026-10-01 "DEBUG onboarding
+/// trigger"): `-forceOnboarding`, `-onboardingPage`, or the main screen's
+/// Show onboarding button. A forced run writes no stored state.
 @Observable
 final class OnboardingViewModel {
 
@@ -61,6 +65,17 @@ final class OnboardingViewModel {
     /// The prompt deactivates the scene; its return to active isn't a
     /// return from Settings.
     @ObservationIgnored private var isRequestingPermission = false
+
+    #if DEBUG
+    /// Shown by the DEBUG trigger, not by `shouldShow`: finishing leaves the
+    /// completed flag alone.
+    @ObservationIgnored private var isForced = false
+
+    /// "That's okay" was forced on screen with location already allowed.
+    /// Its Settings-return rule would close it the moment the scene became
+    /// active, so it's held until the user leaves it.
+    @ObservationIgnored private var isDeclinedForcedWhileAuthorized = false
+    #endif
 
     // MARK: - Init
 
@@ -115,6 +130,9 @@ final class OnboardingViewModel {
             break
         case .denied, .restricted, .servicesOff:
             step = .locationDeclined
+            #if DEBUG
+            isDeclinedForcedWhileAuthorized = false
+            #endif
         }
     }
 
@@ -136,6 +154,9 @@ final class OnboardingViewModel {
     func sceneDidBecomeActive() {
         guard isPresented, step == .locationDeclined, !isRequestingPermission else { return }
         guard locationService.authorizationState.isAuthorized else { return }
+        #if DEBUG
+        if isDeclinedForcedWhileAuthorized { return }
+        #endif
         finish(.locationAllowed)
     }
 
@@ -143,9 +164,66 @@ final class OnboardingViewModel {
 
     private func finish(_ outcome: Outcome) {
         guard isPresented else { return }
-        onboardingStore.isOnboardingCompleted = true
+        #if DEBUG
+        let marksCompleted = !isForced
+        isForced = false
+        isDeclinedForcedWhileAuthorized = false
+        #else
+        let marksCompleted = true
+        #endif
+        if marksCompleted {
+            onboardingStore.isOnboardingCompleted = true
+        }
         // The main screen is told first, so it starts in the right state.
         onFinish(outcome)
         isPresented = false
     }
+
+    // MARK: - DEBUG trigger (DECISIONS.md 2026-10-01)
+
+    #if DEBUG
+    /// Shows onboarding whatever the saved place, permission and completed
+    /// flag say. Temporary: remove before the 1.0 App Store build.
+    static let forceLaunchArgument = "-forceOnboarding"
+
+    /// Followed by `landing`, `upsell` or `declined`: the page onboarding
+    /// starts on. Anything else, or nothing, is the landing.
+    static let pageLaunchArgument = "-onboardingPage"
+
+    /// `-onboardingPage`'s values.
+    static let debugPageNames: [String: Step] = [
+        "landing": .landing,
+        "upsell": .locationUpsell,
+        "declined": .locationDeclined,
+    ]
+
+    /// The page named after `-onboardingPage`, if any.
+    static func debugPage(in arguments: [String]) -> Step? {
+        guard let index = arguments.firstIndex(of: pageLaunchArgument),
+              arguments.indices.contains(index + 1) else { return nil }
+        return debugPageNames[arguments[index + 1]]
+    }
+
+    /// Call once at launch with the process's arguments. `-forceOnboarding`
+    /// shows it; `-onboardingPage` picks the page whenever it shows.
+    func applyDebugLaunchArguments(_ arguments: [String]) {
+        let page = Self.debugPage(in: arguments)
+        if arguments.contains(Self.forceLaunchArgument) {
+            debugShow(startingAt: page ?? .landing)
+        } else if isPresented, let page {
+            step = page
+        }
+    }
+
+    /// The forced flow, from launch or the main screen's Show onboarding
+    /// button. Changes nothing stored: no flag, place or permission.
+    func debugShow(startingAt page: Step = .landing) {
+        isForced = true
+        isRequestingPermission = false
+        step = page
+        isDeclinedForcedWhileAuthorized = page == .locationDeclined
+            && locationService.authorizationState.isAuthorized
+        isPresented = true
+    }
+    #endif
 }
