@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Moon Arc Mockups</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;700&family=Young+Serif&display=swap">
+
+<style>
+/* Layout: sticky control bar, then a grid of four dial panels (reference + 3 arc options), each with a short caption.
+   Colours are the app's own Theme.Colors (DESIGN-1.1.md §2). The page is dark-only on purpose: Moon Signal 1.1 is dark-only. */
+:root {
+  --page: #141013;
+  --bg: #1B1519;
+  --surface: #1E171C;
+  --raised: #2A2127;
+  --stroke: #3D3139;
+  --stroke-raised: #4A3B45;
+  --text: #F5EADB;
+  --text-2: #C9B7A6;
+  --amber: #F2C27B;
+  --moon: #F2E6CF;
+  --dial-top: #30252C;
+  --dial-bottom: #221A1F;
+  --tick: #807075;
+  --font-display: "Young Serif", Georgia, "Times New Roman", serif;
+  --font-body: "Nunito Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--page);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.5;
+  padding-inline: 16px;
+  padding-block: 20px 56px;
+}
+.wrap { max-width: 1120px; margin-inline: auto; display: flex; flex-direction: column; gap: 20px; }
+h1 { font-family: var(--font-display); font-weight: 400; font-size: 28px; line-height: 1.2; margin: 0; text-wrap: balance; }
+.lede { margin: 6px 0 0; color: var(--text-2); max-width: 62ch; }
+
+.controls {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5;
+  display: flex; flex-wrap: wrap; gap: 14px 28px; align-items: end;
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+  border: 1px solid var(--stroke); border-radius: 14px;
+  padding: 12px 16px;
+  backdrop-filter: blur(10px);
+}
+.ctl { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.ctl > span, .ctl > legend { font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--text-2); padding: 0; }
+.ctl output { color: var(--amber); font-variant-numeric: tabular-nums; letter-spacing: 0; text-transform: none; margin-left: 6px; }
+fieldset.ctl { border: 0; margin: 0; padding: 0; }
+input[type=range] { width: 200px; max-width: 100%; accent-color: var(--amber); }
+.seg { display: inline-flex; border: 1px solid var(--stroke-raised); border-radius: 10px; overflow: hidden; background: var(--raised); }
+.seg label { position: relative; }
+.seg input { position: absolute; opacity: 0; inset: 0; cursor: pointer; }
+.seg span { display: block; padding: 6px 12px; font-size: 14px; color: var(--text-2); }
+.seg input:checked + span { background: var(--amber); color: var(--bg); font-weight: 700; }
+.seg input:focus-visible + span { outline: 2px solid var(--amber); outline-offset: -3px; }
+input[type=range]:focus-visible { outline: 2px solid var(--amber); outline-offset: 3px; border-radius: 4px; }
+
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 330px), 1fr)); gap: 20px; }
+figure.opt { margin: 0; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.screen {
+  background: var(--bg); border: 1px solid var(--stroke); border-radius: 24px;
+  padding: 18px 8px 8px; display: flex; flex-direction: column; align-items: center;
+  background-image: radial-gradient(120% 60% at 50% 0%, rgba(242,194,123,.07), transparent 70%);
+}
+.readout { font-family: var(--font-display); font-size: 24px; line-height: 1.2; margin-bottom: 2px; font-variant-numeric: tabular-nums; }
+.screen svg { width: 100%; max-width: 330px; height: auto; display: block; }
+figcaption { display: flex; flex-direction: column; gap: 4px; padding-inline: 4px; }
+figcaption .tag { font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--amber); }
+figcaption h2 { font-family: var(--font-display); font-weight: 400; font-size: 19px; line-height: 1.25; margin: 0; }
+figcaption p { margin: 0; color: var(--text-2); max-width: 54ch; }
+
+.notes { border-top: 1px solid var(--stroke); padding-top: 18px; display: grid; gap: 18px 32px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); }
+.notes h3 { font-family: var(--font-display); font-weight: 400; font-size: 17px; margin: 0 0 6px; }
+.notes ul { margin: 0; padding-left: 18px; color: var(--text-2); display: flex; flex-direction: column; gap: 4px; }
+.notes li::marker { color: var(--stroke-raised); }
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+</style>
+
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Moon arc mockups</h1>
+    <p class="lede">Four takes on the dial, same data: Irvine, Thursday Oct 1, moon up, waning gibbous 64%. Turn the dial and move the moon along its pass to see how each one behaves.</p>
+  </header>
+
+  <div class="controls" role="group" aria-label="Preview controls">
+    <label class="ctl"><span>Heading <output id="o-heading">152°</output></span>
+      <input id="heading" type="range" min="0" max="359" value="152"></label>
+    <label class="ctl"><span>Moon along its pass <output id="o-moon">275° W</output></span>
+      <input id="progress" type="range" min="0" max="100" value="88"></label>
+    <fieldset class="ctl"><legend>Moon is</legend>
+      <div class="seg">
+        <label><input type="radio" name="state" value="up" checked><span>Up</span></label>
+        <label><input type="radio" name="state" value="down"><span>Down (next pass)</span></label>
+      </div></fieldset>
+    <fieldset class="ctl"><legend>Glyph size</legend>
+      <div class="seg">
+        <label><input type="radio" name="glyph" value="20"><span>20 pt</span></label>
+        <label><input type="radio" name="glyph" value="24" checked><span>24 pt</span></label>
+        <label><input type="radio" name="glyph" value="28"><span>28 pt</span></label>
+      </div></fieldset>
+  </div>
+
+  <div class="grid" id="grid"></div>
+
+  <section class="notes" aria-label="What to check">
+    <div>
+      <h3>What the mocks assume</h3>
+      <ul>
+        <li>Rise 56° NE, set 304° WNW, passing south. The arc follows the moon's compass bearing along the pass, so on the dial it is a section of a circle.</li>
+        <li>Moon down: the next pass is drawn dim with no glyph. The rise and set markers stay.</li>
+        <li>A, B and C use a 196 pt dial plus the arc, which takes about the same space as today's 220 pt dial.</li>
+        <li>The heading marker moves outside the arc. Inside it, it would sit on the arc whenever you face the moon's path.</li>
+      </ul>
+    </div>
+    <div>
+      <h3>Not shown yet</h3>
+      <ul>
+        <li>The lock state (amber pill, dot ring and glow, dial halo). With an amber arc in place, the halo may need a different tone.</li>
+        <li>Large Dynamic Type sizes, the 5.6 pinned bar and Reduce Motion.</li>
+        <li>Moonrise in the southern hemisphere, and passes that cross north.</li>
+      </ul>
+    </div>
+  </section>
+</div>
+
+<script>
+(function () {
+  var C = { bg: "#1B1519", amber: "#F2C27B", moon: "#F2E6CF", top: "#30252C", bottom: "#221A1F",
+            tick: "#807075", text2: "#C9B7A6", dark: "#171216" };
+  var RISE = 56, SET = 304, SPAN = 248;            // rise to set, clockwise through south
+  var CX = 150, CY = 156, ILLUM = 0.64;
+  var NAMES = ["N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSW","SW","WSW","W","WNW","NW","NNW"];
+  var VARIANTS = [
+    { id: "today", tag: "Reference", name: "Today", dial: 110,
+      text: "Dial 220 pt. The moon is a 20 pt glyph on the dial edge, the same cream and about the same size as the rise and set dots." },
+    { id: "a", tag: "Option A", name: "Dotted track", dial: 98,
+      text: "A dotted amber arc outside the ring from rise to set. Rise and set dots sit on the arc ends, so the ring only carries ticks and letters. The moon rides the track with a gap cut around it." },
+    { id: "b", tag: "Option B", name: "Travelled and remaining", dial: 98,
+      text: "As A, but the part the moon has already crossed is a faint hairline and only the part still to come is dotted. The arc also shows how much of the pass is left." },
+    { id: "c", tag: "Option C", name: "Markers stay on the dial", dial: 98,
+      text: "Rise and set dots stay on the ring where they are today. The arc is lighter and ends in small caps, so it reads as a path and not as a third target." }
+  ];
+
+  var $ = function (s) { return document.querySelector(s); };
+  var grid = $("#grid");
+  VARIANTS.forEach(function (v) {
+    var f = document.createElement("figure");
+    f.className = "opt";
+    f.innerHTML = '<div class="screen"><div class="readout" id="r-' + v.id + '"></div><div id="s-' + v.id + '"></div></div>' +
+      '<figcaption><span class="tag">' + v.tag + '</span><h2>' + v.name + '</h2><p>' + v.text + '</p></figcaption>';
+    grid.appendChild(f);
+  });
+
+  function n(x) { return Math.round(x * 100) / 100; }
+  function sector(az) { return NAMES[Math.round((((az % 360) + 360) % 360) / 22.5) % 16]; }
+
+  function glyph(x, y, r, uid) {
+    // Waning gibbous: left half lit, plus a bulge on the right (terminator ellipse).
+    var rx = r * (2 * ILLUM - 1);
+    var lit = "M" + n(x) + " " + n(y - r) + " A" + r + " " + r + " 0 0 0 " + n(x) + " " + n(y + r) +
+              " A" + n(rx) + " " + r + " 0 0 0 " + n(x) + " " + n(y - r) + "Z";
+    return '<circle cx="' + n(x) + '" cy="' + n(y) + '" r="' + n(r * 1.5) + '" fill="' + C.moon + '" opacity=".16" filter="url(#blur' + uid + ')"/>' +
+           '<circle cx="' + n(x) + '" cy="' + n(y) + '" r="' + r + '" fill="' + C.dark + '" stroke="' + C.tick + '" stroke-opacity=".5" stroke-width="1"/>' +
+           '<path d="' + lit + '" fill="' + C.moon + '"/>';
+  }
+
+  function render() {
+    var H = +$("#heading").value;
+    var p = +$("#progress").value / 100;
+    var up = document.querySelector('input[name=state]:checked').value === "up";
+    var gs = +document.querySelector('input[name=glyph]:checked').value / 2;
+    var moonAz = (RISE + SPAN * p) % 360;
+    $("#o-heading").textContent = H + "°";
+    $("#o-moon").textContent = Math.round(moonAz) + "° " + sector(moonAz);
+
+    function pt(r, az) { var a = (az - H) * Math.PI / 180; return [CX + r * Math.sin(a), CY - r * Math.cos(a)]; }
+    function arc(r, a1, a2) {
+      var span = (((a2 - a1) % 360) + 360) % 360;
+      var s = pt(r, a1), e = pt(r, a2);
+      return "M" + n(s[0]) + " " + n(s[1]) + " A" + r + " " + r + " 0 " + (span > 180 ? 1 : 0) + " 1 " + n(e[0]) + " " + n(e[1]);
+    }
+    function dot(r, az, rad, fill, op) { var q = pt(r, az); return '<circle cx="' + n(q[0]) + '" cy="' + n(q[1]) + '" r="' + rad + '" fill="' + fill + '"' + (op ? ' opacity="' + op + '"' : '') + '/>'; }
+    function cap(r, az) { var a = pt(r - 5, az), b = pt(r + 5, az); return '<line x1="' + n(a[0]) + '" y1="' + n(a[1]) + '" x2="' + n(b[0]) + '" y2="' + n(b[1]) + '" stroke="' + C.amber + '" stroke-width="2" stroke-linecap="round" opacity=".6"/>'; }
+    function dotted(path, op, w) { return '<path d="' + path + '" fill="none" stroke="' + C.amber + '" stroke-width="' + (w || 3) + '" stroke-linecap="round" stroke-dasharray="0.01 6.6" opacity="' + op + '"/>'; }
+
+    VARIANTS.forEach(function (v) {
+      var R = v.dial, Ra = R + 16, uid = v.id;
+      var s = '<svg viewBox="0 0 300 306" role="img" aria-label="' + v.name + ': compass dial facing ' + H + ' degrees' + (up ? ', moon up at ' + Math.round(moonAz) + ' degrees' : ', moon down, next pass shown dimmed') + '">';
+      s += '<defs><radialGradient id="g' + uid + '" cx="50%" cy="40%" r="65%"><stop offset="0" stop-color="' + C.top + '"/><stop offset="1" stop-color="' + C.bottom + '"/></radialGradient>' +
+           '<filter id="blur' + uid + '" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="3.2"/></filter></defs>';
+
+      // dial face
+      s += '<circle cx="' + CX + '" cy="' + CY + '" r="' + R + '" fill="url(#g' + uid + ')" stroke="#3D3139" stroke-width="1"/>';
+      // ticks every 15 degrees
+      for (var d = 0; d < 360; d += 15) {
+        var q = pt(R * 0.9, d), card = d % 90 === 0;
+        s += '<circle cx="' + n(q[0]) + '" cy="' + n(q[1]) + '" r="' + (card ? 2.6 : 1.7) + '" fill="' + C.tick + '"/>';
+      }
+      // cardinal letters, always upright
+      [["N", 0], ["E", 90], ["S", 180], ["W", 270]].forEach(function (c) {
+        var q = pt(R * 0.66, c[1]);
+        s += '<text x="' + n(q[0]) + '" y="' + n(q[1]) + '" text-anchor="middle" dominant-baseline="central" font-family="Nunito Sans, system-ui, sans-serif" font-size="' + (R * 0.12) + '" fill="' + (c[0] === "N" ? C.amber : C.text2) + '" opacity="' + (c[0] === "N" ? 1 : .65) + '">' + c[0] + '</text>';
+      });
+      // up / down arrows inside the ring, by the rise and set bearings
+      [["↑", RISE], ["↓", SET]].forEach(function (a) {
+        var q = pt(R * 0.8, a[1]);
+        s += '<text x="' + n(q[0]) + '" y="' + n(q[1]) + '" text-anchor="middle" dominant-baseline="central" font-family="Nunito Sans, system-ui, sans-serif" font-weight="700" font-size="15" fill="' + C.amber + '">' + a[0] + '</text>';
+      });
+
+      var rr = 6.5; // rise/set dot radius
+      if (v.id === "today") {
+        s += dot(R, RISE, rr, C.moon) + dot(R, SET, rr, C.moon);
+        if (up) s += glyph.apply(null, [pt(R, moonAz)[0], pt(R, moonAz)[1], 10, uid]);
+      } else {
+        var dim = up ? 1 : 0.3;
+        if (v.id === "a") {
+          s += dotted(arc(Ra, RISE, SET), .95 * dim);
+          s += dot(Ra, RISE, rr, C.moon, dim) + dot(Ra, SET, rr, C.moon, dim);
+        } else if (v.id === "b") {
+          if (up) {
+            s += '<path d="' + arc(Ra, RISE, moonAz) + '" fill="none" stroke="' + C.amber + '" stroke-opacity=".3" stroke-width="1.5" stroke-linecap="round"/>';
+            s += dotted(arc(Ra, moonAz, SET), .95);
+          } else {
+            s += dotted(arc(Ra, RISE, SET), .3);
+          }
+          s += dot(Ra, RISE, rr, C.moon, dim) + dot(Ra, SET, rr, C.moon, dim);
+        } else {
+          s += dotted(arc(Ra, RISE, SET), .55 * dim, 2.6);
+          s += cap(Ra, RISE).replace('opacity=".6"', 'opacity="' + (.6 * dim) + '"') + cap(Ra, SET).replace('opacity=".6"', 'opacity="' + (.6 * dim) + '"');
+          s += dot(R, RISE, rr, C.moon, dim) + dot(R, SET, rr, C.moon, dim);
+        }
+        if (up) {
+          var m = pt(Ra, moonAz);
+          s += '<circle cx="' + n(m[0]) + '" cy="' + n(m[1]) + '" r="' + (gs + 4) + '" fill="' + C.bg + '"/>';
+          s += glyph(m[0], m[1], gs, uid);
+        }
+      }
+      // heading marker: a cream pill at the top, outside everything else
+      var top = v.id === "today" ? R + 6 : Ra + 14;
+      s += '<rect x="' + (CX - 3) + '" y="' + n(CY - top - 17) + '" width="6" height="17" rx="3" fill="' + C.moon + '"/>';
+      s += '</svg>';
+      $("#s-" + v.id).innerHTML = s;
+      $("#r-" + v.id).textContent = H + "° " + sector(H);
+    });
+  }
+
+  ["#heading", "#progress"].forEach(function (id) { $(id).addEventListener("input", render); });
+  document.querySelectorAll("input[type=radio]").forEach(function (el) { el.addEventListener("change", render); });
+  render();
+})();
+</script>
+
+</body>
+</html>

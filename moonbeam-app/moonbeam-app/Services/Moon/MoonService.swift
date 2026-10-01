@@ -21,4 +21,10 @@ nonisolated protocol MoonService {
     /// The moon's direction, and whether it's up, at one instant. Unlike
     /// `moonDay(for:on:)`, `date` is the exact moment, not a day.
     func moonPosition(for place: Place, at date: Date) -> MoonPosition
+
+    /// The pass the moon is on at `date`: the latest rise before it to the
+    /// next set after it, sampled every `MoonPass.sampleInterval`. `nil`
+    /// when the moon is down at `date` (same definition as `moonPosition`),
+    /// or the rise or set is out of the search's reach.
+    func moonPass(for place: Place, containing date: Date) -> MoonPass?
 }

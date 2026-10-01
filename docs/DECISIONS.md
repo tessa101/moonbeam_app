@@ -5,6 +5,56 @@
 
 ---
 
+### 2026-10-01 · 5.8 moon arc: as built
+- **Data:** new `MoonPass` model (rise, set, azimuths every 15 min, unwrapped) and
+  `MoonService.moonPass(for:containing:)`: the latest rise before the moment to the next set after it, with the
+  same rule as `moonPosition`'s "up", so a pass exists exactly when the Moon target does. Sampling stays in
+  `AstronomyEngineMoonService` (the only C API caller). `CompassViewModel.arc` (`CompassArc`) is what the dial
+  draws; the 30 s tick only moves the Moon along it and looks the pass up again only when the moon rises or sets.
+- **Which pass:** moon up: the pass containing now. Otherwise (moon down, or another day): the pass containing
+  a minute after the selected day's moonrise. Taken literally from §3.3a, so on today after the moon has set,
+  the arc is today's finished pass (dimmed), not tomorrow's.
+- **Rise/set dots are the targets, not the arc's ends.** Each dot sits on the arc's track at the selected day's
+  moonrise / moonset bearing (the lock, the card and VoiceOver all use those). Usually that's exactly an arc end.
+  On a pass that starts the day before or ends the day after, the arc's end and the day's dot can be a few
+  degrees apart. **Open for Tessa:** keep this, or move the dots to the pass's own ends (the lock and the card's
+  times would then disagree on those days).
+- **No moonrise, moon down:** no arc; the moonset dot still shows (dimmed) on the track, since it's still a
+  lockable target. §3.3a's "no markers" was read as "no arc markers".
+- **Locked Moon:** grows 24 → 28 pt (the 22 pt locked size would shrink it). The bg disc grows with it.
+- **Dimmed marks:** dot and glow are grouped, then backed with `bg`, so a 30% dot reads as one dim dot and the
+  arc's end dot doesn't show through.
+- **Size:** the dial view is 260 × 277 pt (radius 130 all round, plus the 17 pt capsule). 5.4's was 220 × 230,
+  so the block is **~47 pt taller**, not §3.3a's 25 to 30 (that estimate started from ~250). Not shrunk to
+  180 pt: not yet checked on a small phone.
+- **Halo vs arc:** in the screenshot the halo barely shows past the face (it reaches 116 pt, the arc is at 114),
+  so it doesn't fight the arc. Left as is; review `4-locked-on-moonrise.png`.
+
+### 2026-10-01 · Tap animation on buttons: go, spec (Tessa)
+- **Decision:** build the pressed-state animation from DESIGN-REVIEW.md "Motion and feedback" now, after the
+  DEBUG onboarding trigger and before 5.5.
+- **Look (proposed, tune on device):** scale 0.96 + opacity ~0.8 while pressed, quick spring (~0.15 s) back.
+  **Reduce Motion:** opacity only, no scale.
+- **Where:** the shared styles (`PrimaryButtonStyle`, `SecondaryButtonStyle`, `TextLinkButtonStyle`), so every
+  button picks it up; also the ‹ › day buttons and the sentence tokens, which don't use those styles today.
+  No per-view animation code.
+
+### 2026-10-01 · Moon marker: rise-to-set arc outside the dial, option B, 24 pt glyph (Tessa)
+- **Why:** device check: the ~20 pt mini glyph is hard to tell apart from the cream rise/set dots on the rim.
+- **Decision:** from the arc mock-ups (`design/1.1/moon-arc-mockups.html`), **option B**: a dotted amber arc
+  outside the rim from moonrise to moonset, the moon glyph (**24 pt**) riding on it, the part already travelled a
+  faint hairline and the rest dotted. Rise and set dots move to the arc ends; the rim keeps ticks and letters.
+  Dial 196 pt. Spec: DESIGN-1.1.md §3.3a. New build item **5.8**, before 5.5.
+- **Also decided in the spec:** the heading capsule moves outside the arc; moon down shows the next pass dimmed
+  with no glyph; the path is drawn from sampled azimuths (so southern-hemisphere and near-overhead passes go
+  the right way round); VoiceOver unchanged.
+- **Cost:** the compass block grows about 25 to 30 pt in height (about 277 pt against about 250 pt). Shrink the
+  dial to 180 pt first if it pushes the compass too far down on small phones.
+- **Open:** the lock halo (amber) against the amber arc, checked on a screenshot; the 5.6 pinned bar's compact
+  dial; AX 260 pt dial proportions (5.5).
+- **Considered:** A (arc without the travelled hairline), C (rise/set dots stay on the rim, lighter arc with end
+  caps). B was picked for showing how much of the pass is left.
+
 ### 2026-10-01 · 5.7 onboarding: placeholder copy, Settings return, completed flag (Tessa)
 - **Copy:** the mockup's copy ships as-is in 5.7 (`Moon Signal Madlib 1.0.dc.html` §3d: tagline, upsell, info box,
   "That’s okay"; including its missing final period). It's the designer's placeholder; final copy comes later and

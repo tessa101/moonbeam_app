@@ -65,6 +65,10 @@ final class CompassViewModel {
     /// moon's azimuth moves about a quarter of a degree a minute.
     static let defaultMoonRefreshInterval = Duration.seconds(30)
 
+    /// A day's pass is looked up a minute after its moonrise, when the moon
+    /// is safely up by the same rule the service uses.
+    static let passLookupDelayAfterRise: TimeInterval = 60
+
     /// How long the aha line stays before the normal readout (4.12).
     static let preciseConfirmationDuration = Duration.seconds(3)
 
@@ -137,6 +141,11 @@ final class CompassViewModel {
     /// then the moon if it's today and it's up.
     private(set) var targets: [CompassTarget] = []
 
+    /// The moon arc (DESIGN-1.1.md §3.3a): today with the moon up, the pass
+    /// it's on; otherwise the pass from the selected day's moonrise. `nil`
+    /// with no compass, no moonrise, or no pass found.
+    private(set) var arc: CompassArc?
+
     /// The latest reading, or `nil` while the sensors are off.
     private(set) var reading: HeadingReading?
 
@@ -200,6 +209,10 @@ final class CompassViewModel {
 
     /// Clears `preciseConfirmation` after its few seconds.
     @ObservationIgnored private var preciseConfirmationTask: Task<Void, Never>?
+
+    /// The pass behind `arc`. Kept so the 30 s tick only moves the moon
+    /// along it, and only looks the pass up again when the moon rises or sets.
+    @ObservationIgnored private var pass: MoonPass?
 
     // MARK: - Init
 
@@ -443,6 +456,7 @@ final class CompassViewModel {
     // MARK: - Targets
 
     private func rebuildTargets() {
+        let moment = now()
         var rebuilt: [CompassTarget] = []
         if visibility.showsCompass, let moonDay = context.moonDay {
             if let rise = moonDay.rise {
@@ -452,29 +466,68 @@ final class CompassViewModel {
                 rebuilt.append(CompassTarget(kind: .moonset, azimuth: set.azimuth))
             }
         }
-        if let moon = liveMoonTarget() {
+        let moon = liveMoonTarget(at: moment)
+        if let moon {
             rebuilt.append(moon)
         }
+        pass = passToDraw(isMoonUp: moon != nil, at: moment)
+        updateArc(moon: moon, at: moment)
         setTargets(rebuilt)
     }
 
     /// A tick: only the moon moves, so only its target is recomputed. This
     /// is also where it appears or disappears as the moon rises or sets on
-    /// screen.
+    /// screen, and the arc switches between the live pass and the next one.
     private func refreshMoonTarget() {
+        let moment = now()
+        let wasMoonUp = targets.contains { $0.kind == .moon }
         var refreshed = targets.filter { $0.kind != .moon }
-        if let moon = liveMoonTarget() {
+        let moon = liveMoonTarget(at: moment)
+        if let moon {
             refreshed.append(moon)
         }
+        if (moon != nil) != wasMoonUp {
+            pass = passToDraw(isMoonUp: moon != nil, at: moment)
+        }
+        updateArc(moon: moon, at: moment)
         setTargets(refreshed)
     }
 
     /// Only on today, and only while it's up (COMPASS.md §1, §3).
-    private func liveMoonTarget() -> CompassTarget? {
+    private func liveMoonTarget(at moment: Date) -> CompassTarget? {
         guard visibility.showsCompass, context.isToday, let place = context.place else { return nil }
-        let position = moonService.moonPosition(for: place, at: now())
+        let position = moonService.moonPosition(for: place, at: moment)
         guard position.isUp else { return nil }
         return CompassTarget(kind: .moon, azimuth: position.azimuth)
+    }
+
+    // MARK: - Arc (DESIGN-1.1.md §3.3a)
+
+    /// Moon up (so today): the pass under way, whose rise may be yesterday
+    /// and set tomorrow. Otherwise the pass that starts at the selected
+    /// day's moonrise; none without one.
+    private func passToDraw(isMoonUp: Bool, at moment: Date) -> MoonPass? {
+        guard visibility.showsCompass, let place = context.place else { return nil }
+        if isMoonUp {
+            return moonService.moonPass(for: place, containing: moment)
+        }
+        guard let rise = context.moonDay?.rise else { return nil }
+        return moonService.moonPass(
+            for: place,
+            containing: rise.date.addingTimeInterval(Self.passLookupDelayAfterRise)
+        )
+    }
+
+    private func updateArc(moon: CompassTarget?, at moment: Date) {
+        var newArc: CompassArc?
+        if let pass, let start = pass.path.first, let end = pass.path.last {
+            newArc = CompassArc(
+                startAzimuth: start,
+                endAzimuth: end,
+                moonAzimuth: moon.map { pass.pathAzimuth(for: $0.azimuth, at: moment) }
+            )
+        }
+        if newArc != arc { arc = newArc }
     }
 
     private func setTargets(_ newTargets: [CompassTarget]) {

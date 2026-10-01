@@ -1064,4 +1064,141 @@ struct CompassViewModelTests {
         #expect(!harness.viewModel.targets.map(\.kind).contains(.moon))
         #expect(harness.sleeper.pendingCount == 0)
     }
+
+    // MARK: - Moon arc (DESIGN-1.1.md §3.3a)
+
+    /// Rise at 72°, south, set at 288°: the fixtures' bearings. The fake
+    /// returns it for any moment, so the tests check which moment is asked.
+    private static let scriptedPass = MoonPass(
+        rise: MoonEvent(date: referenceDate - 4 * MoonPass.sampleInterval, azimuth: riseAzimuth),
+        set: MoonEvent(date: referenceDate + 4 * MoonPass.sampleInterval, azimuth: setAzimuth),
+        path: [riseAzimuth, 100, 120, 130, 140, 180, 220, 260, setAzimuth]
+    )
+
+    @Test("No pass from the service: no arc")
+    func noPassNoArc() {
+        let harness = Self.makeHarness(position: Self.moonUp)
+
+        harness.viewModel.update(Self.context())
+
+        #expect(harness.viewModel.arc == nil)
+    }
+
+    @Test("Moon up: the pass under way now, with the moon on it")
+    func arcForMoonUp() {
+        let harness = Self.makeHarness(position: Self.moonUp)
+        harness.moon.pass = Self.scriptedPass
+
+        harness.viewModel.update(Self.context())
+
+        #expect(harness.moon.requestedPassDates == [Self.referenceDate])
+        #expect(harness.viewModel.arc == CompassArc(
+            startAzimuth: Self.riseAzimuth,
+            endAzimuth: Self.setAzimuth,
+            moonAzimuth: Self.moonAzimuth
+        ))
+    }
+
+    @Test("Moon down: the pass from the day's moonrise, no moon on it")
+    func arcForMoonDown() {
+        let harness = Self.makeHarness(position: Self.moonDown)
+        harness.moon.pass = Self.scriptedPass
+
+        harness.viewModel.update(Self.context())
+
+        #expect(harness.moon.requestedPassDates == [
+            Self.referenceDate + CompassViewModel.passLookupDelayAfterRise,
+        ])
+        #expect(harness.viewModel.arc == CompassArc(
+            startAzimuth: Self.riseAzimuth,
+            endAzimuth: Self.setAzimuth,
+            moonAzimuth: nil
+        ))
+    }
+
+    @Test("Another day: the pass from that day's moonrise, never the live moon")
+    func arcForOtherDay() {
+        let harness = Self.makeHarness(position: Self.moonUp)
+        harness.moon.pass = Self.scriptedPass
+
+        harness.viewModel.update(Self.context(isToday: false))
+
+        #expect(harness.moon.requestedPassDates == [
+            Self.referenceDate + CompassViewModel.passLookupDelayAfterRise,
+        ])
+        #expect(harness.viewModel.arc?.moonAzimuth == nil)
+    }
+
+    @Test("No moonrise and the moon down: no arc, and no pass looked up")
+    func noArcWithoutMoonrise() {
+        let harness = Self.makeHarness(position: Self.moonDown)
+        harness.moon.pass = Self.scriptedPass
+
+        harness.viewModel.update(Self.context(moonDay: Self.moonDay(rise: nil)))
+
+        #expect(harness.viewModel.arc == nil)
+        #expect(harness.moon.requestedPassDates.isEmpty)
+    }
+
+    @Test("No compass (Far): no arc")
+    func noArcWhenFar() {
+        let harness = Self.makeHarness(position: Self.moonUp)
+        harness.moon.pass = Self.scriptedPass
+
+        harness.viewModel.update(Self.context(place: Self.sydney))
+
+        #expect(harness.viewModel.arc == nil)
+        #expect(harness.moon.requestedPassDates.isEmpty)
+    }
+
+    @Test("The moon's place on the arc is unwrapped onto the pass")
+    func arcMoonIsUnwrapped() {
+        let harness = Self.makeHarness(position: MoonPosition(azimuth: 5, isUp: true))
+        harness.moon.pass = MoonPass(
+            rise: MoonEvent(date: Self.referenceDate - MoonPass.sampleInterval, azimuth: 350),
+            set: MoonEvent(date: Self.referenceDate + MoonPass.sampleInterval, azimuth: 20),
+            path: [350, 365, 380]
+        )
+
+        harness.viewModel.update(Self.context())
+
+        #expect(harness.viewModel.arc == CompassArc(startAzimuth: 350, endAzimuth: 380, moonAzimuth: 365))
+    }
+
+    @Test("A tick moves the moon along the arc without looking the pass up again")
+    func tickMovesMoonOnArc() async {
+        let harness = Self.makeHarness(position: Self.moonUp)
+        harness.moon.pass = Self.scriptedPass
+        harness.viewModel.update(Self.context())
+        harness.viewModel.setOnScreen(true)
+
+        harness.moon.position = MoonPosition(azimuth: 150, isUp: true)
+        await waitUntil { harness.sleeper.pendingCount == 1 }
+        harness.sleeper.fire()
+        await waitUntil { harness.viewModel.arc?.moonAzimuth == 150 }
+
+        #expect(harness.viewModel.arc?.moonAzimuth == 150)
+        #expect(harness.moon.requestedPassDates.count == 1)
+        harness.sleeper.cancelAll()
+    }
+
+    @Test("A tick where the moon sets switches to the next pass, dimmed")
+    func tickMoonSetSwitchesPass() async {
+        let harness = Self.makeHarness(position: Self.moonUp)
+        harness.moon.pass = Self.scriptedPass
+        harness.viewModel.update(Self.context())
+        harness.viewModel.setOnScreen(true)
+
+        harness.moon.position = Self.moonDown
+        await waitUntil { harness.sleeper.pendingCount == 1 }
+        harness.sleeper.fire()
+        await waitUntil { harness.viewModel.arc?.moonAzimuth == nil }
+
+        #expect(harness.viewModel.arc?.moonAzimuth == nil)
+        #expect(harness.moon.requestedPassDates == [
+            Self.referenceDate,
+            Self.referenceDate + CompassViewModel.passLookupDelayAfterRise,
+        ])
+        harness.sleeper.cancelAll()
+    }
 }

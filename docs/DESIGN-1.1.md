@@ -197,6 +197,7 @@ Centred, below the card.
   just above the rim.
   - Ticks every 15°: 3 pt dots, 5 pt at N/E/S/W, `tick`, inset 10 pt.
   - Letters inset 24 pt; **N in `accent`**, E/S/W `textSecondary`; always upright.
+  - **Superseded by §3.3a (2026-10-01):** dial 196 pt, targets and the live Moon move to an arc outside the rim; the rest of this block is the 5.4 build until the arc ships.
   - Targets: 14 pt `moonLit` dots on the rim (glow `accent` 35% radius 10), with ↑ / ↓ in `accent`
     just outside, upright. Live Moon: a **mini phase glyph**, not a dot (§11 Q4, revised 2026-10-01): ~20 pt,
     the card glyph's lit fraction and terminator, `moonLit` fill and glow, always upright, no arrow. Locked,
@@ -220,6 +221,48 @@ on-screen motion as a turning dial). Letter and arrow centres sit 34 / 22 pt in 
 Live Moon per §11 Q4 (18 pt, no arrow, "Moon" only in the pill, from `CompassViewModel.name(of:)`); *revised
 after the device check:* the card's `PhaseGlyph` at 20 pt (geometry from the selected day's `MoonDay`, as on
 the card), via `CompassViewModel.moonGlyph`. The 260 pt AX dial is left for 5.5.
+
+### 3.3a Moon arc (Tessa, 2026-10-01, chosen from the arc mock-ups: option B, 24 pt glyph)
+Replaces the Moon marker on the rim. Reference mock: `design/1.1/moon-arc-mockups.html` (option B).
+The reason: at 20 pt the mini glyph was hard to tell from the cream rise/set dots, all on the same rim.
+
+- **Dial:** 196 pt (was 220), same face. Ticks and letters keep their 5.4 sizes and rules. The rim now
+  carries ticks and letters only: **no targets on the rim.**
+- **Arc:** a track at **dial radius + 16 pt** (114 pt from the centre), from moonrise to moonset.
+  - Remaining part (moon to set): dotted `accent`, 3 pt round dots, about 6.6 pt apart, 95% opacity.
+  - Travelled part (rise to moon): a 1.5 pt solid `accent` hairline at 30%.
+  - It is a section of a circle, because the dial angle is the azimuth. Moon down: the **next** pass, all
+    dotted at 30%, no glyph.
+- **Moonrise / moonset markers:** 14 pt `moonLit` dots **on the arc ends** (30% when the moon is down). The
+  ↑ / ↓ labels stay inside the rim, upright, at the same bearings (about 20 pt in from the rim; keep the
+  5.4 inset if it fits).
+- **Moon:** the 24 pt phase glyph (card glyph's lit fraction, terminator, `moonLit` fill, glow 16% blurred) on
+  the arc at the moon's bearing, upright, with a 4 pt `bg` disc behind it so the dots stop around it.
+  Sits at the seam between the travelled hairline and the dotted rest.
+- **Heading indicator:** the 6 × 17 pt capsule moves outside the arc, 16 pt beyond the glyph's disc
+  (radius 130 to 147 pt from the centre), still at 12 o'clock. Facing the moon puts the glyph just under it.
+- **Which pass:** today with the moon up, the pass that contains now (rise may be yesterday, set may be
+  tomorrow). Today with the moon down, or any other selected day: the pass that starts at that day's
+  moonrise. No moonrise that day: no arc, no markers (as now).
+- **Direction:** sample the moon's azimuth every ~15 min from rise to set, unwrap the angles, and draw
+  along that range. This is what makes passes through the north (southern hemisphere) and near-overhead
+  passes go the right way round. Don't join the two endpoints by the short way.
+- **Locked:** the lock pill, dot ring, glow and dial halo stay as in §3.3. The locked target is a marker on
+  the arc (a rise or set dot, or the glyph), growing as today. **Open:** the amber halo against the amber
+  arc; build it and we review the screenshot.
+- **Size:** the compass block gets taller by about 25 to 30 pt (outer extent about 277 pt against about
+  250 pt today: heading capsule to 147 pt above the centre, arc and glyph disc to 130 pt below). If the
+  compass drops too far below the fold on small phones, shrink the dial to 180 pt before changing anything else.
+- **VoiceOver:** unchanged. The arc and markers are hidden from accessibility; the dial still reads its
+  targets, and the Moon says "Moon now, west, 275 degrees". The moon's glyph moves with the 30 s refresh,
+  with no animation (and none under Reduce Motion).
+- **Not decided:** the 5.6 pinned bar's compact dial (arc or no arc); the AX 260 pt dial gets the same
+  proportions (+16 pt arc) in 5.5.
+
+*As built (5.8, 2026-10-01):* as above, with these readings (DECISIONS.md "5.8 moon arc"): rise/set dots sit
+at the selected day's target bearings on the arc's track (a few degrees off the arc's end on cross-day passes);
+with no moonrise and the moon down, the moonset dot still shows, dimmed; locked, the Moon grows to 28 pt. The
+block is ~47 pt taller than 5.4 (260 × 277 pt dial view), more than the estimate above.
 
 ## 4. AX sizes (3c), at `dynamicTypeSize.isAccessibilitySize`
 The screen scrolls; containers reflow:
@@ -296,6 +339,7 @@ Loading and failed-fetch states keep their current copy; style them with the not
 5.5 **AX reflow** (§4).
 5.6 **Pinned compass bar** (§4.1).
 5.7 **Onboarding** (§5). *Built first (2026-10-01); 5.5 and 5.6 follow it.*
+5.8 **Moon arc** (§3.3a). *Added 2026-10-01; build before 5.5, because it changes the dial's size and layout. Built 2026-10-01.*
 Then device QA with screenshots at default, AX1 and AX5 for every state in §3–5.
 
 ## 8. Tests
@@ -324,6 +368,7 @@ loading/failed) · light mode, if wanted.
   2026-10-01, after the device check: the dot read as a second moonrise):** a ~20 pt mini phase glyph with
   the card glyph's lit fraction, terminator, `moonLit` fill and glow; upright; no arrow. Locked like the other
   targets. "Moon" only in the lock pill ("Moon · 275° W"); VoiceOver "Moon now, west, 275 degrees". ✅
+  **Revised again (Tessa, 2026-10-01):** still hard to tell apart on device. The glyph moves to a rise-to-set arc outside the rim, 24 pt; see §3.3a. ✅
 - **Q5 Onboarding audience:** new installs only (no saved place, permission not determined); DEBUG
   reset to re-run. ✅
 

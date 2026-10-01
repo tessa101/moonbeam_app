@@ -128,6 +128,55 @@ nonisolated struct AstronomyEngineMoonService: MoonService {
         )
     }
 
+    /// The same latest-rise / latest-set rule as `moonPosition(for:at:)`, so
+    /// a pass exists exactly when the compass's "Moon" target does. The set
+    /// is searched forward from `date` over the same span as the lookback.
+    func moonPass(for place: Place, containing date: Date) -> MoonPass? {
+        let observer = Astronomy_MakeObserver(
+            place.latitude,
+            place.longitude,
+            Self.observerHeightMeters
+        )
+        let moment = Self.astroTime(from: date)
+
+        guard let riseTime = Self.latestEvent(direction: DIRECTION_RISE, observer: observer, before: moment) else {
+            return nil
+        }
+        if let lastSet = Self.latestEvent(direction: DIRECTION_SET, observer: observer, before: moment),
+           lastSet.ut > riseTime.ut {
+            return nil
+        }
+        let setSearch = Astronomy_SearchRiseSetEx(
+            BODY_MOON,
+            observer,
+            DIRECTION_SET,
+            moment,
+            Self.moonUpLookbackDays,
+            Self.metersAboveGround
+        )
+        guard setSearch.status == ASTRO_SUCCESS else { return nil }
+
+        let riseDate = Self.date(from: riseTime)
+        let setDate = Self.date(from: setSearch.time)
+        var sampleDates = Array(stride(from: riseDate, to: setDate, by: MoonPass.sampleInterval))
+        sampleDates.append(setDate)
+
+        var azimuths: [Double] = []
+        azimuths.reserveCapacity(sampleDates.count)
+        for sampleDate in sampleDates {
+            var time = Self.astroTime(from: sampleDate)
+            guard let horizon = Self.horizontal(at: &time, observer: observer) else { return nil }
+            azimuths.append(horizon.azimuth.wrappedIntoDegreeCircle)
+        }
+        guard let riseAzimuth = azimuths.first, let setAzimuth = azimuths.last else { return nil }
+
+        return MoonPass(
+            rise: MoonEvent(date: riseDate, azimuth: riseAzimuth),
+            set: MoonEvent(date: setDate, azimuth: setAzimuth),
+            path: MoonPass.unwrapped(azimuths)
+        )
+    }
+
     // MARK: - Illumination at an arbitrary moment
 
     /// The lit fraction of the disc, `0.0...1.0`, at a specific instant.

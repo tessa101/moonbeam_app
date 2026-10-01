@@ -3,7 +3,7 @@
 > A living note on where things stand. Update it at the end of each work session
 > so the next session (you, or Claude) can pick up cold.
 
-_Last updated: 2026-10-01 (TestFlight build 3 prepared; Step 5.7 onboarding built ahead of 5.5/5.6; Step 5.3 madlib sentence built, with §3.1a; 5.2 follow-ups; Step 5.2 moon card built; 5.1 theme; Design 1.1 settled: DESIGN-1.1.md, Step 5; 4.14, Step 2.2 and 4.15 built; device checks pending)_
+_Last updated: 2026-10-01 (5.8 moon arc built; next: DEBUG onboarding trigger, tap animation, then 5.5; TestFlight build 3 uploaded with 5.7; moon arc decided (option B, 5.8); Step 5.7 onboarding built ahead of 5.5/5.6; Step 5.3 madlib sentence built, with §3.1a; 5.2 follow-ups; Step 5.2 moon card built; 5.1 theme; Design 1.1 settled: DESIGN-1.1.md, Step 5; 4.14, Step 2.2 and 4.15 built; device checks pending)_
 
 ## Where things live
 - **Local repo:** `~/app-ideas/moonbeam` (the one true folder)
@@ -189,7 +189,21 @@ _Last updated: 2026-10-01 (TestFlight build 3 prepared; Step 5.7 onboarding buil
      `-resetOnboarding`. Placeholder copy from the mockup, as-is (DECISIONS.md "5.7 onboarding"). 427 tests / 648
      cases. Screenshots: `.agent-reports/5.7-onboarding/` (default + AX5). **Check on device:** fresh install →
      onboarding; Allow Once; Don't Allow → Enable location → turn on in Settings → back lands on the main screen.
-     Next: 5.5 AX reflow.
+     **Next, in order (2026-10-01):** (1) DEBUG onboarding trigger: `-forceOnboarding` (ignores all
+     conditions) + `-onboardingPage landing|upsell|declined`, no stored-state changes, temporary; (2) tap
+     animation on buttons (DECISIONS.md 2026-10-01); (3) **5.8 moon arc** (DESIGN-1.1.md §3.3a, option B, 24 pt glyph, dial 196 pt); (4) 5.5 AX reflow, then 5.6 pinned bar.
+     **Open:** lock halo vs the amber arc; pinned bar's compact dial (decide in 5.6).
+   - [x] **5.8 moon arc (2026-10-01, built ahead of the DEBUG trigger and tap animation at Tessa's request):**
+     dial 196 pt; the moon's pass as an arc outside the rim (option B: travelled hairline, dotted rest), rise/set
+     dots on it, the live Moon a 24 pt glyph on a `bg` disc, heading capsule beyond the arc. Moon down / other
+     days: the pass from that day's moonrise, dimmed, no glyph. Path sampled every 15 min by the new
+     `MoonService.moonPass(for:containing:)` (`MoonPass` model), so southern-hemisphere passes run through the
+     north. VoiceOver unchanged. 448 tests / 669 cases. Screenshots: `.agent-reports/5.8-moon-arc/`.
+     **Check on device:** the arc follows the moon over an evening; the block is ~47 pt taller than 5.4 (not
+     25–30), so check the compass's position on the smallest phone (§3.3a: shrink to 180 pt first).
+     **Open:** cross-day passes (see DECISIONS.md "5.8 moon arc"); halo vs arc looks fine in the screenshot
+     (it barely shows past the face); pinned bar (5.6).
+     **Next:** (1) DEBUG onboarding trigger; (2) tap animation; (3) 5.5 AX reflow, then 5.6.
 
 5. [ ] Location: detect + search (Step 2)
    - Spec: **[LOCATION.md](LOCATION.md)** (decided 2026-09-25). Place model, CoreLocation one-shot fix,

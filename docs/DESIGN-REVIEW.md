@@ -63,6 +63,7 @@ _Started: 2026-09-26_
   - ~~target dots are unlabelled~~ **Done (5.4):** ↑ moonrise, ↓ moonset, bigger dot with no arrow for the live Moon (§11 Q4, proposed). Was: **target dots are unlabelled** — the rows that named them were removed in 4.7, so nothing says which dot is which until you lock. Likely fix: small labels or distinct shapes per target. The locked dot is just bigger and tinted
   - at AX sizes the top indicator grows and sits close to the "Compass" header
   - no animation, to avoid a long spin across 359° → 0°
+  - [x] **Live Moon marker is hard to tell from the rise/set dots (device, 2026-10-01).** ✅ Settled 2026-10-01 (Tessa): rise-to-set arc outside the rim, option B, 24 pt glyph; DESIGN-1.1.md §3.3a, build item 5.8. Still open: lock halo vs the amber arc, pinned bar (5.6)
 - [ ] **Placeholder copy (4.4):** hint "Turn on location to use the compass." + "Turn On Location"; low accuracy "Compass accuracy is low" (no calibration advice)
 - [ ] **Moonrise / Moon overlap** right after moonrise: which label should win (device QA, STATUS.md Next 7.3)
 
@@ -76,7 +77,7 @@ _Started: 2026-09-26_
 - [ ] **Date row + calendar sheet (Step 3, deferred from device QA):** the date field reads "Date, Today, Saturday, …" and VoiceOver swipe up/down moves a day; ‹ / › announce the new date and read "dimmed" at ±366; the sheet's Today button reads "dimmed" on today; at accessibility text sizes the row stays usable and the sheet opens at large
 
 ## Motion and feedback (noted 2026-10-01, Tessa)
-- [ ] **Tap animation on buttons:** a pressed-state animation (e.g. a slight scale/opacity dip) for the primary, secondary and text-link buttons, the ‹ › day buttons and the sentence tokens. Put it in the shared button styles (`PrimaryButtonStyle`, `SecondaryButtonStyle`, `TextLinkButtonStyle`) so every button picks it up; respect Reduce Motion. After the TestFlight build with 5.7
+- [ ] **Tap animation on buttons:** a pressed-state animation (e.g. a slight scale/opacity dip) for the primary, secondary and text-link buttons, the ‹ › day buttons and the sentence tokens. Put it in the shared button styles (`PrimaryButtonStyle`, `SecondaryButtonStyle`, `TextLinkButtonStyle`) so every button picks it up; respect Reduce Motion. **Go (2026-10-01, Tessa), after the DEBUG onboarding trigger, before 5.5.** Proposed: scale 0.96 + opacity ~0.8, quick spring (~0.15 s); Reduce Motion → opacity only (DECISIONS.md 2026-10-01 "Tap animation")
 
 ## Brand / product
 - [ ] Display name: **"Moon Signal"** for now (was "Moonbeam"; DECISIONS.md 2026-09-28). Lives in `AppInfo.name`; confirm final name with design partner

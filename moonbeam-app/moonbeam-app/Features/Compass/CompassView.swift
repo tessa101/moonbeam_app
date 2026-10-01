@@ -33,7 +33,7 @@ struct CompassView: View {
     // MARK: - Constants (§3.3, from the HTML)
 
     private static let readoutBaseHeight: CGFloat = 40
-    /// Readout to dial (the dial adds its indicator's 10 pt itself), and
+    /// Readout to dial (the dial adds its indicator's 17 pt itself), and
     /// dial to notes.
     private static let dialTopSpacing: CGFloat = 12
     private static let dialBottomSpacing: CGFloat = 4
@@ -89,7 +89,8 @@ struct CompassView: View {
                 targets: viewModel.targets,
                 lockedKind: viewModel.lockedKind,
                 accessibilityTargets: viewModel.targetsAccessibilityLabel,
-                moonGlyph: viewModel.moonGlyph
+                moonGlyph: viewModel.moonGlyph,
+                arc: viewModel.arc
             )
             .padding(.top, Self.dialTopSpacing)
             .padding(.bottom, Self.dialBottomSpacing)
@@ -203,8 +204,10 @@ private struct CompassPreview: View {
 
     let context: CompassContext
     let reading: HeadingReading?
-    /// Where the fake moon is: up, at this azimuth.
+    /// Where the fake moon is: at this azimuth, up unless `isMoonUp` is
+    /// false.
     var moonAzimuth = 140.0
+    var isMoonUp = true
 
     @State private var heading = FakeHeadingService()
     @State private var viewModel: CompassViewModel?
@@ -222,7 +225,10 @@ private struct CompassPreview: View {
         .task {
             let viewModel = CompassViewModel(
                 headingService: heading,
-                moonService: FakeMoonService(position: MoonPosition(azimuth: moonAzimuth, isUp: true))
+                moonService: FakeMoonService(
+                    position: MoonPosition(azimuth: moonAzimuth, isUp: isMoonUp),
+                    pass: Self.pass
+                )
             )
             viewModel.update(context)
             viewModel.setOnScreen(true)
@@ -232,6 +238,21 @@ private struct CompassPreview: View {
             if let reading { heading.send(reading) }
         }
     }
+
+    /// A pass from moonrise at 72° to moonset at 288°, through the south,
+    /// as `context` has them. Evenly spaced, which is close enough here.
+    static let pass: MoonPass = {
+        let riseAzimuth = 72.0
+        let setAzimuth = 288.0
+        let sampleStep = 4.0
+        let rise = Date().addingTimeInterval(-6 * 60 * 60)
+        let path = Array(stride(from: riseAzimuth, through: setAzimuth, by: sampleStep))
+        return MoonPass(
+            rise: MoonEvent(date: rise, azimuth: riseAzimuth),
+            set: MoonEvent(date: rise.addingTimeInterval(Double(path.count - 1) * MoonPass.sampleInterval), azimuth: setAzimuth),
+            path: path
+        )
+    }()
 
     static let place = Place(
         name: "Los Angeles",
@@ -300,6 +321,15 @@ private let waningGibbous = CompassPreview.context(phase: .waningGibbous, phaseA
 
 #Preview("Moon up") {
     CompassPreview(context: waningGibbous, reading: HeadingReading(trueHeading: 240, accuracy: 3), moonAzimuth: 275)
+}
+
+#Preview("Moon down") {
+    CompassPreview(
+        context: waningGibbous,
+        reading: HeadingReading(trueHeading: 240, accuracy: 3),
+        moonAzimuth: 275,
+        isMoonUp: false
+    )
 }
 
 #Preview("Locked on the Moon") {

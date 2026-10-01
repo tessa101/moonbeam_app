@@ -88,6 +88,12 @@ struct MoonPosition: Equatable {    // compass "Moon" target (COMPASS.md §4)
     let isUp: Bool              // latest rise after latest set, same search as the table
 }
 
+struct MoonPass: Equatable, Sendable {   // the compass's moon arc (DESIGN-1.1.md §3.3a)
+    let rise: MoonEvent         // may be the day before the selected day
+    let set: MoonEvent          // may be the day after
+    let path: [Double]          // azimuths every 15 min, rise → set, unwrapped (can leave 0..<360)
+}
+
 struct HeadingReading: Equatable, Sendable {
     let trueHeading: Double?    // 0..<360 true north; nil = unavailable (never magnetic)
     let accuracy: Double?       // degrees; nil = unknown
@@ -102,6 +108,7 @@ Models are plain values with no formatting logic. `Formatting/` turns them into 
 protocol MoonService {                                         // nonisolated
     func moonDay(for place: Place, on date: Date) -> MoonDay   // sync, pure, fast
     func moonPosition(for place: Place, at date: Date) -> MoonPosition  // an instant, not a day
+    func moonPass(for place: Place, containing date: Date) -> MoonPass?  // nil while the moon is down
 }
 
 protocol HeadingService {                                      // @MainActor

@@ -34,6 +34,10 @@ nonisolated final class FakeMoonService: MoonService {
     /// the moon rise or set while the compass is on screen.
     var position: MoonPosition
 
+    /// Returned by `moonPass(for:containing:)` for any moment. `nil` by
+    /// default: no arc.
+    var pass: MoonPass?
+
     // MARK: - Record
 
     /// Every `date` passed to `moonDay(for:on:)`, oldest first.
@@ -42,6 +46,9 @@ nonisolated final class FakeMoonService: MoonService {
     /// Every `date` passed to `moonPosition(for:at:)`, oldest first.
     private(set) var requestedPositionDates: [Date] = []
 
+    /// Every `date` passed to `moonPass(for:containing:)`, oldest first.
+    private(set) var requestedPassDates: [Date] = []
+
     // MARK: - Init
 
     init(
@@ -49,13 +56,15 @@ nonisolated final class FakeMoonService: MoonService {
         set: MoonEvent? = nil,
         phaseAngle: Double = FakeMoonService.fullMoonPhaseAngle,
         illumination: Double = FakeMoonService.fullyLit,
-        position: MoonPosition = MoonPosition(azimuth: 0, isUp: false)
+        position: MoonPosition = MoonPosition(azimuth: 0, isUp: false),
+        pass: MoonPass? = nil
     ) {
         self.rise = rise
         self.set = set
         self.phaseAngle = phaseAngle
         self.illumination = illumination
         self.position = position
+        self.pass = pass
     }
 
     // MARK: - MoonService
@@ -75,5 +84,10 @@ nonisolated final class FakeMoonService: MoonService {
     func moonPosition(for place: Place, at date: Date) -> MoonPosition {
         requestedPositionDates.append(date)
         return position
+    }
+
+    func moonPass(for place: Place, containing date: Date) -> MoonPass? {
+        requestedPassDates.append(date)
+        return pass
     }
 }
