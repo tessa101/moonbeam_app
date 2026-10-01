@@ -311,6 +311,7 @@ Four full screens, `bg` background, 28 pt margins, buttons pinned to the bottom.
 - **(new, Tessa, 2026-10-01) Completed flag:** …**and** onboarding hasn't been completed. Every exit (Allow,
   Got it, Search instead, the Settings return below) sets the flag, so Search instead → Cancel → relaunch
   doesn't show it again.
+- **(new, Tessa, 2026-10-01) Services off / already denied:** Use my location opens the app's Settings and stays on the upsell; "That's okay" only follows a real Don't Allow (DECISIONS.md 2026-10-01 "Location Services off").
 - **(new, Tessa, 2026-10-01) Back from Settings:** after Enable location, "That's okay" stays up. If permission
   is authorized when the app returns to the foreground, go to the main screen as for Allow.
 

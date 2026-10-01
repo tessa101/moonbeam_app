@@ -54,6 +54,11 @@ final class OnboardingViewModel {
 
     private(set) var step: Step = .landing
 
+    /// Goes up by one each time Use my location can't show the prompt
+    /// (Location Services off, or already denied): the view opens the app's
+    /// Settings page when it changes, as "Enable location" does.
+    private(set) var settingsRequestCount = 0
+
     // MARK: - Dependencies
 
     private let locationService: any LocationService
@@ -65,6 +70,10 @@ final class OnboardingViewModel {
     /// The prompt deactivates the scene; its return to active isn't a
     /// return from Settings.
     @ObservationIgnored private var isRequestingPermission = false
+
+    /// Use my location sent the user to Settings from the upsell; coming
+    /// back authorized goes to the main screen.
+    @ObservationIgnored private var isAwaitingSettingsFromUpsell = false
 
     #if DEBUG
     /// Shown by the DEBUG trigger, not by `shouldShow`: finishing leaves the
@@ -116,8 +125,19 @@ final class OnboardingViewModel {
     }
 
     /// The upsell's Use my location: the one call that shows the prompt.
+    ///
+    /// "That's okay" follows a real Don't Allow only (DECISIONS.md
+    /// 2026-10-01 "Location Services off"). With Location Services off, or
+    /// permission already denied ("Never"), no prompt can show, so nobody
+    /// declined anything: Settings opens instead and the upsell stays.
     func useMyLocation() async {
         guard step == .locationUpsell, !isRequestingPermission else { return }
+        let before = locationService.authorizationState
+        if before == .servicesOff || before == .denied {
+            requestSettings()
+            return
+        }
+
         isRequestingPermission = true
         let state = await locationService.requestAuthorization()
         isRequestingPermission = false
@@ -128,7 +148,11 @@ final class OnboardingViewModel {
         case .notDetermined:
             // The prompt went away unanswered; stay so it can be tapped again.
             break
-        case .denied, .restricted, .servicesOff:
+        case .servicesOff:
+            requestSettings()
+        case .denied, .restricted:
+            // Don't Allow at the prompt. Restricted (parental controls,
+            // MDM) can't be fixed in Settings, so it keeps "That's okay".
             step = .locationDeclined
             #if DEBUG
             isDeclinedForcedWhileAuthorized = false
@@ -151,13 +175,24 @@ final class OnboardingViewModel {
     /// Call when the scene becomes active. "Enable location" leaves for
     /// Settings with "That's okay" still up; coming back authorized goes to
     /// the main screen as Allow does. Anything else stays put.
+    ///
+    /// The same holds on the upsell after Use my location opened Settings;
+    /// still off, it stays so Use my location can be tapped again.
     func sceneDidBecomeActive() {
-        guard isPresented, step == .locationDeclined, !isRequestingPermission else { return }
+        guard isPresented, !isRequestingPermission else { return }
+        let isBackFromUpsellSettings = step == .locationUpsell && isAwaitingSettingsFromUpsell
+        guard step == .locationDeclined || isBackFromUpsellSettings else { return }
         guard locationService.authorizationState.isAuthorized else { return }
         #if DEBUG
         if isDeclinedForcedWhileAuthorized { return }
         #endif
         finish(.locationAllowed)
+    }
+
+    /// Asks the view to open the app's Settings page; the upsell stays up.
+    private func requestSettings() {
+        isAwaitingSettingsFromUpsell = true
+        settingsRequestCount += 1
     }
 
     // MARK: - Finishing
@@ -174,6 +209,7 @@ final class OnboardingViewModel {
         if marksCompleted {
             onboardingStore.isOnboardingCompleted = true
         }
+        isAwaitingSettingsFromUpsell = false
         // The main screen is told first, so it starts in the right state.
         onFinish(outcome)
         isPresented = false
@@ -220,6 +256,7 @@ final class OnboardingViewModel {
     func debugShow(startingAt page: Step = .landing) {
         isForced = true
         isRequestingPermission = false
+        isAwaitingSettingsFromUpsell = false
         step = page
         isDeclinedForcedWhileAuthorized = page == .locationDeclined
             && locationService.authorizationState.isAuthorized

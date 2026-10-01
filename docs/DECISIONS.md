@@ -5,6 +5,47 @@
 
 ---
 
+### 2026-10-01 · Show onboarding button also in TestFlight builds (Tessa)
+- **Why:** testers (and Tessa on a phone without Xcode) need to see onboarding again without deleting the app
+  and resetting location and privacy. Launch arguments don't exist in TestFlight, so the button is the way.
+- **Decision:** the "Show onboarding" button (DECISIONS.md 2026-10-01 "DEBUG onboarding trigger") also shows in
+  **TestFlight** builds. It stays hidden in App Store builds.
+- **How:** a runtime check, not a build setting: show it when `DEBUG`, or when
+  `Bundle.main.appStoreReceiptURL?.lastPathComponent == "sandboxReceipt"` (TestFlight; App Store builds have
+  `receipt`). One small `BuildChannel` helper (`isTestFlight`) so the check lives in one place and is
+  testable with an injected URL. The launch arguments (`-forceOnboarding`, `-onboardingPage`) stay DEBUG-only.
+- **Same rules:** it opens the same forced flow and never writes stored state (no completed flag, place or
+  permission). Text-link style, 44 pt, at the bottom of the main screen.
+- **Release check changes:** the button text and its code are now **in** the Release binary on purpose. What must
+  stay out of Release: the launch-argument names. With an App Store receipt the button is not shown.
+- **Temporary:** remove the button and `BuildChannel` before the 1.0 App Store build (STATUS.md).
+- **Tests:** `BuildChannel` with `sandboxReceipt`, `receipt`, nil; the button's visibility in each; a forced run
+  from the button still writes nothing.
+
+### 2026-10-01 · Onboarding: Location Services off sends Use my location to Settings, not "That's okay" (Tessa)
+- **Bug (device):** with location off, tapping Use my location on the upsell lands on "That's okay". The view
+  model maps every non-authorized answer (`.denied`, `.restricted`, `.servicesOff`) to `locationDeclined`, but §5
+  says "That's okay" follows **Don't Allow** only. With Location Services off the system can't show the prompt,
+  so nobody declined anything.
+- **Fix:** `useMyLocation()` reads the state **before** requesting.
+  - `.notDetermined` before, `.denied` after: a real Don't Allow → "That's okay" (unchanged).
+  - `.servicesOff` (before or after), or `.denied` when it was already denied before the tap (no prompt could
+    show): **open the app's Settings page** (`UIApplication.openSettingsURLString`, as "Enable location" does) and
+    **stay on the upsell**. Back in the foreground: authorized → main screen as for Allow (the existing
+    Settings-return rule, extended to the upsell); still off → stays on the upsell, tappable again.
+  - `.restricted` (parental controls / MDM): Settings can't help; keep "That's okay" for now.
+- **Limit:** the public API only opens Moon Signal's own Settings page, not the top-level Location Services
+  switch (Privacy & Security > Location Services). Copy for that is a later design question.
+- **Tests:** per case above (before/after states, Settings opened once, stays on the upsell, return authorized,
+  return still off, real Don't Allow unchanged), on `FakeLocationService`.
+- **Spec:** DESIGN-1.1.md §5 updated.
+- **As built:** `OnboardingViewModel.useMyLocation()` doesn't request at all when the state is already `.denied` or
+  `.servicesOff` (no prompt could show); it bumps `settingsRequestCount`, which `OnboardingView` turns into the
+  Settings URL, as "Enable location" does. The upsell's Settings return only applies after that trip, so a forced
+  upsell with location allowed doesn't close itself. 7 new tests.
+- **Simulator (iOS 27):** the Settings URL brought Settings forward on whatever page it was last on (or its home
+  screen), not Moon Signal's page; "Enable location" uses the same URL. **Check on device.**
+
 ### 2026-10-01 · DEBUG onboarding trigger for testing (Tessa)
 - **Why:** onboarding only shows on a fresh install, so testing it means deleting the app. A temporary DEBUG
   button/launch argument lets us see it any time (and on TestFlight-style device builds from Xcode).

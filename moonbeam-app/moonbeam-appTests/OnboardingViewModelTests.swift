@@ -266,4 +266,114 @@ struct OnboardingViewModelTests {
 
         #expect(outcomes.received == [.locationDeclined])
     }
+
+    // MARK: - Location Services off / already denied (DECISIONS.md 2026-10-01)
+
+    /// On the upsell with location already in `state`, as a forced run or a
+    /// device whose state changed after launch would have it.
+    private static func makeViewModelAtUpsell(
+        startingIn state: LocationAuthState,
+        outcomes: Outcomes = Outcomes()
+    ) -> (OnboardingViewModel, FakeLocationService) {
+        let location = FakeLocationService()
+        let viewModel = makeViewModelAtUpsell(location: location, outcomes: outcomes)
+        location.authorizationState = state
+        return (viewModel, location)
+    }
+
+    @Test("Services off or already denied before the tap: Settings once, no prompt, upsell stays", arguments: [
+        LocationAuthState.servicesOff, .denied,
+    ])
+    func noPromptPossibleOpensSettings(state: LocationAuthState) async {
+        let outcomes = Outcomes()
+        let (viewModel, location) = Self.makeViewModelAtUpsell(startingIn: state, outcomes: outcomes)
+
+        await viewModel.useMyLocation()
+
+        #expect(viewModel.settingsRequestCount == 1)
+        #expect(location.requestAuthorizationCount == 0)
+        #expect(viewModel.step == .locationUpsell)
+        #expect(viewModel.isPresented)
+        #expect(outcomes.received.isEmpty)
+    }
+
+    @Test("Services off reported after the request: Settings, upsell stays")
+    func servicesOffAfterRequestOpensSettings() async {
+        let location = FakeLocationService()
+        location.stateAfterRequest = .servicesOff
+        let viewModel = Self.makeViewModelAtUpsell(location: location)
+
+        await viewModel.useMyLocation()
+
+        #expect(viewModel.settingsRequestCount == 1)
+        #expect(viewModel.step == .locationUpsell)
+    }
+
+    @Test("A real Don't Allow still shows \"That's okay\", without opening Settings")
+    func realDontAllowUnchanged() async {
+        let location = FakeLocationService()
+        location.stateAfterRequest = .denied
+        let viewModel = Self.makeViewModelAtUpsell(location: location)
+
+        await viewModel.useMyLocation()
+
+        #expect(viewModel.step == .locationDeclined)
+        #expect(viewModel.settingsRequestCount == 0)
+    }
+
+    @Test("Restricted keeps \"That's okay\": Settings can't fix it")
+    func restrictedKeepsThatsOkay() async {
+        let location = FakeLocationService()
+        location.stateAfterRequest = .restricted
+        let viewModel = Self.makeViewModelAtUpsell(location: location)
+
+        await viewModel.useMyLocation()
+
+        #expect(viewModel.step == .locationDeclined)
+        #expect(viewModel.settingsRequestCount == 0)
+    }
+
+    @Test("Back from Settings authorized: main screen as for Allow, completed", arguments: [
+        LocationAuthState.servicesOff, .denied,
+    ])
+    func upsellSettingsReturnAuthorized(state: LocationAuthState) async {
+        let store = InMemoryOnboardingStore()
+        let outcomes = Outcomes()
+        let location = FakeLocationService()
+        let viewModel = Self.makeViewModelAtUpsell(location: location, onboardingStore: store, outcomes: outcomes)
+        location.authorizationState = state
+        await viewModel.useMyLocation()
+
+        location.authorizationState = .authorized
+        viewModel.sceneDidBecomeActive()
+
+        #expect(!viewModel.isPresented)
+        #expect(outcomes.received == [.locationAllowed])
+        #expect(store.isOnboardingCompleted)
+    }
+
+    @Test("Back from Settings still off: upsell stays, and Use my location opens Settings again")
+    func upsellSettingsReturnStillOff() async {
+        let (viewModel, _) = Self.makeViewModelAtUpsell(startingIn: .servicesOff)
+        await viewModel.useMyLocation()
+
+        viewModel.sceneDidBecomeActive()
+        #expect(viewModel.isPresented)
+        #expect(viewModel.step == .locationUpsell)
+
+        await viewModel.useMyLocation()
+        #expect(viewModel.settingsRequestCount == 2)
+    }
+
+    @Test("The upsell doesn't leave on its own when authorized without a trip to Settings")
+    func upsellNoSettingsTripStays() {
+        let location = FakeLocationService()
+        let viewModel = Self.makeViewModelAtUpsell(location: location)
+        location.authorizationState = .authorized
+
+        viewModel.sceneDidBecomeActive()
+
+        #expect(viewModel.isPresented)
+        #expect(viewModel.step == .locationUpsell)
+    }
 }

@@ -213,6 +213,10 @@ _Last updated: 2026-10-01 (tap animation and DEBUG onboarding trigger built; nex
      tokens not done (inline links, open in DECISIONS.md). 461 tests / 687 cases. Screenshots:
      `.agent-reports/tap-animation/`. **Check on device:** tune the scale/opacity/spring by feel.
      **Next:** 5.5 AX reflow, then 5.6 pinned bar.
+   - [x] **Onboarding, Location Services off / Never (2026-10-01):** Use my location opens Settings and stays on
+     the upsell instead of showing "That's okay"; back allowed → main screen. Real Don't Allow unchanged.
+     468 tests / 696 cases. Screenshots: `.agent-reports/onboarding-services-off/`. **Check on device:** that the
+     Settings URL lands on Moon Signal's page (the simulator showed Settings' last page).
    - [x] **App icon (2026-10-01):** the Moon Signal design replaces the placeholder (`MoonSignal-AppIcon-*`):
      Dark in both the default and dark slots (the app is dark-only, so there's no light design), Tinted for
      tinted. **Check on device:** home screen in default, dark and tinted. Not in TestFlight build 3.

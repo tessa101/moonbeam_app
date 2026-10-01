@@ -39,6 +39,12 @@ struct OnboardingView: View {
         .onChange(of: viewModel.step) {
             AccessibilityNotification.ScreenChanged().post()
         }
+        // Use my location with Location Services off or already denied: no
+        // prompt can show, so the app's Settings page instead (DECISIONS.md
+        // 2026-10-01 "Location Services off").
+        .onChange(of: viewModel.settingsRequestCount) {
+            openSettings()
+        }
         .onChange(of: scenePhase) { _, phase in
             guard phase == .active else { return }
             viewModel.sceneDidBecomeActive()
@@ -47,8 +53,9 @@ struct OnboardingView: View {
 
     // MARK: - Actions
 
-    /// "Enable location": the app's own Settings page. "That's okay" stays
-    /// up; the view model checks again on the way back.
+    /// "Enable location", and Use my location when no prompt can show: the
+    /// app's own Settings page. The screen stays up; the view model checks
+    /// again on the way back.
     private func openSettings() {
         guard let url = URL(string: UIApplication.openSettingsURLString) else { return }
         openURL(url)
