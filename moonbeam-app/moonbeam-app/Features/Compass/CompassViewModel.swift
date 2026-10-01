@@ -84,6 +84,9 @@ final class CompassViewModel {
     /// Leads into the existing Location Off flow.
     static let turnOnLocationTitle = "Turn On Location"
 
+    /// How VoiceOver names the live Moon on the dial.
+    static let moonNowName = "Moon now"
+
     /// Shown, and read by VoiceOver, while the heading can't be trusted.
     static let lowAccuracyText = "Compass accuracy is low"
 
@@ -143,6 +146,11 @@ final class CompassViewModel {
     private(set) var isLowAccuracy = true
 
     private(set) var lockedKind: CompassTarget.Kind?
+
+    /// The live Moon marker's phase (§11 Q4, revised): the same lit
+    /// fraction and side as the moon card's glyph, from the selected day's
+    /// table. Stored, since `context` isn't observed.
+    private(set) var moonGlyph: PhaseGlyphGeometry?
 
     /// The heading and location sensors are running.
     private(set) var isSensing = false
@@ -278,15 +286,27 @@ final class CompassViewModel {
     }
 
     /// The dial's VoiceOver label: "Targets: moonrise, 72 degrees
-    /// east-northeast; moon, 140 degrees southeast". There are no target rows
+    /// east-northeast; Moon now, west, 275 degrees". There are no target rows
     /// (4.7), so this is how VoiceOver hears each bearing, including the live
     /// moon's, which the moon table doesn't have. `nil` with no targets.
     var targetsAccessibilityLabel: String? {
         guard !targets.isEmpty else { return nil }
         let parts = targets.map { target in
-            "\(Self.name(of: target.kind).lowercased()), \(formatter.spokenBearing(for: target.azimuth))"
+            switch target.kind {
+            case .moonrise, .moonset:
+                "\(Self.name(of: target.kind).lowercased()), \(formatter.spokenBearing(for: target.azimuth))"
+            case .moon:
+                moonNowText(for: target.azimuth)
+            }
         }
         return "Targets: " + parts.joined(separator: "; ")
+    }
+
+    /// "Moon now, west, 275 degrees": "now" says it's where the moon is,
+    /// not where it rises (the marker looked like a second moonrise on
+    /// device), and the direction leads, as on the moon card.
+    private func moonNowText(for azimuth: Double) -> String {
+        "\(Self.moonNowName), \(formatter.spokenName(for: azimuth)), \(formatter.spokenDegrees(for: azimuth))"
     }
 
     /// "Pointing at moonrise, 72 degrees east-northeast".
@@ -312,6 +332,10 @@ final class CompassViewModel {
     func update(_ context: CompassContext) {
         let wasPreciseLocationOff = isPreciseLocationOff
         self.context = context
+        let glyph = context.moonDay.map {
+            PhaseGlyphGeometry(illumination: $0.illumination, phaseAngle: $0.phaseAngle)
+        }
+        if glyph != moonGlyph { moonGlyph = glyph }
         isPreciseLocationOff = context.isPreciseLocationOff
         hasDetectedPlace = context.detectedPlace != nil
         placeName = context.place?.nameWithRegion

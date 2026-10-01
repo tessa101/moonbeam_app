@@ -6,13 +6,14 @@
 import SwiftUI
 
 /// The compass dial (DESIGN-1.1.md §3.3, COMPASS.md §1): a lit face with tick
-/// dots every 15°, N/E/S/W, a moon-coloured dot on the rim for each target
-/// (↑ moonrise, ↓ moonset, no arrow for the live Moon, §11 Q4) and a fixed
-/// indicator at 12 o'clock. Locked, the target's dot grows and glows and the
-/// dial gets a soft amber halo.
+/// dots every 15°, N/E/S/W, a moon-coloured dot on the rim for moonrise (↑)
+/// and moonset (↓), a mini phase glyph for the live Moon (§11 Q4, revised)
+/// and a fixed indicator at 12 o'clock. Locked, the target's mark grows and
+/// glows and the dial gets a soft amber halo.
 ///
 /// The face itself doesn't turn: everything on it is placed at its on-screen
-/// angle (azimuth − heading), so letters and arrows are always upright and
+/// angle (azimuth − heading), so letters, arrows and the Moon's phase are
+/// always upright and
 /// the face's light stays at the top. Turning the phone right still moves
 /// the marks left, as in Compass. Not animated: a turn from 359° to 0° would
 /// otherwise spin the long way. Only the lock change animates, and not with
@@ -31,6 +32,10 @@ struct CompassDial: View {
     /// `CompassViewModel.targetsAccessibilityLabel`; `nil` hides the dial
     /// from VoiceOver.
     var accessibilityTargets: String? = nil
+
+    /// The live Moon's phase (`CompassViewModel.moonGlyph`). `nil` draws the
+    /// Moon as a plain dot.
+    var moonGlyph: PhaseGlyphGeometry? = nil
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -55,8 +60,9 @@ struct CompassDial: View {
     private static let arrowCentreInset: CGFloat = 22
 
     private static let targetDotSize: CGFloat = 14
-    /// The live Moon (§11 Q4): bigger than rise/set, no arrow.
-    private static let moonDotSize: CGFloat = 18
+    /// The live Moon (§11 Q4, revised): a mini phase glyph, bigger than
+    /// the rise/set dots, no arrow. Locked, it grows like the others.
+    private static let moonMarkerSize: CGFloat = 20
     private static let lockedDotSize: CGFloat = 22
     private static let lockedRingWidth: CGFloat = 4
     private static let lockedRingOpacity = 0.35
@@ -203,7 +209,7 @@ struct CompassDial: View {
     private func targetMarks(radius: CGFloat) -> some View {
         ForEach(targets, id: \.kind) { target in
             let isLocked = target.kind == lockedKind
-            targetDot(kind: target.kind, isLocked: isLocked)
+            targetMark(kind: target.kind, isLocked: isLocked)
                 .position(point(at: target.azimuth, distanceFromRim: 0, radius: radius))
             if let arrow = Self.arrow(for: target.kind) {
                 Text(arrow)
@@ -214,14 +220,12 @@ struct CompassDial: View {
         }
     }
 
-    /// A `moonLit` dot with a faint amber glow; locked, it grows and gets a
-    /// ring and a strong glow (§3.3).
-    private func targetDot(kind: CompassTarget.Kind, isLocked: Bool) -> some View {
-        let size = isLocked ? Self.lockedDotSize : (kind == .moon ? Self.moonDotSize : Self.targetDotSize)
-        return Circle()
-            .fill(Theme.Colors.moonLit)
+    /// A target's mark; locked, it grows and gets a ring and a strong glow
+    /// (§3.3), the live Moon included.
+    private func targetMark(kind: CompassTarget.Kind, isLocked: Bool) -> some View {
+        let size = isLocked ? Self.lockedDotSize : (kind == .moon ? Self.moonMarkerSize : Self.targetDotSize)
+        return targetFace(kind: kind, isLocked: isLocked)
             .frame(width: size, height: size)
-            .shadow(color: Theme.Colors.accent.opacity(isLocked ? 0 : Self.targetGlowOpacity), radius: Self.targetGlowRadius)
             .background {
                 if isLocked {
                     Circle()
@@ -238,6 +242,21 @@ struct CompassDial: View {
                 }
             }
             .animation(reduceMotion ? nil : Self.lockAnimation, value: isLocked)
+    }
+
+    /// The live Moon is the card's phase glyph (its own lit fraction,
+    /// terminator, `moonLit` and glow), so it can't pass for a second
+    /// moonrise. It's placed, not rotated, so it stays upright. Rise and set
+    /// are `moonLit` dots with a faint amber glow.
+    @ViewBuilder
+    private func targetFace(kind: CompassTarget.Kind, isLocked: Bool) -> some View {
+        if kind == .moon, let moonGlyph {
+            PhaseGlyph(geometry: moonGlyph)
+        } else {
+            Circle()
+                .fill(Theme.Colors.moonLit)
+                .shadow(color: Theme.Colors.accent.opacity(isLocked ? 0 : Self.targetGlowOpacity), radius: Self.targetGlowRadius)
+        }
     }
 
     // MARK: - Geometry
@@ -273,7 +292,8 @@ struct CompassDial: View {
             CompassTarget(kind: .moonset, azimuth: 301),
             CompassTarget(kind: .moon, azimuth: 140),
         ],
-        lockedKind: nil
+        lockedKind: nil,
+        moonGlyph: PhaseGlyphGeometry(illumination: 0.64, phaseAngle: 240)
     )
     .padding(40)
     .background(Theme.Colors.bg)

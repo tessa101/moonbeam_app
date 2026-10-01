@@ -194,7 +194,10 @@ Centred, below the card.
   - Ticks every 15°: 3 pt dots, 5 pt at N/E/S/W, `tick`, inset 10 pt.
   - Letters inset 24 pt; **N in `accent`**, E/S/W `textSecondary`; always upright.
   - Targets: 14 pt `moonLit` dots on the rim (glow `accent` 35% radius 10), with ↑ / ↓ in `accent`
-    just outside, upright. Live Moon dot: see §11 Q4.
+    just outside, upright. Live Moon: a **mini phase glyph**, not a dot (§11 Q4, revised 2026-10-01): ~20 pt,
+    the card glyph's lit fraction and terminator, `moonLit` fill and glow, always upright, no arrow. Locked,
+    it matches the other targets (grows to 22 pt, 4 pt `accent` 35% ring, strong glow); pill "Moon · 275° W".
+    VoiceOver: "Moon now, west, 275 degrees".
 - **Locked:** the readout becomes an **amber pill**: "Moonrise · 58° ENE", Young Serif 24,
   `accent` fill, `onAccent` text, padding 9 / 18, glow `accent` 45% radius 36. The locked dot grows to
   22 pt with a 4 pt `accent` 35% ring and a strong glow, and the whole dial gets a soft amber halo
@@ -210,7 +213,9 @@ placed at azimuth − heading, so letters and ↑/↓ are upright and the face's
 on-screen motion as a turning dial). Letter and arrow centres sit 34 / 22 pt in from the rim (the HTML's
 24 / 13 pt box tops). CSS blurs are halved for SwiftUI shadow radii. The 40 pt readout slot scales with
 `.title2`; the pill (~51 pt at default) overflows it, as in the HTML, so the dial doesn't move on lock.
-Live Moon per §11 Q4 (18 pt, no arrow, "Moon" only in the pill, from `CompassViewModel.name(of:)`). The 260 pt AX dial is left for 5.5.
+Live Moon per §11 Q4 (18 pt, no arrow, "Moon" only in the pill, from `CompassViewModel.name(of:)`); *revised
+after the device check:* the card's `PhaseGlyph` at 20 pt (geometry from the selected day's `MoonDay`, as on
+the card), via `CompassViewModel.moonGlyph`. The 260 pt AX dial is left for 5.5.
 
 ## 4. AX sizes (3c), at `dynamicTypeSize.isAccessibilitySize`
 The screen scrolls; containers reflow:
@@ -298,8 +303,10 @@ loading/failed) · light mode, if wanted.
 - **Q2 No place yet:** "a city" token + secondary Use my location button; card and compass hidden (§3.1). ✅
 - **Q3 Time zone:** a small zone abbreviation next to the moonrise and moonset times (§3.2), replacing
   the separate label line. ✅
-- **Q4 Live Moon dot** (today, moon up): **(proposed, not yet confirmed)** an 18 pt `moonLit` dot with no
-  arrow, labelled "Moon" only in the lock pill. Build it this way unless Tessa says otherwise.
+- **Q4 Live Moon marker** (today, moon up): ~~an 18 pt `moonLit` dot with no arrow~~ **Revised (Tessa,
+  2026-10-01, after the device check: the dot read as a second moonrise):** a ~20 pt mini phase glyph with
+  the card glyph's lit fraction, terminator, `moonLit` fill and glow; upright; no arrow. Locked like the other
+  targets. "Moon" only in the lock pill ("Moon · 275° W"); VoiceOver "Moon now, west, 275 degrees". ✅
 - **Q5 Onboarding audience:** new installs only (no saved place, permission not determined); DEBUG
   reset to re-run. ✅
 

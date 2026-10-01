@@ -163,6 +163,10 @@ _Last updated: 2026-10-01 (Step 5.3 madlib sentence built, with §3.1a; 5.2 foll
      At the default size only, the three lines shrink together (minimum 0.7×) before any wraps; other sizes
      don't shrink and wrap. 401 tests / 613 cases. Screenshots: `.agent-reports/5.3-sentence-breaks/`.
      **Check on device:** Irvine, Rancho Santa Margarita and a 2027 date at default and AX3.
+   - [x] **5.4 follow-up, live Moon marker (2026-10-01):** the Moon is a ~20 pt phase glyph (the card's), not a
+     dot; locked like the others; VoiceOver "Moon now, west, 275 degrees". 403 tests / 615 cases. Screenshots:
+     `.agent-reports/5.4-moon-marker/`. **Check on device:** with the moon up, the marker reads as the moon,
+     not a second moonrise.
    - [x] **5.4 compass restyle (2026-10-01):** heading readout (Young Serif 24 in a 40 pt slot), 220 pt
      dial (gradient face, 15° tick dots, upright N/E/S/W with N amber, ↑/↓ by the rise/set dots, 18 pt
      live Moon dot with no arrow), lock = amber pill + dot ring/glow + dial halo, notes as amber-tint

@@ -681,8 +681,37 @@ struct CompassViewModelTests {
         #expect(harness.viewModel.targetsAccessibilityLabel == """
             Targets: moonrise, 72 degrees east-northeast; \
             moonset, 288 degrees west-northwest; \
-            moon, 140 degrees southeast
+            Moon now, southeast, 140 degrees
             """)
+    }
+
+    /// §11 Q4 (revised): "now" and the direction first, so the live Moon
+    /// isn't heard as another moonrise.
+    @Test("The live Moon reads \"Moon now, west, 275 degrees\"")
+    func dialReadsMoonNow() {
+        let harness = Self.makeHarness(position: MoonPosition(azimuth: 275, isUp: true))
+
+        harness.viewModel.update(Self.context())
+
+        #expect(harness.viewModel.targetsAccessibilityLabel?.hasSuffix("; Moon now, west, 275 degrees") == true)
+    }
+
+    @Test("The Moon marker's phase is the moon card's: lit fraction and side from the day's table")
+    func moonGlyphFollowsTable() {
+        let harness = Self.makeHarness(position: Self.moonUp)
+        let base = Self.moonDay()
+        let waning = MoonDay(
+            place: base.place, rise: base.rise, set: base.set,
+            phase: .waningGibbous, phaseAngle: 240, illumination: 0.64
+        )
+
+        harness.viewModel.update(Self.context(moonDay: waning))
+
+        #expect(harness.viewModel.moonGlyph == PhaseGlyphGeometry(illumination: 0.64, phaseAngle: 240))
+        #expect(harness.viewModel.moonGlyph?.litSide == .left)
+
+        harness.viewModel.update(Self.context(moonDay: nil))
+        #expect(harness.viewModel.moonGlyph == nil)
     }
 
     @Test("With no targets the dial has no label, so it's hidden from VoiceOver")
@@ -698,12 +727,12 @@ struct CompassViewModelTests {
     func dialLabelFollowsMoon() {
         let harness = Self.makeHarness(position: Self.moonDown)
         harness.viewModel.update(Self.context())
-        #expect(harness.viewModel.targetsAccessibilityLabel?.contains("moon,") == false)
+        #expect(harness.viewModel.targetsAccessibilityLabel?.contains("Moon now") == false)
 
         harness.moon.position = Self.moonUp
         harness.viewModel.sceneDidBecomeActive()
 
-        #expect(harness.viewModel.targetsAccessibilityLabel?.hasSuffix("moon, 140 degrees southeast") == true)
+        #expect(harness.viewModel.targetsAccessibilityLabel?.hasSuffix("Moon now, southeast, 140 degrees") == true)
     }
 
     @Test("Placeholder copy for the hint and low accuracy")

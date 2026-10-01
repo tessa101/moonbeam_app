@@ -88,7 +88,8 @@ struct CompassView: View {
                 heading: viewModel.heading,
                 targets: viewModel.targets,
                 lockedKind: viewModel.lockedKind,
-                accessibilityTargets: viewModel.targetsAccessibilityLabel
+                accessibilityTargets: viewModel.targetsAccessibilityLabel,
+                moonGlyph: viewModel.moonGlyph
             )
             .padding(.top, Self.dialTopSpacing)
             .padding(.bottom, Self.dialBottomSpacing)
@@ -202,6 +203,8 @@ private struct CompassPreview: View {
 
     let context: CompassContext
     let reading: HeadingReading?
+    /// Where the fake moon is: up, at this azimuth.
+    var moonAzimuth = 140.0
 
     @State private var heading = FakeHeadingService()
     @State private var viewModel: CompassViewModel?
@@ -219,7 +222,7 @@ private struct CompassPreview: View {
         .task {
             let viewModel = CompassViewModel(
                 headingService: heading,
-                moonService: FakeMoonService(position: MoonPosition(azimuth: 140, isUp: true))
+                moonService: FakeMoonService(position: MoonPosition(azimuth: moonAzimuth, isUp: true))
             )
             viewModel.update(context)
             viewModel.setOnScreen(true)
@@ -263,7 +266,10 @@ private struct CompassPreview: View {
     static func context(
         selected: Place = place,
         auth: LocationAuthState = .authorized,
-        preciseOff: Bool = false
+        preciseOff: Bool = false,
+        phase: MoonPhase = .full,
+        phaseAngle: Double = FakeMoonService.fullMoonPhaseAngle,
+        illumination: Double = FakeMoonService.fullyLit
     ) -> CompassContext {
         let day = Date()
         return CompassContext(
@@ -275,9 +281,9 @@ private struct CompassPreview: View {
                 place: place,
                 rise: MoonEvent(date: day, azimuth: 72),
                 set: MoonEvent(date: day, azimuth: 288),
-                phase: .full,
-                phaseAngle: FakeMoonService.fullMoonPhaseAngle,
-                illumination: FakeMoonService.fullyLit
+                phase: phase,
+                phaseAngle: phaseAngle,
+                illumination: illumination
             ),
             isToday: true
         )
@@ -286,6 +292,18 @@ private struct CompassPreview: View {
 
 #Preview("Live") {
     CompassPreview(context: CompassPreview.context(), reading: HeadingReading(trueHeading: 100, accuracy: 3))
+}
+
+/// The device-test sky (2026-10-01): a waning gibbous Moon up in the west,
+/// so the marker's terminator shows.
+private let waningGibbous = CompassPreview.context(phase: .waningGibbous, phaseAngle: 240, illumination: 0.64)
+
+#Preview("Moon up") {
+    CompassPreview(context: waningGibbous, reading: HeadingReading(trueHeading: 240, accuracy: 3), moonAzimuth: 275)
+}
+
+#Preview("Locked on the Moon") {
+    CompassPreview(context: waningGibbous, reading: HeadingReading(trueHeading: 276, accuracy: 3), moonAzimuth: 275)
 }
 
 #Preview("Locked on moonrise") {

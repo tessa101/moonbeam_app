@@ -5,6 +5,18 @@
 
 ---
 
+### 2026-10-01 · §11 Q4 revised: the live Moon marker is a mini phase glyph (Tessa)
+- **Why:** on device, the plain 18 pt Moon dot read as a second moonrise target (same colour and shape as the
+  rise/set dots, just bigger).
+- **Marker:** the moon card's `PhaseGlyph` at ~20 pt: the same lit fraction and elliptical terminator, `moonLit`
+  fill over a dark disc, the card's soft glow. Its phase comes from the selected day's `MoonDay` (midnight
+  illumination, phase angle), so it always matches the card. Placed, not rotated, so it stays upright as the
+  dial turns; no arrow.
+- **Locked:** like the other targets: grows to 22 pt, 4 pt `accent` ring, strong glow. The pill stays "Moon · 275° W".
+- **VoiceOver:** the dial reads the Moon as "Moon now, west, 275 degrees" (direction first, as the moon card
+  does); rise/set entries are unchanged. The lock label ("Pointing at moon, 275 degrees west") is unchanged.
+- **Considered:** a ring or outline dot (still a dot); a moon emoji or SF Symbol (doesn't show tonight's phase).
+
 ### 2026-10-01 · Madlib sentence: "Where will the moon be…", new breaks, default-size fit rule (Tessa)
 - **Copy:** **"Where will the moon be [date] in [city]?"**, the spec's original wording (§3.1), replacing
   "Where can I find the moon [date] in [place]?". VoiceOver header to match ("Where will the moon be tonight
