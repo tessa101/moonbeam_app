@@ -43,8 +43,9 @@ nonisolated enum Theme {
         /// Dial face, a radial gradient from top to bottom.
         static let dialTop = Color(hex: 0x30252C)
         static let dialBottom = Color(hex: 0x221A1F)
-        /// Dial ticks (non-text, 3.5:1 on the dial).
-        static let tick = Color(hex: 0x7E6C72)
+        /// Dial ticks (non-text): 3.15:1 on `dialTop`, 3.6:1 on `dialBottom`,
+        /// so ≥ 3:1 across the face (5.4; was `#7E6C72`, 2.997:1 on `dialTop`).
+        static let tick = Color(hex: 0x807075)
     }
 
     // MARK: - Metrics
@@ -135,6 +136,8 @@ nonisolated enum Theme {
         static let label = Font.custom(FontName.nunitoSansSemiBold, size: 13, relativeTo: .footnote)
         /// Notes under the dial.
         static let note = Font.custom(FontName.nunitoSansRegular, size: 13, relativeTo: .footnote)
+        /// The "!" in a note's amber circle (Nunito 700).
+        static let noteMark = Font.custom(FontName.nunitoSansBold, size: 13, relativeTo: .footnote)
 
         /// Dial letters N/E/S/W scale with `.subheadline` from this size but
         /// stop at `dialLetterMaxSize`, so the dial's geometry holds at AX

@@ -196,6 +196,13 @@ Centred, below the card.
   Use Precise Location / Turn On Location as **secondary buttons** under the note. Copy unchanged
   (COMPASS.md). Far: the compass is hidden and only the note shows, centred.
 
+*As built (5.4):* `CompassDial`, `CompassNote`, `CompassView`. The face stays still and every mark is
+placed at azimuth − heading, so letters and ↑/↓ are upright and the face's light stays on top (same
+on-screen motion as a turning dial). Letter and arrow centres sit 34 / 22 pt in from the rim (the HTML's
+24 / 13 pt box tops). CSS blurs are halved for SwiftUI shadow radii. The 40 pt readout slot scales with
+`.title2`; the pill (~51 pt at default) overflows it, as in the HTML, so the dial doesn't move on lock.
+Live Moon per §11 Q4 (18 pt, no arrow, "Moon" only in the pill, from `CompassViewModel.name(of:)`). The 260 pt AX dial is left for 5.5.
+
 ## 4. AX sizes (3c), at `dynamicTypeSize.isAccessibilitySize`
 The screen scrolls; containers reflow:
 - Sentence wraps freely (rule in §3.1).

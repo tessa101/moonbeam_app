@@ -44,12 +44,13 @@ struct ThemeTests {
         #expect(ratio >= Self.textMinimum)
     }
 
-    /// Ticks sit near the rim, where the face is `dialBottom` (3.5:1). Not
-    /// checked against the lighter `dialTop` centre, where it's 2.997:1; the
-    /// ticks never sit there (flagged for the a11y pass).
-    @Test("Dial ticks meet non-text contrast at the rim")
+    /// `#807075` from 5.4 (DESIGN-1.1.md §2): 3.15:1 on `dialTop`, 3.6:1 on
+    /// `dialBottom`, so ticks clear 3:1 anywhere on the face (5.1's
+    /// `#7E6C72` was 2.997:1 on `dialTop`).
+    @Test("Dial ticks meet non-text contrast across the whole face")
     func tickContrast() {
         #expect(Self.contrast(Theme.Colors.tick, Theme.Colors.dialBottom) >= Self.nonTextMinimum)
+        #expect(Self.contrast(Theme.Colors.tick, Theme.Colors.dialTop) >= Self.nonTextMinimum)
     }
 
     // MARK: - Helpers

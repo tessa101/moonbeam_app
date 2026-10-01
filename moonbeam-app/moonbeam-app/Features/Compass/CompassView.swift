@@ -5,11 +5,12 @@
 
 import SwiftUI
 
-/// The compass under the moon table (COMPASS.md §1, §2), or the
-/// enable-location hint in its place.
+/// The compass block under the moon card (DESIGN-1.1.md §3.3, COMPASS.md
+/// §1, §2): the heading readout (an amber pill when locked), the dial, and
+/// notes under it; or, in place of the compass, the Far or location-off
+/// note.
 ///
-/// Functional and deliberately unstyled: layout and look are the design
-/// pass. Every string and accessibility label comes from `CompassViewModel`.
+/// Every string and accessibility label comes from `CompassViewModel`.
 /// Where it sits and when it counts as on screen is `LocationScreen`'s job.
 struct CompassView: View {
 
@@ -22,18 +23,46 @@ struct CompassView: View {
     /// Use Precise Location: iOS's temporary full-accuracy alert (4.12).
     let onUsePreciseLocation: () -> Void
 
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    /// The readout's slot, so the dial doesn't move when the pill appears.
+    /// The pill is taller than the slot and overflows it, as in the HTML;
+    /// the slot grows with the readout's text style.
+    @ScaledMetric(relativeTo: .title2) private var readoutHeight = Self.readoutBaseHeight
+
+    // MARK: - Constants (§3.3, from the HTML)
+
+    private static let readoutBaseHeight: CGFloat = 40
+    /// Readout to dial (the dial adds its indicator's 10 pt itself), and
+    /// dial to notes.
+    private static let dialTopSpacing: CGFloat = 12
+    private static let dialBottomSpacing: CGFloat = 4
+    private static let notesTopSpacing: CGFloat = 14
+    private static let notesSpacing: CGFloat = 10
+    /// Buttons under a note are no wider than the widest note.
+    private static let noteMaxWidth: CGFloat = 330
+
+    /// The lock pill: padding 9 / 18, `accent` glow 45% (CSS 36 px blur).
+    private static let pillPaddingVertical: CGFloat = 9
+    private static let pillPaddingHorizontal: CGFloat = 18
+    private static let pillGlowOpacity = 0.45
+    private static let pillGlowRadius: CGFloat = 18
+
+    private static let lockAnimation = Animation.easeOut(duration: 0.2)
+
+    // MARK: - Body
+
     var body: some View {
-        VStack(alignment: .leading) {
+        VStack(spacing: 0) {
             switch viewModel.visibility {
             case .here, .nearby:
                 compass
             case .far:
                 if let farMessage = viewModel.farMessage {
-                    Text(farMessage)
-                        .foregroundStyle(.secondary)
+                    CompassNote(text: farMessage)
                 }
             case .locationOff:
-                locationOffHint
+                locationOffNote
             case .hidden:
                 EmptyView()
             }
@@ -44,21 +73,16 @@ struct CompassView: View {
             debugReadout
             #endif
         }
+        .frame(maxWidth: .infinity)
     }
 
     // MARK: - Compass
 
     private var compass: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Compass")
-                .font(.headline)
-                .accessibilityAddTraits(.isHeader)
-
-            // Nearby only (§2): says which city the bearings are for.
-            if let nearbyNote = viewModel.nearbyNote {
-                Text(nearbyNote)
-                    .foregroundStyle(.secondary)
-            }
+        VStack(spacing: 0) {
+            readout
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(height: readoutHeight)
 
             CompassDial(
                 heading: viewModel.heading,
@@ -66,63 +90,80 @@ struct CompassView: View {
                 lockedKind: viewModel.lockedKind,
                 accessibilityTargets: viewModel.targetsAccessibilityLabel
             )
-            .padding(.vertical)
+            .padding(.top, Self.dialTopSpacing)
+            .padding(.bottom, Self.dialBottomSpacing)
 
-            heading
+            notes
+                .padding(.top, Self.notesTopSpacing)
 
-            if let lockText = viewModel.lockText {
-                Label(lockText, systemImage: "scope")
-                    .font(.title3.bold())
-                    .foregroundStyle(Color.accentColor)
-                    .accessibilityLabel(viewModel.lockAccessibilityLabel ?? lockText)
-            }
-
-            // No target rows (4.7): rise/set bearings are in the moon table
+            // No target rows (4.7): rise/set bearings are in the moon card
             // above, and VoiceOver reads every target from the dial.
         }
+        .animation(reduceMotion ? nil : Self.lockAnimation, value: viewModel.lockedKind)
         // One firm tap per lock acquired (4.5). Release and holding don't
         // change the count, so they're silent. System feedback follows the
         // user's System Haptics setting.
         .sensoryFeedback(.impact(weight: .heavy), trigger: viewModel.lockAcquisitionCount)
-    }
-
-    /// One element for VoiceOver: the heading, or "Compass accuracy is low"
-    /// when it can't be trusted (an untrustworthy number isn't read out).
-    private var heading: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            VStack(alignment: .leading, spacing: 4) {
-                if let headingText = viewModel.headingText {
-                    Text(headingText)
-                        .font(.largeTitle)
-                        .monospacedDigit()
-                        .foregroundStyle(viewModel.isLowAccuracy ? .secondary : .primary)
-                }
-                // One plain line under the heading (4.10): why it's low, so
-                // it can be fixed, or for a moment the aha line (4.12).
-                if let statusLineText = viewModel.statusLineText {
-                    Text(statusLineText)
-                        .foregroundStyle(.secondary)
-                        .transition(.opacity)
-                }
-            }
-            .animation(.easeInOut, value: viewModel.preciseConfirmation)
-            .accessibilityElement(children: .ignore)
-            .accessibilityLabel(viewModel.headingAccessibilityLabel)
-            .accessibilityAddTraits(.updatesFrequently)
-
-            // Outside the combined element, so VoiceOver can reach it. One
-            // button only (4.14): the alert is iOS's own (Don't Allow /
-            // Allow Once), and permanent Precise lives in Settings.
-            if viewModel.offersPreciseLocation {
-                Button(CompassViewModel.usePreciseLocationTitle, action: onUsePreciseLocation)
-                    .buttonStyle(.bordered)
-            }
-        }
         // The aha line is spoken as it appears, wherever VoiceOver is.
         .onChange(of: viewModel.preciseConfirmation) { _, confirmation in
             guard let confirmation else { return }
             AccessibilityNotification.Announcement(confirmation).post()
         }
+    }
+
+    /// The heading ("72° ENE"), or locked, the amber pill ("Moonrise · 58°
+    /// ENE", §3.3). One VoiceOver element either way: the heading, or
+    /// "Compass accuracy is low" plus why when it can't be trusted (an
+    /// untrustworthy number isn't read out), or "Pointing at moonrise, …".
+    @ViewBuilder
+    private var readout: some View {
+        if let lockText = viewModel.lockText {
+            Text(lockText)
+                .font(Theme.Fonts.display)
+                .foregroundStyle(Theme.Colors.onAccent)
+                .padding(.vertical, Self.pillPaddingVertical)
+                .padding(.horizontal, Self.pillPaddingHorizontal)
+                .background(Theme.Colors.accent, in: Capsule())
+                .shadow(color: Theme.Colors.accent.opacity(Self.pillGlowOpacity), radius: Self.pillGlowRadius)
+                .transition(.opacity)
+                .accessibilityLabel(viewModel.lockAccessibilityLabel ?? lockText)
+        } else {
+            Text(viewModel.headingText ?? "")
+                .font(Theme.Fonts.display)
+                .monospacedDigit()
+                .foregroundStyle(viewModel.isLowAccuracy ? Theme.Colors.textSecondary : Theme.Colors.textPrimary)
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel(viewModel.headingAccessibilityLabel)
+                .accessibilityAddTraits(.updatesFrequently)
+        }
+    }
+
+    /// Nearby (which city the bearings are for), then the status line (why
+    /// accuracy is low, or for a moment the aha line), then Use Precise
+    /// Location as a secondary button.
+    private var notes: some View {
+        VStack(spacing: Self.notesSpacing) {
+            if let nearbyNote = viewModel.nearbyNote {
+                CompassNote(text: nearbyNote)
+            }
+
+            if let statusLineText = viewModel.statusLineText {
+                CompassNote(text: statusLineText)
+                    .transition(.opacity)
+                    // Already in the readout's spoken label, and the aha
+                    // line is announced as it appears.
+                    .accessibilityHidden(true)
+            }
+
+            // One button only (4.14): the alert is iOS's own (Don't Allow /
+            // Allow Once), and permanent Precise lives in Settings.
+            if viewModel.offersPreciseLocation {
+                Button(CompassViewModel.usePreciseLocationTitle, action: onUsePreciseLocation)
+                    .buttonStyle(.secondary)
+                    .frame(maxWidth: Self.noteMaxWidth)
+            }
+        }
+        .animation(reduceMotion ? nil : .easeInOut, value: viewModel.preciseConfirmation)
     }
 
     // MARK: - DEBUG readout
@@ -137,16 +178,19 @@ struct CompassView: View {
         }
         .font(.caption.monospaced())
         .foregroundStyle(.secondary)
+        .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.top)
     }
     #endif
 
     // MARK: - Location off (§2)
 
-    private var locationOffHint: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(CompassViewModel.locationOffHint)
+    private var locationOffNote: some View {
+        VStack(spacing: Self.notesSpacing) {
+            CompassNote(text: CompassViewModel.locationOffHint)
             Button(CompassViewModel.turnOnLocationTitle, action: onTurnOnLocation)
+                .buttonStyle(.secondary)
+                .frame(maxWidth: Self.noteMaxWidth)
         }
     }
 }
@@ -167,8 +211,11 @@ private struct CompassPreview: View {
             if let viewModel {
                 CompassView(viewModel: viewModel, onTurnOnLocation: {}, onUsePreciseLocation: {})
                     .padding()
+                    .font(Theme.Fonts.body)
+                    .foregroundStyle(Theme.Colors.textPrimary)
             }
         }
+        .background { ScreenBackground() }
         .task {
             let viewModel = CompassViewModel(
                 headingService: heading,
@@ -235,6 +282,10 @@ private struct CompassPreview: View {
             isToday: true
         )
     }
+}
+
+#Preview("Live") {
+    CompassPreview(context: CompassPreview.context(), reading: HeadingReading(trueHeading: 100, accuracy: 3))
 }
 
 #Preview("Locked on moonrise") {

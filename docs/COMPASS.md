@@ -143,7 +143,7 @@ nonisolated protocol MoonService {
 - Enable-location hint: final copy, placement, and whether it opens the existing Location Off dialog or the system prompt (design pass)
 - ~~Other-city state~~ **Settled 2026-09-29:** replaced by the Nearby / Far states (§2, 4.6).
 - Final copy for the Nearby note and Far message (design pass). Far may later add something like "we can still show you the data for the city you searched" or "search for a city near you to see the compass"
-- Wireframe: layout, typography, and how the compass sits under the moon table (design pass — v1 build is plain/unstyled)
+- Wireframe: layout, typography, and how the compass sits under the moon table (design pass: restyled in Design 1.1 step 5.4, DESIGN-1.1.md §3.3)
 
 ## 6. Tests
 

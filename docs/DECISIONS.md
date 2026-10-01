@@ -5,6 +5,24 @@
 
 ---
 
+### 2026-10-01 · 5.4 compass restyle: as built
+- **Still face, moving marks:** the face doesn't rotate; ticks, letters and target dots are placed at
+  azimuth − heading. Letters and ↑/↓ stay upright without counter-rotation, and the face's gradient light
+  stays at the top as in the HTML. On screen it moves like the old turning dial. Still not animated
+  (a 359° → 0° turn would spin the long way); only the lock change animates, and not with Reduce Motion.
+- **Readout slot holds still:** 40 pt (scaled with `.title2`) with the pill overflowing it, as the
+  HTML's 42 px pill overflows its 40 px slot. Young Serif's line height makes our pill ~51 pt, so a
+  growing slot moved the dial ~11 pt on every lock.
+- **Notes:** one `CompassNote` style for low accuracy, Precise Location, Nearby, location off, Far and
+  the aha line (§3.3 proposed). VoiceOver: the low-accuracy and aha lines stay in the readout's label /
+  the announcement as before, so the pill copy is hidden from VoiceOver; Nearby, Far and location off
+  are read as text. Buttons are `SecondaryButtonStyle`, at most 330 pt wide.
+- **Tick token:** `#807075` (§2, §7); `ThemeTests` now also checks ticks on `dialTop`.
+- **Left for 5.5:** the 260 pt AX dial and the letters' Large Content Viewer. The letters already stop
+  at 17 pt (the §2 token).
+- **Considered:** rotating the whole face with counter-rotated labels (the HTML's method; also turns the
+  face's light and the inner highlight with the phone).
+
 ### 2026-10-01 · 5.3 madlib sentence: as built
 - **VoiceOver "button", in order:** the sentence is one set of `Text` lines with link tokens (wraps like
   text; taps via `OpenURLAction`). VoiceOver would read links inside a text, so `.accessibilityChildren`

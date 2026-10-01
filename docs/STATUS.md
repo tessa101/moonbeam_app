@@ -159,6 +159,14 @@ _Last updated: 2026-10-01 (Step 5.3 madlib sentence built, with §3.1a; 5.2 foll
      simulator; places in the phone's own zone show none, by design (§11 Q3). **Found, not fixed:** the
      recent "Sydney, Australia" resolved to Sydney River, Nova Scotia (search resolve, Step 2.2). Next: 5.4
      compass restyle.
+   - [x] **5.4 compass restyle (2026-10-01):** heading readout (Young Serif 24 in a 40 pt slot), 220 pt
+     dial (gradient face, 15° tick dots, upright N/E/S/W with N amber, ↑/↓ by the rise/set dots, 18 pt
+     live Moon dot with no arrow), lock = amber pill + dot ring/glow + dial halo, notes as amber-tint
+     pills (`CompassNote`) with Use Precise Location / Turn On Location as secondary buttons. `tick` →
+     `#807075`. Behavior unchanged (haptic, sensors, Far hides the dial); Reduce Motion swaps with no
+     animation. 398 tests / 604 cases. Screenshots: `.agent-reports/5.4-compass/`. **Check on device:**
+     the lock pill + haptic, marks moving smoothly, notes in low accuracy. Next: 5.5 AX reflow (incl. the
+     260 pt dial).
 
 5. [ ] Location: detect + search (Step 2)
    - Spec: **[LOCATION.md](LOCATION.md)** (decided 2026-09-25). Place model, CoreLocation one-shot fix,

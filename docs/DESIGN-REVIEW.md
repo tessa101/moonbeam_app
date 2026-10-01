@@ -55,12 +55,12 @@ _Started: 2026-09-26_
 - [ ] **iPhone-only for v1** (COMPASS.md §1). iPad dropped so the portrait lock doesn't fight iPad multitasking; revisit with landscape
 - [ ] **Enable-location hint** (location off): copy, placement, and whether it opens the Location Off dialog or the system prompt. Built as a plain placeholder
 - [ ] **Proximity copy (4.6, reworded 4.11):** Nearby note "You're in {Detected city} but {City} is nearby"; Far message "You're a bit too far from {City} to view the compass accurately" (both placeholder; tone in the design pass; was "Directions for {City}" / "Compass is only available near this location"). Far may later offer "search for a city near you". Never include a distance
-- [ ] **Lock feedback:** visual treatment of the lock state; haptic tap on acquire is in 4.5 — check it feels right (strength, not too frequent)
+- [ ] **Lock feedback:** visual treatment built in 5.4 (amber pill, dot ring + glow, dial halo; DESIGN-1.1.md §3.3); haptic tap on acquire is in 4.5 — check it feels right (strength, not too frequent)
 - [ ] **Low-accuracy state:** look and copy. The threshold is now hysteresis: enter above 25°, leave below 20° (was a single 15° line; device test 2026-09-29). Tune further on device if needed. **Reason is inline for now (4.10; Precise copy replaced in 4.12):** "We think you're near {City}, but the compass needs Precise Location to point the right way." + "Use Precise Location" (temporary alert; the only button since 4.14), then "There you are! The compass is happy now." for ~3 s once it's on; or "Move away from metal, magnets or a charger, or wave your phone in a figure 8" (built 4.10; the reason line replaces "Compass accuracy is low"). Decide in the design pass whether an ⓘ bottom sheet or floating dialog with fuller tips is worth adding
 - [ ] Layout under the moon table, dial styling, typography (wireframe pending)
 - [ ] **Plain dial as built (4.4)**, things to decide in the design pass:
-  - the N/E/S/W letters rotate with the dial, so they read sideways or upside down
-  - **target dots are unlabelled** — the rows that named them were removed in 4.7, so nothing says which dot is which until you lock. Likely fix: small labels or distinct shapes per target. The locked dot is just bigger and tinted
+  - ~~the N/E/S/W letters rotate with the dial~~ **Done (5.4):** letters and ↑/↓ are always upright
+  - ~~target dots are unlabelled~~ **Done (5.4):** ↑ moonrise, ↓ moonset, bigger dot with no arrow for the live Moon (§11 Q4, proposed). Was: **target dots are unlabelled** — the rows that named them were removed in 4.7, so nothing says which dot is which until you lock. Likely fix: small labels or distinct shapes per target. The locked dot is just bigger and tinted
   - at AX sizes the top indicator grows and sits close to the "Compass" header
   - no animation, to avoid a long spin across 359° → 0°
 - [ ] **Placeholder copy (4.4):** hint "Turn on location to use the compass." + "Turn On Location"; low accuracy "Compass accuracy is low" (no calibration advice)
