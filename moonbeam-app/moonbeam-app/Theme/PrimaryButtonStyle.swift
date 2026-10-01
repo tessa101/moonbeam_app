@@ -15,7 +15,6 @@ struct PrimaryButtonStyle: ButtonStyle {
     private static let glowOpacity = 0.25
     /// CSS `0 0 30px`: SwiftUI's radius is about half a CSS blur.
     private static let glowRadius: CGFloat = 15
-    private static let pressedOpacity = 0.75
     private static let disabledOpacity = 0.35
     /// Keeps the title off the rounded ends when it wraps at AX sizes.
     private static let horizontalPadding: CGFloat = 24
@@ -37,7 +36,9 @@ struct PrimaryButtonStyle: ButtonStyle {
                     .fill(Theme.Colors.accent)
                     .shadow(color: Theme.Colors.accent.opacity(Self.glowOpacity), radius: Self.glowRadius)
             }
-            .opacity(isEnabled ? (configuration.isPressed ? Self.pressedOpacity : 1) : Self.disabledOpacity)
+            .opacity(isEnabled ? 1 : Self.disabledOpacity)
+            // Shrink, dim and spring back (DECISIONS.md "Tap animation").
+            .pressFeedback(isPressed: configuration.isPressed)
             .contentShape(capsule)
     }
 }

@@ -61,6 +61,15 @@
 - **Where:** the shared styles (`PrimaryButtonStyle`, `SecondaryButtonStyle`, `TextLinkButtonStyle`), so every
   button picks it up; also the ‹ › day buttons and the sentence tokens, which don't use those styles today.
   No per-view animation code.
+- **As built:** one `PressFeedback` modifier (`Theme/PressFeedback.swift`: scale 0.96, opacity 0.8,
+  `.spring(duration: 0.15)`), applied by `PrimaryButtonStyle`, `SecondaryButtonStyle`, `TextLinkButtonStyle` and
+  the card's `DayStepButtonStyle` (the circle shrinks, not its 44 pt target). It replaces each style's own pressed
+  opacity (0.75 / 0.6 / 0.6 / 0.6), so the dip is a little lighter than before. Reduce Motion: opacity only, still
+  animated (a fade isn't motion). Disabled opacity unchanged.
+  - **Not done: the sentence tokens.** They're links inside one `Text` (that's how the sentence wraps and fits,
+    §3.1a), so SwiftUI gives no per-token pressed state to animate. **Open for Tessa:** leave them (the system
+    link tap is the feedback); or dim the whole sentence while a token is pressed; or rebuild the tokens as real
+    buttons, which would mean redoing the sentence's layout and fit rules.
 
 ### 2026-10-01 · Moon marker: rise-to-set arc outside the dial, option B, 24 pt glyph (Tessa)
 - **Why:** device check: the ~20 pt mini glyph is hard to tell apart from the cream rise/set dots on the rim.

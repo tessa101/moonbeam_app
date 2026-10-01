@@ -19,7 +19,6 @@ struct SecondaryButtonStyle: ButtonStyle {
     /// CSS `0 2px 6px`: SwiftUI's radius is about half a CSS blur.
     private static let shadowRadius: CGFloat = 3
     private static let shadowOffsetY: CGFloat = 2
-    private static let pressedOpacity = 0.6
     private static let disabledOpacity = 0.35
     /// Keeps the title off the rounded ends when it wraps at AX sizes.
     private static let horizontalPadding: CGFloat = 24
@@ -55,7 +54,9 @@ struct SecondaryButtonStyle: ButtonStyle {
             .overlay {
                 capsule.strokeBorder(Theme.Colors.strokeRaised, lineWidth: Theme.Metrics.hairline)
             }
-            .opacity(isEnabled ? (configuration.isPressed ? Self.pressedOpacity : 1) : Self.disabledOpacity)
+            .opacity(isEnabled ? 1 : Self.disabledOpacity)
+            // Shrink, dim and spring back (DECISIONS.md "Tap animation").
+            .pressFeedback(isPressed: configuration.isPressed)
             .contentShape(capsule)
     }
 }

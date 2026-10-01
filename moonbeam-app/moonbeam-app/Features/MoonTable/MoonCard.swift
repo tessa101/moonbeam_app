@@ -252,7 +252,6 @@ private struct DayStepButtonStyle: ButtonStyle {
     /// CSS `0 2px 6px`: SwiftUI's radius is about half a CSS blur.
     private static let shadowRadius: CGFloat = 3
     private static let shadowOffsetY: CGFloat = 2
-    private static let pressedOpacity = 0.6
     private static let disabledOpacity = 0.35
 
     func makeBody(configuration: Configuration) -> some View {
@@ -281,7 +280,10 @@ private struct DayStepButtonStyle: ButtonStyle {
             .overlay {
                 circle.strokeBorder(Theme.Colors.strokeRaised, lineWidth: Theme.Metrics.hairline)
             }
-            .opacity(isEnabled ? (configuration.isPressed ? Self.pressedOpacity : 1) : Self.disabledOpacity)
+            .opacity(isEnabled ? 1 : Self.disabledOpacity)
+            // The circle, not its 44 pt target, shrinks and dims
+            // (DECISIONS.md "Tap animation").
+            .pressFeedback(isPressed: configuration.isPressed)
             .frame(width: Theme.Metrics.minimumHitTarget, height: Theme.Metrics.minimumHitTarget)
             .contentShape(Rectangle())
     }

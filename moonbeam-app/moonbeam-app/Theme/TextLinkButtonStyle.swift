@@ -10,7 +10,6 @@ import SwiftUI
 /// a city instead" (§5).
 struct TextLinkButtonStyle: ButtonStyle {
 
-    private static let pressedOpacity = 0.6
     private static let verticalPadding: CGFloat = 8
 
     func makeBody(configuration: Configuration) -> some View {
@@ -20,7 +19,8 @@ struct TextLinkButtonStyle: ButtonStyle {
             .multilineTextAlignment(.center)
             .padding(.vertical, Self.verticalPadding)
             .frame(maxWidth: .infinity, minHeight: Theme.Metrics.minimumHitTarget)
-            .opacity(configuration.isPressed ? Self.pressedOpacity : 1)
+            // Shrink, dim and spring back (DECISIONS.md "Tap animation").
+            .pressFeedback(isPressed: configuration.isPressed)
             .contentShape(Rectangle())
     }
 }
