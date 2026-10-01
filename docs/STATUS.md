@@ -3,7 +3,7 @@
 > A living note on where things stand. Update it at the end of each work session
 > so the next session (you, or Claude) can pick up cold.
 
-_Last updated: 2026-09-30 (4.14, Step 2.2 and 4.15 built; device checks pending)_
+_Last updated: 2026-09-30 (Step 5.1 theme built; Design 1.1 settled: DESIGN-1.1.md, Step 5; 4.14, Step 2.2 and 4.15 built; device checks pending)_
 
 ## Where things live
 - **Local repo:** `~/app-ideas/moonbeam` (the one true folder)
@@ -127,9 +127,16 @@ _Last updated: 2026-09-30 (4.14, Step 2.2 and 4.15 built; device checks pending)
      | Mar Vista (no moonrise) | 2026-10-03 | 34.00, -118.43 · PDT | **no rise** · set 14:27 (rise 23:12 on 10/2, 00:21 on 10/4) | `oneday?date=2026-10-03&coords=34.00,-118.43&tz=-8&dst=true` |
 
      Base URL: `https://aa.usno.navy.mil/api/rstt/`. Open from the Mac (the cloud sandbox is blocked).
-4. [ ] Build the SwiftUI table
-   - Design first (Tessa): table layout, and the **"no moonrise / no moonset today"** state, which the
-     Oct 3 row above will exercise. Bring a sketch or Figma link, then spec it for the agent.
+4. [ ] Build the SwiftUI table → **now part of Step 5 (Design 1.1), item 5.2**
+   - Design settled 2026-09-30: [DESIGN-1.1.md](DESIGN-1.1.md) §3.2 (moon card, incl. "No moonrise today").
+   - **Step 5 build order** (DESIGN-1.1.md §7, one commit each): 5.1 theme · 5.2 moon card · 5.3 madlib
+     sentence · 5.4 compass restyle · 5.5 AX reflow · 5.6 pinned compass bar · 5.7 onboarding · then
+     device QA at default / AX1 / AX5.
+   - [x] **5.1 theme (2026-09-30):** `Theme/Theme.swift` (color tokens, type scale, bundled font names),
+     `Theme/ScreenBackground.swift` (`bg` + top amber glow), fonts in `Resources/Fonts` + `UIAppFonts`,
+     forced dark (`UIUserInterfaceStyle`), `AccentColor` = `accent`, iOS 26 status bar backing is solid
+     `bg`. App root defaults to the body font and `textPrimary`. `ThemeTests`: fonts register, §2
+     contrast table holds. Next: 5.2 moon card.
 
 5. [ ] Location: detect + search (Step 2)
    - Spec: **[LOCATION.md](LOCATION.md)** (decided 2026-09-25). Place model, CoreLocation one-shot fix,

@@ -29,6 +29,11 @@ struct moonbeam_appApp: App {
             // The chosen place drives the spike moon table (ContentView)
             // until the designed table replaces it in task #4.
             LocationScreen(viewModel: locationViewModel)
+                // Design 1.1 defaults for any text a step hasn't styled yet,
+                // sheets included (DESIGN-1.1.md §6). Dark is forced in
+                // Info.plist; tint comes from the AccentColor asset.
+                .font(Theme.Fonts.body)
+                .foregroundStyle(Theme.Colors.textPrimary)
         }
     }
 }

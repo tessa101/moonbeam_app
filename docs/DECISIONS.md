@@ -5,6 +5,29 @@
 
 ---
 
+### 2026-09-30 · 5.1 theme: static Nunito Sans, app-wide defaults
+- **Fonts:** Nunito Sans is bundled as three static weights (Regular, SemiBold, Bold from
+  googlefonts/NunitoSans), not the variable font: exact PostScript names, no axis handling in
+  `Font.custom`. Young Serif from google/fonts. OFL texts ship in the bundle beside them.
+- **Defaults:** the app root sets the body font and `textPrimary`, and the `AccentColor` asset is the
+  amber, so unstyled text and the sheets pick up the theme (DESIGN-1.1.md §6) until each step styles them.
+- **Considered:** the variable font (one file, but weight via axes is less predictable); no root
+  defaults (each step would show mixed SF / Nunito until 5.4).
+
+### 2026-09-30 · Design 1.1: Madlib (direction C) is the design direction
+- **Chosen:** Claude Design "Madlib 1.0" (`design/1.1/`), spec in DESIGN-1.1.md (Step 5). The prompt becomes
+  a sentence with two tappable tokens (date → calendar, place → search); one moon card (date + ‹ ›, phase
+  glyph, rise/set); restyled compass with upright letters, ↑/↓ target labels and an amber lock pill; an
+  AX reflow; a pinned compass bar when the dial is below the fold; four onboarding screens.
+- Answers DESIGN-BRIEF.md §7 Q1–Q8 (table in DESIGN-1.1.md §1). The card's date label says "Today ·" again.
+- **Dark only** for 1.1 (forced dark); light mode with Round 2.
+- **No place yet:** place token reads "a city"; card and compass hidden; Use my location as a secondary button.
+- **Time zone:** small abbreviation next to the moonrise/moonset times, replacing the "Sydney · AEST" line.
+- **Onboarding:** new installs only (no saved place, permission not determined); DEBUG reset.
+- Fonts: Young Serif + Nunito Sans (OFL), bundled, scaled with Dynamic Type via `relativeTo:`.
+- Open: live Moon dot style (proposed in DESIGN-1.1.md §11 Q4); VoiceOver order at AX2 and final
+  onboarding copy come from the designer.
+
 ### 2026-09-30 · Search ranks smart, then closest; 4.15 status bar fix now
 - **Ranking (Tessa):** the most prominent / expected place first, distance from the user only as
   the tiebreak. No more biasing results to the user's area. Fuzzy matching from MapKit is fine.

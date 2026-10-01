@@ -2,7 +2,7 @@
 
 > For the first visual pass: take this to Claude Design (and the design partner).
 > Behavior is decided and built. This pass decides **how it looks and feels**.
-> Backlog of open design items: DESIGN-REVIEW.md. Owner: Tessa · _Drafted 2026-09-30_
+> Backlog of open design items: DESIGN-REVIEW.md. Owner: Tessa · _Drafted 2026-09-30, updated 2026-09-30 to match build 2_
 
 ---
 
@@ -38,8 +38,8 @@ This is the order as built. Layout can change; the content can't.
 
 1. **Prompt:** "Where are you watching the moon tonight?"
 2. **Place field:** shows the city as **"Los Angeles, CA"**. Tapping it opens the search sheet. It's a button that looks like a field.
-3. **Date control:** ‹ · "Today · Wed, Sep 30" · ›. Tapping the date opens a month calendar. A "Today" chip shows only when you're off today.
-4. **Time zone label:** only when the place's time zone ≠ the phone's, e.g. "Sydney time".
+3. **Date control:** ‹ · "Wed, Sep 30" · › (the year shows only for another year: "Mon, Jan 4, 2027"). Tapping the date opens a month calendar sheet; its **Today** button is the way back to today. There's no "Today" chip on the main screen (removed in Step 3), and the label doesn't say "Today" (VoiceOver does).
+4. **Time zone label:** only when the place's time zone ≠ the phone's: city + zone abbreviation, e.g. **"Sydney · AEST"** (VoiceOver: "Times shown in Sydney time, AEST"). Some locales show "GMT+10" instead of "AEST".
 5. **Moon table:** Moonrise · Moonset · Phase · Illumination
 6. **Compass:** live dial, heading readout, lock label, status notes
 
@@ -49,7 +49,7 @@ This is the order as built. Layout can change; the content can't.
 | **Los Angeles, CA · Today, Wed Sep 30** | 9:10 PM · 58° ENE | 11:17 AM · 301° WNW | Waning Gibbous | 75% |
 | Los Angeles, CA · Sat Oct 3 | **No moonrise today** | 2:27 PM · 302° WNW | Waning Crescent | 42% |
 | Los Angeles, CA · Sat Sep 26 | 6:39 PM · 82° E | 6:42 AM · 274° W | Waning Gibbous (a day after full) | 99% |
-| Sydney · Thu Oct 1 ("Sydney time") | 11:13 PM · 56° ENE | 7:58 AM · 302° WNW | Waning Gibbous | 72% |
+| Sydney, NSW · Thu Oct 1 (label "Sydney · AEST") | 11:13 PM · 56° ENE | 7:58 AM · 302° WNW | Waning Gibbous | 72% |
 
 - Times are in the **place's** time zone.
 - Illumination/phase are for **tonight's local midnight** (design question: how to signal that, e.g. "at midnight").
@@ -65,7 +65,7 @@ A rotating dial like Apple's Compass: N/E/S/W, degree ticks, fixed heading indic
 | **Live** | Dial + heading "72° ENE". Target dots unlabelled today (a known problem: find a way to tell them apart, like labels, shapes or icons) |
 | **Locked** (within ±5° of a target) | "**Moonrise · 58° ENE**". Visual change + one haptic tap. *This is the hero moment; make it feel like finding something* |
 | **Nearby** (searched city within 60 mi of you) | Compass shows + note: "You're in Irvine, CA but Los Angeles, CA is nearby" |
-| **Far** | Compass hidden: "You're a bit too far from Sydney to view the compass accurately" |
+| **Far** | Compass hidden: "You're a bit too far from Sydney, NSW to view the compass accurately" |
 | **Needs Precise Location** | "We think you're near Irvine, CA, but the compass needs Precise Location to point the right way." + **Use Precise Location**. Then briefly: "There you are! The compass is happy now." |
 | **Low accuracy (interference)** | "Move away from metal, magnets or a charger, or wave your phone in a figure 8" |
 | **Location off** | Compass hidden: "Turn on location to use the compass." + **Turn On Location** |
@@ -86,7 +86,7 @@ Copy above is placeholder; tone is part of this pass. Never show a distance or c
 - **Dark mode is primary** (used at night); light mode must also work
 - **Accessibility:** WCAG AA contrast in both modes · Dynamic Type up to the largest accessibility sizes (the table and dial must reflow, not truncate) · 44 pt touch targets · Reduce Motion respected · VoiceOver reads "east-northeast", not "ENE"
 - **Privacy:** no coordinates, no distances, no maps of the user's position
-- **Content scrolls under the status bar:** the top needs a material/solid backdrop or pinned header
+- **Status bar:** content scrolling under the clock is fixed with the iOS 26 system scroll edge effect (blur/fade). Only its final styling is open; a pinned header is still an option
 - No accounts, no ads, no onboarding carousel
 
 ## 7. Open questions this pass should answer

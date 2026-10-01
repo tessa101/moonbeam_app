@@ -9,5 +9,14 @@
 		<key>Compass</key>
 		<string>The compass needs Precise Location to point at the moon. We never see your location, and it's never shown on screen.</string>
 	</dict>
+	<key>UIAppFonts</key>
+	<array>
+		<string>YoungSerif-Regular.ttf</string>
+		<string>NunitoSans-Regular.ttf</string>
+		<string>NunitoSans-SemiBold.ttf</string>
+		<string>NunitoSans-Bold.ttf</string>
+	</array>
+	<key>UIUserInterfaceStyle</key>
+	<string>Dark</string>
 </dict>
 </plist>

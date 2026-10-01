@@ -37,6 +37,8 @@ moonbeam-app/moonbeam-app/
 │   └── Location/        # LocationService, PlaceSearchService, PlaceStore + real and fake impls
 ├── Models/              # Plain value types
 ├── Formatting/          # Compass, time, and percent formatters
+├── Theme/               # Design 1.1 tokens (Theme), ScreenBackground
+├── Resources/Fonts/     # Young Serif, Nunito Sans (OFL), listed in UIAppFonts
 └── Vendor/Astronomy/    # astronomy.c, astronomy.h, VERSION
 moonbeam-appTests/       # Swift Testing, app-hosted: formatters, models, service vs ASTRONOMY.md §5
 ```
@@ -180,6 +182,7 @@ They're separate because the last-viewed place can be detected and recents can't
 | Dependency | Why | How |
 |---|---|---|
 | Astronomy Engine | Moon math | Vendored C source, pinned version |
+| Young Serif, Nunito Sans | Design 1.1 type (DECISIONS.md 2026-09-30) | Bundled TTFs + OFL texts in `Resources/Fonts` |
 
 Rule: no new dependency without an entry in `DECISIONS.md`.
 
