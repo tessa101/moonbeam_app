@@ -26,8 +26,7 @@ struct moonbeam_appApp: App {
 
     var body: some Scene {
         WindowGroup {
-            // The chosen place drives the spike moon table (ContentView)
-            // until the designed table replaces it in task #4.
+            // The chosen place drives the moon card.
             LocationScreen(viewModel: locationViewModel)
                 // Design 1.1 defaults for any text a step hasn't styled yet,
                 // sheets included (DESIGN-1.1.md §6). Dark is forced in

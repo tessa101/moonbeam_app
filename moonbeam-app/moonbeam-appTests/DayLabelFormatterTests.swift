@@ -46,6 +46,24 @@ nonisolated struct DayLabelFormatterTests {
         #expect(formatter.label(for: last, today: today, timeZone: Self.losAngeles) == "Mon, Dec 1, 2025")
     }
 
+    // MARK: - Moon card label (DESIGN-1.1.md §3.2)
+
+    /// The card brings "Today ·" back; other days read as the plain label.
+    @Test("Card label: Today · on today, the plain label otherwise", arguments: [
+        (2026, 9, 30, 0, "Today · Wed, Sep 30"),
+        (2026, 10, 3, 3, "Sat, Oct 3"),
+        (2026, 9, 29, -1, "Tue, Sep 29"),
+        (2027, 1, 4, 96, "Mon, Jan 4, 2027"),
+    ])
+    func cardLabel(year: Int, month: Int, day: Int, dayOffset: Int, expected: String) throws {
+        let today = try Self.date(2026, 9, 30, hour: 12, in: Self.losAngeles)
+        let selected = try Self.date(year, month, day, hour: 0, in: Self.losAngeles)
+
+        let label = formatter.cardLabel(for: selected, dayOffset: dayOffset, today: today, timeZone: Self.losAngeles)
+
+        #expect(label == expected)
+    }
+
     /// Dec 31 → Jan 1: the year appears as soon as the day crosses it, in
     /// either direction.
     @Test("Year boundary: Dec 31 → Jan 1 and back")

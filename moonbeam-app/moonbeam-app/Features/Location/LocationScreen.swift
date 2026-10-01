@@ -43,21 +43,18 @@ struct LocationScreen: View {
                     Text("Couldn't find your location. Try again, or search for a city.")
                 }
 
-                // DATE.md §1: above the time zone label and the moon table.
+                // Opens the calendar until 5.3's date token replaces it.
                 if viewModel.place != nil {
                     DateControl(viewModel: viewModel)
                 }
 
-                if let timeZoneLabel = viewModel.timeZoneLabel {
-                    Text(timeZoneLabel)
-                        .accessibilityLabel(viewModel.timeZoneAccessibilityLabel ?? timeZoneLabel)
-                }
-
+                // DESIGN-1.1.md §3.2. The place's zone now sits beside each
+                // time, replacing the separate "Sydney · AEST" line.
                 if let moonTable = viewModel.moonTable {
-                    ContentView(viewModel: moonTable)
+                    MoonCard(viewModel: viewModel, table: moonTable)
                 }
 
-                // COMPASS.md §1: at the bottom, below the moon table. DEBUG
+                // COMPASS.md §1: at the bottom, below the moon card. DEBUG
                 // builds keep it in every state for its diagnostic readout;
                 // the sensors still only run when it's shown.
                 if viewModel.compass.visibility != .hidden || Self.showsDebugReadout {
@@ -206,7 +203,7 @@ private struct StatusBarBackdrop: ViewModifier {
         viewModel: LocationViewModel(
             locationService: FakeLocationService(authorizationState: .denied),
             placeSearch: FakePlaceSearchService(),
-            placeStore: InMemoryPlaceStore(lastViewed: SpikeMoonTableViewModel.marVista),
+            placeStore: InMemoryPlaceStore(lastViewed: Place.marVista),
             moonService: AstronomyEngineMoonService(),
             headingService: FakeHeadingService()
         )

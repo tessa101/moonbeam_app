@@ -5,6 +5,31 @@
 
 ---
 
+### 2026-09-30 · 5.2 moon card: as built
+- **Hairlines:** one, between the phase row and the rise/set row, as the HTML draws it. §3.2 says "three
+  rows separated by hairlines"; §9 acceptance is "matches the HTML", so the HTML won. Header → phase is
+  spacing only.
+- **Zone per time, sampled at the event:** each rise/set time gets its own abbreviation, taken at that
+  moment, not at the day's noon as the old label line was. On a DST changeover day a 01:00 set and a
+  20:00 rise can differ (Phoenix vs LA on Nov 1: only the rise shows "PST"). Still the system's
+  `TimeZone.abbreviation(for:)`, so `en_US` shows "GMT+10" for Sydney.
+- **Zone wraps under the time at default size:** a column is ~145 pt on a 393 pt phone; "11:13 PM" in
+  Young Serif 24 plus "GMT+10" needs ~165. So it stacks (the §3.2 fallback) nearly always, and the card
+  grows ~22 pt for another zone. Open for Tessa: accept, or shrink/shorten something.
+- **VoiceOver wording:** the spike's labels kept as §3.2 says ("Moonrise at 5:18 PM, east-southeast"),
+  plus the zone in the old label's words: "Moonrise at 11:13 PM Sydney time, GMT+10, east-northeast".
+  §3.2's example also has "56 degrees"; not added, since the rule says "unchanged".
+- **Spike UI removed:** `ContentView`, `SpikeMoonTableViewModel` and its tests are gone; the card's model is
+  `Features/MoonTable/MoonTableViewModel` (text from `Formatting/MoonTableFormatter`). `MoonTableSpike`
+  (console print at launch) stays; it isn't spike UI.
+- **`DateControl` interim:** ‹ › and VoiceOver's adjustable day stepping moved to the card's header; the
+  field is left only to open the calendar until 5.3's date token replaces it.
+- **Phase glyph:** a terminator half-ellipse with semi-axis `|1 − 2k|`, so the lit area is exactly `k`
+  (tested by polygon area). Northern orientation only (Sydney shows waning lit on the left; flip is backlog).
+- **Considered:** sampling the zone at noon as before (wrong on changeover days once it sits beside a
+  specific time); a `Grid` for the rise/set row (the HStack with a centred hairline overlay is simpler and
+  matches the CSS grid for equal columns).
+
 ### 2026-09-30 · 5.1 theme: static Nunito Sans, app-wide defaults
 - **Fonts:** Nunito Sans is bundled as three static weights (Regular, SemiBold, Bold from
   googlefonts/NunitoSans), not the variable font: exact PostScript names, no axis handling in

@@ -28,6 +28,11 @@ nonisolated struct DayLabelFormatter {
     /// Between the relative word and the date when spoken.
     private static let spokenSeparator = ", "
 
+    /// Between "Today" and the date on the moon card.
+    private static let cardTodaySeparator = " · "
+
+    private static let todayWord = "Today"
+
     // MARK: - Configuration
 
     let locale: Locale
@@ -52,6 +57,16 @@ nonisolated struct DayLabelFormatter {
         return day.formatted(style)
     }
 
+    /// The moon card's header: "Today · Wed, Sep 30" on the place's today,
+    /// otherwise the same as `label(for:today:timeZone:)` (DESIGN-1.1.md
+    /// §3.2). With the calendar's Today chip gone, it's the card's only
+    /// "today" cue, so the visible label carries the word again.
+    func cardLabel(for day: Date, dayOffset: Int, today: Date, timeZone: TimeZone) -> String {
+        let date = label(for: day, today: today, timeZone: timeZone)
+        guard dayOffset == 0 else { return date }
+        return Self.todayWord + Self.cardTodaySeparator + date
+    }
+
     /// "Tomorrow, Sunday, September 27, 2026", for the date field's
     /// accessibility value. Always has the year; has the relative word when
     /// one applies.
@@ -69,7 +84,7 @@ nonisolated struct DayLabelFormatter {
     private static func relativeWord(for dayOffset: Int) -> String? {
         switch dayOffset {
         case -1: "Yesterday"
-        case 0: "Today"
+        case 0: todayWord
         case 1: "Tomorrow"
         default: nil
         }

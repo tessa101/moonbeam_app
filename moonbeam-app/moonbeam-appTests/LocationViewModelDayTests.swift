@@ -9,7 +9,7 @@ import Testing
 
 /// `LocationViewModel`'s day selection (DATE.md §3, §4, §6): the date control
 /// state, which day reaches `MoonService`, the midnight rollover on
-/// foreground, and the time zone label following the selected day.
+/// foreground, and the zone beside the times following the selected day.
 ///
 /// Its own suite, separate from `LocationViewModelTests`, so the location
 /// fixtures there stay as they are. Uses a clock the test can move forward.
@@ -467,53 +467,84 @@ struct LocationViewModelDayTests {
         #expect(viewModel.canGoForward)
     }
 
-    // MARK: - Time zone label on the selected day
+    // MARK: - Time zone beside the times (DESIGN-1.1.md §3.2)
 
     /// Phoenix has no DST. In September both are UTC−7; after LA falls back
     /// on Nov 1 they're an hour apart.
-    @Test("Phoenix on an LA device: no label today, label on a day after LA falls back")
-    func phoenixLabelFollowsTheDay() throws {
+    @Test("Phoenix on an LA device: no zone today, the zone on a day after LA falls back")
+    func phoenixZoneFollowsTheDay() throws {
         let clock = TestClock(try Self.date(2026, 9, 26, hour: 12, in: Self.losAngelesZone))
-        let viewModel = Self.makeViewModel(clock: clock)
+        let service = FakeMoonService(rise: MoonEvent(date: clock.now, azimuth: 90))
+        let viewModel = Self.makeViewModel(clock: clock, moonService: service)
         viewModel.select(Self.phoenix)
 
-        #expect(viewModel.timeZoneLabel == nil)
+        #expect(Self.timeZone(of: viewModel.moonTable?.rise) == nil)
 
+        let nov5 = try Self.date(2026, 11, 5, hour: 12, in: Self.phoenixZone)
+        service.rise = MoonEvent(date: nov5, azimuth: 90)
         viewModel.select(day: DateComponents(year: 2026, month: 11, day: 5))
 
-        let noon = try Self.date(2026, 11, 5, hour: 12, in: Self.phoenixZone)
-        let abbreviation = try #require(Self.phoenixZone.abbreviation(for: noon))
-        #expect(viewModel.timeZoneLabel == "Phoenix · \(abbreviation)")
-        #expect(viewModel.timeZoneAccessibilityLabel != nil)
+        let abbreviation = try #require(Self.phoenixZone.abbreviation(for: nov5))
+        #expect(Self.timeZone(of: viewModel.moonTable?.rise) == abbreviation)
+        #expect(viewModel.moonTable?.rise.accessibilityLabel.contains("Phoenix time, \(abbreviation)") == true)
     }
 
-    /// Sampled at noon, LA's changeover day counts as after the change (it
-    /// falls back at 02:00).
-    @Test("Phoenix on an LA device: label shown on LA's fall-back day")
-    func phoenixLabelOnTheChangeoverDay() throws {
+    /// Each time is sampled at its own moment: on LA's fall-back day (02:00),
+    /// a 01:00 event is still PDT, the same as Phoenix, and an evening one
+    /// is PST, an hour off.
+    @Test("Phoenix on an LA device, LA's fall-back day: the zone only after the change")
+    func phoenixZoneOnTheChangeoverDay() throws {
         let clock = TestClock(try Self.date(2026, 9, 26, hour: 12, in: Self.losAngelesZone))
-        let viewModel = Self.makeViewModel(clock: clock)
+        let early = try Self.date(2026, 11, 1, hour: 1, in: Self.losAngelesZone)
+        let evening = try Self.date(2026, 11, 1, hour: 20, in: Self.losAngelesZone)
+        let service = FakeMoonService(
+            rise: MoonEvent(date: evening, azimuth: 90),
+            set: MoonEvent(date: early, azimuth: 270)
+        )
+        let viewModel = Self.makeViewModel(clock: clock, moonService: service)
         viewModel.select(Self.phoenix)
 
         viewModel.select(day: DateComponents(year: 2026, month: 11, day: 1))
 
-        #expect(viewModel.timeZoneLabel != nil)
+        #expect(Self.timeZone(of: viewModel.moonTable?.set) == nil)
+        #expect(Self.timeZone(of: viewModel.moonTable?.rise) != nil)
     }
 
     /// Sydney is on AEST (+10) in September and AEDT (+11) from Oct 4.
-    @Test("Sydney on an LA device: a late-November day gets that day's abbreviation")
-    func sydneyLabelUsesTheSelectedDay() throws {
+    @Test("Sydney on an LA device: a late-November time gets that day's abbreviation")
+    func sydneyZoneUsesTheEvent() throws {
         let clock = TestClock(try Self.date(2026, 9, 26, hour: 12, in: Self.losAngelesZone))
-        let viewModel = Self.makeViewModel(clock: clock)
+        let nov25 = try Self.date(2026, 11, 25, hour: 12, in: Self.sydneyZone)
+        let service = FakeMoonService(rise: MoonEvent(date: nov25, azimuth: 90))
+        let viewModel = Self.makeViewModel(clock: clock, moonService: service)
         viewModel.select(Self.sydney)
         let todayAbbreviation = try #require(Self.sydneyZone.abbreviation(for: clock.now))
 
         viewModel.select(day: DateComponents(year: 2026, month: 11, day: 25))
 
-        let noon = try Self.date(2026, 11, 25, hour: 12, in: Self.sydneyZone)
-        let abbreviation = try #require(Self.sydneyZone.abbreviation(for: noon))
+        let abbreviation = try #require(Self.sydneyZone.abbreviation(for: nov25))
         #expect(abbreviation != todayAbbreviation)
-        #expect(viewModel.timeZoneLabel == "Sydney · \(abbreviation)")
+        #expect(Self.timeZone(of: viewModel.moonTable?.rise) == abbreviation)
+    }
+
+    // MARK: - Moon card header (DESIGN-1.1.md §3.2)
+
+    @Test("The card's date label says Today only on today")
+    func cardDateLabel() throws {
+        let clock = TestClock(try Self.date(2026, 9, 26, hour: 20, in: Self.losAngelesZone))
+        let viewModel = Self.makeViewModel(clock: clock)
+        viewModel.select(Self.marVista)
+
+        // The strings are the runner's locale's; DayLabelFormatterTests pins
+        // en_US.
+        #expect(viewModel.cardDateLabel == "Today · \(viewModel.dateLabel)")
+
+        viewModel.nextDay()
+        #expect(viewModel.cardDateLabel == viewModel.dateLabel)
+
+        viewModel.select(day: DateComponents(year: 2027, month: 1, day: 4))
+        #expect(viewModel.cardDateLabel == viewModel.dateLabel)
+        #expect(viewModel.cardDateLabel.contains("2027"))
     }
 
     // MARK: - Values through the view model (engine-derived guards)
@@ -531,7 +562,7 @@ struct LocationViewModelDayTests {
 
         let moonTable = try #require(viewModel.moonTable)
         #expect(moonTable.moonDay.rise == nil)
-        #expect(moonTable.riseText == "No moonrise today")
+        #expect(moonTable.rise.detail == .missing("No moonrise today"))
         let set = try #require(moonTable.moonDay.set)
         try Self.expectNear(set.date, try Self.date(2026, 10, 3, hour: 14, minute: 27, in: Self.losAngelesZone))
     }
@@ -558,6 +589,12 @@ struct LocationViewModelDayTests {
     }
 
     // MARK: - Helpers
+
+    /// The zone abbreviation beside a column's time, if it has one.
+    private static func timeZone(of column: MoonTableViewModel.Column?) -> String? {
+        guard case let .time(_, timeZone, _) = column?.detail else { return nil }
+        return timeZone
+    }
 
     private static func date(
         _ year: Int, _ month: Int, _ day: Int,

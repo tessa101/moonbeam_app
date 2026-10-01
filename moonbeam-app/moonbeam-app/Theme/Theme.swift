@@ -47,6 +47,26 @@ nonisolated enum Theme {
         static let tick = Color(hex: 0x7E6C72)
     }
 
+    // MARK: - Metrics
+
+    /// §2 spacing and radii shared across components. Each step adds the
+    /// ones it uses; values only one view needs stay in that view.
+    enum Metrics {
+        /// Hairlines and borders.
+        static let hairline: CGFloat = 1
+        /// The smallest tap target for any control.
+        static let minimumHitTarget: CGFloat = 44
+
+        /// The moon card (§2 "Card").
+        static let cardCornerRadius: CGFloat = 24
+        static let cardPaddingVertical: CGFloat = 16
+        static let cardPaddingHorizontal: CGFloat = 18
+        static let cardSpacing: CGFloat = 14
+
+        /// ‹ › (§2): a 32 pt circle inside the 44 pt hit area.
+        static let stepButtonSize: CGFloat = 32
+    }
+
     // MARK: - Fonts
 
     /// PostScript names of the bundled fonts (`Resources/Fonts`, listed in

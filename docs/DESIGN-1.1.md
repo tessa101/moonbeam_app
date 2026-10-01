@@ -44,12 +44,13 @@ confirms or changes them in §11 before the agent builds the step that uses them
 | `onAccent` | `#1B1519` | Text on amber | 10.9:1 |
 | `moonLit` | `#F2E6CF` | Phase glyph and dial dots | |
 | `dialTop` / `dialBottom` | `#30252C` / `#221A1F` | Dial face, radial gradient centred 50% / 40% | |
-| `tick` | `#7E6C72` | Dial ticks | 3.5:1 on `dialBottom` at the rim (non-text, ≥3:1); 2.997:1 on `dialTop` |
+| `tick` | `#807075` | Dial ticks | 3.15:1 on `dialTop`, 3.6:1 on `dialBottom` (non-text, ≥3:1). **Set in 5.4**; 5.1 shipped `#7E6C72` (2.997:1 on `dialTop`) |
 | `accentGlow` | `accent` at 8–70% | Glows (see components) | |
 
 Contrast is WCAG AA or better for all text. **Known gap:** the ‹ › button edge is 1.7:1 against the
-card; acceptable because the glyph (13:1) identifies the control, but note it in the a11y pass. Also for
-the a11y pass: `tick` is just under 3:1 against `dialTop`, fine while ticks stay near the rim (5.4).
+card; acceptable because the glyph (13:1) identifies the control, but note it in the a11y pass. `tick`
+was just under 3:1 against `dialTop`; 5.4 changes it to `#807075`, which clears 3:1 on the whole face
+(Tessa, 2026-09-30).
 
 **Light mode:** dark only for 1.1; the app is forced dark (§11 Q1, decided). Light mode comes with Round 2.
 
@@ -114,7 +115,9 @@ Top to bottom. Replaces the prompt, the search-field button, `DateControl`'s row
   VoiceOver: "Place, choose a city, button".
 
 ### 3.2 Moon card
-One card, three rows separated by 1 pt `stroke` hairlines.
+One card, three rows separated by 1 pt `stroke` hairlines. *As built (5.2):* one hairline, between the
+phase and rise/set rows, as the HTML draws it; the zone wraps under the time at default size on a
+393 pt phone. See DECISIONS.md 2026-09-30 "5.2 moon card".
 
 1. **Header row:** date label left ("Today · Wed, Sep 30" on today, "Sat, Oct 3" otherwise),
    `textSecondary` footnote 600; **‹ ›** right. Behavior as DATE.md (day stepping, ±366, VoiceOver
@@ -216,7 +219,9 @@ Loading and failed-fetch states keep their current copy; style them with the not
     Delete the spike `ContentView` / `SpikeMoonTableViewModel` once nothing uses them, and the
     "Spike UI" line.
 5.3 **Madlib sentence:** replaces prompt + search button; tokens open the sheets; VoiceOver per §3.1.
-5.4 **Compass restyle:** readout, dial, upright letters, ↑/↓, lock pill + halo, notes.
+5.4 **Compass restyle:** readout, dial, upright letters, ↑/↓, lock pill + halo, notes. Change
+    `Theme.Colors.tick` to `#807075` (3.15:1 on `dialTop`; §2 table already shows it) and have
+    `ThemeTests` check ticks against `dialTop` too.
 5.5 **AX reflow** (§4).
 5.6 **Pinned compass bar** (§4.1).
 5.7 **Onboarding** (§5).

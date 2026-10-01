@@ -29,6 +29,10 @@ Placed directly under the city name, above the moon table (sketch #3).
   - Use the device locale's date format (`Date.FormatStyle`). "Today" and the year are the place's (§3), not the device's.
 - **Range:** today ±366 days. The ‹ or › button is disabled at the limit.
 
+> **Design 1.1 (Step 5.2, 2026-09-30):** ‹ › and the adjustable day stepping moved into the moon
+> card's header, which reads "Today · Wed, Sep 30" on today (DESIGN-1.1.md §3.2). The field here
+> only opens the calendar until 5.3's date token replaces it.
+
 ## 2. Calendar sheet
 
 - Bottom sheet, **medium detent** (large if Dynamic Type needs it), drag indicator visible.

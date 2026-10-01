@@ -30,13 +30,13 @@ moonbeam-app/moonbeam-app/
 ├── Features/
 │   ├── Location/        # LocationViewModel, LocationScreen, LocationOffDialog, DateControl, CalendarSheet
 │   ├── Compass/         # CompassView, CompassDial, CompassViewModel, CompassLock, CompassTarget, CompassContext
-│   └── MoonTable/       # MoonTableView, MoonTableViewModel
+│   └── MoonTable/       # MoonCard, MoonTableViewModel, PhaseGlyph, PhaseGlyphGeometry
 ├── Services/
 │   ├── Moon/            # MoonService protocol + AstronomyEngineMoonService
 │   ├── Heading/         # HeadingService + CoreLocationHeadingService and fake, HeadingSessionMonitor
 │   └── Location/        # LocationService, PlaceSearchService, PlaceStore + real and fake impls
 ├── Models/              # Plain value types
-├── Formatting/          # Compass, time, and percent formatters
+├── Formatting/          # Compass, day label and moon table (phase, %, time, zone) formatters
 ├── Theme/               # Design 1.1 tokens (Theme), ScreenBackground
 ├── Resources/Fonts/     # Young Serif, Nunito Sans (OFL), listed in UIAppFonts
 └── Vendor/Astronomy/    # astronomy.c, astronomy.h, VERSION
@@ -152,7 +152,8 @@ anywhere) with different failure modes. See LOCATION.md.
     anchored at local noon and moved with `date(byAdding: .day)`, and stays within today ±366.
   - The moon table is built for `daySelection.startOfDay(in: place.timeZone, now:)`. It's rebuilt on
     a place change, a day change, and a foreground after the place's midnight (following today only).
-  - The time zone label samples local noon on the selected day.
+  - The place's zone abbreviation sits beside each rise/set time, sampled at that event (5.2;
+    the old "Sydney · AEST" line sampled local noon).
   - The selection isn't persisted: every launch opens on today.
   - The view model takes the clock as `now: () -> Date`, so tests can pin it.
 

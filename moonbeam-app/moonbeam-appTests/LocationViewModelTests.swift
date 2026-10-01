@@ -588,9 +588,10 @@ struct LocationViewModelTests {
     // MARK: - Time zones (§5)
 
     /// The §5 case end to end: a Sydney place on a Los Angeles device reads
-    /// in Sydney's clock and carries the label. Rise 14:24 AEST is the
-    /// engine-derived ASTRONOMY.md §5 value (see PlaceTimeZoneTests).
-    @Test("Sydney on a Los Angeles device: times in AEST and the label shown")
+    /// in Sydney's clock, with the zone beside the time (DESIGN-1.1.md §3.2).
+    /// Rise 14:24 AEST is the engine-derived ASTRONOMY.md §5 value (see
+    /// PlaceTimeZoneTests).
+    @Test("Sydney on a Los Angeles device: times in AEST with the zone shown")
     func sydneyOnALosAngelesDevice() async throws {
         let viewModel = Self.makeViewModel()
 
@@ -607,17 +608,20 @@ struct LocationViewModelTests {
         sydneyStyle.timeZone = Self.sydneyZone
         var losAngelesStyle = sydneyStyle
         losAngelesStyle.timeZone = Self.losAngelesZone
-        #expect(moonTable.riseText.hasPrefix(rise.date.formatted(sydneyStyle)))
-        #expect(!moonTable.riseText.hasPrefix(rise.date.formatted(losAngelesStyle)))
+        guard case let .time(time, timeZone, _) = moonTable.rise.detail else {
+            Issue.record("Expected a moonrise time")
+            return
+        }
+        #expect(time == rise.date.formatted(sydneyStyle))
+        #expect(time != rise.date.formatted(losAngelesStyle))
 
-        let label = try #require(viewModel.timeZoneLabel)
-        let abbreviation = try #require(Self.sydneyZone.abbreviation(for: Self.referenceDate))
-        #expect(label == "Sydney · \(abbreviation)")
-        #expect(viewModel.timeZoneAccessibilityLabel != nil)
+        let abbreviation = try #require(Self.sydneyZone.abbreviation(for: rise.date))
+        #expect(timeZone == abbreviation)
+        #expect(moonTable.rise.accessibilityLabel.contains("Sydney time, \(abbreviation)"))
     }
 
-    @Test("Los Angeles on a Los Angeles device: no label")
-    func losAngelesOnALosAngelesDevice() async {
+    @Test("Los Angeles on a Los Angeles device: no zone beside the times")
+    func losAngelesOnALosAngelesDevice() async throws {
         let viewModel = Self.makeViewModel(
             location: FakeLocationService(
                 authorizationState: .authorized,
@@ -627,8 +631,12 @@ struct LocationViewModelTests {
 
         await viewModel.start()
 
-        #expect(viewModel.place != nil)
-        #expect(viewModel.timeZoneLabel == nil)
-        #expect(viewModel.timeZoneAccessibilityLabel == nil)
+        let moonTable = try #require(viewModel.moonTable)
+        for column in [moonTable.rise, moonTable.set] {
+            if case let .time(_, timeZone, _) = column.detail {
+                #expect(timeZone == nil)
+            }
+            #expect(!column.accessibilityLabel.contains(" time, "))
+        }
     }
 }

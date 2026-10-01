@@ -135,7 +135,7 @@ struct SearchSheet: View {
     SearchSheet(
         viewModel: SearchSheetViewModel(
             placeSearch: FakePlaceSearchService(),
-            placeStore: InMemoryPlaceStore(recents: [SpikeMoonTableViewModel.marVista]),
+            placeStore: InMemoryPlaceStore(recents: [Place.marVista]),
             showsUseMyLocation: true,
             onPick: { _ in },
             onUseMyLocation: {}

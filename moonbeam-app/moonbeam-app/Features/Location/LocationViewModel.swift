@@ -15,7 +15,7 @@ import Observation
 /// (SEARCH-RECENTS.md §4).
 ///
 /// Also owns the selected day (DATE.md): a calendar day in the place's time
-/// zone that the moon table and the time zone label follow.
+/// zone that the moon table follows.
 ///
 /// Main-actor isolated (the project default), like the three location
 /// services it drives. The services come in through the initializer, so
@@ -51,18 +51,15 @@ final class LocationViewModel {
     /// Must match it, or iOS declines the request without showing anything.
     static let compassPrecisePurposeKey = "Compass"
 
-    /// Separates the city from the zone in the §3 label: "Sydney · AEST".
-    private static let timeZoneLabelSeparator = " · "
-
     // MARK: - Observed state
 
     /// The place the moon table is for, or `nil` for the empty first-launch
     /// state.
     private(set) var place: Place?
 
-    /// The moon table for `place` on the selected day, rebuilt whenever
-    /// either changes.
-    private(set) var moonTable: SpikeMoonTableViewModel?
+    /// The moon card's table for `place` on the selected day, rebuilt
+    /// whenever either changes.
+    private(set) var moonTable: MoonTableViewModel?
 
     /// The day the moon table is for. Not persisted: every launch opens on
     /// today (DATE.md §3).
@@ -202,19 +199,6 @@ final class LocationViewModel {
     /// (SEARCH-RECENTS.md §1).
     var searchFieldTitle: String {
         place?.nameWithRegion ?? searchPrompt
-    }
-
-    /// "Sydney · AEST", only when the place's clock differs from the device's
-    /// (§3, §5). The abbreviation is whatever the user's locale calls the
-    /// zone, which for some locales is "GMT+10" rather than "AEST".
-    var timeZoneLabel: String? {
-        guard let place, let abbreviation = timeZoneAbbreviation(for: place) else { return nil }
-        return place.shortName + Self.timeZoneLabelSeparator + abbreviation
-    }
-
-    var timeZoneAccessibilityLabel: String? {
-        guard let place, let abbreviation = timeZoneAbbreviation(for: place) else { return nil }
-        return "Times shown in \(place.shortName) time, \(abbreviation)"
     }
 
     // MARK: - Launch (§3)
@@ -404,6 +388,18 @@ final class LocationViewModel {
         )
     }
 
+    /// The moon card's header: "Today · Wed, Sep 30" on the place's today,
+    /// otherwise as `dateLabel` (DESIGN-1.1.md §3.2).
+    var cardDateLabel: String {
+        guard let place else { return "" }
+        return dayLabelFormatter.cardLabel(
+            for: selectedStartOfDay(for: place),
+            dayOffset: selectedDayOffset(for: place),
+            today: now(),
+            timeZone: place.timeZone
+        )
+    }
+
     /// The date field's accessibility value: "Tomorrow, Sunday, September
     /// 27, 2026". It's a value, not the label, so VoiceOver reads the new date
     /// after each adjustable swipe (DATE.md §5).
@@ -583,10 +579,11 @@ final class LocationViewModel {
             moonTable = nil
             return
         }
-        moonTable = SpikeMoonTableViewModel(
+        moonTable = MoonTableViewModel(
             moonService: moonService,
             place: place,
-            day: selectedStartOfDay(for: place)
+            day: selectedStartOfDay(for: place),
+            deviceTimeZone: deviceTimeZone
         )
     }
 
@@ -692,15 +689,5 @@ final class LocationViewModel {
             placeStore.lastViewed = place
             lastViewed = place
         }
-    }
-
-    /// Sampled at local noon on the selected day, not now: the label
-    /// describes the times on screen, and a picked day can be across a DST
-    /// change from today. DST changes happen overnight, so noon has that
-    /// day's offset for nearly all of the day.
-    private func timeZoneAbbreviation(for place: Place) -> String? {
-        let date = daySelection.noon(in: place.timeZone, now: now())
-        guard place.isInDifferentTimeZone(from: deviceTimeZone, on: date) else { return nil }
-        return place.timeZone.abbreviation(for: date)
     }
 }

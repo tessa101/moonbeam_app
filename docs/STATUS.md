@@ -3,7 +3,7 @@
 > A living note on where things stand. Update it at the end of each work session
 > so the next session (you, or Claude) can pick up cold.
 
-_Last updated: 2026-09-30 (Step 5.1 theme built; Design 1.1 settled: DESIGN-1.1.md, Step 5; 4.14, Step 2.2 and 4.15 built; device checks pending)_
+_Last updated: 2026-09-30 (Step 5.2 moon card built; 5.1 theme; Design 1.1 settled: DESIGN-1.1.md, Step 5; 4.14, Step 2.2 and 4.15 built; device checks pending)_
 
 ## Where things live
 - **Local repo:** `~/app-ideas/moonbeam` (the one true folder)
@@ -136,7 +136,15 @@ _Last updated: 2026-09-30 (Step 5.1 theme built; Design 1.1 settled: DESIGN-1.1.
      `Theme/ScreenBackground.swift` (`bg` + top amber glow), fonts in `Resources/Fonts` + `UIAppFonts`,
      forced dark (`UIUserInterfaceStyle`), `AccentColor` = `accent`, iOS 26 status bar backing is solid
      `bg`. App root defaults to the body font and `textPrimary`. `ThemeTests`: fonts register, §2
-     contrast table holds. Next: 5.2 moon card.
+     contrast table holds.
+   - [x] **5.2 moon card (2026-09-30):** `Features/MoonTable/` (`MoonCard`, `MoonTableViewModel`,
+     `PhaseGlyph` + `PhaseGlyphGeometry`), `Formatting/MoonTableFormatter`. Header "Today · Wed, Sep 30"
+     with ‹ › (moved out of `DateControl`, which now only opens the calendar until 5.3), phase glyph
+     with a real terminator, rise/set columns with the place's zone beside each time (replaces the
+     "Sydney · AEST" line). Spike `ContentView` / `SpikeMoonTableViewModel` deleted. 371 tests / 568
+     cases pass. Screenshots: `.agent-reports/design-1.1/`. **Open for Tessa:** the zone wraps under the
+     time at default size (DECISIONS.md "5.2 moon card"). **For 5.4:** `tick` → `#807075`
+     (DESIGN-1.1.md §2, §7). Next: 5.3 madlib sentence.
 
 5. [ ] Location: detect + search (Step 2)
    - Spec: **[LOCATION.md](LOCATION.md)** (decided 2026-09-25). Place model, CoreLocation one-shot fix,
