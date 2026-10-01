@@ -79,6 +79,11 @@ nonisolated enum Theme {
 
         /// Secondary buttons (§2): capsule, full width.
         static let secondaryButtonHeight: CGFloat = 52
+        /// Primary buttons (§2): capsule, full width.
+        static let primaryButtonHeight: CGFloat = 56
+
+        /// Onboarding screens' side margins (§2, §5).
+        static let onboardingMargin: CGFloat = 28
     }
 
     // MARK: - Fonts
@@ -139,6 +144,9 @@ nonisolated enum Theme {
         static let secondaryButton = Font.custom(FontName.nunitoSansSemiBold, size: 17, relativeTo: .body)
         /// Text links ("Search for a city instead").
         static let link = Font.custom(FontName.nunitoSansSemiBold, size: 16, relativeTo: .callout)
+        /// The onboarding info box ("Keep Precise Location on…"). Nunito 400
+        /// at 15 in the HTML; the §2 table doesn't list it.
+        static let infoNote = Font.custom(FontName.nunitoSansRegular, size: 15, relativeTo: .subheadline)
         /// The illumination line and directions ("58° ENE").
         static let detail = Font.custom(FontName.nunitoSansRegular, size: 14, relativeTo: .subheadline)
         /// The card's date label and the "↑ Moonrise" labels.

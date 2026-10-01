@@ -5,6 +5,27 @@
 
 ---
 
+### 2026-10-01 · 5.7 onboarding: placeholder copy, Settings return, completed flag (Tessa)
+- **Copy:** the mockup's copy ships as-is in 5.7 (`Moon Signal Madlib 1.0.dc.html` §3d: tagline, upsell, info box,
+  "That’s okay"; including its missing final period). It's the designer's placeholder; final copy comes later and
+  swaps in one file, `Features/Onboarding/OnboardingCopy.swift`.
+- **(new) Back from Settings:** after Enable location, "That's okay" stays up. If permission is authorized when the
+  app returns to the foreground, onboarding goes to the main screen as for Allow; otherwise it stays.
+- **(new) Completed flag:** onboarding shows only with no saved place **and** permission not determined **and**
+  onboarding not yet completed. Any exit (Allow, Got it, Search instead, the Settings return) sets the flag, so
+  Search instead → Cancel → relaunch (still no place, still not determined) doesn't show it again. Stored by
+  `OnboardingStore` (`UserDefaults` key `onboardingCompleted`); DEBUG builds clear it with the launch argument
+  `-resetOnboarding`.
+- **As built:** `OnboardingViewModel` decides show/skip and the steps and reports an `Outcome` to
+  `LocationViewModel.onboardingDidFinish(_:)`; the app root swaps onboarding for `LocationScreen`. Allow (Allow Once
+  included) and the Settings return both run the normal launch flow (`start()`, a launch fix, so the detected city
+  isn't saved as last-viewed, as on any launch). Search instead opens the search sheet from `start()`. A prompt
+  dismissed with no answer stays on the upsell. The moon on each screen is the 5.2 `PhaseGlyph` (fixed waning
+  gibbous, as drawn, on `bg`, glow scaled to size). New `PrimaryButtonStyle`, `TextLinkButtonStyle`.
+- **Order:** 5.7 is built before 5.5 (AX reflow) and 5.6 (pinned bar), which are deferred until after it.
+- **Considered:** a full-screen cover over the main screen (its dismissal would have to finish before the search
+  sheet could present); keeping the flag in `PlaceStore` (not about places).
+
 ### 2026-10-01 · Rise/set times: smaller day period, found by its date field (Tessa)
 - **Look:** "PM" in Young Serif at 60% of the time's 24 pt (`Theme.Fonts.dayPeriod`, relative to `.title2` like
   the digits, so both scale together), same `textPrimary`, baseline-aligned in one `Text`. Digits and the zone

@@ -12,15 +12,23 @@ struct PhaseGlyph: View {
 
     let geometry: PhaseGlyphGeometry
 
-    /// §3.2: glow `accent` 30%, blur 18 in the design's CSS. SwiftUI's
-    /// shadow radius is about half a CSS blur.
+    /// The unlit disc: the card's `surface`, or the screen's `bg` where the
+    /// glyph sits straight on the background (onboarding, §5).
+    var discColor: Color = Theme.Colors.surface
+
+    /// §3.2: blur 18 in the design's CSS at 44 pt. Onboarding's bigger
+    /// glyphs pass their own.
+    var glowCSSBlur: CGFloat = Self.cardGlowCSSBlur
+
+    /// §3.2: glow `accent` 30%. SwiftUI's shadow radius is about half a CSS
+    /// blur.
     private static let glowOpacity = 0.3
-    private static let glowCSSBlur: CGFloat = 18
+    static let cardGlowCSSBlur: CGFloat = 18
 
     var body: some View {
         Circle()
-            .fill(Theme.Colors.surface)
-            .shadow(color: Theme.Colors.accent.opacity(Self.glowOpacity), radius: Self.glowCSSBlur / 2)
+            .fill(discColor)
+            .shadow(color: Theme.Colors.accent.opacity(Self.glowOpacity), radius: glowCSSBlur / 2)
             .overlay {
                 LitShape(geometry: geometry)
                     .fill(Theme.Colors.moonLit)

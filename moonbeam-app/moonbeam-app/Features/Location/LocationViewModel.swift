@@ -143,6 +143,10 @@ final class LocationViewModel {
     /// clears it.
     @ObservationIgnored private var detectionOnlyAfterSettings = false
 
+    /// Onboarding ended with "Search for a city instead" (DESIGN-1.1.md §5):
+    /// the screen opens with the search sheet up.
+    @ObservationIgnored private var presentsSearchOnStart = false
+
     // MARK: - Init
 
     /// - Parameters:
@@ -233,11 +237,23 @@ final class LocationViewModel {
         let state = locationService.authorizationState
         lastSeenAuthState = state
 
+        if presentsSearchOnStart {
+            presentsSearchOnStart = false
+            presentSearch()
+        }
+
         if state.isAuthorized {
             await locate(userInitiated: false)
         } else if let lastViewed {
             show(lastViewed, remember: false)
         }
+    }
+
+    /// Call before the screen appears, with how onboarding ended (§5).
+    /// Allowed and declined need nothing extra: `start()`'s normal launch
+    /// flow finds the city, or leaves the empty "a city" state.
+    func onboardingDidFinish(_ outcome: OnboardingViewModel.Outcome) {
+        presentsSearchOnStart = outcome == .searchInstead
     }
 
     // MARK: - Permission branches (§4)

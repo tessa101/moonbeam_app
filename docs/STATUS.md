@@ -3,7 +3,7 @@
 > A living note on where things stand. Update it at the end of each work session
 > so the next session (you, or Claude) can pick up cold.
 
-_Last updated: 2026-10-01 (Step 5.3 madlib sentence built, with §3.1a; 5.2 follow-ups; Step 5.2 moon card built; 5.1 theme; Design 1.1 settled: DESIGN-1.1.md, Step 5; 4.14, Step 2.2 and 4.15 built; device checks pending)_
+_Last updated: 2026-10-01 (Step 5.7 onboarding built ahead of 5.5/5.6; Step 5.3 madlib sentence built, with §3.1a; 5.2 follow-ups; Step 5.2 moon card built; 5.1 theme; Design 1.1 settled: DESIGN-1.1.md, Step 5; 4.14, Step 2.2 and 4.15 built; device checks pending)_
 
 ## Where things live
 - **Local repo:** `~/app-ideas/moonbeam` (the one true folder)
@@ -179,6 +179,17 @@ _Last updated: 2026-10-01 (Step 5.3 madlib sentence built, with §3.1a; 5.2 foll
      animation. 398 tests / 604 cases. Screenshots: `.agent-reports/5.4-compass/`. **Check on device:**
      the lock pill + haptic, marks moving smoothly, notes in low accuracy. Next: 5.5 AX reflow (incl. the
      260 pt dial).
+   - **Order change (Tessa, 2026-10-01):** 5.7 onboarding is built first; **5.5 AX reflow and 5.6 pinned compass
+     bar are deferred until after 5.7.**
+   - [x] **5.7 onboarding (2026-10-01):** Landing → Location upsell → iOS prompt → "That’s okay" (after Don't
+     Allow only); the prompt only from the Use my location tap. Allow / Allow Once → main screen, normal launch;
+     Got it → "a city" empty state; Enable location → app Settings, and back authorized → main screen; Search
+     instead → main screen with the search sheet, no prompt. Shows only with no saved place, permission not
+     determined and onboarding not completed (any exit sets the flag). DEBUG reset: launch argument
+     `-resetOnboarding`. Placeholder copy from the mockup, as-is (DECISIONS.md "5.7 onboarding"). 427 tests / 648
+     cases. Screenshots: `.agent-reports/5.7-onboarding/` (default + AX5). **Check on device:** fresh install →
+     onboarding; Allow Once; Don't Allow → Enable location → turn on in Settings → back lands on the main screen.
+     Next: 5.5 AX reflow.
 
 5. [ ] Location: detect + search (Step 2)
    - Spec: **[LOCATION.md](LOCATION.md)** (decided 2026-09-25). Place model, CoreLocation one-shot fix,

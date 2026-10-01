@@ -265,6 +265,18 @@ Four full screens, `bg` background, 28 pt margins, buttons pinned to the bottom.
 - Landing tagline and "That's okay" copy are the designer's placeholders.
 - **When it shows** (§11 Q5, decided): only when there's no saved place **and** location permission is
   not determined, so existing TestFlight installs skip it. Add a DEBUG-only way to re-run it.
+- **(new, Tessa, 2026-10-01) Completed flag:** …**and** onboarding hasn't been completed. Every exit (Allow,
+  Got it, Search instead, the Settings return below) sets the flag, so Search instead → Cancel → relaunch
+  doesn't show it again.
+- **(new, Tessa, 2026-10-01) Back from Settings:** after Enable location, "That's okay" stays up. If permission
+  is authorized when the app returns to the foreground, go to the main screen as for Allow.
+
+*As built (5.7):* `Features/Onboarding/` (`OnboardingViewModel`, `OnboardingView`, one view per screen,
+`OnboardingPage` layout, `OnboardingMoon`, `OnboardingCopy`), `Services/Onboarding/OnboardingStore` (+
+`UserDefaults` and in-memory). The copy is the mockup's, as-is (placeholder). Allow Once counts as Allow. Search
+instead opens the sheet from the main screen's `start()`; cancelling leaves the "a city" state. Pages scroll at
+least a screen tall, so buttons sit at the bottom when everything fits and follow the content at AX sizes. DEBUG
+reset: launch argument `-resetOnboarding`. See DECISIONS.md 2026-10-01 "5.7 onboarding".
 
 ## 6. Unchanged / not in this pass
 Search sheet, calendar sheet and the Location Off dialog keep their current look (Round 2 screens,
@@ -283,12 +295,13 @@ Loading and failed-fetch states keep their current copy; style them with the not
     `ThemeTests` check ticks against `dialTop` too.
 5.5 **AX reflow** (§4).
 5.6 **Pinned compass bar** (§4.1).
-5.7 **Onboarding** (§5).
+5.7 **Onboarding** (§5). *Built first (2026-10-01); 5.5 and 5.6 follow it.*
 Then device QA with screenshots at default, AX1 and AX5 for every state in §3–5.
 
 ## 8. Tests
 - Date token text: today / other day / other year; spoken labels.
-- Onboarding routing: first-launch conditions; Allow / Don't Allow / Search instead outcomes.
+- Onboarding routing: first-launch conditions (including the completed flag); Allow / Don't Allow / Search
+  instead / back-from-Settings outcomes.
 - Pinned bar visibility rule (as a view-model state, not a UI test).
 - Phase glyph lit-fraction geometry at 0, 25, 50, 75, 100% for waxing and waning.
 

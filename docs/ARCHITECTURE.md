@@ -30,14 +30,16 @@ moonbeam-app/moonbeam-app/
 ├── Features/
 │   ├── Location/        # LocationViewModel, LocationScreen, MadlibSentence, LocationOffDialog, CalendarSheet
 │   ├── Compass/         # CompassView, CompassDial, CompassNote, CompassViewModel, CompassLock, CompassTarget, CompassContext
-│   └── MoonTable/       # MoonCard, MoonTableViewModel, PhaseGlyph, PhaseGlyphGeometry
+│   ├── MoonTable/       # MoonCard, MoonTableViewModel, PhaseGlyph, PhaseGlyphGeometry
+│   └── Onboarding/      # OnboardingViewModel, OnboardingView + one view per screen, OnboardingPage, OnboardingCopy
 ├── Services/
 │   ├── Moon/            # MoonService protocol + AstronomyEngineMoonService
 │   ├── Heading/         # HeadingService + CoreLocationHeadingService and fake, HeadingSessionMonitor
-│   └── Location/        # LocationService, PlaceSearchService, PlaceStore + real and fake impls
+│   ├── Location/        # LocationService, PlaceSearchService, PlaceStore + real and fake impls
+│   └── Onboarding/      # OnboardingStore (completed flag) + UserDefaults and in-memory impls
 ├── Models/              # Plain value types
 ├── Formatting/          # Compass, day label, madlib sentence and moon table (phase, %, time, zone) formatters
-├── Theme/               # Design 1.1 tokens (Theme), ScreenBackground, SecondaryButtonStyle
+├── Theme/               # Design 1.1 tokens (Theme), ScreenBackground, Primary/Secondary/TextLink button styles
 ├── Resources/Fonts/     # Young Serif, Nunito Sans (OFL), listed in UIAppFonts
 └── Vendor/Astronomy/    # astronomy.c, astronomy.h, VERSION
 moonbeam-appTests/       # Swift Testing, app-hosted: formatters, models, service vs ASTRONOMY.md §5
@@ -166,6 +168,9 @@ Two lists, via `PlaceStore` → `UserDefaults`, each stored as a JSON array:
   Seeded once from the last-viewed place on first run after Step 2.1.
 
 They're separate because the last-viewed place can be detected and recents can't.
+
+Plus one flag via `OnboardingStore` → `UserDefaults`: **onboarding completed** (`onboardingCompleted`,
+DESIGN-1.1.md §5), set on any exit from onboarding.
 **TBD:** saved places in SwiftData, if that feature happens.
 
 ## 7. Apple frameworks
