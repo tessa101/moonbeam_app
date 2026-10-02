@@ -62,6 +62,11 @@
   HTML, and 5.2's hairline divider between them is gone**; the cells reach 6 pt into the card's padding, so their
   text sits 5 pt inside the header's (the HTML's offset). The two boxes match heights. Amber label on the
   highlight fill: about 8.7:1.
+- **As built, 5.4.2 dial:** readout was already Young Serif 24 unlocked and in the pill (`Fonts.display`), no change.
+  Ticks are four paths (2° / 10° / 30° / N) from 1 pt inside the rim, lengths 7 / 11 / 15; numbers 72 pt out,
+  `dialNumber` `#A8939C` (5.1:1 on `dialTop`); cardinals 58 pt out (were 64), E/S/W now `textPrimary`. The needle
+  starts where 5.4's capsule did (the same 17 pt lead, so the dial doesn't move) and ends 12 pt inside the rim, as
+  deep as a mid tick. Until 5.4.4 the old ↑ / ↓ inside the rim overlap the numbers near them. Shimmer: device check.
 
 ### 2026-10-01 · Show onboarding button also in TestFlight builds (Tessa)
 - **Why:** testers (and Tessa on a phone without Xcode) need to see onboarding again without deleting the app

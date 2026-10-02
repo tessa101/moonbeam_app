@@ -5,11 +5,13 @@
 
 import SwiftUI
 
-/// The compass dial (DESIGN-1.1.md §3.3, §3.3a, COMPASS.md §1): a lit face
-/// with tick dots every 15°, N/E/S/W and ↑ / ↓ by the moonrise and moonset
-/// bearings; outside the rim, the moon arc, the moon's pass from rise to set,
-/// with `moonLit` dots at moonrise and moonset and the live Moon as a phase
-/// glyph riding on it; and a fixed indicator at 12 o'clock beyond the arc.
+/// The compass dial (DESIGN-1.1.md §3.3, §3.3a, COMPASS-1.1.md §4, COMPASS.md
+/// §1): a lit face with tick lines every 2° (longer every 10° and 30°), degree
+/// numbers every 30°, N/E/S/W in Young Serif, a fixed crosshair, and ↑ / ↓ by
+/// the moonrise and moonset bearings; outside the rim, the moon arc, the
+/// moon's pass from rise to set, with `moonLit` dots at moonrise and moonset
+/// and the live Moon as a phase glyph riding on it; and a fixed needle at 12
+/// o'clock from above the arc into the ticks.
 /// Locked, the target's mark grows and glows and the dial gets a soft amber
 /// halo.
 ///
@@ -57,17 +59,30 @@ struct CompassDial: View {
     private static let dialRadius = diameter / 2
 
     private static let fullTurnDegrees = 360
-    private static let tickStepDegrees = 15
     private static let cardinalStepDegrees = 90
-    private static let tickSize: CGFloat = 3
-    private static let cardinalTickSize: CGFloat = 5
-    /// From the rim to a tick's outer edge.
-    private static let tickInset: CGFloat = 10
 
-    /// From the rim to the centre of a letter and of an ↑/↓ arrow (the 5.4
-    /// insets, which still fit inside the smaller dial).
-    private static let letterCentreInset: CGFloat = 34
+    /// Ticks (COMPASS-1.1.md §4, the HTML's 104 pt dial scaled to 98 pt):
+    /// every 2° minor, every 10° mid, every 30° heavy, from just inside the
+    /// rim inwards. Minor ticks are under 3:1 and decorative; mid and heavy
+    /// carry the reading.
+    private static let minorTickStepDegrees = 2
+    private static let midTickStepDegrees = 10
+    private static let heavyTickStepDegrees = 30
+    private static let tickOuterInset: CGFloat = 1
+    private static let minorTick = (length: CGFloat(7), width: CGFloat(1))
+    private static let midTick = (length: CGFloat(11), width: CGFloat(1.4))
+    private static let heavyTick = (length: CGFloat(15), width: CGFloat(2.2))
+
+    /// Degree numbers every 30° except on the cardinals, this far from the
+    /// centre; cardinals at `letterCentreDistance`.
+    private static let numberCentreDistance: CGFloat = 72
+    private static let letterCentreDistance: CGFloat = 58
+    /// From the rim to the centre of an ↑/↓ arrow (5.4's inset).
     private static let arrowCentreInset: CGFloat = 22
+
+    /// The fixed crosshair: ±28 pt, 1 pt, with a 2 pt centre dot.
+    private static let crosshairReach: CGFloat = 28
+    private static let crosshairDotSize: CGFloat = 2
 
     /// The arc's track: this far outside the rim (114 pt from the centre).
     private static let arcGap: CGFloat = 16
@@ -117,14 +132,18 @@ struct CompassDial: View {
     private static let haloOverhang: CGFloat = 18
     private static let haloOpacity = 0.28
 
-    /// The indicator: a 6 × 17 capsule beyond the arc, from the glyph disc's
-    /// outer edge (130 pt from the centre) to 147 pt, so facing the Moon puts
-    /// the glyph just under it.
-    private static let indicatorSize = CGSize(width: 6, height: 17)
+    /// The room above the outer radius that 5.4's capsule indicator had,
+    /// kept so the dial doesn't move: the needle starts at its top.
+    private static let needleLead: CGFloat = 17
+    /// The needle (COMPASS-1.1.md §4): a 3 pt round-capped line from the top
+    /// of the view, across the arc at 12 o'clock, ending as deep in the ring
+    /// as a mid tick.
+    private static let needleWidth: CGFloat = 3
+    private static let needleDepth = tickOuterInset + midTick.length
 
     /// The farthest anything reaches on every side but the top: the glyph's
     /// disc on the arc. The view is this radius all round, plus the
-    /// indicator on top (about 277 pt tall in all).
+    /// needle's lead on top (about 277 pt tall in all).
     private static let outerRadius = arcRadius + moonMarkerSize / 2 + moonDiscMargin
     private static let outerSize = outerRadius * 2
 
@@ -148,6 +167,10 @@ struct CompassDial: View {
         ("N", 0), ("E", 90), ("S", 180), ("W", 270),
     ]
 
+    /// 30, 60, 120 … 330: every heavy tick but the cardinals.
+    private static let numberedDegrees = stride(from: heavyTickStepDegrees, to: fullTurnDegrees, by: heavyTickStepDegrees)
+        .filter { !$0.isMultiple(of: cardinalStepDegrees) }
+
     /// The moon is up and this is its pass; otherwise everything on the arc
     /// is dimmed.
     private var isMoonUp: Bool {
@@ -160,12 +183,13 @@ struct CompassDial: View {
         ZStack {
             halo
             face
+            crosshair
             marks
                 .opacity(heading == nil ? Self.noHeadingOpacity : 1)
         }
         .frame(width: Self.outerSize, height: Self.outerSize)
-        .overlay(alignment: .top) { indicator }
-        .padding(.top, Self.indicatorSize.height)
+        .overlay { needle }
+        .padding(.top, Self.needleLead)
         .frame(maxWidth: .infinity)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(accessibilityTargets ?? "")
@@ -220,12 +244,42 @@ struct CompassDial: View {
         }
     }
 
-    /// Fixed at 12 o'clock, beyond the arc: where the phone points.
-    private var indicator: some View {
-        Capsule()
-            .fill(Theme.Colors.textPrimary)
-            .frame(width: Self.indicatorSize.width, height: Self.indicatorSize.height)
-            .offset(y: -Self.indicatorSize.height)
+    /// Fixed at 12 o'clock: where the phone points. From the top of the
+    /// view (just under the readout), across the arc, into the ticks; amber
+    /// while locked. Drawn over the marks, as in the HTML.
+    private var needle: some View {
+        let capRadius = Self.needleWidth / 2
+        return Path { path in
+            path.move(to: CGPoint(x: Self.outerRadius, y: capRadius - Self.needleLead))
+            path.addLine(to: CGPoint(x: Self.outerRadius, y: Self.outerRadius - Self.dialRadius + Self.needleDepth))
+        }
+        .stroke(
+            lockedKind == nil ? Theme.Colors.textPrimary : Theme.Colors.accent,
+            style: StrokeStyle(lineWidth: Self.needleWidth, lineCap: .round)
+        )
+        .frame(width: Self.outerSize, height: Self.outerSize)
+        .accessibilityHidden(true)
+    }
+
+    /// Fixed, under the turning marks; decorative.
+    private var crosshair: some View {
+        let centre = Self.outerRadius
+        let reach = Self.crosshairReach
+        return ZStack {
+            Path { path in
+                path.move(to: CGPoint(x: centre - reach, y: centre))
+                path.addLine(to: CGPoint(x: centre + reach, y: centre))
+                path.move(to: CGPoint(x: centre, y: centre - reach))
+                path.addLine(to: CGPoint(x: centre, y: centre + reach))
+            }
+            .stroke(Theme.Colors.faint, lineWidth: Theme.Metrics.hairline)
+            Circle()
+                .fill(Theme.Colors.tick)
+                .frame(width: Self.crosshairDotSize, height: Self.crosshairDotSize)
+                .position(x: centre, y: centre)
+        }
+        .frame(width: Self.outerSize, height: Self.outerSize)
+        .accessibilityHidden(true)
     }
 
     // MARK: - Marks
@@ -233,6 +287,7 @@ struct CompassDial: View {
     private var marks: some View {
         ZStack {
             ticks
+            numbers
             letters
             arcTrack
             targetMarks
@@ -240,24 +295,57 @@ struct CompassDial: View {
         .frame(width: Self.outerSize, height: Self.outerSize)
     }
 
+    /// One path per weight, so 180 ticks are four shapes, not 180 views.
+    /// The N tick is heavy, in amber.
     private var ticks: some View {
-        ForEach(Array(stride(from: 0, to: Self.fullTurnDegrees, by: Self.tickStepDegrees)), id: \.self) { degrees in
-            let size = degrees.isMultiple(of: Self.cardinalStepDegrees) ? Self.cardinalTickSize : Self.tickSize
-            Circle()
-                .fill(Theme.Colors.tick)
-                .frame(width: size, height: size)
-                .position(point(at: Double(degrees), distance: Self.dialRadius - Self.tickInset - size / 2))
+        ZStack {
+            tickPath(where: { !$0.isMultiple(of: Self.midTickStepDegrees) }, length: Self.minorTick.length)
+                .stroke(Theme.Colors.faint, lineWidth: Self.minorTick.width)
+            tickPath(
+                where: { $0.isMultiple(of: Self.midTickStepDegrees) && !$0.isMultiple(of: Self.heavyTickStepDegrees) },
+                length: Self.midTick.length
+            )
+            .stroke(Theme.Colors.dialNumber, lineWidth: Self.midTick.width)
+            tickPath(where: { $0.isMultiple(of: Self.heavyTickStepDegrees) && $0 != 0 }, length: Self.heavyTick.length)
+                .stroke(Theme.Colors.textBody, lineWidth: Self.heavyTick.width)
+            tickPath(where: { $0 == 0 }, length: Self.heavyTick.length)
+                .stroke(Theme.Colors.accent, lineWidth: Self.heavyTick.width)
         }
         .accessibilityHidden(true)
     }
 
-    /// N in amber, the rest in `textSecondary`, always upright.
+    /// Ticks at every 2° that `include` keeps, from just inside the rim
+    /// inwards by `length`.
+    private func tickPath(where include: (Int) -> Bool, length: CGFloat) -> Path {
+        let outer = Self.dialRadius - Self.tickOuterInset
+        var path = Path()
+        for degrees in stride(from: 0, to: Self.fullTurnDegrees, by: Self.minorTickStepDegrees) where include(degrees) {
+            path.move(to: point(at: Double(degrees), distance: outer))
+            path.addLine(to: point(at: Double(degrees), distance: outer - length))
+        }
+        return path
+    }
+
+    /// 30, 60, 120 …: fixed size, upright, hidden from VoiceOver (a nice to
+    /// have, COMPASS-1.1.md §4).
+    private var numbers: some View {
+        ForEach(Self.numberedDegrees, id: \.self) { degrees in
+            Text(verbatim: String(degrees))
+                .font(Theme.Fonts.dialNumber)
+                .monospacedDigit()
+                .foregroundStyle(Theme.Colors.dialNumber)
+                .position(point(at: Double(degrees), distance: Self.numberCentreDistance))
+        }
+        .accessibilityHidden(true)
+    }
+
+    /// Young Serif; N in amber, the rest in `textPrimary`, always upright.
     private var letters: some View {
         ForEach(Self.cardinals, id: \.label) { cardinal in
             Text(cardinal.label)
                 .font(Theme.Fonts.dialLetter(size: letterSize))
-                .foregroundStyle(cardinal.degrees == 0 ? Theme.Colors.accent : Theme.Colors.textSecondary)
-                .position(point(at: cardinal.degrees, distance: Self.dialRadius - Self.letterCentreInset))
+                .foregroundStyle(cardinal.degrees == 0 ? Theme.Colors.accent : Theme.Colors.textPrimary)
+                .position(point(at: cardinal.degrees, distance: Self.letterCentreDistance))
         }
     }
 

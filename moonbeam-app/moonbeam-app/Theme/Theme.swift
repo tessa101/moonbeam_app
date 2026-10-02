@@ -24,8 +24,12 @@ nonisolated enum Theme {
         static let surfaceRaised = Color(hex: 0x2A2127)
         /// The Up now row's fill, a step up from `surface` (COMPASS-1.1.md §3).
         static let surfaceInset = Color(hex: 0x251C22)
-        /// Decorative marks only, under 3:1: the moon-down dot (§3).
+        /// Decorative marks only, under 3:1: the moon-down dot (§3), the
+        /// dial's 2° ticks and its crosshair (COMPASS-1.1.md §4).
         static let faint = Color(hex: 0x5E4D57)
+        /// The dial's 10° ticks and degree numbers (COMPASS-1.1.md §4):
+        /// 5.1:1 on `dialTop`, 5.9:1 on `dialBottom`.
+        static let dialNumber = Color(hex: 0xA8939C)
         /// Card border, hairlines, onboarding info box border.
         static let stroke = Color(hex: 0x3D3139)
         /// ‹ › and secondary-button border.
@@ -162,15 +166,20 @@ nonisolated enum Theme {
         /// The Up now bar's rise and set times (COMPASS-1.1.md §3).
         static let caption = Font.custom(FontName.nunitoSansRegular, size: 11, relativeTo: .caption2)
 
-        /// Dial letters N/E/S/W scale with `.subheadline` from this size but
-        /// stop at `dialLetterMaxSize`, so the dial's geometry holds at AX
-        /// sizes (§4). The view scales the size and builds the font with
+        /// Dial letters N/E/S/W, in Young Serif since Compass 1.1, scale
+        /// with `.subheadline` from this size but stop at
+        /// `dialLetterMaxSize`, so the dial's geometry holds at AX sizes
+        /// (§4). The view scales the size and builds the font with
         /// `dialLetter(size:)`.
         static let dialLetterSize: CGFloat = 15
         static let dialLetterMaxSize: CGFloat = 17
         static func dialLetter(size: CGFloat) -> Font {
-            .custom(FontName.nunitoSansSemiBold, fixedSize: min(size, dialLetterMaxSize))
+            .custom(FontName.youngSerif, fixedSize: min(size, dialLetterMaxSize))
         }
+
+        /// The dial's degree numbers (30, 60 …), fixed in size: no Dynamic
+        /// Type, decorative (COMPASS-1.1.md §4).
+        static let dialNumber = Font.custom(FontName.nunitoSansSemiBold, fixedSize: 11)
 
         /// The dial's ↑/↓ target labels, fixed in size.
         static let dialArrow = Font.custom(FontName.nunitoSansBold, fixedSize: 14)

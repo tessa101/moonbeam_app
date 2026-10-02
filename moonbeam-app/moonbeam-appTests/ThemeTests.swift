@@ -40,7 +40,10 @@ struct ThemeTests {
         // The Up now row (COMPASS-1.1.md §3).
         (Theme.Colors.textBody, Theme.Colors.surfaceInset, 11.6),
         (Theme.Colors.textSecondary, Theme.Colors.surfaceInset, 8.5),
-        (Theme.Colors.accent, Theme.Colors.surfaceInset, 10.1)
+        (Theme.Colors.accent, Theme.Colors.surfaceInset, 10.1),
+        // The dial's degree numbers (COMPASS-1.1.md §4), at the face's
+        // lightest point.
+        (Theme.Colors.dialNumber, Theme.Colors.dialTop, 5.1)
     ])
     func textContrast(foreground: Color, background: Color, documented: Double) {
         let ratio = Self.contrast(foreground, background)
