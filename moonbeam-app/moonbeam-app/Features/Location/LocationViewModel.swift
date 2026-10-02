@@ -193,7 +193,7 @@ final class LocationViewModel {
     }
 
     /// The madlib sentence, the screen's header (DESIGN-1.1.md §3.1): "Where
-    /// will the moon be 📅 tonight in 📍 Los Angeles, CA?". The place token
+    /// can I find the moon 📅 today in 📍 Los Angeles, CA?". The place token
     /// is "City, ST" (4.13), or "a city" with no place yet. §3: while a
     /// launch fetch runs, the last-viewed name stands in so it isn't blank.
     ///

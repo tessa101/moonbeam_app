@@ -7,10 +7,11 @@ import Accessibility
 import Foundation
 
 /// Builds the main screen's madlib sentence (DESIGN-1.1.md §3.1, §3.1a):
-/// "Where will the moon / be 📅 tonight / in 📍 Los Angeles, CA?", as three
+/// "Where can I find / the moon 📅 today / in 📍 Los Angeles, CA?", as three
 /// lines of plain words and two tokens, plus what VoiceOver says for each.
 ///
-/// The date token reads "tonight" on the place's today and "on Sat, Oct 3"
+/// The date token reads "today" on the place's today (COMPASS-1.1.md §2; it
+/// was "tonight") and "on Sat, Oct 3"
 /// otherwise, with the year only in another year (DATE.md's rule, through
 /// `DayLabelFormatter`). With no place yet the place token reads "a city"
 /// and the date is plain words: there's no place's calendar to pick a day
@@ -47,16 +48,16 @@ nonisolated struct MadlibFormatter {
         /// The token's words. Spaces inside are non-breaking unless breaks
         /// are allowed (every size but the default).
         let text: String
-        /// "Date, tonight" / "Place, Los Angeles, CA". An attributed string
+        /// "Date, today" / "Place, Los Angeles, CA". An attributed string
         /// so a region abbreviation is spelled out ("C A").
         let accessibilityLabel: AttributedString
     }
 
     /// The whole sentence.
     struct Sentence: Equatable {
-        /// Always three lines, broken explicitly (§3.1a): the lead, "be" +
-        /// the date, "in" + the place + "?". A line may still wrap if it
-        /// can't fit.
+        /// Always three lines, broken explicitly (§3.1a): the lead, "the
+        /// moon" + the date, "in" + the place + "?". A line may still wrap
+        /// if it can't fit.
         let lines: [[Part]]
         /// The sentence read as one line, with ordinary spaces and no icons,
         /// for the header element VoiceOver reads before the two buttons.
@@ -78,12 +79,12 @@ nonisolated struct MadlibFormatter {
     /// Keeps a token's words, and its icon, on one line.
     static let nonBreakingSpace = "\u{00A0}"
 
-    private static let lead = "Where will the moon"
-    private static let dateLead = "be"
+    private static let lead = "Where can I find"
+    private static let dateLead = "the moon"
     private static let placeLead = "in"
     private static let end = "?"
 
-    private static let tonight = "tonight"
+    private static let today = "today"
     private static let datePrefix = "on "
     private static let noPlace = "a city"
 
@@ -141,8 +142,8 @@ nonisolated struct MadlibFormatter {
             dateWords = date.text
             dateLine = [.words(Self.dateLead + " "), .token(date.withSpaces(space))]
         } else {
-            dateWords = Self.tonight
-            dateLine = [.words(Self.dateLead + " " + Self.tonight)]
+            dateWords = Self.today
+            dateLine = [.words(Self.dateLead + " " + Self.today)]
         }
 
         let place = placeToken(place ?? standIn)
@@ -169,8 +170,8 @@ nonisolated struct MadlibFormatter {
         let text: String
         let spoken: String
         if dayOffset == 0 {
-            text = Self.tonight
-            spoken = Self.tonight
+            text = Self.today
+            spoken = Self.today
         } else {
             text = Self.datePrefix + dayLabels.label(for: day, today: today, timeZone: place.timeZone)
             spoken = dayLabels.spokenLabel(for: day, today: today, timeZone: place.timeZone)

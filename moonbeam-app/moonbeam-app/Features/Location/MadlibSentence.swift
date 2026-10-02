@@ -5,8 +5,8 @@
 
 import SwiftUI
 
-/// The main screen's header (DESIGN-1.1.md §3.1, §3.1a): "Where will the
-/// moon / be 📅 tonight / in 📍 Los Angeles, CA?", where the two amber tokens
+/// The main screen's header (DESIGN-1.1.md §3.1, §3.1a, COMPASS-1.1.md §2):
+/// "Where can I find / the moon 📅 today / in 📍 Los Angeles, CA?", where the two amber tokens
 /// open the calendar and the search sheet.
 ///
 /// Always three lines, so the card below never jumps as the date or city
@@ -17,7 +17,7 @@ import SwiftUI
 /// link whose URL an `OpenURLAction` turns back into a view-model call.
 /// VoiceOver would read those as links inside the text, so the text is
 /// replaced, for accessibility only, by the sentence as a header followed
-/// by a real button per token: "Date, tonight, button", "Place, Los
+/// by a real button per token: "Date, today, button", "Place, Los
 /// Angeles, C A, button", in that order. The words come from `MadlibFormatter` via
 /// `LocationViewModel`.
 struct MadlibSentence: View {

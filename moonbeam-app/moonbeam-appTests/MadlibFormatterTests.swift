@@ -34,15 +34,15 @@ nonisolated struct MadlibFormatterTests {
 
     // MARK: - Date token
 
-    @Test("Today: the date token reads \"tonight\"")
+    @Test("Today: the date token reads \"today\"")
     func today() throws {
         let sentence = try sentence(day: (2026, 9, 30), dayOffset: 0)
         let date = try #require(sentence.tokens.first)
 
         #expect(date.kind == .date)
         #expect(date.symbol == "token.calendar")
-        #expect(date.text == "tonight")
-        #expect(String(date.accessibilityLabel.characters) == "Date, tonight")
+        #expect(date.text == "today")
+        #expect(String(date.accessibilityLabel.characters) == "Date, today")
     }
 
     @Test("Another day: \"on Sat, Oct 3\", spoken in full")
@@ -94,17 +94,17 @@ nonisolated struct MadlibFormatterTests {
 
     // MARK: - Sentence
 
-    @Test("Three lines: \"Where will the moon\" / \"be\" + date / \"in\" + place + \"?\"")
+    @Test("Three lines: \"Where can I find\" / \"the moon\" + date / \"in\" + place + \"?\"")
     func lines() throws {
         let sentence = try sentence(day: (2026, 9, 30), dayOffset: 0, allowsBreaks: true)
         let tokens = sentence.tokens
 
         #expect(sentence.lines.count == 3)
-        #expect(sentence.lines[0] == [.words("Where will the moon")])
-        #expect(sentence.lines[1] == [.words("be "), .token(tokens[0])])
+        #expect(sentence.lines[0] == [.words("Where can I find")])
+        #expect(sentence.lines[1] == [.words("the moon "), .token(tokens[0])])
         #expect(sentence.lines[2] == [.words("in "), .token(tokens[1]), .words("?")])
         #expect(tokens.map(\.kind) == [.date, .place])
-        #expect(sentence.accessibilityLabel == "Where will the moon be tonight in Los Angeles, CA?")
+        #expect(sentence.accessibilityLabel == "Where can I find the moon today in Los Angeles, CA?")
     }
 
     /// No space, so line breaking can't put the "?" on a line of its own,
@@ -122,7 +122,7 @@ nonisolated struct MadlibFormatterTests {
     func spokenSentenceSpaces() throws {
         let sentence = try sentence(day: (2026, 10, 3), dayOffset: 3, allowsBreaks: false)
 
-        #expect(sentence.accessibilityLabel == "Where will the moon be on Sat, Oct 3 in Los Angeles, CA?")
+        #expect(sentence.accessibilityLabel == "Where can I find the moon on Sat, Oct 3 in Los Angeles, CA?")
     }
 
     @Test("Off the default size a token's words may break; at the default they can't")
@@ -143,11 +143,11 @@ nonisolated struct MadlibFormatterTests {
         )
 
         #expect(sentence.lines.count == 3)
-        #expect(sentence.lines[1] == [.words("be tonight")])
+        #expect(sentence.lines[1] == [.words("the moon today")])
         #expect(sentence.tokens.map(\.kind) == [.place])
         #expect(sentence.tokens.first?.text == "a\(Self.nbsp)city")
         #expect(sentence.tokens.first.map { String($0.accessibilityLabel.characters) } == "Place, choose a city")
-        #expect(sentence.accessibilityLabel == "Where will the moon be tonight in a city?")
+        #expect(sentence.accessibilityLabel == "Where can I find the moon today in a city?")
     }
 
     @Test("No place with a stand-in: its name in the place token, the date still plain")
