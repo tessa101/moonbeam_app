@@ -6,9 +6,10 @@
 import SwiftUI
 
 /// The compass block under the moon card (DESIGN-1.1.md §3.3, COMPASS.md
-/// §1, §2): the heading readout (an amber pill when locked), the dial, and
-/// notes under it; or, in place of the compass, the Far or location-off
-/// note.
+/// §1, §2): the heading readout (an amber pill when locked), the accuracy
+/// notes under it while they show (COMPASS-1.1.md §4.1), the dial, and the
+/// Nearby note under the dial; or, in place of the compass, the Far or
+/// location-off note.
 ///
 /// Every string and accessibility label comes from `CompassViewModel`.
 /// Where it sits and when it counts as on screen is `LocationScreen`'s job.
@@ -84,6 +85,11 @@ struct CompassView: View {
                 .fixedSize(horizontal: false, vertical: true)
                 .frame(height: readoutHeight)
 
+            // §4.1: no lock is possible in low accuracy, so the warning
+            // takes the space under the readout; the dial (and its needle)
+            // moves down while it shows.
+            accuracyNotes
+
             CompassDial(
                 heading: viewModel.heading,
                 targets: viewModel.targets,
@@ -140,15 +146,29 @@ struct CompassView: View {
         }
     }
 
-    /// Nearby (which city the bearings are for), then the status line (why
-    /// accuracy is low, or for a moment the aha line), then Use Precise
-    /// Location as a secondary button.
+    /// Under the dial: Nearby, which city the bearings are for.
+    @ViewBuilder
     private var notes: some View {
-        VStack(spacing: Self.notesSpacing) {
-            if let nearbyNote = viewModel.nearbyNote {
-                CompassNote(text: nearbyNote)
-            }
+        if let nearbyNote = viewModel.nearbyNote {
+            CompassNote(text: nearbyNote)
+        }
+    }
 
+    /// Under the readout (COMPASS-1.1.md §4.1): the status line (why
+    /// accuracy is low, or for a moment the aha line), then Use Precise
+    /// Location as a secondary button. Nothing, and no gap, while all's
+    /// well. VoiceOver order is unchanged: the readout already says why,
+    /// and the button comes after it.
+    @ViewBuilder
+    private var accuracyNotes: some View {
+        if viewModel.statusLineText != nil || viewModel.offersPreciseLocation {
+            statusNotes
+                .padding(.top, Self.notesSpacing)
+        }
+    }
+
+    private var statusNotes: some View {
+        VStack(spacing: Self.notesSpacing) {
             if let statusLineText = viewModel.statusLineText {
                 CompassNote(text: statusLineText)
                     .transition(.opacity)

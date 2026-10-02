@@ -67,6 +67,11 @@
   `dialNumber` `#A8939C` (5.1:1 on `dialTop`); cardinals 58 pt out (were 64), E/S/W now `textPrimary`. The needle
   starts where 5.4's capsule did (the same 17 pt lead, so the dial doesn't move) and ends 12 pt inside the rim, as
   deep as a mid tick. Until 5.4.4 the old ↑ / ↓ inside the rim overlap the numbers near them. Shimmer: device check.
+- **As built, 5.4.3 accuracy notes:** the status line (low accuracy, Precise Location, aha) and Use Precise Location
+  sit between the readout and the dial, 10 pt under the readout (the notes' own spacing), so the dial and its needle
+  move down while they show; with nothing to say there's no gap. Nearby stays 14 pt under the dial. No spacing
+  values changed. Placement is two view slots fed by the existing `statusLineText` / `offersPreciseLocation` and
+  `nearbyNote`, so §8's placement check is the previews, not a unit test.
 
 ### 2026-10-01 · Show onboarding button also in TestFlight builds (Tessa)
 - **Why:** testers (and Tessa on a phone without Xcode) need to see onboarding again without deleting the app
