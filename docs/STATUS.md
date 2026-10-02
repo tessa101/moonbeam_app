@@ -3,7 +3,7 @@
 > A living note on where things stand. Update it at the end of each work session
 > so the next session (you, or Claude) can pick up cold.
 
-_Last updated: 2026-10-01 (tap animation and DEBUG onboarding trigger built; next 5.5; Moon Signal app icon in; 5.8 moon arc built; next: DEBUG onboarding trigger, tap animation, then 5.5; TestFlight build 3 uploaded with 5.7; moon arc decided (option B, 5.8); Step 5.7 onboarding built ahead of 5.5/5.6; Step 5.3 madlib sentence built, with §3.1a; 5.2 follow-ups; Step 5.2 moon card built; 5.1 theme; Design 1.1 settled: DESIGN-1.1.md, Step 5; 4.14, Step 2.2 and 4.15 built; device checks pending)_
+_Last updated: 2026-10-01 (TestFlight build 4 prepared; onboarding Settings fix; Show onboarding in TestFlight; tap animation and DEBUG onboarding trigger built; next 5.5; Moon Signal app icon in; 5.8 moon arc built; next: DEBUG onboarding trigger, tap animation, then 5.5; TestFlight build 3 uploaded with 5.7; moon arc decided (option B, 5.8); Step 5.7 onboarding built ahead of 5.5/5.6; Step 5.3 madlib sentence built, with §3.1a; 5.2 follow-ups; Step 5.2 moon card built; 5.1 theme; Design 1.1 settled: DESIGN-1.1.md, Step 5; 4.14, Step 2.2 and 4.15 built; device checks pending)_
 
 ## Where things live
 - **Local repo:** `~/app-ideas/moonbeam` (the one true folder)
@@ -223,7 +223,7 @@ _Last updated: 2026-10-01 (tap animation and DEBUG onboarding trigger built; nex
      Findings: `.agent-reports/testflight-onboarding-button/`. **Check in TestFlight:** the button is there.
    - [x] **App icon (2026-10-01):** the Moon Signal design replaces the placeholder (`MoonSignal-AppIcon-*`):
      Dark in both the default and dark slots (the app is dark-only, so there's no light design), Tinted for
-     tinted. **Check on device:** home screen in default, dark and tinted. Not in TestFlight build 3.
+     tinted. **Check on device:** home screen in default, dark and tinted. In TestFlight build 4.
 
 5. [ ] Location: detect + search (Step 2)
    - Spec: **[LOCATION.md](LOCATION.md)** (decided 2026-09-25). Place model, CoreLocation one-shot fix,
@@ -379,6 +379,41 @@ _Last updated: 2026-10-01 (tap animation and DEBUG onboarding trigger built; nex
      layout is 5.5, not in this build)
    - **VoiceOver:** onboarding titles read as headings; the sentence then "Date, …" / "Place, …" buttons
    - Known, not fixed: onboarding text scrolls under the clock at large sizes; "That’s okay" copy is placeholder
+
+9. [ ] **TestFlight build 4 (1.0 (4), prepared 2026-10-01).** Everything since build 3 (`64a99bc`):
+   - **5.8 moon arc:** 196 pt dial, the moon's pass as an arc outside the rim (travelled hairline, dots to
+     moonset), rise/set dots on it, the live Moon a 24 pt glyph riding it, heading marker beyond the arc.
+   - **New app icon:** the Moon Signal design, with default, dark and tinted variants.
+   - **Button tap animation:** buttons shrink slightly and dim while pressed (Reduce Motion: dim only). The sentence's
+     📅 / 📍 tokens have **no pressed state yet** (open in DECISIONS.md).
+   - **Onboarding Settings fix:** with Location Services off, or location set to Never, Use my location opens
+     Settings instead of "That's okay"; back with location allowed → the main screen.
+   - **Show onboarding button, TestFlight-only and temporary:** at the bottom of the main screen, reopens onboarding
+     without deleting the app; writes no stored state. Hidden in App Store builds; remove before 1.0. The DEBUG
+     launch arguments (`-forceOnboarding`, `-onboardingPage`) are **not** in this build.
+   - Still **not** in it: 5.5 (AX reflow), 5.6 (pinned compass bar).
+
+   Release build checked: CFBundleVersion **4** (MARKETING_VERSION 1.0); the four fonts in the bundle and in
+   `UIAppFonts`, both OFL texts; `PrivacyInfo.xcprivacy` (no tracking, no collected data, UserDefaults `CA92.1`);
+   forced dark; display name "Moon Signal"; minimum iOS 26.0; `ITSAppUsesNonExemptEncryption` false; the icon's
+   default, dark and tinted renditions in `Assets.car`. Launch arguments: 0 `strings` hits for `-forceOnboarding`,
+   0 symbols for the launch-argument code (`strings` can't see strings of 15 bytes or fewer, such as
+   `-onboardingPage`; DECISIONS.md). 473 tests / 706 cases pass. **Archive and upload are Tessa's** (not done by
+   the agent).
+   **What testers should check:**
+   - **Icon** on the home screen in default, dark and tinted (Home Screen → Edit → Customize)
+   - **Moon arc:** it follows the moon over an evening (glyph moves along, hairline grows behind it); a pass that
+     crosses midnight (moon up after 12 AM) still draws from the evening's rise; moon down shows the next pass dimmed
+   - **Compass height:** the block is ~47 pt taller than build 3; on the **smallest phone**, check how far below the
+     moon card it sits
+   - **Button press feel:** Get started, Use my location, the ‹ › day buttons, Use Precise Location: does the shrink
+     and dim feel right, too much or too little?
+   - **Onboarding via Show onboarding** (bottom of the main screen): the whole flow again without deleting the app,
+     then back to the main screen with your city unchanged
+     - With location set to **Never** (Settings → Moon Signal → Location): Use my location opens Settings, not
+       "That's okay"; set it to While Using and come back → main screen. Note where Settings opens (Moon Signal's
+       page or somewhere else)
+     - Also with Location Services off entirely (Privacy & Security → Location Services)
 
 Design-pass items (visuals, copy, a11y) are tracked in **[DESIGN-REVIEW.md](DESIGN-REVIEW.md)**.
 
