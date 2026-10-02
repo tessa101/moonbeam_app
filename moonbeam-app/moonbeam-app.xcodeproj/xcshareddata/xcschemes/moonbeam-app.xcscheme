@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Scheme
    LastUpgradeVersion = "2700"
-   version = "1.7">
+   version = "1.3">
    <BuildAction
       parallelizeBuildables = "YES"
       buildImplicitDependencies = "YES">
@@ -32,7 +32,7 @@
             skipped = "NO">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "533924A03064ACAD009094C9"
+               BlueprintIdentifier = "533924D43064AE46009094C9"
                BuildableName = "moonbeam-appTests.xctest"
                BlueprintName = "moonbeam-appTests"
                ReferencedContainer = "container:moonbeam-app.xcodeproj">
