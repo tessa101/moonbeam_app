@@ -15,12 +15,10 @@ struct LocationScreen: View {
 
     @Bindable var viewModel: LocationViewModel
 
-    #if DEBUG
-    /// The DEBUG-only Show onboarding button (DECISIONS.md 2026-10-01):
-    /// the forced onboarding flow, for devices where launch arguments are
-    /// awkward. Compiled out of Release.
+    /// The Show onboarding button (DECISIONS.md 2026-10-01): the forced
+    /// onboarding flow. The app passes it in DEBUG and TestFlight builds
+    /// only (`BuildChannel`); `nil` hides the button. Temporary.
     var onShowOnboarding: (() -> Void)? = nil
-    #endif
 
     @Environment(\.scenePhase) private var scenePhase
 
@@ -66,16 +64,14 @@ struct LocationScreen: View {
                         .padding(.top, Theme.Metrics.cardToCompass)
                 }
 
-                #if DEBUG
-                // At the very bottom, under the compass's DEBUG readout:
-                // out of the design's way. Temporary, like the readout.
+                // At the very bottom, under the compass (and its DEBUG
+                // readout): out of the design's way.
                 if let onShowOnboarding {
                     // The text-link style: amber, and a 44 pt target.
                     Button("Show onboarding", action: onShowOnboarding)
                         .buttonStyle(.textLink)
                         .padding(.top)
                 }
-                #endif
             }
             .padding(.horizontal, Theme.Metrics.screenMargin)
             .padding(.top, Theme.Metrics.contentTopSpacing)

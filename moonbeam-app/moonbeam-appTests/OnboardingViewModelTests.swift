@@ -376,4 +376,32 @@ struct OnboardingViewModelTests {
         #expect(viewModel.isPresented)
         #expect(viewModel.step == .locationUpsell)
     }
+
+    // MARK: - Forced run, Release too (DECISIONS.md 2026-10-01 "TestFlight")
+
+    /// What the Show onboarding button does in a TestFlight build: not
+    /// DEBUG-only, so tested here as well as in `OnboardingDebugTriggerTests`.
+    @Test("A forced run from the button shows it and finishes without writing the completed flag")
+    func forceShowWritesNothing() {
+        let store = InMemoryOnboardingStore(isOnboardingCompleted: true)
+        let outcomes = Outcomes()
+        let viewModel = Self.makeViewModel(
+            location: FakeLocationService(authorizationState: .authorized),
+            placeStore: InMemoryPlaceStore(lastViewed: Self.savedPlace),
+            onboardingStore: store,
+            outcomes: outcomes
+        )
+        #expect(!viewModel.isPresented)
+        store.isOnboardingCompleted = false
+
+        viewModel.forceShow()
+        #expect(viewModel.isPresented)
+        #expect(viewModel.step == .landing)
+        viewModel.getStarted()
+        viewModel.searchInstead()
+
+        #expect(!viewModel.isPresented)
+        #expect(outcomes.received == [.searchInstead])
+        #expect(!store.isOnboardingCompleted)
+    }
 }

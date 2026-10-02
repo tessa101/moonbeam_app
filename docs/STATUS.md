@@ -217,6 +217,10 @@ _Last updated: 2026-10-01 (tap animation and DEBUG onboarding trigger built; nex
      the upsell instead of showing "That's okay"; back allowed → main screen. Real Don't Allow unchanged.
      468 tests / 696 cases. Screenshots: `.agent-reports/onboarding-services-off/`. **Check on device:** that the
      Settings URL lands on Moon Signal's page (the simulator showed Settings' last page).
+   - [x] **Show onboarding in TestFlight (2026-10-01):** the button shows in DEBUG and TestFlight
+     (`BuildChannel.isTestFlight`, the `sandboxReceipt` check), not App Store; launch arguments stay DEBUG-only.
+     **Temporary: remove the button and `BuildChannel` before the 1.0 App Store build.** 473 tests / 706 cases.
+     Findings: `.agent-reports/testflight-onboarding-button/`. **Check in TestFlight:** the button is there.
    - [x] **App icon (2026-10-01):** the Moon Signal design replaces the placeholder (`MoonSignal-AppIcon-*`):
      Dark in both the default and dark slots (the app is dark-only, so there's no light design), Tinted for
      tinted. **Check on device:** home screen in default, dark and tinted. Not in TestFlight build 3.

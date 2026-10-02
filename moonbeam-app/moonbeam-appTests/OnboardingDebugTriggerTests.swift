@@ -10,7 +10,7 @@ import Testing
 
 /// The DEBUG onboarding trigger (DECISIONS.md 2026-10-01): `-forceOnboarding`,
 /// `-onboardingPage`, and the main screen's Show onboarding button
-/// (`debugShow`). A forced run shows whatever the stored state says, and
+/// (`forceShow`). A forced run shows whatever the stored state says, and
 /// never writes the store. DEBUG only, like the trigger.
 @Suite("Onboarding DEBUG trigger")
 @MainActor
@@ -137,17 +137,17 @@ struct OnboardingDebugTriggerTests {
     func forcedExitsNeverWrite(isCompleted: Bool) async {
         // Got it.
         let declined = Self.makeExistingInstall(authorization: .denied, isCompleted: isCompleted)
-        declined.viewModel.debugShow(startingAt: .locationDeclined)
+        declined.viewModel.forceShow(startingAt: .locationDeclined)
         declined.viewModel.gotIt()
 
         // Search instead.
         let search = Self.makeExistingInstall(isCompleted: isCompleted)
-        search.viewModel.debugShow(startingAt: .locationUpsell)
+        search.viewModel.forceShow(startingAt: .locationUpsell)
         search.viewModel.searchInstead()
 
         // Use my location, already allowed: no prompt is needed.
         let allowed = Self.makeExistingInstall(isCompleted: isCompleted)
-        allowed.viewModel.debugShow(startingAt: .locationUpsell)
+        allowed.viewModel.forceShow(startingAt: .locationUpsell)
         await allowed.viewModel.useMyLocation()
 
         for harness in [declined, search, allowed] {
@@ -181,12 +181,12 @@ struct OnboardingDebugTriggerTests {
     @Test("Show onboarding reopens it after it was left, from the landing")
     func buttonReopens() {
         let harness = Self.makeExistingInstall()
-        harness.viewModel.debugShow()
+        harness.viewModel.forceShow()
         harness.viewModel.getStarted()
         harness.viewModel.searchInstead()
         #expect(!harness.viewModel.isPresented)
 
-        harness.viewModel.debugShow()
+        harness.viewModel.forceShow()
 
         #expect(harness.viewModel.isPresented)
         #expect(harness.viewModel.step == .landing)
@@ -198,7 +198,7 @@ struct OnboardingDebugTriggerTests {
     @Test("Forced \"That's okay\" with location allowed stays up when the scene becomes active")
     func forcedDeclinedHoldsWhileAuthorized() {
         let harness = Self.makeExistingInstall(authorization: .authorized)
-        harness.viewModel.debugShow(startingAt: .locationDeclined)
+        harness.viewModel.forceShow(startingAt: .locationDeclined)
 
         harness.viewModel.sceneDidBecomeActive()
 
@@ -210,7 +210,7 @@ struct OnboardingDebugTriggerTests {
     func forcedSettingsReturnStillWorks() async {
         let harness = Self.makeExistingInstall(authorization: .notDetermined)
         harness.location.stateAfterRequest = .denied
-        harness.viewModel.debugShow(startingAt: .locationUpsell)
+        harness.viewModel.forceShow(startingAt: .locationUpsell)
         await harness.viewModel.useMyLocation()
         #expect(harness.viewModel.step == .locationDeclined)
 

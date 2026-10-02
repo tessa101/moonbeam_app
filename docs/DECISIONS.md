@@ -21,6 +21,16 @@
 - **Temporary:** remove the button and `BuildChannel` before the 1.0 App Store build (STATUS.md).
 - **Tests:** `BuildChannel` with `sandboxReceipt`, `receipt`, nil; the button's visibility in each; a forced run
   from the button still writes nothing.
+- **As built:** `BuildChannel` (`isTestFlight`, `showsOnboardingButton`, plus forms taking the URL and DEBUG flag
+  for tests). The forced flow (`OnboardingViewModel.forceShow`, was `debugShow`) and its two flags are now compiled
+  in Release; the app passes the button's action only when `BuildChannel.showsOnboardingButton`. Launch-argument
+  parsing stays in `#if DEBUG`.
+  - **One warning:** `Bundle.appStoreReceiptURL` is deprecated since iOS 18 (StoreKit's `AppTransaction` is the
+    replacement, async). Kept as decided, read in one place.
+  - **Release check:** `nm` finds 0 symbols for the launch-argument code (Debug: 20). `strings` finds 0
+    `-forceOnboarding`. **`strings` can't check strings of 15 bytes or fewer** ("Show onboarding",
+    `-onboardingPage`, `sandboxReceipt`): Swift keeps them inline in the code, so 0 hits there means nothing,
+    which also applies to the build 3 `-onboardingPage` check. Symbols are the check that counts.
 
 ### 2026-10-01 · Onboarding: Location Services off sends Use my location to Settings, not "That's okay" (Tessa)
 - **Bug (device):** with location off, tapping Use my location on the upsell lands on "That's okay". The view

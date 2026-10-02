@@ -56,14 +56,14 @@ struct moonbeam_appApp: App {
                     OnboardingView(viewModel: onboardingViewModel)
                 } else {
                     // The chosen place drives the moon card.
-                    #if DEBUG
+                    // Show onboarding: DEBUG and TestFlight only, temporary
+                    // (DECISIONS.md 2026-10-01).
                     LocationScreen(
                         viewModel: locationViewModel,
-                        onShowOnboarding: { onboardingViewModel.debugShow() }
+                        onShowOnboarding: BuildChannel.showsOnboardingButton
+                            ? { onboardingViewModel.forceShow() }
+                            : nil
                     )
-                    #else
-                    LocationScreen(viewModel: locationViewModel)
-                    #endif
                 }
             }
             // Design 1.1 defaults for any text a step hasn't styled yet,

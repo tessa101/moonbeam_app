@@ -17,9 +17,11 @@ import Observation
 /// `onFinish`, which the app routes to `LocationViewModel` so the main
 /// screen starts in the right state.
 ///
-/// DEBUG builds can also force it (DECISIONS.md 2026-10-01 "DEBUG onboarding
-/// trigger"): `-forceOnboarding`, `-onboardingPage`, or the main screen's
-/// Show onboarding button. A forced run writes no stored state.
+/// It can also be forced (DECISIONS.md 2026-10-01 "DEBUG onboarding trigger",
+/// "Show onboarding button also in TestFlight builds"): the main screen's
+/// Show onboarding button in DEBUG and TestFlight builds, and in DEBUG the
+/// `-forceOnboarding` / `-onboardingPage` launch arguments. A forced run
+/// writes no stored state.
 @Observable
 final class OnboardingViewModel {
 
@@ -75,8 +77,7 @@ final class OnboardingViewModel {
     /// back authorized goes to the main screen.
     @ObservationIgnored private var isAwaitingSettingsFromUpsell = false
 
-    #if DEBUG
-    /// Shown by the DEBUG trigger, not by `shouldShow`: finishing leaves the
+    /// Shown by `forceShow`, not by `shouldShow`: finishing leaves the
     /// completed flag alone.
     @ObservationIgnored private var isForced = false
 
@@ -84,7 +85,6 @@ final class OnboardingViewModel {
     /// Its Settings-return rule would close it the moment the scene became
     /// active, so it's held until the user leaves it.
     @ObservationIgnored private var isDeclinedForcedWhileAuthorized = false
-    #endif
 
     // MARK: - Init
 
@@ -154,9 +154,7 @@ final class OnboardingViewModel {
             // Don't Allow at the prompt. Restricted (parental controls,
             // MDM) can't be fixed in Settings, so it keeps "That's okay".
             step = .locationDeclined
-            #if DEBUG
             isDeclinedForcedWhileAuthorized = false
-            #endif
         }
     }
 
@@ -183,9 +181,7 @@ final class OnboardingViewModel {
         let isBackFromUpsellSettings = step == .locationUpsell && isAwaitingSettingsFromUpsell
         guard step == .locationDeclined || isBackFromUpsellSettings else { return }
         guard locationService.authorizationState.isAuthorized else { return }
-        #if DEBUG
         if isDeclinedForcedWhileAuthorized { return }
-        #endif
         finish(.locationAllowed)
     }
 
@@ -199,13 +195,9 @@ final class OnboardingViewModel {
 
     private func finish(_ outcome: Outcome) {
         guard isPresented else { return }
-        #if DEBUG
         let marksCompleted = !isForced
         isForced = false
         isDeclinedForcedWhileAuthorized = false
-        #else
-        let marksCompleted = true
-        #endif
         if marksCompleted {
             onboardingStore.isOnboardingCompleted = true
         }
@@ -245,15 +237,20 @@ final class OnboardingViewModel {
     func applyDebugLaunchArguments(_ arguments: [String]) {
         let page = Self.debugPage(in: arguments)
         if arguments.contains(Self.forceLaunchArgument) {
-            debugShow(startingAt: page ?? .landing)
+            forceShow(startingAt: page ?? .landing)
         } else if isPresented, let page {
             step = page
         }
     }
+    #endif
 
-    /// The forced flow, from launch or the main screen's Show onboarding
-    /// button. Changes nothing stored: no flag, place or permission.
-    func debugShow(startingAt page: Step = .landing) {
+    // MARK: - Forced run (DEBUG and TestFlight)
+
+    /// The forced flow, from the Show onboarding button (DEBUG and
+    /// TestFlight) or `-forceOnboarding`. Changes nothing stored: no flag,
+    /// place or permission. Temporary: remove before the 1.0 App Store
+    /// build.
+    func forceShow(startingAt page: Step = .landing) {
         isForced = true
         isRequestingPermission = false
         isAwaitingSettingsFromUpsell = false
@@ -262,5 +259,4 @@ final class OnboardingViewModel {
             && locationService.authorizationState.isAuthorized
         isPresented = true
     }
-    #endif
 }
