@@ -59,6 +59,7 @@
 ### Targets & refresh
 
 - A day with no moonrise or no moonset (ASTRONOMY.md §4) simply has no target for it.
+- **"On screen"** = any part of the compass visible (≥ 10% of it, DECISIONS.md 2026-10-02).
 - **"Moon" target refresh:** every **30 s** while the compass is on screen, recompute the moon's azimuth **and re-check moon-up** — so the target appears or disappears if the moon rises or sets while you're looking. Also recompute immediately on return to foreground, and when the selection becomes today.
 
 ### Sensor lifecycle

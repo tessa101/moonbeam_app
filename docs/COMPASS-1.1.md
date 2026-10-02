@@ -110,6 +110,14 @@ resolved.
   - **Reduce Motion:** a static 2 pt `accent` ring instead, same stop rule.
   - None when the moon is down or on other dates. Hidden from VoiceOver.
 
+## 5a. Sensors start when any part of the compass is visible (fix, 2026-10-02)
+
+- **Bug (device, after 5.4.1):** the Up now row pushed the dial partly below the fold. `onScrollVisibilityChange`
+  defaults to a 0.5 threshold, so the sensors stayed off until half the compass was on screen: blank readout,
+  dimmed marks, no turning until you scroll.
+- **Fix:** `onScrollVisibilityChange(threshold: 0.1)` in `LocationScreen`; `onDisappear` unchanged. COMPASS.md §1
+  "on screen" now means **any part of the compass visible**. Build before 5.4.2.
+
 ## 6. Still open (before 5.5)
 
 - **Height / pinned bar:** the Up now row adds ~50 pt, on top of 5.8's ~47 pt, plus the accuracy note when it
@@ -123,6 +131,7 @@ resolved.
 - **5.4.3** Accuracy notes under the readout (§4.1)
 - **5.4.4** Target labels outside the arc, collision rule, pulse + Reduce Motion (§5)
 - **5.4.5** Sentence: new lines, "today" token (§2)
+- **5.4.6** Spacing pass (§9), after Tessa reviews 5.4.2–5.4.5 on device
 
 Screenshots for each, at default size on the smallest supported phone and a 393 pt phone: moon up / locked on
 set / locked on moon / moon down / low accuracy / Precise off / Nearby.
@@ -138,6 +147,25 @@ set / locked on moon / moon down / low accuracy / Precise off / Nearby.
 - Label collision: within the threshold, "Now" keeps its label
 - Pulse: on with the moon up and no lock yet this launch; off after the first lock and stays off; off when down
 
+## 9. 5.4.6 Spacing pass (later, after 5.4.5)
+
+**Goal:** the whole dial (labels included) sits above the fold at the default size on a 402 pt iPhone 17. Smaller
+phones may still need the pinned bar (§6). **Not before 5.4.5:** the needle, accuracy note, outside labels and
+sentence all change the heights, so spacing is tuned once, on the finished screen.
+
+**First:** after 5.4.5, the agent reports the dial's bottom edge vs the screen bottom (iPhone 17 and the smallest
+supported phone, on load, no scroll; `.agent-reports/5.4-fit/`). Tessa picks from the options below with those numbers.
+
+Options, with rough savings measured from the 5.4.1 device screenshot (dial bottom was ~70–90 pt below the fold):
+- **A. Tighten (recommended first):** card padding 16 → 12 and internal gap 14 → 10 (the mock's values);
+  rise/set columns hug their content (drop the 76 pt minimum); sentence line height 1.5 → 1.35; card → compass
+  gap 24 → 16. With 5.4.2's needle already removing the capsule band: ~70–90 pt.
+- **B. A + dial 196 → 180 pt** (the 5.8 fallback): ~30 pt more; numbers and labels get tighter.
+- **C. A + phase merged into the header row** (small glyph and "Last Quarter · 53%" beside the date, ‹ › kept):
+  ~45 pt more; a layout change that needs a mock first.
+
+Then decide the pinned-bar rule (§6) and move on to 5.5.
+
 ## Decision log
 
 - **2026-10-02 (Tessa):** Compass 1.1 reviewed. Keep the Up now row, lock highlight, needle, ticks, crosshair,
@@ -147,3 +175,6 @@ set / locked on moon / moon down / low accuracy / Precise off / Nearby.
   **moon glyph**; if the two rise times still feel off, drop the end times. **Accuracy warnings go under the
   readout** (no lock is possible then). Other gaps: Cowork's recommendations (other dates hidden, collision
   rule, Reduce Motion pulse, equal readout sizes; pinned-bar rule decided before 5.5).
+- **2026-10-02 (Tessa, after the 5.4.1 device check):** the dial sits partly below the fold and stays frozen until
+  scrolled. Fix the sensor threshold now (§5a). Spacing waits: build 5.4.2–5.4.5 first, then a **5.4.6 spacing pass**
+  on the finished screen (§9), then the pinned-bar rule.

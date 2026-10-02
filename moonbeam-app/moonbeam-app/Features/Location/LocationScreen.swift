@@ -119,6 +119,10 @@ struct LocationScreen: View {
 
     // MARK: - Compass
 
+    /// The fraction of the compass that must be visible for its sensors to
+    /// run: a sliver counts (COMPASS.md §1 "on screen" = any part visible).
+    private static let compassVisibilityThreshold = 0.1
+
     #if DEBUG
     private static let showsDebugReadout = true
     #else
@@ -133,13 +137,17 @@ struct LocationScreen: View {
     /// sensors would start off screen. `onScrollVisibilityChange` also fires
     /// on appearing when already past its threshold, which covers insertion.
     /// `onDisappear` covers removal.
+    ///
+    /// "On screen" is any part visible (DECISIONS.md 2026-10-02): with the
+    /// default half-visible threshold, a dial peeking above the fold stayed
+    /// greyed with its sensors off.
     private var compass: some View {
         CompassView(
             viewModel: viewModel.compass,
             onTurnOnLocation: { Task { await viewModel.turnOnLocationForCompass() } },
             onUsePreciseLocation: { Task { await viewModel.usePreciseLocationForCompass() } }
         )
-        .onScrollVisibilityChange { isVisible in
+        .onScrollVisibilityChange(threshold: Self.compassVisibilityThreshold) { isVisible in
             viewModel.compass.setOnScreen(isVisible)
         }
         .onDisappear {

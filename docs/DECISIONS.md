@@ -5,6 +5,22 @@
 
 ---
 
+### 2026-10-02 · Compass sensors start when any part is visible; spacing pass after 5.4.5 (Tessa)
+- **Bug (device, after 5.4.1):** the Up now row pushed the dial partly below the fold, and the sensors only start at
+  SwiftUI's default 0.5 visibility threshold, so the dial stayed frozen (blank readout, dimmed marks) until scrolled.
+- **Fix now:** `onScrollVisibilityChange(threshold: 0.1)`; COMPASS.md §1 "on screen" = any part visible
+  (COMPASS-1.1.md §5a).
+- **Spacing later:** build 5.4.2–5.4.5 unchanged, then **5.4.6 spacing pass** (COMPASS-1.1.md §9) on the finished
+  screen: tighten first (option A), dial 180 pt or a merged header only if needed. Then the pinned-bar rule.
+- **Why wait:** the needle, accuracy note, outside labels and new sentence all change the heights.
+
+### 2026-10-02 · Compass sensors start when any part of it is visible (Tessa)
+- **Decision:** COMPASS.md §1 "on screen" means **any part of the compass visible**, not half of it.
+  `onScrollVisibilityChange(threshold: 0.1)` in `LocationScreen` (was the default 0.5); `onDisappear` still
+  stops the sensors on removal.
+- **Why:** with the card taller (Up now) and the dial lower, the dial often peeks above the fold at the default
+  size; at 0.5 it showed but stayed off (no heading, no lock, no Up now tick) until scrolled halfway in.
+
 ### 2026-10-02 · Compass 1.1: Up now row, needle and ticks, labels on the arc, accuracy notes under the readout, "today" (Tessa)
 - **Spec:** COMPASS-1.1.md (5.4.1–5.4.5, build before 5.5). Source: `design/1.1/Moon Signal Compass 1.1.dc.html`.
 - **Card:** new **Up now** row (live bearing; bar from last rise to next set with the moon glyph as thumb; "Below

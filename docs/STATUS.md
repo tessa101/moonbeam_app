@@ -227,7 +227,9 @@ _Last updated: 2026-10-02 (Compass 1.1: Build 5.4.1 [spike], Up now row and lock
    - [ ] **Compass 1.1 (decided 2026-10-02, build before 5.5):** [COMPASS-1.1.md](COMPASS-1.1.md) §7, one commit
      each: 5.4.1 Up now row + lock highlight; 5.4.2 dial (needle, ticks, numbers, serif cardinals, crosshair);
      5.4.3 accuracy notes under the readout; 5.4.4 target labels outside the arc + pulse; 5.4.5 sentence
-     ("Where can I find / the moon today / in [city]?"). Then decide the pinned-bar rule (§6), then 5.5.
+     ("Where can I find / the moon today / in [city]?"). **5.4.1 done** (1fa2bed, bb6e4d2; scheme fix 6044e4c).
+     **Next:** sensor threshold fix (§5a), then 5.4.2–5.4.5, then **5.4.6 spacing pass** (§9) after Tessa's device
+     check, then the pinned-bar rule (§6), then 5.5.
      - [x] **Build 5.4.1 [spike] (2026-10-02):** Up now row + lock highlight, two commits. The row shows only where the
        compass does (today, Here / Nearby) and refreshes on the compass's tick: **decide** whether it should
        show for any place (DECISIONS.md 2026-10-02 as built). Moonrise/Moonset are now boxed cells, the
