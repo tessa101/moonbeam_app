@@ -72,6 +72,13 @@
   move down while they show; with nothing to say there's no gap. Nearby stays 14 pt under the dial. No spacing
   values changed. Placement is two view slots fed by the existing `statusLineText` / `offersPreciseLocation` and
   `nearbyNote`, so §8's placement check is the previews, not a unit test.
+- **As built, 5.4.4 labels + pulse:** `CompassTargetLabels` decides the labels: locked drops its own; within 15°
+  "Now" keeps its label, and rise beats set if those two collide (near the poles only; not in the spec). Labels sit
+  138 pt out (24 beyond the track), Nunito 700 12 pt fixed, `textBody` with a `bg` halo; at 3 / 9 o'clock they
+  reach ~160 pt from the centre, inside a 353 pt block. At 3 / 9 o'clock "Now" nearly touches the Moon's disc (the
+  HTML's geometry). The ↑ / ↓ inside the rim are gone. Pulse: `CompassViewModel.showsMoonPulse` (Moon target present
+  and `hasLockedThisLaunch` false; the flag is set on the first lock and never cleared). Ring radius 10 → 24 pt,
+  2 pt `accent`, 0.8 → 0 over 1.8 s; Reduce Motion: a still ring at 17 pt.
 
 ### 2026-10-01 · Show onboarding button also in TestFlight builds (Tessa)
 - **Why:** testers (and Tessa on a phone without Xcode) need to see onboarding again without deleting the app

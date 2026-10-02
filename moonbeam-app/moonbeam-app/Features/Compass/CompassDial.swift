@@ -7,16 +7,16 @@ import SwiftUI
 
 /// The compass dial (DESIGN-1.1.md §3.3, §3.3a, COMPASS-1.1.md §4, COMPASS.md
 /// §1): a lit face with tick lines every 2° (longer every 10° and 30°), degree
-/// numbers every 30°, N/E/S/W in Young Serif, a fixed crosshair, and ↑ / ↓ by
-/// the moonrise and moonset bearings; outside the rim, the moon arc, the
-/// moon's pass from rise to set, with `moonLit` dots at moonrise and moonset
-/// and the live Moon as a phase glyph riding on it; and a fixed needle at 12
-/// o'clock from above the arc into the ticks.
+/// numbers every 30°, N/E/S/W in Young Serif and a fixed crosshair; outside
+/// the rim, the moon arc, the moon's pass from rise to set, with `moonLit`
+/// dots at moonrise and moonset, the live Moon as a phase glyph riding on it
+/// (pulsing until the first lock), and their labels beyond; and a fixed
+/// needle at 12 o'clock from above the arc into the ticks.
 /// Locked, the target's mark grows and glows and the dial gets a soft amber
 /// halo.
 ///
 /// The face itself doesn't turn: everything is placed at its on-screen
-/// angle (azimuth − heading), so letters, arrows and the Moon's phase are
+/// angle (azimuth − heading), so letters, labels and the Moon's phase are
 /// always upright and the face's light stays at the top. Turning the phone
 /// right still moves the marks left, as in Compass. Not animated: a turn
 /// from 359° to 0° would otherwise spin the long way, and the Moon steps
@@ -45,6 +45,9 @@ struct CompassDial: View {
     /// `CompassViewModel.arc`; `nil` draws no arc, and the targets still sit
     /// on its track.
     var arc: CompassArc? = nil
+
+    /// `CompassViewModel.showsMoonPulse`: the ring pulsing from the Moon.
+    var showsMoonPulse = false
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -77,8 +80,21 @@ struct CompassDial: View {
     /// centre; cardinals at `letterCentreDistance`.
     private static let numberCentreDistance: CGFloat = 72
     private static let letterCentreDistance: CGFloat = 58
-    /// From the rim to the centre of an ↑/↓ arrow (5.4's inset).
-    private static let arrowCentreInset: CGFloat = 22
+    /// Target labels ("↑ Rise", "↓ Set", "Now", COMPASS-1.1.md §5): centred
+    /// this far beyond the arc's track (138 pt from the centre), with a `bg`
+    /// halo so they read over the dots.
+    private static let labelGap: CGFloat = 24
+    private static let labelHaloRadius: CGFloat = 1.5
+
+    /// The Moon's pulse (§5): a 2 pt `accent` ring growing from 10 to 24 pt
+    /// radius as it fades from 80%, every 1.8 s. Reduce Motion: a still ring
+    /// halfway out.
+    private static let pulseStartRadius: CGFloat = 10
+    private static let pulseEndRadius: CGFloat = 24
+    private static let pulseStaticRadius: CGFloat = 17
+    private static let pulseLineWidth: CGFloat = 2
+    private static let pulseStartOpacity = 0.8
+    private static let pulseDuration = 1.8
 
     /// The fixed crosshair: ±28 pt, 1 pt, with a 2 pt centre dot.
     private static let crosshairReach: CGFloat = 28
@@ -380,13 +396,19 @@ struct CompassDial: View {
         }
     }
 
-    /// Each target on the arc's track, with ↑ / ↓ inside the rim at the same
-    /// bearing. Rise and set dim with the arc while the moon is down; a
+    /// Each target on the arc's track, with its label outside the arc
+    /// (`CompassTargetLabels`: the locked one, and the loser of a collision,
+    /// go without). Rise and set dim with the arc while the moon is down; a
     /// locked target never does.
     private var targetMarks: some View {
-        ForEach(targets, id: \.kind) { target in
+        let labels = CompassTargetLabels.labels(for: targets, lockedKind: lockedKind)
+        return ForEach(targets, id: \.kind) { target in
             let isLocked = target.kind == lockedKind
             let size = Self.markSize(kind: target.kind, isLocked: isLocked)
+            if target.kind == .moon, showsMoonPulse {
+                MoonPulse(reduceMotion: reduceMotion)
+                    .position(point(at: target.azimuth, distance: Self.arcRadius))
+            }
             // Grouped so the dot and its glow dim as one, then backed with
             // `bg` so the arc's end dot doesn't show through a dimmed mark.
             targetMark(kind: target.kind, isLocked: isLocked)
@@ -398,12 +420,41 @@ struct CompassDial: View {
                         .frame(width: size, height: size)
                 }
                 .position(point(at: target.azimuth, distance: Self.arcRadius))
-            if let arrow = Self.arrow(for: target.kind) {
-                Text(arrow)
-                    .font(Theme.Fonts.dialArrow)
-                    .foregroundStyle(Theme.Colors.accent)
-                    .position(point(at: target.azimuth, distance: Self.dialRadius - Self.arrowCentreInset))
+            if let label = labels[target.kind] {
+                Text(label)
+                    .font(Theme.Fonts.dialTargetLabel)
+                    .foregroundStyle(Theme.Colors.textBody)
+                    .fixedSize()
+                    .shadow(color: Theme.Colors.bg, radius: Self.labelHaloRadius)
+                    .shadow(color: Theme.Colors.bg, radius: Self.labelHaloRadius)
+                    .position(point(at: target.azimuth, distance: Self.arcRadius + Self.labelGap))
+                    .accessibilityHidden(true)
             }
+        }
+    }
+
+    /// The ring round the Moon until the first lock this launch; hidden from
+    /// VoiceOver.
+    private struct MoonPulse: View {
+
+        let reduceMotion: Bool
+        @State private var isExpanded = false
+
+        var body: some View {
+            let radius = reduceMotion
+                ? CompassDial.pulseStaticRadius
+                : (isExpanded ? CompassDial.pulseEndRadius : CompassDial.pulseStartRadius)
+            Circle()
+                .stroke(Theme.Colors.accent, lineWidth: CompassDial.pulseLineWidth)
+                .frame(width: radius * 2, height: radius * 2)
+                .opacity(reduceMotion ? 1 : (isExpanded ? 0 : CompassDial.pulseStartOpacity))
+                .accessibilityHidden(true)
+                .onAppear {
+                    guard !reduceMotion else { return }
+                    withAnimation(.easeOut(duration: CompassDial.pulseDuration).repeatForever(autoreverses: false)) {
+                        isExpanded = true
+                    }
+                }
         }
     }
 
@@ -499,14 +550,6 @@ struct CompassDial: View {
         return path
     }
 
-    /// ↑ moonrise, ↓ moonset; the live Moon has none (§11 Q4).
-    private static func arrow(for kind: CompassTarget.Kind) -> String? {
-        switch kind {
-        case .moonrise: "↑"
-        case .moonset: "↓"
-        case .moon: nil
-        }
-    }
 }
 
 // MARK: - Previews

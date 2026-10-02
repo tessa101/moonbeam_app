@@ -109,7 +109,8 @@ nonisolated enum Theme {
     }
 
     /// The type scale. Every size scales with Dynamic Type through
-    /// `relativeTo:`, except the dial's ↑/↓, which the spec fixes.
+    /// `relativeTo:`, except the dial's numbers and target labels, which the
+    /// spec fixes.
     enum Fonts {
         /// The madlib sentence. Line height is `sentenceLineHeightMultiple`.
         static let sentenceSize: CGFloat = 27
@@ -181,8 +182,9 @@ nonisolated enum Theme {
         /// Type, decorative (COMPASS-1.1.md §4).
         static let dialNumber = Font.custom(FontName.nunitoSansSemiBold, fixedSize: 11)
 
-        /// The dial's ↑/↓ target labels, fixed in size.
-        static let dialArrow = Font.custom(FontName.nunitoSansBold, fixedSize: 14)
+        /// The targets' labels outside the arc ("↑ Rise", "↓ Set", "Now"),
+        /// fixed in size (COMPASS-1.1.md §5).
+        static let dialTargetLabel = Font.custom(FontName.nunitoSansBold, fixedSize: 12)
     }
 }
 

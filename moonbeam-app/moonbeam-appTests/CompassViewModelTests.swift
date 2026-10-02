@@ -1292,4 +1292,43 @@ struct CompassViewModelTests {
         #expect(harness.moon.requestedNextRiseDates == [Self.referenceDate])
         harness.sleeper.cancelAll()
     }
+
+    // MARK: - Moon pulse (COMPASS-1.1.md §5)
+
+    @Test("Pulse: on with the moon up and no lock yet this launch")
+    func pulseOnWhileUnlocked() {
+        let harness = Self.makeRunningHarness(position: Self.moonUp)
+
+        #expect(harness.viewModel.showsMoonPulse)
+    }
+
+    @Test("Pulse: off when the moon is down, or on another day")
+    func pulseOffWithoutMoon() {
+        let down = Self.makeRunningHarness(position: Self.moonDown)
+        let otherDay = Self.makeHarness(position: Self.moonUp)
+        otherDay.viewModel.update(Self.context(isToday: false))
+
+        #expect(!down.viewModel.showsMoonPulse)
+        #expect(!otherDay.viewModel.showsMoonPulse)
+    }
+
+    @Test("Pulse: off after the first lock on any target, and stays off")
+    func pulseStopsAfterFirstLock() async {
+        let harness = Self.makeRunningHarness(position: Self.moonUp)
+
+        harness.heading.send(Self.reading(Self.riseAzimuth))
+        await waitUntil { harness.viewModel.lockedKind == .moonrise }
+        #expect(!harness.viewModel.showsMoonPulse)
+
+        harness.heading.send(Self.reading(Self.riseAzimuth + 90))
+        await waitUntil { harness.viewModel.lockedKind == nil }
+        #expect(harness.viewModel.hasLockedThisLaunch)
+        #expect(!harness.viewModel.showsMoonPulse)
+
+        // Not even after the sensors stop and start again.
+        harness.viewModel.setOnScreen(false)
+        harness.viewModel.setOnScreen(true)
+        #expect(!harness.viewModel.showsMoonPulse)
+        harness.sleeper.cancelAll()
+    }
 }

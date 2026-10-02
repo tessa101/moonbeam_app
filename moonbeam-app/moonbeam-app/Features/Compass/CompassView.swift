@@ -96,7 +96,8 @@ struct CompassView: View {
                 lockedKind: viewModel.lockedKind,
                 accessibilityTargets: viewModel.targetsAccessibilityLabel,
                 moonGlyph: viewModel.moonGlyph,
-                arc: viewModel.arc
+                arc: viewModel.arc,
+                showsMoonPulse: viewModel.showsMoonPulse
             )
             .padding(.top, Self.dialTopSpacing)
             .padding(.bottom, Self.dialBottomSpacing)

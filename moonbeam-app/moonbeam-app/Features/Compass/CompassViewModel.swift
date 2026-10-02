@@ -191,6 +191,11 @@ final class CompassViewModel {
     /// it changes (COMPASS.md §1, 4.5), so release and holding stay silent.
     private(set) var lockAcquisitionCount = 0
 
+    /// Some target has been locked since launch. The Moon's pulse
+    /// (COMPASS-1.1.md §5) stops then and doesn't return until the app
+    /// relaunches; this view model lives as long as the app does.
+    private(set) var hasLockedThisLaunch = false
+
     // MARK: - Dependencies
 
     private let headingService: any HeadingService
@@ -248,6 +253,12 @@ final class CompassViewModel {
     // MARK: - Derived state
 
     var heading: Double? { reading?.trueHeading }
+
+    /// The ring pulsing from the live Moon (COMPASS-1.1.md §5): while the
+    /// moon is up (so today) and nothing has been locked yet this launch.
+    var showsMoonPulse: Bool {
+        !hasLockedThisLaunch && targets.contains { $0.kind == .moon }
+    }
 
     var lockedTarget: CompassTarget? {
         guard let lockedKind else { return nil }
@@ -583,7 +594,10 @@ final class CompassViewModel {
             targets: targets
         )
         guard next != lockedKind else { return }
-        if next != nil { lockAcquisitionCount += 1 }
+        if next != nil {
+            lockAcquisitionCount += 1
+            if !hasLockedThisLaunch { hasLockedThisLaunch = true }
+        }
         lockedKind = next
     }
 
