@@ -178,6 +178,8 @@ beside it at default size for most times. At AX sizes the day period wraps under
      The HTML fakes it with two circles; don't copy that. Northern-hemisphere orientation for 1.1
      (waning = lit on the left); southern flip goes in the backlog.
 3. **Rise/set row:** two equal columns with a 1 pt vertical hairline, gap 18, min height 76.
+   *Compass 1.1 (5.4.1):* the columns are now boxed cells 6 pt apart with no hairline, for the lock
+   highlight, and an Up now row follows (COMPASS-1.1.md §3; DECISIONS.md 2026-10-02 as built).
    Each: label "↑ Moonrise" / "↓ Moonset" (footnote 600, `textSecondary`), time (Young Serif 24),
    direction "58° ENE" (subheadline, `accent`).
    - Missing event: the time and direction are replaced by **"No moonrise today"** (Nunito 17,
@@ -273,7 +275,7 @@ The screen scrolls; containers reflow:
 - Sentence wraps freely (rule in §3.1).
 - ‹ › leave the header row and become their **own full-width row** of two equal buttons, 60 pt tall.
 - Phase stacks: glyph (64 pt) above the text.
-- Moonrise and Moonset **stack**, divided by hairlines.
+- Moonrise and Moonset **stack**, divided by hairlines (since 5.4.1: boxed cells, so 5.5 stacks the boxes).
 - Dial is a fixed **260 pt**; letters capped at 17 pt and expose the **Large Content Viewer**. Only
   the heading readout scales.
 

@@ -22,7 +22,7 @@
   date token (a moon state, not a date; wrong when the moon is down); IBM Plex Mono numbers (a third font, 10 pt).
 - **Open:** the pinned bar's rule now that the dial sits lower (decide before 5.5); drop the Up now end times if
   the two rise times confuse on device.
-- **As built, 5.4.1 Up now row:**
+- **As built, Build 5.4.1 [spike], Up now row:**
   - **One source with the dial.** `CompassViewModel.upNow` is built from the same position, pass and 30 s tick as
     the live Moon target, so the card's "266° W" and the lock pill can't differ by a tick. So the row shows
     exactly where the Moon target can: **today with the compass shown** (Here / Nearby). It's hidden with
@@ -40,6 +40,12 @@
     in a 1.5 pt `surface` ring with an amber glow, kept inside the bar's ends. At AX sizes the headline and the
     bar stack (bar over the two times). Moon down keeps the bar's line, hidden, so the height doesn't change.
   - New tokens: `surfaceInset` `#251C22`, `faint` `#5E4D57` (decorative), `Fonts.caption` (11 pt, `.caption2`).
+- **As built, Build 5.4.1 [spike], lock highlight:** `MoonCardCell(lockedOn:)` maps the compass's lock to a cell (rise → Moonrise,
+  set → Moonset, Moon → Up now). Every cell is now a padded box (8 / 10, radius 14) with a clear 1 pt border, so a
+  lock changes only colours. To give the outline room, **Moonrise and Moonset are boxes 6 pt apart, as in the
+  HTML, and 5.2's hairline divider between them is gone**; the cells reach 6 pt into the card's padding, so their
+  text sits 5 pt inside the header's (the HTML's offset). The two boxes match heights. Amber label on the
+  highlight fill: about 8.7:1.
 
 ### 2026-10-01 · Show onboarding button also in TestFlight builds (Tessa)
 - **Why:** testers (and Tessa on a phone without Xcode) need to see onboarding again without deleting the app

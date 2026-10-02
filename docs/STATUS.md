@@ -3,7 +3,7 @@
 > A living note on where things stand. Update it at the end of each work session
 > so the next session (you, or Claude) can pick up cold.
 
-_Last updated: 2026-10-01 (TestFlight build 4 prepared; onboarding Settings fix; Show onboarding in TestFlight; tap animation and DEBUG onboarding trigger built; next 5.5; Moon Signal app icon in; 5.8 moon arc built; next: DEBUG onboarding trigger, tap animation, then 5.5; TestFlight build 3 uploaded with 5.7; moon arc decided (option B, 5.8); Step 5.7 onboarding built ahead of 5.5/5.6; Step 5.3 madlib sentence built, with §3.1a; 5.2 follow-ups; Step 5.2 moon card built; 5.1 theme; Design 1.1 settled: DESIGN-1.1.md, Step 5; 4.14, Step 2.2 and 4.15 built; device checks pending)_
+_Last updated: 2026-10-02 (Compass 1.1: Build 5.4.1 [spike], Up now row and lock highlight; next 5.4.2 dial); 2026-10-01 (TestFlight build 4 prepared; onboarding Settings fix; Show onboarding in TestFlight; tap animation and DEBUG onboarding trigger built; next 5.5; Moon Signal app icon in; 5.8 moon arc built; next: DEBUG onboarding trigger, tap animation, then 5.5; TestFlight build 3 uploaded with 5.7; moon arc decided (option B, 5.8); Step 5.7 onboarding built ahead of 5.5/5.6; Step 5.3 madlib sentence built, with §3.1a; 5.2 follow-ups; Step 5.2 moon card built; 5.1 theme; Design 1.1 settled: DESIGN-1.1.md, Step 5; 4.14, Step 2.2 and 4.15 built; device checks pending)_
 
 ## Where things live
 - **Local repo:** `~/app-ideas/moonbeam` (the one true folder)
@@ -228,6 +228,11 @@ _Last updated: 2026-10-01 (TestFlight build 4 prepared; onboarding Settings fix;
      each: 5.4.1 Up now row + lock highlight; 5.4.2 dial (needle, ticks, numbers, serif cardinals, crosshair);
      5.4.3 accuracy notes under the readout; 5.4.4 target labels outside the arc + pulse; 5.4.5 sentence
      ("Where can I find / the moon today / in [city]?"). Then decide the pinned-bar rule (§6), then 5.5.
+     - [x] **Build 5.4.1 [spike] (2026-10-02):** Up now row + lock highlight, two commits. The row shows only where the
+       compass does (today, Here / Nearby) and refreshes on the compass's tick: **decide** whether it should
+       show for any place (DECISIONS.md 2026-10-02 as built). Moonrise/Moonset are now boxed cells, the
+       hairline between them is gone. **495 tests / 736 cases across 37 suites**, all pass (iPhone 17 sim).
+       Report: `.agent-reports/5.4.1/`. Not yet checked on a 375 pt phone or on device.
 
 5. [ ] Location: detect + search (Step 2)
    - Spec: **[LOCATION.md](LOCATION.md)** (decided 2026-09-25). Place model, CoreLocation one-shot fix,

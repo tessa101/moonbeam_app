@@ -452,6 +452,12 @@ final class LocationViewModel {
         )
     }
 
+    /// The moon card's cell to outline for the compass's lock
+    /// (COMPASS-1.1.md §3), or `nil` while unlocked.
+    var highlightedCardCell: MoonCardCell? {
+        MoonCardCell(lockedOn: compass.lockedKind)
+    }
+
     /// The selected day is the place's today, so the calendar sheet's Today
     /// button is disabled. Reads the resolved day rather than the case, so a
     /// picked day that has become today counts too. With no place there's

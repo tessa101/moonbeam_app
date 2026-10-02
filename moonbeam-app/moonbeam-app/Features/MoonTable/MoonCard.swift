@@ -6,10 +6,12 @@
 import SwiftUI
 
 /// The moon card (DESIGN-1.1.md §3.2): the selected day with ‹ ›, the phase,
-/// then moonrise and moonset side by side.
+/// then moonrise and moonset side by side, and on today the Up now row
+/// (COMPASS-1.1.md §3). A compass lock outlines the matching cell.
 ///
 /// Layout and announcements only. Day stepping is `LocationViewModel`'s
-/// (DATE.md), the card's text is `MoonTableViewModel`'s.
+/// (DATE.md), the card's text is `MoonTableViewModel`'s, Up now and the lock
+/// are the compass's.
 struct MoonCard: View {
 
     let viewModel: LocationViewModel
@@ -28,8 +30,8 @@ struct MoonCard: View {
     private static let phaseSpacing: CGFloat = 14
     private static let phaseTextSpacing: CGFloat = 4
 
-    /// Gap on each side of the rise/set divider.
-    private static let columnGap: CGFloat = 18
+    /// Between the Moonrise and Moonset cells (the HTML's grid gap).
+    private static let columnGap: CGFloat = 6
     private static let columnMinHeight: CGFloat = 76
     private static let columnSpacing: CGFloat = 6
     /// Between a time and its zone abbreviation, side by side or stacked.
@@ -37,15 +39,14 @@ struct MoonCard: View {
     /// "No moonrise today" sits a little lower than a time would.
     private static let missingTopPadding: CGFloat = 4
 
-    // MARK: - Up now constants (COMPASS-1.1.md §3, read from the HTML)
+    // MARK: - Cell constants (COMPASS-1.1.md §3, read from the HTML)
 
-    private static let cellPaddingVertical: CGFloat = 8
-    private static let cellPaddingHorizontal: CGFloat = 10
-    private static let cellCornerRadius: CGFloat = 14
-    /// The cell reaches this far into the card's padding, so its text sits
+    /// The data cells (`CellStyle`) reach this far into the card's padding, so their text sits
     /// just inside the header's, as in the HTML (12 pt card padding there,
     /// 18 here).
     private static let cellOutset: CGFloat = 6
+
+    // MARK: - Up now constants (COMPASS-1.1.md §3, read from the HTML)
 
     /// Between the headline and the bar.
     private static let upNowSpacing: CGFloat = 7
@@ -178,28 +179,23 @@ struct MoonCard: View {
 
     // MARK: - Rise/set row
 
-    /// Two equal columns with a hairline between. The hairline is an overlay
-    /// at the centre, which is where the gap between equal columns is, so it
-    /// spans the row's full height whichever column is taller.
+    /// Two equal cells, as tall as the taller one, so a highlighted cell's
+    /// outline matches its neighbour's height (COMPASS-1.1.md §3; they
+    /// replace 5.2's hairline divider, as in the HTML).
     private var riseSetRow: some View {
-        HStack(alignment: .top, spacing: 2 * Self.columnGap + Theme.Metrics.hairline) {
-            column(table.rise)
-            column(table.set)
+        HStack(alignment: .top, spacing: Self.columnGap) {
+            column(table.rise, isHighlighted: viewModel.highlightedCardCell == .moonrise)
+            column(table.set, isHighlighted: viewModel.highlightedCardCell == .moonset)
         }
-        .frame(minHeight: Self.columnMinHeight, alignment: .top)
-        .overlay {
-            Rectangle()
-                .fill(Theme.Colors.stroke)
-                .frame(width: Theme.Metrics.hairline)
-                .accessibilityHidden(true)
-        }
+        .fixedSize(horizontal: false, vertical: true)
+        .padding(.horizontal, -Self.cellOutset)
     }
 
-    private func column(_ column: MoonTableViewModel.Column) -> some View {
+    private func column(_ column: MoonTableViewModel.Column, isHighlighted: Bool) -> some View {
         VStack(alignment: .leading, spacing: Self.columnSpacing) {
             Text(column.title)
                 .font(Theme.Fonts.label)
-                .foregroundStyle(Theme.Colors.textSecondary)
+                .foregroundStyle(isHighlighted ? Theme.Colors.accent : Theme.Colors.textSecondary)
 
             switch column.detail {
             case let .time(time, timeZone, direction):
@@ -214,7 +210,9 @@ struct MoonCard: View {
                     .padding(.top, Self.missingTopPadding)
             }
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .frame(maxWidth: .infinity, minHeight: Self.columnMinHeight, alignment: .topLeading)
+        .modifier(CellStyle(isHighlighted: isHighlighted, restingFill: .clear))
+        .frame(maxHeight: .infinity)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(column.accessibilityLabel)
     }
@@ -256,8 +254,9 @@ struct MoonCard: View {
     /// line is kept while the moon is down, hidden, so the card keeps its
     /// height as the moon rises or sets.
     private func upNowRow(_ upNow: UpNow) -> some View {
-        VStack(alignment: .leading, spacing: Self.upNowSpacing) {
-            upNowHeadline(upNow)
+        let isHighlighted = viewModel.highlightedCardCell == .upNow
+        return VStack(alignment: .leading, spacing: Self.upNowSpacing) {
+            upNowHeadline(upNow, isHighlighted: isHighlighted)
             if case let .up(_, pass?) = upNow.state {
                 upNowBar(pass)
             } else {
@@ -265,10 +264,8 @@ struct MoonCard: View {
                     .hidden()
             }
         }
-        .padding(.vertical, Self.cellPaddingVertical)
-        .padding(.horizontal, Self.cellPaddingHorizontal)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Theme.Colors.surfaceInset, in: RoundedRectangle(cornerRadius: Self.cellCornerRadius))
+        .modifier(CellStyle(isHighlighted: isHighlighted, restingFill: Theme.Colors.surfaceInset))
         .padding(.horizontal, -Self.cellOutset)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(upNow.accessibilityLabel)
@@ -279,14 +276,14 @@ struct MoonCard: View {
 
     /// "● Up now ……… 266° W" on one line, or stacked when the two don't fit
     /// (AX sizes).
-    private func upNowHeadline(_ upNow: UpNow) -> some View {
+    private func upNowHeadline(_ upNow: UpNow, isHighlighted: Bool) -> some View {
         let title = HStack(spacing: Self.upNowItemSpacing) {
             Circle()
                 .fill(upNow.isUp ? Theme.Colors.moonLit : Theme.Colors.faint)
                 .frame(width: Self.upNowDotSize, height: Self.upNowDotSize)
             Text(upNow.title)
                 .font(Theme.Fonts.label)
-                .foregroundStyle(Theme.Colors.textBody)
+                .foregroundStyle(isHighlighted ? Theme.Colors.accent : Theme.Colors.textBody)
         }
         let detail = Self.detail(of: upNow).map { text in
             Text(text)
@@ -391,6 +388,38 @@ private extension MoonCard {
     }
 }
 
+// MARK: - Cell style (COMPASS-1.1.md §3)
+
+/// A data cell's box: padded and rounded, with the lock highlight (1 pt
+/// `accent` border, `accent` 10% fill) when it's the locked target's cell.
+/// Unlocked, the border is drawn clear, so locking shifts nothing.
+private struct CellStyle: ViewModifier {
+
+    let isHighlighted: Bool
+    /// The fill while not highlighted: none for Moonrise and Moonset, the
+    /// inset fill for Up now.
+    let restingFill: Color
+
+    private static let paddingVertical: CGFloat = 8
+    private static let paddingHorizontal: CGFloat = 10
+    private static let cornerRadius: CGFloat = 14
+    private static let highlightFillOpacity = 0.1
+
+    func body(content: Content) -> some View {
+        let shape = RoundedRectangle(cornerRadius: Self.cornerRadius)
+        content
+            .padding(.vertical, Self.paddingVertical)
+            .padding(.horizontal, Self.paddingHorizontal)
+            .background(
+                isHighlighted ? Theme.Colors.accent.opacity(Self.highlightFillOpacity) : restingFill,
+                in: shape
+            )
+            .overlay {
+                shape.strokeBorder(isHighlighted ? Theme.Colors.accent : .clear, lineWidth: Theme.Metrics.hairline)
+            }
+    }
+}
+
 // MARK: - ‹ › button style
 
 /// §2: a 32 pt raised circle with a faint top highlight and a soft shadow,
@@ -460,16 +489,37 @@ private struct DayStepButtonStyle: ButtonStyle {
     UpNowPreview(isMoonUp: false)
 }
 
+#Preview("Locked on the moon") {
+    UpNowPreview(isMoonUp: true, heading: 266)
+}
+
+#Preview("Locked on moonset") {
+    UpNowPreview(isMoonUp: true, heading: 303)
+}
+
+#Preview("Locked on moonrise") {
+    UpNowPreview(isMoonUp: false, heading: 58)
+}
+
 /// The design's sky (COMPASS-1.1.md source, state 1 and 4) from fakes: Irvine
 /// at 7:53 AM on Fri, Oct 2, detected, so the compass and its Up now row
 /// show. Moon up at 266° on the pass from 10:06 PM to 1:28 PM; or down,
-/// rising in 34 minutes.
+/// rising in 34 minutes. With a `heading`, the compass is on screen and
+/// reads it, so it locks onto the target there.
 private struct UpNowPreview: View {
 
     let viewModel: LocationViewModel
 
-    init(isMoonUp: Bool) {
-        viewModel = Self.makeViewModel(isMoonUp: isMoonUp)
+    /// Well inside the compass's low-accuracy threshold.
+    private static let goodAccuracy = 3.0
+
+    init(isMoonUp: Bool, heading: Double? = nil) {
+        let headingService = FakeHeadingService()
+        viewModel = Self.makeViewModel(isMoonUp: isMoonUp, headingService: headingService)
+        if let heading {
+            viewModel.compass.setOnScreen(true)
+            headingService.send(HeadingReading(trueHeading: heading, accuracy: Self.goodAccuracy))
+        }
     }
 
     /// In a scroll view, as on the main screen, so AX sizes don't squeeze it.
@@ -484,7 +534,7 @@ private struct UpNowPreview: View {
         .font(Theme.Fonts.body)
     }
 
-    private static func makeViewModel(isMoonUp: Bool) -> LocationViewModel {
+    private static func makeViewModel(isMoonUp: Bool, headingService: FakeHeadingService) -> LocationViewModel {
         let zone = Place.irvine.timeZone
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = zone
@@ -518,7 +568,7 @@ private struct UpNowPreview: View {
             placeSearch: FakePlaceSearchService(),
             placeStore: InMemoryPlaceStore(),
             moonService: moon,
-            headingService: FakeHeadingService(),
+            headingService: headingService,
             deviceTimeZone: zone,
             now: { now }
         )
