@@ -1201,4 +1201,95 @@ struct CompassViewModelTests {
         ])
         harness.sleeper.cancelAll()
     }
+
+    // MARK: - Up now (COMPASS-1.1.md §3)
+
+    /// 34 minutes after the fixtures' clock.
+    private static let soonRise = MoonEvent(date: referenceDate + 34 * 60, azimuth: riseAzimuth)
+
+    @Test("Up now, moon up: its bearing, and the pass the arc draws")
+    func upNowWhileUp() {
+        let harness = Self.makeHarness(position: Self.moonUp)
+        harness.moon.pass = Self.scriptedPass
+
+        harness.viewModel.update(Self.context())
+
+        guard case let .up(bearing, pass?) = harness.viewModel.upNow?.state else {
+            Issue.record("Expected Up now with the moon up and its pass")
+            return
+        }
+        #expect(bearing == "140° SE")
+        // The fixtures' clock is halfway through the scripted pass.
+        #expect(pass.progress == 0.5)
+        #expect(harness.moon.requestedNextRiseDates.isEmpty)
+    }
+
+    @Test("Up now, moon down: when it rises next")
+    func upNowWhileDown() {
+        let harness = Self.makeHarness(position: Self.moonDown)
+        harness.moon.nextRise = Self.soonRise
+
+        harness.viewModel.update(Self.context())
+
+        #expect(harness.viewModel.upNow?.state == .down(nextRise: "Rises in 34 min"))
+        #expect(harness.moon.requestedNextRiseDates == [Self.referenceDate])
+    }
+
+    @Test("Up now is hidden on other dates")
+    func upNowHiddenOnOtherDates() {
+        let harness = Self.makeHarness(position: Self.moonUp)
+
+        harness.viewModel.update(Self.context(isToday: false))
+
+        #expect(harness.viewModel.upNow == nil)
+    }
+
+    @Test("Up now is hidden without the compass", arguments: [false, true])
+    func upNowHiddenWithoutCompass(locationOff: Bool) {
+        let harness = Self.makeHarness(position: Self.moonUp)
+        let context = locationOff ? Self.context(auth: .denied) : Self.context(place: Self.sydney)
+
+        harness.viewModel.update(context)
+
+        #expect(harness.viewModel.upNow == nil)
+        #expect(harness.moon.requestedNextRiseDates.isEmpty)
+    }
+
+    @Test("A tick turns Up now over when the moon rises, and back when it sets")
+    func tickTurnsUpNowOver() async {
+        let harness = Self.makeHarness(position: Self.moonDown)
+        harness.moon.nextRise = Self.soonRise
+        harness.viewModel.update(Self.context())
+        harness.viewModel.setOnScreen(true)
+        #expect(harness.viewModel.upNow?.isUp == false)
+
+        harness.moon.position = Self.moonUp
+        await waitUntil { harness.sleeper.pendingCount == 1 }
+        harness.sleeper.fire()
+        await waitUntil { harness.viewModel.upNow?.isUp == true }
+        #expect(harness.viewModel.upNow?.state == .up(bearing: "140° SE", pass: nil))
+
+        harness.moon.position = Self.moonDown
+        await waitUntil { harness.sleeper.pendingCount == 1 }
+        harness.sleeper.fire()
+        await waitUntil { harness.viewModel.upNow?.isUp == false }
+        #expect(harness.viewModel.upNow?.state == .down(nextRise: "Rises in 34 min"))
+
+        harness.sleeper.cancelAll()
+    }
+
+    @Test("A tick while down keeps the next rise until it has passed")
+    func tickKeepsNextRise() async {
+        let harness = Self.makeHarness(position: Self.moonDown)
+        harness.moon.nextRise = Self.soonRise
+        harness.viewModel.update(Self.context())
+        harness.viewModel.setOnScreen(true)
+
+        await waitUntil { harness.sleeper.pendingCount == 1 }
+        harness.sleeper.fire()
+        await waitUntil { harness.sleeper.pendingCount == 1 }
+
+        #expect(harness.moon.requestedNextRiseDates == [Self.referenceDate])
+        harness.sleeper.cancelAll()
+    }
 }

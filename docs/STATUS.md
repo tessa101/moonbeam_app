@@ -224,6 +224,10 @@ _Last updated: 2026-10-01 (TestFlight build 4 prepared; onboarding Settings fix;
    - [x] **App icon (2026-10-01):** the Moon Signal design replaces the placeholder (`MoonSignal-AppIcon-*`):
      Dark in both the default and dark slots (the app is dark-only, so there's no light design), Tinted for
      tinted. **Check on device:** home screen in default, dark and tinted. In TestFlight build 4.
+   - [ ] **Compass 1.1 (decided 2026-10-02, build before 5.5):** [COMPASS-1.1.md](COMPASS-1.1.md) §7, one commit
+     each: 5.4.1 Up now row + lock highlight; 5.4.2 dial (needle, ticks, numbers, serif cardinals, crosshair);
+     5.4.3 accuracy notes under the readout; 5.4.4 target labels outside the arc + pulse; 5.4.5 sentence
+     ("Where can I find / the moon today / in [city]?"). Then decide the pinned-bar rule (§6), then 5.5.
 
 5. [ ] Location: detect + search (Step 2)
    - Spec: **[LOCATION.md](LOCATION.md)** (decided 2026-09-25). Place model, CoreLocation one-shot fix,

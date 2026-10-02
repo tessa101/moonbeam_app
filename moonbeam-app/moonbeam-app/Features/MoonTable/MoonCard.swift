@@ -37,6 +37,35 @@ struct MoonCard: View {
     /// "No moonrise today" sits a little lower than a time would.
     private static let missingTopPadding: CGFloat = 4
 
+    // MARK: - Up now constants (COMPASS-1.1.md §3, read from the HTML)
+
+    private static let cellPaddingVertical: CGFloat = 8
+    private static let cellPaddingHorizontal: CGFloat = 10
+    private static let cellCornerRadius: CGFloat = 14
+    /// The cell reaches this far into the card's padding, so its text sits
+    /// just inside the header's, as in the HTML (12 pt card padding there,
+    /// 18 here).
+    private static let cellOutset: CGFloat = 6
+
+    /// Between the headline and the bar.
+    private static let upNowSpacing: CGFloat = 7
+    /// Between the dot, the title, the bar and its times.
+    private static let upNowItemSpacing: CGFloat = 8
+    /// The headline's two halves, stacked at large sizes.
+    private static let upNowStackedSpacing: CGFloat = 4
+    private static let upNowDotSize: CGFloat = 8
+
+    private static let barHeight: CGFloat = 2
+    private static let barFillOpacity = 0.6
+    /// The bar never squeezes below this between its two times.
+    private static let barMinWidth: CGFloat = 40
+    /// The thumb: a mini phase glyph in a `surface` ring, softly glowing.
+    private static let thumbSize: CGFloat = 14
+    private static let thumbOutline: CGFloat = 1.5
+    private static let thumbGlowOpacity = 0.6
+    /// CSS `0 0 8px`: SwiftUI's radius is about half a CSS blur.
+    private static let thumbGlowRadius: CGFloat = 4
+
     // MARK: - Card
 
     var body: some View {
@@ -45,6 +74,11 @@ struct MoonCard: View {
             phaseRow
             hairline
             riseSetRow
+            // COMPASS-1.1.md §3: today with the compass shown; hidden on
+            // other dates.
+            if let upNow = viewModel.compass.upNow {
+                upNowRow(upNow)
+            }
         }
         .padding(.vertical, Theme.Metrics.cardPaddingVertical)
         .padding(.horizontal, Theme.Metrics.cardPaddingHorizontal)
@@ -215,6 +249,125 @@ struct MoonCard: View {
             timeText
         }
     }
+
+    // MARK: - Up now row (COMPASS-1.1.md §3)
+
+    /// One element for VoiceOver, with the formatter's sentence. The bar's
+    /// line is kept while the moon is down, hidden, so the card keeps its
+    /// height as the moon rises or sets.
+    private func upNowRow(_ upNow: UpNow) -> some View {
+        VStack(alignment: .leading, spacing: Self.upNowSpacing) {
+            upNowHeadline(upNow)
+            if case let .up(_, pass?) = upNow.state {
+                upNowBar(pass)
+            } else {
+                upNowBar(Self.placeholderPass)
+                    .hidden()
+            }
+        }
+        .padding(.vertical, Self.cellPaddingVertical)
+        .padding(.horizontal, Self.cellPaddingHorizontal)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Theme.Colors.surfaceInset, in: RoundedRectangle(cornerRadius: Self.cellCornerRadius))
+        .padding(.horizontal, -Self.cellOutset)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(upNow.accessibilityLabel)
+    }
+
+    /// Holds the bar's line open while the moon is down; never shown.
+    private static let placeholderPass = UpNow.Pass(progress: 0, riseTime: "12:00 PM", setTime: "12:00 PM")
+
+    /// "● Up now ……… 266° W" on one line, or stacked when the two don't fit
+    /// (AX sizes).
+    private func upNowHeadline(_ upNow: UpNow) -> some View {
+        let title = HStack(spacing: Self.upNowItemSpacing) {
+            Circle()
+                .fill(upNow.isUp ? Theme.Colors.moonLit : Theme.Colors.faint)
+                .frame(width: Self.upNowDotSize, height: Self.upNowDotSize)
+            Text(upNow.title)
+                .font(Theme.Fonts.label)
+                .foregroundStyle(Theme.Colors.textBody)
+        }
+        let detail = Self.detail(of: upNow).map { text in
+            Text(text)
+                .font(Theme.Fonts.label)
+                .foregroundStyle(upNow.isUp ? Theme.Colors.accent : Theme.Colors.textSecondary)
+        }
+        return ViewThatFits(in: .horizontal) {
+            HStack(spacing: Self.upNowItemSpacing) {
+                title
+                Spacer(minLength: Self.upNowItemSpacing)
+                detail
+            }
+            VStack(alignment: .leading, spacing: Self.upNowStackedSpacing) {
+                title
+                detail
+            }
+        }
+    }
+
+    /// The right side: the bearing, or when it rises.
+    private static func detail(of upNow: UpNow) -> String? {
+        switch upNow.state {
+        case let .up(bearing, _): bearing
+        case let .down(nextRise): nextRise
+        }
+    }
+
+    /// "10:06 PM ━━━━━●───── 1:28 PM", or at large sizes, where the times
+    /// leave the bar no room, the bar over the two times.
+    private func upNowBar(_ pass: UpNow.Pass) -> some View {
+        let rise = Text(pass.riseTime).fixedSize()
+        let set = Text(pass.setTime).fixedSize()
+        return ViewThatFits(in: .horizontal) {
+            HStack(spacing: Self.upNowItemSpacing) {
+                rise
+                progressBar(pass.progress)
+                    .frame(minWidth: Self.barMinWidth)
+                set
+            }
+            VStack(spacing: Self.upNowStackedSpacing) {
+                progressBar(pass.progress)
+                HStack(spacing: Self.upNowItemSpacing) {
+                    rise
+                    Spacer(minLength: 0)
+                    set
+                }
+            }
+        }
+        .font(Theme.Fonts.caption)
+        .foregroundStyle(Theme.Colors.textSecondary)
+    }
+
+    /// The track, the travelled part in amber, and the moon as the thumb.
+    /// The thumb's centre runs inset by its radius, so at either end it
+    /// stays clear of the times.
+    private func progressBar(_ progress: Double) -> some View {
+        let thumbDiameter = Self.thumbSize + 2 * Self.thumbOutline
+        return GeometryReader { proxy in
+            let radius = thumbDiameter / 2
+            let midY = proxy.size.height / 2
+            let thumbX = radius + max(proxy.size.width - thumbDiameter, 0) * progress
+            ZStack {
+                Capsule()
+                    .fill(Theme.Colors.stroke)
+                    .frame(width: proxy.size.width, height: Self.barHeight)
+                    .position(x: proxy.size.width / 2, y: midY)
+                Capsule()
+                    .fill(Theme.Colors.accent.opacity(Self.barFillOpacity))
+                    .frame(width: thumbX, height: Self.barHeight)
+                    .position(x: thumbX / 2, y: midY)
+                PhaseGlyph(geometry: table.glyph, glowCSSBlur: 0)
+                    .frame(width: Self.thumbSize, height: Self.thumbSize)
+                    .padding(Self.thumbOutline)
+                    .background(Theme.Colors.surface, in: Circle())
+                    .shadow(color: Theme.Colors.accent.opacity(Self.thumbGlowOpacity), radius: Self.thumbGlowRadius)
+                    .position(x: thumbX, y: midY)
+            }
+        }
+        .frame(height: thumbDiameter)
+        .accessibilityHidden(true)
+    }
 }
 
 // MARK: - Time
@@ -297,6 +450,82 @@ private struct DayStepButtonStyle: ButtonStyle {
 
 #Preview("Sat, Oct 3: no moonrise") {
     previewCard(place: .marVista, dayOffset: 3)
+}
+
+#Preview("Up now: moon up") {
+    UpNowPreview(isMoonUp: true)
+}
+
+#Preview("Up now: moon down") {
+    UpNowPreview(isMoonUp: false)
+}
+
+/// The design's sky (COMPASS-1.1.md source, state 1 and 4) from fakes: Irvine
+/// at 7:53 AM on Fri, Oct 2, detected, so the compass and its Up now row
+/// show. Moon up at 266° on the pass from 10:06 PM to 1:28 PM; or down,
+/// rising in 34 minutes.
+private struct UpNowPreview: View {
+
+    let viewModel: LocationViewModel
+
+    init(isMoonUp: Bool) {
+        viewModel = Self.makeViewModel(isMoonUp: isMoonUp)
+    }
+
+    /// In a scroll view, as on the main screen, so AX sizes don't squeeze it.
+    var body: some View {
+        ScrollView {
+            if let table = viewModel.moonTable {
+                MoonCard(viewModel: viewModel, table: table)
+                    .padding(20)
+            }
+        }
+        .background(Theme.Colors.bg)
+        .font(Theme.Fonts.body)
+    }
+
+    private static func makeViewModel(isMoonUp: Bool) -> LocationViewModel {
+        let zone = Place.irvine.timeZone
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = zone
+        func time(_ day: Int, _ hour: Int, _ minute: Int) -> Date {
+            calendar.date(from: DateComponents(year: 2026, month: 10, day: day, hour: hour, minute: minute)) ?? .now
+        }
+        let now = time(2, 7, 53)
+        let here = Place(
+            name: "Irvine",
+            region: "CA",
+            latitude: Place.irvine.latitude,
+            longitude: Place.irvine.longitude,
+            timeZone: zone,
+            isCurrentLocation: true
+        )
+        let moon = FakeMoonService(
+            rise: MoonEvent(date: time(2, 23, 10), azimuth: 57),
+            set: MoonEvent(date: time(2, 13, 28), azimuth: 304),
+            phaseAngle: 270,
+            illumination: 0.53,
+            position: MoonPosition(azimuth: 266, isUp: isMoonUp),
+            pass: MoonPass(
+                rise: MoonEvent(date: time(1, 22, 6), azimuth: 56),
+                set: MoonEvent(date: time(2, 13, 28), azimuth: 304),
+                path: [56, 304]
+            )
+        )
+        moon.nextRise = MoonEvent(date: now.addingTimeInterval(34 * 60), azimuth: 57)
+        let viewModel = LocationViewModel(
+            locationService: FakeLocationService(authorizationState: .authorized, placeResult: .success(here)),
+            placeSearch: FakePlaceSearchService(),
+            placeStore: InMemoryPlaceStore(),
+            moonService: moon,
+            headingService: FakeHeadingService(),
+            deviceTimeZone: zone,
+            now: { now }
+        )
+        // A current-location place is "Here": the compass shows.
+        viewModel.select(here)
+        return viewModel
+    }
 }
 
 /// A card for `place`, moved `dayOffset` days from today, on the real engine.

@@ -93,6 +93,8 @@ Top to bottom. Replaces the prompt, the search-field button, `DateControl`'s row
 `ContentView` table.
 
 ### 3.1 Madlib sentence
+> **Revised 2026-10-02 (COMPASS-1.1.md §2):** lines "Where can I find" / "the moon 📅 [date]" / "in 📍 [city]?"; date token "today" replaces "tonight". Fit rule unchanged.
+
 > Where will the moon be 📅 **tonight** in 📍 **Los Angeles, CA**?
 
 - Plain words in `textPrimary`; two **tokens** in `accent`, underlined (1.5 pt, `accent` 55%), each led
@@ -221,6 +223,8 @@ on-screen motion as a turning dial). Letter and arrow centres sit 34 / 22 pt in 
 Live Moon per §11 Q4 (18 pt, no arrow, "Moon" only in the pill, from `CompassViewModel.name(of:)`); *revised
 after the device check:* the card's `PhaseGlyph` at 20 pt (geometry from the selected day's `MoonDay`, as on
 the card), via `CompassViewModel.moonGlyph`. The 260 pt AX dial is left for 5.5.
+
+> **Compass 1.1 (2026-10-02):** needle, ticks, numbers, serif cardinals, labels outside the arc, pulse, accuracy notes under the readout and the Up now row: see COMPASS-1.1.md.
 
 ### 3.3a Moon arc (Tessa, 2026-10-01, chosen from the arc mock-ups: option B, 24 pt glyph)
 Replaces the Moon marker on the rim. Reference mock: `design/1.1/moon-arc-mockups.html` (option B).

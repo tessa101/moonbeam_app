@@ -38,6 +38,10 @@ nonisolated final class FakeMoonService: MoonService {
     /// default: no arc.
     var pass: MoonPass?
 
+    /// Returned by `nextMoonrise(for:after:)` for any moment. `nil` by
+    /// default: no rise in reach.
+    var nextRise: MoonEvent?
+
     // MARK: - Record
 
     /// Every `date` passed to `moonDay(for:on:)`, oldest first.
@@ -48,6 +52,9 @@ nonisolated final class FakeMoonService: MoonService {
 
     /// Every `date` passed to `moonPass(for:containing:)`, oldest first.
     private(set) var requestedPassDates: [Date] = []
+
+    /// Every `date` passed to `nextMoonrise(for:after:)`, oldest first.
+    private(set) var requestedNextRiseDates: [Date] = []
 
     // MARK: - Init
 
@@ -89,5 +96,10 @@ nonisolated final class FakeMoonService: MoonService {
     func moonPass(for place: Place, containing date: Date) -> MoonPass? {
         requestedPassDates.append(date)
         return pass
+    }
+
+    func nextMoonrise(for place: Place, after date: Date) -> MoonEvent? {
+        requestedNextRiseDates.append(date)
+        return nextRise
     }
 }

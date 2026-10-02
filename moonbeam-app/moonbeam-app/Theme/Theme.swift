@@ -22,6 +22,10 @@ nonisolated enum Theme {
         static let surface = Color(hex: 0x1E171C)
         /// ‹ › buttons and secondary buttons.
         static let surfaceRaised = Color(hex: 0x2A2127)
+        /// The Up now row's fill, a step up from `surface` (COMPASS-1.1.md §3).
+        static let surfaceInset = Color(hex: 0x251C22)
+        /// Decorative marks only, under 3:1: the moon-down dot (§3).
+        static let faint = Color(hex: 0x5E4D57)
         /// Card border, hairlines, onboarding info box border.
         static let stroke = Color(hex: 0x3D3139)
         /// ‹ › and secondary-button border.
@@ -155,6 +159,8 @@ nonisolated enum Theme {
         static let note = Font.custom(FontName.nunitoSansRegular, size: 13, relativeTo: .footnote)
         /// The "!" in a note's amber circle (Nunito 700).
         static let noteMark = Font.custom(FontName.nunitoSansBold, size: 13, relativeTo: .footnote)
+        /// The Up now bar's rise and set times (COMPASS-1.1.md §3).
+        static let caption = Font.custom(FontName.nunitoSansRegular, size: 11, relativeTo: .caption2)
 
         /// Dial letters N/E/S/W scale with `.subheadline` from this size but
         /// stop at `dialLetterMaxSize`, so the dial's geometry holds at AX

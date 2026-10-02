@@ -27,4 +27,9 @@ nonisolated protocol MoonService {
     /// when the moon is down at `date` (same definition as `moonPosition`),
     /// or the rise or set is out of the search's reach.
     func moonPass(for place: Place, containing date: Date) -> MoonPass?
+
+    /// The first moonrise after `date`, by the moon table's rise definition,
+    /// for the card's "Rises in 34 min" (COMPASS-1.1.md §3). `nil` when
+    /// none falls within the search's reach.
+    func nextMoonrise(for place: Place, after date: Date) -> MoonEvent?
 }

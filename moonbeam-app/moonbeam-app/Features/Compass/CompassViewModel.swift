@@ -146,6 +146,12 @@ final class CompassViewModel {
     /// with no compass, no moonrise, or no pass found.
     private(set) var arc: CompassArc?
 
+    /// The moon card's Up now row (COMPASS-1.1.md §3): today with the
+    /// compass shown, from the same position, pass and tick as the Moon
+    /// target, so the card and the dial agree. `nil` on other dates and
+    /// wherever there's no compass.
+    private(set) var upNow: UpNow?
+
     /// The latest reading, or `nil` while the sensors are off.
     private(set) var reading: HeadingReading?
 
@@ -193,6 +199,7 @@ final class CompassViewModel {
     private let moonRefreshInterval: Duration
     private let sleep: @Sendable (Duration) async throws -> Void
     private let formatter = CompassFormatter()
+    private let upNowFormatter = UpNowFormatter()
 
     // MARK: - Bookkeeping
 
@@ -213,6 +220,10 @@ final class CompassViewModel {
     /// The pass behind `arc`. Kept so the 30 s tick only moves the moon
     /// along it, and only looks the pass up again when the moon rises or sets.
     @ObservationIgnored private var pass: MoonPass?
+
+    /// The next moonrise while the moon is down, for Up now. Kept so the
+    /// tick only looks it up again once it has passed.
+    @ObservationIgnored private var nextRise: MoonEvent?
 
     // MARK: - Init
 
@@ -471,7 +482,9 @@ final class CompassViewModel {
             rebuilt.append(moon)
         }
         pass = passToDraw(isMoonUp: moon != nil, at: moment)
+        nextRise = nil
         updateArc(moon: moon, at: moment)
+        updateUpNow(moon: moon, at: moment)
         setTargets(rebuilt)
     }
 
@@ -490,6 +503,7 @@ final class CompassViewModel {
             pass = passToDraw(isMoonUp: moon != nil, at: moment)
         }
         updateArc(moon: moon, at: moment)
+        updateUpNow(moon: moon, at: moment)
         setTargets(refreshed)
     }
 
@@ -528,6 +542,30 @@ final class CompassViewModel {
             )
         }
         if newArc != arc { arc = newArc }
+    }
+
+    // MARK: - Up now (COMPASS-1.1.md §3)
+
+    /// Where the live Moon target can exist: today, with the compass shown.
+    /// Moon up: its bearing and the pass behind the arc. Down: the next
+    /// rise, looked up again only once it's a minute past (the moon may
+    /// read down for a moment at its rise, like the pass lookup).
+    private func updateUpNow(moon: CompassTarget?, at moment: Date) {
+        var newUpNow: UpNow?
+        if visibility.showsCompass, context.isToday, let place = context.place {
+            if let moon {
+                nextRise = nil
+                newUpNow = upNowFormatter.up(azimuth: moon.azimuth, pass: pass, at: moment, in: place.timeZone)
+            } else {
+                if nextRise.map({ moment > $0.date.addingTimeInterval(Self.passLookupDelayAfterRise) }) ?? true {
+                    nextRise = moonService.nextMoonrise(for: place, after: moment)
+                }
+                newUpNow = upNowFormatter.down(nextRise: nextRise?.date, at: moment, in: place.timeZone)
+            }
+        } else {
+            nextRise = nil
+        }
+        if newUpNow != upNow { upNow = newUpNow }
     }
 
     private func setTargets(_ newTargets: [CompassTarget]) {

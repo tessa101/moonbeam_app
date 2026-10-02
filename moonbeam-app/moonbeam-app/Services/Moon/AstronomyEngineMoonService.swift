@@ -177,6 +177,23 @@ nonisolated struct AstronomyEngineMoonService: MoonService {
         )
     }
 
+    /// The same search as the table's moonrise, run forward from `date`
+    /// instead of local midnight, over the lookback's span, so it lands on
+    /// the very event the Moonrise column shows when that's still ahead.
+    func nextMoonrise(for place: Place, after date: Date) -> MoonEvent? {
+        let observer = Astronomy_MakeObserver(
+            place.latitude,
+            place.longitude,
+            Self.observerHeightMeters
+        )
+        return Self.event(
+            direction: DIRECTION_RISE,
+            observer: observer,
+            searchStart: Self.astroTime(from: date),
+            limitDays: Self.moonUpLookbackDays
+        )
+    }
+
     // MARK: - Illumination at an arbitrary moment
 
     /// The lit fraction of the disc, `0.0...1.0`, at a specific instant.
@@ -197,10 +214,13 @@ nonisolated struct AstronomyEngineMoonService: MoonService {
     ///
     /// Returns `nil` when the event doesn't occur in the window, which is
     /// normal rather than an error (ASTRONOMY.md §4).
+    ///
+    /// - Parameter limitDays: the window; the table's one day by default.
     private static func event(
         direction: astro_direction_t,
         observer: astro_observer_t,
-        searchStart: astro_time_t
+        searchStart: astro_time_t,
+        limitDays: Double = searchWindowDays
     ) -> MoonEvent? {
         // Astronomy_SearchRiseSet is a C macro in v2.1.19, so it isn't
         // visible to Swift; call the underlying function directly.
@@ -209,7 +229,7 @@ nonisolated struct AstronomyEngineMoonService: MoonService {
             observer,
             direction,
             searchStart,
-            searchWindowDays,
+            limitDays,
             metersAboveGround
         )
         guard search.status == ASTRO_SUCCESS else { return nil }

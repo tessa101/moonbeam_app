@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Young+Serif&family=Nunito+Sans:opsz,wght@6..12,400;6..12,600;6..12,700&display=swap" rel="stylesheet">
+<style>body{margin:0;background:#E7E5E1;font-family:'Nunito Sans',system-ui,sans-serif;color:#1C1B19}a{color:#5B4A2A}a:hover{color:#1C1B19}</style>
+</helmet>
+<section data-screen-label="Compass 1.1" style="padding:64px;display:flex;flex-direction:column;gap:32px">
+<header style="display:flex;flex-direction:column;gap:8px;max-width:980px"><div style="font:500 13px/1 'IBM Plex Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:#6B665E">Moon Signal · compass polish</div><h1 style="margin:0;font:400 40px/1.1 'Young Serif',serif">Compass 1.1</h1>
+<p style="margin:0;font:400 16px/1.5 'Nunito Sans',sans-serif;color:#4A463F;text-wrap:pretty">The dial now has tick lines, degree numbers every 30° and a fixed crosshair. Every target on the arc has a label. The heading needle runs from the readout down into the dial, and a lock lights up the matching row in the table.</p></header>
+<div id="4a" style="display:flex;flex-direction:column;gap:24px;padding:40px;background:#DCD9D3;border-radius:28px;align-self:flex-start">
+<div style="display:flex;align-items:baseline;gap:12px;flex-wrap:wrap"><span style="font:600 13px/1 'IBM Plex Mono',monospace;background:#1C1B19;color:#EEEAE3;padding:6px 9px;border-radius:6px">4a</span><span style="font:400 26px/1 'Young Serif',serif">Four states</span></div>
+<div style="display:flex;gap:40px;align-items:flex-start;flex-wrap:wrap">
+<sc-for list="{{ states }}" as="s" hint-placeholder-count="4">
+<div style="display:flex;flex-direction:column;gap:14px;align-items:center">
+<div style="position:relative;width:393px;height:852px;border-radius:56px;overflow:hidden;background:#1B1519;box-shadow:0 0 0 11px #050505,0 30px 60px rgba(0,0,0,.25);color:#F5EADB">
+<div style="position:absolute;top:-120px;left:50%;margin-left:-260px;width:520px;height:420px;border-radius:50%;background:radial-gradient(closest-side,rgba(242,194,123,.08),rgba(242,194,123,0))"></div>
+<div style="position:absolute;top:11px;left:50%;margin-left:-62px;width:124px;height:36px;border-radius:20px;background:#000;z-index:6"></div>
+<div style="position:absolute;top:18px;left:44px;font:600 17px/1 -apple-system,system-ui,sans-serif;z-index:6">{{ s.time }}</div>
+<div style="position:absolute;top:21px;right:36px;width:25px;height:12px;border:1.5px solid #F5EADB;border-radius:4px;z-index:6"><div style="margin:1.5px;width:15px;height:6px;background:#F5EADB;border-radius:1.5px"></div></div>
+<div style="position:absolute;top:62px;left:20px;right:20px;display:flex;flex-direction:column">
+<h2 style="margin:0 4px;height:114px;display:flex;flex-direction:column;font:400 26px/1.45 'Young Serif',serif"><span style="white-space:nowrap">Where can I find</span><span style="white-space:nowrap">the moon <span style="color:#F2C27B;text-decoration:underline;text-decoration-thickness:1.5px;text-underline-offset:7px;text-decoration-color:rgba(242,194,123,.55);white-space:nowrap"><svg width="17" height="17" viewBox="0 0 17 17" style="vertical-align:-0.08em"><rect x="1" y="2.5" width="15" height="13.5" rx="3" fill="none" stroke="#F2C27B" stroke-width="1.7"></rect><path d="M1 7h15M5 0.8v3.4M12 0.8v3.4" stroke="#F2C27B" stroke-width="1.7"></path></svg> {{ s.when }}</span></span><span style="display:flex;min-width:0;white-space:nowrap"><span>in&nbsp;</span><span style="color:#F2C27B;text-decoration:underline;text-decoration-thickness:1.5px;text-underline-offset:7px;text-decoration-color:rgba(242,194,123,.55);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0"><svg width="15" height="18" viewBox="0 0 16 19" style="vertical-align:-0.12em"><path d="M8 18s6.2-5.6 6.2-10.4A6.2 6.2 0 0 0 1.8 7.6C1.8 12.4 8 18 8 18z" fill="none" stroke="#F2C27B" stroke-width="1.7"></path><circle cx="8" cy="7.6" r="2.3" fill="#F2C27B"></circle></svg> {{ s.city }}</span><span>?</span></span></h2>
+<div style="margin-top:16px;border:1px solid #3D3139;border-radius:24px;background:#1E171C;padding:12px 12px 12px;display:flex;flex-direction:column;gap:10px">
+<div style="display:flex;align-items:center;gap:8px;padding:0 6px"><div style="flex:1;font:600 13px/1.2 'Nunito Sans',sans-serif;color:#C9B7A6">{{ s.date }}</div><span style="width:32px;height:32px;border-radius:16px;background:#2A2127;border:1px solid #4A3B45;display:flex;align-items:center;justify-content:center;font:400 18px/1 'Nunito Sans',sans-serif">‹</span><span style="width:32px;height:32px;border-radius:16px;background:#2A2127;border:1px solid #4A3B45;display:flex;align-items:center;justify-content:center;font:400 18px/1 'Nunito Sans',sans-serif">›</span></div>
+<div style="display:flex;align-items:center;gap:14px;padding:0 6px"><div style="position:relative;width:40px;height:40px;border-radius:50%;overflow:hidden;background:#F2E6CF;box-shadow:0 0 20px rgba(242,194,123,.3);flex:none"><div style="position:absolute;top:0;left:{{ s.phaseOff }}px;width:40px;height:40px;border-radius:50%;background:#1E171C"></div></div><div style="display:flex;flex-direction:column;gap:3px"><div style="font:600 16px/1.2 'Nunito Sans',sans-serif">{{ s.phase }}</div><div style="font:400 13px/1.2 'Nunito Sans',sans-serif;color:#C9B7A6">{{ s.lit }}</div></div></div>
+<div style="height:1px;background:#3D3139;margin:0 6px"></div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+<div style="display:flex;flex-direction:column;gap:5px;padding:8px 10px;border-radius:14px;border:1px solid {{ s.riseBd }};background:{{ s.riseBg }}"><div style="font:600 13px/1.2 'Nunito Sans',sans-serif;color:{{ s.riseLc }}">↑ Moonrise</div><div style="font:400 22px/1.1 'Young Serif',serif">{{ s.rise.t }}</div><div style="font:400 13px/1.1 'Nunito Sans',sans-serif;color:#F2C27B">{{ s.rise.az }}° {{ s.rise.dir }}</div></div>
+<div style="display:flex;flex-direction:column;gap:5px;padding:8px 10px;border-radius:14px;border:1px solid {{ s.setBd }};background:{{ s.setBg }}"><div style="font:600 13px/1.2 'Nunito Sans',sans-serif;color:{{ s.setLc }}">↓ Moonset</div><div style="font:400 22px/1.1 'Young Serif',serif">{{ s.set.t }}</div><div style="font:400 13px/1.1 'Nunito Sans',sans-serif;color:#F2C27B">{{ s.set.az }}° {{ s.set.dir }}</div></div>
+</div>
+<div style="display:flex;flex-direction:column;gap:7px;padding:8px 10px;border-radius:14px;border:1px solid {{ s.nowBd }};background:{{ s.nowBg }}">
+<div style="display:flex;align-items:center;gap:8px"><span style="width:8px;height:8px;border-radius:50%;background:{{ s.nowDot }};flex:none"></span><span style="flex:1;font:600 13px/1.2 'Nunito Sans',sans-serif;color:{{ s.nowLc }}">{{ s.nowLabel }}</span><span style="font:600 13px/1.2 'Nunito Sans',sans-serif;color:{{ s.nowRc }}">{{ s.nowRight }}</span></div>
+<sc-if value="{{ s.up }}" hint-placeholder-val="{{ true }}"><div style="display:flex;align-items:center;gap:8px;font:400 11px/1 'Nunito Sans',sans-serif;color:#C9B7A6"><span>{{ s.roseAt }}</span><div style="position:relative;flex:1;height:2px;border-radius:1px;background:#3D3139"><div style="position:absolute;left:0;top:0;bottom:0;width:{{ s.fracPct }};background:rgba(242,194,123,.6);border-radius:1px"></div><div style="position:absolute;top:-4px;left:{{ s.fracPct }};margin-left:-5px;width:10px;height:10px;border-radius:50%;background:#F2E6CF;box-shadow:0 0 8px rgba(242,194,123,.6)"></div></div><span>{{ s.set.t }}</span></div></sc-if>
+</div>
+</div>
+<div style="margin-top:16px;display:flex;flex-direction:column;align-items:center">
+<sc-if value="{{ s.locked }}" hint-placeholder-val="{{ false }}"><div style="height:46px;padding:0 22px;border-radius:23px;background:#F2C27B;color:#1B1519;display:flex;align-items:center;font:400 22px/1 'Young Serif',serif;box-shadow:0 0 28px rgba(242,194,123,.35)">{{ s.readout }}</div></sc-if>
+<sc-if value="{{ s.unlocked }}" hint-placeholder-val="{{ true }}"><div style="height:46px;display:flex;align-items:center;font:400 28px/1 'Young Serif',serif">{{ s.readout }}</div></sc-if>
+<div style="position:relative;width:353px;height:322px"><svg width="353" height="322" viewBox="0 0 353 322" style="display:block;overflow:visible">
+<defs><radialGradient id="dialg" cx="50%" cy="40%" r="60%"><stop offset="0" stop-color="#30252C"></stop><stop offset="1" stop-color="#211A1F"></stop></radialGradient></defs>
+<path d="{{ s.arcPast }}" fill="none" stroke="rgba(242,194,123,.38)" stroke-width="1.5"></path>
+<path d="{{ s.arcFuture }}" fill="none" stroke="#F2C27B" stroke-opacity="{{ s.futureOp }}" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="0 6"></path>
+<circle cx="176.5" cy="164" r="104" fill="url(#dialg)"></circle>
+<sc-for list="{{ s.ticks }}" as="k" hint-placeholder-count="0"><line x1="{{ k.x1 }}" y1="{{ k.y1 }}" x2="{{ k.x2 }}" y2="{{ k.y2 }}" stroke="{{ k.c }}" stroke-width="{{ k.w }}" stroke-linecap="round"></line></sc-for>
+<line x1="146.5" y1="164" x2="206.5" y2="164" stroke="#5E4D57" stroke-width="1"></line>
+<line x1="176.5" y1="134" x2="176.5" y2="194" stroke="#5E4D57" stroke-width="1"></line>
+<circle cx="176.5" cy="164" r="2" fill="#7E6C72"></circle>
+<line x1="176.5" y1="0" x2="176.5" y2="76" stroke="{{ s.needle }}" stroke-width="3" stroke-linecap="round"></line>
+<sc-if value="{{ s.pulse }}" hint-placeholder-val="{{ false }}"><circle cx="{{ s.moonX }}" cy="{{ s.moonY }}" r="9" fill="none" stroke="#F2C27B" stroke-width="2"><animate attributeName="r" values="10;24" dur="1.8s" repeatCount="indefinite"></animate><animate attributeName="stroke-opacity" values=".8;0" dur="1.8s" repeatCount="indefinite"></animate></circle></sc-if>
+<sc-for list="{{ s.marks }}" as="m" hint-placeholder-count="0">
+<circle cx="{{ m.x }}" cy="{{ m.y }}" r="{{ m.halo }}" fill="rgba(242,194,123,.22)"></circle>
+<circle cx="{{ m.x }}" cy="{{ m.y }}" r="{{ m.r }}" fill="{{ m.fill }}" stroke="#1B1519" stroke-width="2"></circle>
+<path d="{{ m.lit }}" fill="#F2E6CF"></path>
+</sc-for>
+</svg>
+<sc-for list="{{ s.nums }}" as="n" hint-placeholder-count="0"><div style="position:absolute;left:{{ n.x }}px;top:{{ n.y }}px;transform:translate(-50%,-50%);font:500 10px/1 'IBM Plex Mono',monospace;color:#A8939C">{{ n.t }}</div></sc-for>
+<sc-for list="{{ s.cards }}" as="c" hint-placeholder-count="0"><div style="position:absolute;left:{{ c.x }}px;top:{{ c.y }}px;transform:translate(-50%,-50%);font:400 17px/1 'Young Serif',serif;color:{{ c.f }}">{{ c.t }}</div></sc-for>
+<sc-for list="{{ s.marks }}" as="m" hint-placeholder-count="0"><div style="position:absolute;left:{{ m.lx }}px;top:{{ m.ly }}px;transform:translate(-50%,-50%);white-space:nowrap;font:700 12px/1 'Nunito Sans',sans-serif;color:#E4D6C6;opacity:{{ m.lop }};text-shadow:0 0 3px #1B1519,0 0 3px #1B1519,0 0 3px #1B1519">{{ m.label }}</div></sc-for>
+</div>
+</div>
+</div>
+<div style="position:absolute;bottom:9px;left:50%;margin-left:-67px;width:134px;height:5px;border-radius:3px;background:#F5EADB;z-index:7"></div>
+</div>
+<div style="font:500 13px/1.3 'IBM Plex Mono',monospace;color:#4A463F;max-width:393px;text-align:center">{{ s.caption }}</div>
+</div>
+</sc-for>
+<div style="width:300px;display:flex;flex-direction:column;gap:10px;padding:26px;background:#1B1519;border-radius:26px;color:#E4D6C6;font:400 14px/1.45 'Nunito Sans',sans-serif;align-self:flex-start">
+<div style="font:600 12px/1 'Nunito Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#C9B7A6">Dial</div>
+<div style="text-wrap:pretty">Ticks every 2°, longer every 10°, and heavy every 30°. Numbers sit at each 30° step between the cardinals, so you always have a reference within 15°.</div>
+<div style="text-wrap:pretty">The needle starts right under the readout and runs into the tick ring, so the readout and the dial read as one thing. On lock, the needle and readout both turn amber.</div>
+<div style="text-wrap:pretty">The crosshair stays fixed and doesn't rotate.</div>
+<div style="font:600 12px/1 'Nunito Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#C9B7A6;margin-top:10px">Now vs tonight</div>
+<div style="text-wrap:pretty">If the moon is up, the prompt says "now" and the moon glyph pulses on the arc. The pulse stops the first time the user locks on any target, and it doesn't come back for that session.</div>
+<div style="text-wrap:pretty">If the moon is down, the prompt says "tonight" and there's no glyph on the dial.</div>
+<div style="text-wrap:pretty">The prompt is always exactly three lines: "Where can I find" / "the moon [when]" / "in [city]?". A long city name gets an ellipsis on line 3, so the layout below never moves.</div>
+<div style="font:600 12px/1 'Nunito Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#C9B7A6;margin-top:10px">Arc</div>
+<div style="text-wrap:pretty">The arc shows the moon's path from rise to set, outside the ring. The part it has already travelled is a solid line, and the part still to come is dotted. When the moon is down, the whole of tonight's path is dotted and dimmer.</div>
+<div style="text-wrap:pretty">The labels are "↑ Rise", "↓ Set" and "Now". The locked target drops its label, because the readout pill says the same thing.</div>
+<div style="font:600 12px/1 'Nunito Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#C9B7A6;margin-top:10px">Table</div>
+<div style="text-wrap:pretty">On lock, the matching cell gets an amber outline and its label turns amber.</div>
+<div style="text-wrap:pretty"><span style="color:#F2C27B">Your question:</span> a third row, "Up now", shows the moon's live bearing and where it is between last rise and next set. Locking on the moon highlights this row. When the moon is down, the row says when it rises next, so the table stays the same height.</div>
+</div>
+</div>
+</div>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;showNumbers&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;},&quot;labels&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Hide on lock&quot;,&quot;Always&quot;],&quot;default&quot;:&quot;Hide on lock&quot;,&quot;tsType&quot;:&quot;string&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    const showNums = this.props.showNumbers ?? true;
+    const always = (this.props.labels ?? 'Hide on lock') === 'Always';
+    const cx = 176.5, cy = 164, RA = 118, RL = 142;
+    const f = v => Math.round(v * 10) / 10;
+    const pt = (b, r, h) => { const t = (b - h) * Math.PI / 180; return [f(cx + r * Math.sin(t)), f(cy - r * Math.cos(t))]; };
+    const arc = (a1, a2, h) => { const span = ((a2 - a1) % 360 + 360) % 360; const p = pt(a1, RA, h), q = pt(a2, RA, h); return `M${p[0]} ${p[1]} A${RA} ${RA} 0 ${span > 180 ? 1 : 0} 1 ${q[0]} ${q[1]}`; };
+    const dir16 = ['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'];
+    const dn = d => dir16[Math.round(((d % 360) + 360) % 360 / 22.5) % 16];
+    const off = 'transparent', amb = '#F2C27B';
+    const base = [
+      { time: '7:53', date: 'Today · Fri, Oct 2', phase: 'Last Quarter', lit: '53% lit at midnight', phaseOff: 20, rise: { t: '11:10 PM', az: 57 }, set: { t: '1:28 PM', az: 304 }, now: 266, up: true, frac: .64, roseAt: '10:06 PM', heading: 10, lock: null, caption: '1 · Moon up, not locked · long city' },
+      { time: '7:54', date: 'Today · Fri, Oct 2', phase: 'Last Quarter', lit: '53% lit at midnight', phaseOff: 20, rise: { t: '11:10 PM', az: 57 }, set: { t: '1:28 PM', az: 304 }, now: 266, up: true, frac: .64, roseAt: '10:06 PM', heading: 303, lock: 'set', pulseDone: true, caption: '2 · Locked on Moonset' },
+      { time: '7:54', date: 'Today · Fri, Oct 2', phase: 'Last Quarter', lit: '53% lit at midnight', phaseOff: 20, rise: { t: '11:10 PM', az: 57 }, set: { t: '1:28 PM', az: 304 }, now: 266, up: true, frac: .64, roseAt: '10:06 PM', heading: 268, lock: 'now', caption: '3 · Locked on the moon' },
+      { time: '9:32', date: 'Today · Thu, Oct 1', phase: 'Waning Gibbous', lit: '64% lit at midnight', phaseOff: 28, rise: { t: '10:06 PM', az: 56 }, set: { t: '12:24 PM', az: 304 }, now: null, up: false, heading: 152, lock: null, caption: '4 · Moon not up' }
+    ];
+    base[0].city = 'Rancho Santa Margarita, CA';
+    const states = base.map(s => {
+      const h = s.heading, ticks = [], nums = [], cards = [], marks = [];
+      for (let d = 0; d < 360; d += 2) {
+        const maj = d % 30 === 0, mid = d % 10 === 0;
+        const a = pt(d, 103, h), b = pt(d, maj ? 87 : mid ? 91 : 96, h);
+        ticks.push({ x1: a[0], y1: a[1], x2: b[0], y2: b[1], w: maj ? 2.2 : mid ? 1.4 : 1, c: d === 0 ? amb : maj ? '#E4D6C6' : mid ? '#A8939C' : '#5E4D57' });
+        if (maj && d % 90 !== 0 && showNums) { const p = pt(d, 76, h); nums.push({ x: p[0], y: p[1], t: String(d) }); }
+      }
+      [['N', 0], ['E', 90], ['S', 180], ['W', 270]].forEach(([t, d]) => { const p = pt(d, 62, h); cards.push({ x: p[0], y: p[1], t, f: t === 'N' ? amb : '#F5EADB' }); });
+      const tg = [{ k: 'rise', az: s.rise.az, label: '↑ Rise' }, { k: 'set', az: s.set.az, label: '↓ Set' }];
+      if (s.up) tg.push({ k: 'now', az: s.now, label: 'Now', moon: true });
+      tg.forEach(t => {
+        const L = s.lock === t.k, p = pt(t.az, RA, h), l = pt(t.az, RL, h), r = t.moon ? (L ? 12 : 9) : (L ? 7 : 5);
+        marks.push({ x: p[0], y: p[1], r, halo: L ? 18 : 0, fill: t.moon ? '#3A2E36' : L ? amb : '#F5EADB',
+          lit: t.moon ? `M${p[0]} ${f(p[1] - r + 1)} A${r - 1} ${r - 1} 0 0 0 ${p[0]} ${f(p[1] + r - 1)} Z` : '',
+          lx: l[0], ly: l[1], label: t.label, lop: L && !always ? 0 : 1 });
+      });
+      const lockName = { rise: 'Moonrise', set: 'Moonset', now: 'Moon' }[s.lock];
+      const lockAz = s.lock === 'rise' ? s.rise.az : s.lock === 'set' ? s.set.az : s.now;
+      const hl = k => s.lock === k;
+      const mp = s.up ? pt(s.now, RA, h) : [0, 0];
+      return { ...s, when: s.up ? 'now' : 'tonight', city: s.city || 'Irvine, CA', pulse: s.up && !s.lock && !s.pulseDone, moonX: mp[0], moonY: mp[1],
+        rise: { ...s.rise, dir: dn(s.rise.az) }, set: { ...s.set, dir: dn(s.set.az) },
+        ticks, nums, cards, marks, locked: !!s.lock, unlocked: !s.lock,
+        readout: s.lock ? `${lockName} · ${lockAz}° ${dn(lockAz)}` : `${h}° ${dn(h)}`,
+        needle: s.lock ? amb : '#F5EADB',
+        arcPast: s.up ? arc(s.rise.az, s.now, h) : '',
+        arcFuture: s.up ? arc(s.now, s.set.az, h) : arc(s.rise.az, s.set.az, h),
+        futureOp: s.up ? 1 : .5,
+        riseBd: hl('rise') ? amb : off, riseBg: hl('rise') ? 'rgba(242,194,123,.1)' : off, riseLc: hl('rise') ? amb : '#C9B7A6',
+        setBd: hl('set') ? amb : off, setBg: hl('set') ? 'rgba(242,194,123,.1)' : off, setLc: hl('set') ? amb : '#C9B7A6',
+        nowBd: hl('now') ? amb : off, nowBg: hl('now') ? 'rgba(242,194,123,.1)' : '#251C22', nowLc: hl('now') ? amb : '#E4D6C6',
+        nowDot: s.up ? '#F2E6CF' : '#5E4D57',
+        nowLabel: s.up ? 'Up now' : 'Below the horizon',
+        nowRight: s.up ? `${s.now}° ${dn(s.now)}` : 'Rises in 34 min',
+        nowRc: s.up ? amb : '#C9B7A6',
+        fracPct: s.up ? `${Math.round(s.frac * 100)}%` : '0%'
+      };
+    });
+    return { states };
+  }
+}
+</script>
+</body>
+</html>

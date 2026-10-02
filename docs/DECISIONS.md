@@ -5,6 +5,42 @@
 
 ---
 
+### 2026-10-02 · Compass 1.1: Up now row, needle and ticks, labels on the arc, accuracy notes under the readout, "today" (Tessa)
+- **Spec:** COMPASS-1.1.md (5.4.1–5.4.5, build before 5.5). Source: `design/1.1/Moon Signal Compass 1.1.dc.html`.
+- **Card:** new **Up now** row (live bearing; bar from last rise to next set with the moon glyph as thumb; "Below
+  the horizon · Rises in …" when down; hidden on other dates). On lock the matching cell is outlined amber.
+- **Dial:** needle from under the readout into the ticks (replaces the capsule); ticks every 2° / 10° / 30°;
+  fixed-size degree numbers every 30° (Nunito Sans 11 pt, no Dynamic Type, hidden from VoiceOver); cardinals in
+  Young Serif; fixed crosshair; readout 24 pt locked and unlocked.
+- **Targets:** "↑ Rise", "↓ Set", "Now" labels outside the arc (locked one drops its label; "Now" wins a
+  collision); pulse ring on the Moon until the first lock this launch, static ring under Reduce Motion.
+- **Accuracy notes** (low accuracy, Precise Location + its button, aha line) move **under the readout**: no lock
+  is possible then, so the space is free. Nearby stays below the dial.
+- **Sentence:** "Where can I find / the moon 📅 [date] / in 📍 [city]?" (supersedes the 2026-10-01 "Where will
+  the moon / be … / in …" lines); fit rule unchanged, never an ellipsis. Date token **"today"** replaces "tonight".
+- **Considered:** the mock's fixed three lines with an ellipsis (hides the city, fights AX reflow); "now" as the
+  date token (a moon state, not a date; wrong when the moon is down); IBM Plex Mono numbers (a third font, 10 pt).
+- **Open:** the pinned bar's rule now that the dial sits lower (decide before 5.5); drop the Up now end times if
+  the two rise times confuse on device.
+- **As built, 5.4.1 Up now row:**
+  - **One source with the dial.** `CompassViewModel.upNow` is built from the same position, pass and 30 s tick as
+    the live Moon target, so the card's "266° W" and the lock pill can't differ by a tick. So the row shows
+    exactly where the Moon target can: **today with the compass shown** (Here / Nearby). It's hidden with
+    location off, in Far, and with a searched city that hasn't been matched to a detection yet (the simulator's
+    usual state). **To decide:** whether it should show for any place (it's about the place, not where you are).
+    That would need its own foreground tick, since the compass's tick runs only while its sensors do.
+  - **Refresh:** on context change (place, day, permission), foreground, and the compass's tick. While the compass
+    is off screen (e.g. below the fold on a small phone) the row holds its last values ("Rises in 34 min" stops
+    counting) until one of those happens.
+  - **Next rise:** a new `MoonService.nextMoonrise(for:after:)`, the table's rise search run forward from now
+    (Astronomy Engine, 30-day reach). Looked up once per down spell, and again a minute after it passes.
+    Copy beyond the three proposed: rising after tomorrow (tomorrow has no moonrise) reads "Rises Sun 12:05 AM";
+    nothing in reach leaves the right side empty. The countdown rounds up, so never "0 min".
+  - **Bar:** times in the place's zone with no zone abbreviation (11 pt); thumb is the card's phase glyph, 14 pt,
+    in a 1.5 pt `surface` ring with an amber glow, kept inside the bar's ends. At AX sizes the headline and the
+    bar stack (bar over the two times). Moon down keeps the bar's line, hidden, so the height doesn't change.
+  - New tokens: `surfaceInset` `#251C22`, `faint` `#5E4D57` (decorative), `Fonts.caption` (11 pt, `.caption2`).
+
 ### 2026-10-01 · Show onboarding button also in TestFlight builds (Tessa)
 - **Why:** testers (and Tessa on a phone without Xcode) need to see onboarding again without deleting the app
   and resetting location and privacy. Launch arguments don't exist in TestFlight, so the button is the way.

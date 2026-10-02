@@ -36,7 +36,11 @@ struct ThemeTests {
         (Theme.Colors.textBody, Theme.Colors.bg, 12.6),
         (Theme.Colors.accent, Theme.Colors.bg, 10.9),
         (Theme.Colors.accent, Theme.Colors.surface, 10.7),
-        (Theme.Colors.onAccent, Theme.Colors.accent, 10.9)
+        (Theme.Colors.onAccent, Theme.Colors.accent, 10.9),
+        // The Up now row (COMPASS-1.1.md §3).
+        (Theme.Colors.textBody, Theme.Colors.surfaceInset, 11.6),
+        (Theme.Colors.textSecondary, Theme.Colors.surfaceInset, 8.5),
+        (Theme.Colors.accent, Theme.Colors.surfaceInset, 10.1)
     ])
     func textContrast(foreground: Color, background: Color, documented: Double) {
         let ratio = Self.contrast(foreground, background)
