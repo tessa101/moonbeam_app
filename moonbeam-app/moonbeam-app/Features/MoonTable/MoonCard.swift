@@ -5,10 +5,10 @@
 
 import SwiftUI
 
-/// The moon card (DESIGN-1.1.md §3.2, COMPASS-1.1.md §9.2): a header row
-/// (phase glyph, the selected day over the phase, ‹ ›), then moonrise and
-/// moonset side by side, and on today the Up now pill (or when it rises). A
-/// compass lock outlines the matching cell.
+/// The moon card (DESIGN-1.1.md §3.2, COMPASS-1.1.md §9.2, §9.14): a header
+/// row (phase glyph, the selected day over the phase, ‹ ›), then moonrise and
+/// moonset, with Up now between them while the moon is up today. A compass
+/// lock outlines the matching cell.
 ///
 /// Layout and announcements only. Day stepping is `LocationViewModel`'s
 /// (DATE.md), the card's text is `MoonTableViewModel`'s, Up now and the lock
@@ -40,6 +40,9 @@ struct MoonCard: View {
     private static let phaseLineScales: [CGFloat] = [1, 0.95, 0.9, 0.85, 0.8, 0.75, 0.7]
     /// "After midnight" / "Not today" shrink this far before wrapping.
     private static let missingTextScales: [CGFloat] = [1, 0.9, 0.8]
+    /// The three columns' text, at the default size, shrinks in these steps
+    /// before it wraps (COMPASS-1.1.md §9.14).
+    fileprivate static let cellTextScales: [CGFloat] = [1, 0.9, 0.8]
 
     // MARK: - Rise/set constants
 
@@ -59,7 +62,25 @@ struct MoonCard: View {
     /// so their text sits just inside the header's.
     private static let cellOutset: CGFloat = 6
 
-    // MARK: - Up now constants (COMPASS-1.1.md §9.2)
+    // MARK: - Up now column constants (COMPASS-1.1.md §9.14)
+
+    /// "Up now" a step under the times (about 20 pt to their 24, the mock).
+    private static let upNowTitleSize: CGFloat = 20
+    private static let upNowTitleScale = upNowTitleSize / Theme.Fonts.displaySize
+    /// One narrow digit gives the time slot's height without its width.
+    private static let timeSlotSample = "1"
+    /// The phase glyph on the connector, in the label's slot.
+    @ScaledMetric(relativeTo: .footnote) private var upNowGlyphSize: CGFloat = 16
+    /// The shortest the connector gets on each side before it hides.
+    private static let connectorMinLength: CGFloat = 12
+    /// Between the connector's ends and the cells beside it.
+    private static let connectorInset: CGFloat = 4
+    /// The pill fallback reads Moonrise → Up now → Moonset, though the pill
+    /// is under both.
+    private static let firstSortPriority: Double = 2
+    private static let secondSortPriority: Double = 1
+
+    // MARK: - Up now pill constants (COMPASS-1.1.md §9.2)
 
     /// The pill's height on one line; its radius is half of it.
     private static let pillHeight: CGFloat = 36
@@ -75,12 +96,7 @@ struct MoonCard: View {
         VStack(alignment: .leading, spacing: Theme.Metrics.cardSpacing) {
             header
             hairline
-            riseSetRow
-            // COMPASS-1.1.md §3: today with the compass shown; hidden on
-            // other dates.
-            if let upNow = viewModel.compass.upNow, let line = upNow.line {
-                upNowRow(upNow, line: line)
-            }
+            riseSetArea
         }
         .padding(.vertical, Theme.Metrics.cardPaddingVertical)
         .padding(.horizontal, Theme.Metrics.cardPaddingHorizontal)
@@ -239,53 +255,241 @@ struct MoonCard: View {
         AccessibilityNotification.Announcement(viewModel.dateAccessibilityValue).post()
     }
 
-    // MARK: - Rise/set row
+    // MARK: - Rise/set row (COMPASS-1.1.md §9.14)
 
-    /// Two equal cells, as tall as the taller one, so a highlighted cell's
-    /// outline matches its neighbour's height (COMPASS-1.1.md §3). Since
-    /// 5.4.6 they hug their content (no minimum height).
-    private var riseSetRow: some View {
-        HStack(alignment: .top, spacing: Self.columnGap) {
-            column(table.rise, isHighlighted: viewModel.highlightedCardCell == .moonrise)
-            column(table.set, isHighlighted: viewModel.highlightedCardCell == .moonset)
+    /// The live row over its hidden twin for the other state (moon up or
+    /// down), so the card is the same height either way and nothing below
+    /// it moves when the moon rises or sets.
+    private var riseSetArea: some View {
+        let layout = RiseSetLayout(upNow: viewModel.compass.upNow)
+        return ZStack(alignment: .top) {
+            if let twin = layout.twin {
+                riseSetRow(twin)
+                    .hidden()
+                    .accessibilityHidden(true)
+            }
+            riseSetRow(layout)
         }
-        .fixedSize(horizontal: false, vertical: true)
         .padding(.horizontal, -Self.cellOutset)
     }
 
-    /// Top-aligned in both states, so the two labels share a baseline, and
-    /// as tall as its neighbour, so a lock outline matches it. Missing
+    /// Moon up: three columns, the widest that fits of `threeColumnRungs`
+    /// (the connector gives first, then the text shrinks); past that, at the
+    /// default size the text wraps at 80%, at other sizes the pill row
+    /// fallback. Otherwise rise and set hug their ends, joined by the dim
+    /// line, or as built (two halves) when they don't fit.
+    @ViewBuilder
+    private func riseSetRow(_ layout: RiseSetLayout) -> some View {
+        if let bearing = layout.bearing {
+            ViewThatFits(in: .horizontal) {
+                ForEach(threeColumnRungs, id: \.self) { rung in
+                    threeColumns(bearing: bearing, rung: rung)
+                }
+                if MadlibScale.shrinks(at: dynamicTypeSize) {
+                    threeColumns(bearing: bearing, rung: .wrapping)
+                } else {
+                    fallbackRow(layout, bearing: bearing)
+                }
+            }
+        } else {
+            ViewThatFits(in: .horizontal) {
+                joinedColumns
+                halfColumns()
+            }
+        }
+    }
+
+    /// One-line steps for the three columns. Only the default size shrinks,
+    /// like the sentence (§3.1a).
+    private var threeColumnRungs: [Rung] {
+        let scales = MadlibScale.shrinks(at: dynamicTypeSize) ? Self.cellTextScales : [1]
+        return [Rung(showsConnector: true, scale: 1, oneLine: true)]
+            + scales.map { Rung(showsConnector: false, scale: $0, oneLine: true) }
+    }
+
+    /// ↑ Moonrise · Up now · ↓ Moonset (7a, 7b). The outer cells hug their
+    /// content; the connector, or the gap, takes what's left, so Up now sits
+    /// centred between them.
+    private func threeColumns(bearing: String, rung: Rung) -> some View {
+        HStack(alignment: .top, spacing: 0) {
+            column(table.rise, isHighlighted: viewModel.highlightedCardCell == .moonrise, rung: rung)
+                .layoutPriority(1)
+            joint(.travelled, shows: rung.showsConnector)
+            upNowColumn(bearing: bearing, rung: rung)
+                .layoutPriority(1)
+            joint(.remaining, shows: rung.showsConnector)
+            column(table.set, isHighlighted: viewModel.highlightedCardCell == .moonset, rung: rung)
+                .layoutPriority(1)
+        }
+        .fixedSize(horizontal: false, vertical: true)
+    }
+
+    /// Moon down or another date (7c): rise leading, set trailing, one dim
+    /// dotted line between them. Set is where it is with the moon up.
+    private var joinedColumns: some View {
+        HStack(alignment: .top, spacing: 0) {
+            column(table.rise, isHighlighted: viewModel.highlightedCardCell == .moonrise)
+                .layoutPriority(1)
+            joint(.dim, shows: true)
+            column(table.set, isHighlighted: viewModel.highlightedCardCell == .moonset)
+                .layoutPriority(1)
+        }
+        .fixedSize(horizontal: false, vertical: true)
+    }
+
+    /// Two equal cells, as tall as the taller one, so a highlighted cell's
+    /// outline matches its neighbour's height (COMPASS-1.1.md §3): the
+    /// 5.4.6c row, for when the cells don't fit hugging their ends.
+    private func halfColumns(sortsForVoiceOver: Bool = false) -> some View {
+        HStack(alignment: .top, spacing: Self.columnGap) {
+            column(table.rise, isHighlighted: viewModel.highlightedCardCell == .moonrise, fills: true)
+                .accessibilitySortPriority(sortsForVoiceOver ? Self.firstSortPriority : 0)
+            column(table.set, isHighlighted: viewModel.highlightedCardCell == .moonset, fills: true)
+        }
+        .fixedSize(horizontal: false, vertical: true)
+    }
+
+    /// When three columns don't fit (AX sizes, §9.14): rise and set as built
+    /// with the 5.4.6a pill under them, still read Moonrise → Up now →
+    /// Moonset.
+    private func fallbackRow(_ layout: RiseSetLayout, bearing: String) -> some View {
+        VStack(alignment: .leading, spacing: Theme.Metrics.cardSpacing) {
+            halfColumns(sortsForVoiceOver: true)
+            if layout.fallback.showsPillRow {
+                upNowPill(bearing: bearing)
+                    .accessibilitySortPriority(Self.secondSortPriority)
+            }
+        }
+        .accessibilityElement(children: .contain)
+    }
+
+    /// The connector in a gap (`shows`), or just the gap.
+    @ViewBuilder
+    private func joint(_ style: ConnectorStyle, shows: Bool) -> some View {
+        if shows {
+            connector(style)
+        } else {
+            Spacer(minLength: Self.columnGap)
+        }
+    }
+
+    /// On the labels' centre line: a hidden label-sized line sets the height,
+    /// so it stays there at any text size. Decorative.
+    private func connector(_ style: ConnectorStyle) -> some View {
+        Text(verbatim: " ")
+            .font(Theme.Fonts.label)
+            .hidden()
+            .frame(minWidth: Self.connectorMinLength + 2 * Self.connectorInset, maxWidth: .infinity)
+            .overlay {
+                HorizontalLine()
+                    .stroke(style.color, style: style.stroke)
+                    .padding(.horizontal, Self.connectorInset)
+            }
+            .padding(.top, CellStyle.paddingVertical)
+            .accessibilityHidden(true)
+    }
+
+    /// Top-aligned in both states, so the labels share a baseline, and as
+    /// tall as its neighbours, so a lock outline matches them. Missing
     /// (§9.10, §9.12): "After midnight" in the time's font and slot, the
     /// next one ("Sun 12:20 AM") where the direction goes.
-    private func column(_ column: MoonTableViewModel.Column, isHighlighted: Bool) -> some View {
+    ///
+    /// - Parameters:
+    ///   - rung: the three columns' text step; `nil` as built.
+    ///   - fills: takes half the row (as built) rather than hugging.
+    private func column(
+        _ column: MoonTableViewModel.Column,
+        isHighlighted: Bool,
+        rung: Rung? = nil,
+        fills: Bool = false
+    ) -> some View {
         VStack(alignment: .leading, spacing: Self.labelToTimeSpacing) {
             Text(column.title)
                 .font(Theme.Fonts.label)
                 .foregroundStyle(isHighlighted ? Theme.Colors.accent : Theme.Colors.textSecondary)
+                .lineLimit(rung?.oneLine == true ? 1 : nil)
+                
 
             VStack(alignment: .leading, spacing: Self.timeToDirectionSpacing) {
                 switch column.detail {
                 case let .time(time, timeZone, direction):
-                    timeView(time, timeZone: timeZone)
+                    if let rung {
+                        scaledTimeView(time, timeZone: timeZone, rung: rung)
+                    } else {
+                        timeView(time, timeZone: timeZone)
+                    }
                     Text(direction)
                         .font(Theme.Fonts.detail)
                         .foregroundStyle(Theme.Colors.accent)
+                        .lineLimit(rung?.oneLine == true ? 1 : nil)
+                        // Its own height: filled to the row's, the cell gave
+                        // it one line at AX5 ("57° E…").
+                        .fixedSize(horizontal: false, vertical: true)
+                        
                 case let .missing(text, next):
-                    missingText(text)
+                    if let rung {
+                        scaledText(Text(text), rung: rung)
+                            .foregroundStyle(Theme.Colors.textPrimary)
+                    } else {
+                        missingText(text)
+                    }
                     if let next {
                         Text(next)
                             .font(Theme.Fonts.detail)
                             .foregroundStyle(Theme.Colors.textSecondary)
+                            .lineLimit(rung?.oneLine == true ? 1 : nil)
+                            .fixedSize(horizontal: false, vertical: true)
+                            
                     }
                 }
             }
         }
         // Filled to the row's height, top first: 5.4.6b centred the shorter
         // cell, which set its label ~5 pt low.
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .frame(maxWidth: fills ? .infinity : nil, maxHeight: .infinity, alignment: .topLeading)
         .modifier(CellStyle(isHighlighted: isHighlighted, restingFill: .clear))
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(column.accessibilityLabel)
+    }
+
+    /// The middle column (7a): the phase glyph in the label's slot, on the
+    /// connector; "Up now" a step under the times; the live bearing. Locked
+    /// on the Moon, outlined like Moonrise and Moonset (7b).
+    private func upNowColumn(bearing: String, rung: Rung) -> some View {
+        let isHighlighted = viewModel.highlightedCardCell == .upNow
+        let title = Text(UpNowFormatter.upTitle)
+            .font(Theme.Fonts.display(scale: Self.upNowTitleScale * rung.scale))
+        return VStack(alignment: .center, spacing: Self.labelToTimeSpacing) {
+            Text(verbatim: " ")
+                .font(Theme.Fonts.label)
+                .hidden()
+                .overlay {
+                    PhaseGlyph(geometry: table.glyph)
+                        .frame(width: upNowGlyphSize, height: upNowGlyphSize)
+                }
+            VStack(alignment: .center, spacing: Self.timeToDirectionSpacing) {
+                // As tall as a time and on its baseline, so the bearing
+                // lines up with the directions beside it; a narrow sample
+                // keeps the width the title's.
+                ZStack(alignment: Alignment(horizontal: .center, vertical: .firstTextBaseline)) {
+                    Text(verbatim: Self.timeSlotSample)
+                        .font(Theme.Fonts.display(scale: rung.scale))
+                        .hidden()
+                    title
+                        .lineLimit(rung.oneLine ? 1 : nil)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                Text(bearing)
+                    .font(Theme.Fonts.detail)
+                    .foregroundStyle(Theme.Colors.accent)
+                    .lineLimit(1)
+            }
+        }
+        .foregroundStyle(Theme.Colors.accent)
+        .frame(maxHeight: .infinity, alignment: .top)
+        .modifier(CellStyle(isHighlighted: isHighlighted, restingFill: .clear))
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(viewModel.compass.upNow?.accessibilityLabel ?? "")
     }
 
     /// "After midnight" / "Not today" like a time (§9.12); at the default
@@ -303,6 +507,47 @@ struct MoonCard: View {
                 .fixedSize(horizontal: false, vertical: true)
         }
         .foregroundStyle(Theme.Colors.textPrimary)
+    }
+
+    /// A time-font line at the rung's scale: one line, or wrapping.
+    @ViewBuilder
+    private func scaledText(_ text: Text, rung: Rung) -> some View {
+        if rung.oneLine {
+            text
+                .font(Theme.Fonts.display(scale: rung.scale))
+                .lineLimit(1)
+        } else {
+            text
+                .font(Theme.Fonts.display(scale: rung.scale))
+                .fixedSize(horizontal: false, vertical: true)
+        }
+    }
+
+    /// A time in the three columns: at the rung's scale, the zone beside it
+    /// on one line, or under it when wrapping.
+    @ViewBuilder
+    private func scaledTimeView(_ time: TimeText, timeZone: String?, rung: Rung) -> some View {
+        let timeText = scaledText(Self.text(for: time, scale: rung.scale), rung: rung)
+            .foregroundStyle(Theme.Colors.textPrimary)
+        if let timeZone {
+            let zoneText = Text(timeZone)
+                .font(Theme.Fonts.note)
+                .foregroundStyle(Theme.Colors.textSecondary)
+                .lineLimit(1)
+            if rung.oneLine {
+                HStack(alignment: .firstTextBaseline, spacing: Self.timeZoneSpacing) {
+                    timeText
+                    zoneText
+                }
+            } else {
+                VStack(alignment: .leading, spacing: Self.timeZoneSpacing) {
+                    timeText
+                    zoneText
+                }
+            }
+        } else {
+            timeText
+        }
     }
 
     /// "11:13 PM AEST", baseline-aligned; the zone wraps under the time when
@@ -336,35 +581,101 @@ struct MoonCard: View {
         }
     }
 
-    // MARK: - Up now (COMPASS-1.1.md §9.2)
+    // MARK: - Up now pill (COMPASS-1.1.md §9.2; the §9.14 AX fallback)
 
-    /// Moon up: the pill "● Up now · 266° W", outlined when the compass is
-    /// locked on the Moon. Down: the plain line "● Rises 11:10 PM", same
-    /// height, so the card doesn't jump as the moon rises or sets. One
-    /// element for VoiceOver, with the formatter's sentence (§3).
-    private func upNowRow(_ upNow: UpNow, line: String) -> some View {
-        let isUp = upNow.isUp
+    /// "● Up now · 266° W", outlined when the compass is locked on the
+    /// Moon. Only while the moon is up, and only where the three columns
+    /// don't fit; one element for VoiceOver, with the formatter's sentence
+    /// (§3).
+    private func upNowPill(bearing: String) -> some View {
         let isHighlighted = viewModel.highlightedCardCell == .upNow
         let shape = RoundedRectangle(cornerRadius: Self.pillHeight / 2)
         return HStack(spacing: Self.upNowItemSpacing) {
             Circle()
-                .fill(isUp ? Theme.Colors.moonLit : Theme.Colors.faint)
+                .fill(Theme.Colors.moonLit)
                 .frame(width: Self.upNowDotSize, height: Self.upNowDotSize)
-            Text(line)
+            Text(UpNow.pillText(bearing: bearing))
                 .font(Theme.Fonts.label)
-                .foregroundStyle(isUp ? Theme.Colors.accent : Theme.Colors.textSecondary)
+                .foregroundStyle(Theme.Colors.accent)
                 .fixedSize(horizontal: false, vertical: true)
         }
         .padding(.horizontal, Self.pillPaddingHorizontal)
         .padding(.vertical, Self.pillPaddingVertical)
         .frame(maxWidth: .infinity, minHeight: Self.pillHeight, alignment: .leading)
-        .background(isUp ? Theme.Colors.surfaceInset : .clear, in: shape)
+        .background(Theme.Colors.surfaceInset, in: shape)
         .overlay {
             shape.strokeBorder(isHighlighted ? Theme.Colors.accent : .clear, lineWidth: Theme.Metrics.hairline)
         }
-        .padding(.horizontal, -Self.cellOutset)
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(upNow.accessibilityLabel)
+        .accessibilityLabel(viewModel.compass.upNow?.accessibilityLabel ?? "")
+    }
+}
+
+// MARK: - Three-column steps
+
+private extension MoonCard {
+
+    /// One step of the three columns' fit (§9.14): whether the connector
+    /// shows, the time-font scale, and whether text stays on one line.
+    struct Rung: Hashable {
+        let showsConnector: Bool
+        let scale: CGFloat
+        let oneLine: Bool
+
+        /// The last resort at the default size: 80%, wrapping, never an
+        /// ellipsis.
+        static let wrapping = Rung(
+            showsConnector: false,
+            scale: MoonCard.cellTextScales.last ?? 1,
+            oneLine: false
+        )
+    }
+
+    /// The connector's three looks, matched to the dial's arc.
+    enum ConnectorStyle {
+        /// Moonrise → glyph: the arc's travelled hairline.
+        case travelled
+        /// Glyph → Moonset: the arc's remaining dots.
+        case remaining
+        /// Moon down: the dim dots.
+        case dim
+
+        private static let solidWidth: CGFloat = 1.5
+        private static let solidOpacity = 0.3
+        /// Smaller than the dial's 3 pt dots, at the card's scale.
+        private static let dotSize: CGFloat = 2
+        private static let dotSpacing: CGFloat = 5
+        /// A dash just long enough to draw its round caps: a dot.
+        private static let dotDash: CGFloat = 0.01
+        private static let remainingOpacity = 0.95
+        private static let dimOpacity = 0.4
+
+        var color: Color {
+            switch self {
+            case .travelled: Theme.Colors.accent.opacity(Self.solidOpacity)
+            case .remaining: Theme.Colors.accent.opacity(Self.remainingOpacity)
+            case .dim: Theme.Colors.accent.opacity(Self.dimOpacity)
+            }
+        }
+
+        var stroke: StrokeStyle {
+            switch self {
+            case .travelled:
+                StrokeStyle(lineWidth: Self.solidWidth, lineCap: .round)
+            case .remaining, .dim:
+                StrokeStyle(lineWidth: Self.dotSize, lineCap: .round, dash: [Self.dotDash, Self.dotSpacing])
+            }
+        }
+    }
+}
+
+/// A line across the middle of its frame.
+nonisolated private struct HorizontalLine: Shape {
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
+        path.move(to: CGPoint(x: rect.minX, y: rect.midY))
+        path.addLine(to: CGPoint(x: rect.maxX, y: rect.midY))
+        return path
     }
 }
 
@@ -379,11 +690,12 @@ private extension MoonCard {
     /// baseline. The formatter's no-break space becomes an ordinary one, so
     /// a time too wide for its column (AX sizes) puts the day period on the
     /// next line instead of breaking inside it ("8:53 A / M").
-    static func text(for time: TimeText) -> Text {
+    /// - Parameter scale: the three columns' shrink step (§9.14); 1 as built.
+    static func text(for time: TimeText, scale: CGFloat = 1) -> Text {
         time.runs.reduce(Text(verbatim: "")) { text, run in
             let words = run.text.replacingOccurrences(of: narrowNoBreakSpace, with: " ")
             let piece = Text(verbatim: words)
-                .font(run.isDayPeriod ? Theme.Fonts.dayPeriod : Theme.Fonts.display)
+                .font(Theme.Fonts.display(scale: run.isDayPeriod ? scale * Theme.Fonts.dayPeriodScale : scale))
             return Text("\(text)\(piece)")
         }
     }
@@ -400,7 +712,8 @@ private struct CellStyle: ViewModifier {
     /// The fill while not highlighted: none for Moonrise and Moonset.
     let restingFill: Color
 
-    private static let paddingVertical: CGFloat = 8
+    /// Also where the connector's line starts, beside a cell's label.
+    static let paddingVertical: CGFloat = 8
     private static let paddingHorizontal: CGFloat = 10
     private static let cornerRadius: CGFloat = 14
     private static let highlightFillOpacity = 0.1

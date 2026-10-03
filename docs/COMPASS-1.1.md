@@ -42,6 +42,7 @@ the 24 pt Moon glyph (28 locked), rise/set dots on the arc, lock pill, halo, hap
 ## 3. Up now row (moon card)
 
 > **Superseded by §9.2 (5.4.6a):** a one-line pill when up, "● Rises …" when down, no bar. VoiceOver unchanged.
+> **Superseded again by §9.14 (5.4.7):** Up now is a middle column between rise and set; no row.
 
 Third row in the card, under rise/set. Same height whether the moon is up or down.
 
@@ -134,6 +135,7 @@ See §9.6: the bar shows when the dial's centre is below the fold (SE-size phone
 - **5.4.4** Target labels outside the arc, collision rule, pulse + Reduce Motion (§5)
 - **5.4.5** Sentence: new lines, "today" token (§2)
 - **5.4.6a–c** Layout pass (§9.8), after Tessa's device review of 5.4.2–5.4.5
+- **5.4.7** Up now as the middle column between rise and set (§9.14)
 
 Screenshots for each, at default size on the smallest supported phone and a 393 pt phone: moon up / locked on
 set / locked on moon / moon down / low accuracy / Precise off / Nearby.
@@ -170,6 +172,7 @@ set / locked on moon / moon down / low accuracy / Precise off / Nearby.
 - **Rise / set:** tighter padding and gaps (card padding 16 → 12, internal gap 14 → 10; columns hug content).
   **AM / PM stays the smaller size, as built.** Time zone abbreviation unchanged.
 - **Up now (replaces §3's bar):**
+  > **Superseded by §9.14 (5.4.7):** the pill row and the down line go; Up now becomes the middle column.
   - Moon up: one-line pill **"● Up now · 266° W"** (`accent` text, `#251C22` fill, radius = height / 2,
     ~36 pt tall). No progress bar, no end times, no thumb.
   - Locked on the Moon: pill gets the 1 pt `accent` outline (the lock highlight, §3).
@@ -237,11 +240,13 @@ on the iPhone 17, shrink the dial before the gaps, and say by how much.
 - **5.4.6b** Compass: bigger dial, shorter needle, arc, Moon at 12 on lock, even labels, spacing, sentence line
   height (§9.1, 9.3, 9.7) + fit report
 - **5.4.6c** Bottom bar for notes, reverting 5.4.3 (§9.4)
-- **5.6** Pinned bar (§9.6), after Tessa checks 5.4.6 on device
+- **5.4.7** Up now as the middle column (§9.14), after 5.4.6c
+- **5.6** Pinned bar (§9.6), after Tessa checks 5.4.6 / 5.4.7 on device
 
 ### 9.9 Tests
 - Header: date line then "Phase · N% lit"; VoiceOver still says "at midnight"
 - Up now: up → pill text with bearing; locked on Moon → outlined; down → "Rises …" variants; hidden other dates
+  (replaced by §9.14's tests in 5.4.7)
 - Bottom bar: Precise off / low accuracy / aha / Nearby → bar with the right copy and button; priority order;
   location off / Far unchanged
 - Labels: gap from dot equal (± 1 pt) at 0°, 90°, 180°, 270° and 45° steps
@@ -317,6 +322,55 @@ placement are still 5.4.5's; those are covered by §9.3 and §9.4.
   midnight" in the time font (0.8× before wrapping); needle 28 pt to the heavy ticks; phase line to 0.7×, then
   without " lit". On the SE 3 the no-moonrise "After midnight" still wraps at 0.8×.
 
+### 9.14 5.4.7 Up now moves between rise and set (Tessa, 2026-10-03)
+Source: `design/1.3-upnow/` mocks **7a** (up now), **7b** (locked on the Moon), **7c** (not up), Tessa 2026-10-03, after her paper
+sketch. **Goal:** win back vertical space by removing the Up now row under rise / set (~34 pt; the space goes
+under the dial, gaps unchanged). **Only the moon card's rise / set / Up now area changes.** Header row, phase line,
+sentence, gaps, dial, needle, readout, lock pill, bottom bar and everything else stay as built (§9.13).
+The mocks' sentence token ("now" / "tonight") is not adopted: **keep "today"**.
+
+- **Moon up (today only), 7a:** one row, three columns: **↑ Moonrise · Up now · ↓ Moonset** (chronological).
+  - Moonrise column leading, Moonset column trailing, Up now centred between them. Rise / set cells as built.
+  - **Up now cell**, top-aligned with the other two:
+    - Label slot: the **moon phase glyph** (`PhaseGlyph`, ~16 pt), sitting **on the connector line**.
+    - Time slot: **"Up now"**, Young Serif in `accent`, a step smaller than the times (match the mock, ~20 pt).
+    - Direction slot: live bearing **"266° W"**, same style as the cells' direction line, `accent`.
+  - **Connector line** at the labels' centre line, between the Moonrise label and the Moonset label, broken by the
+    glyph: **rise → glyph thin solid**, **glyph → set dotted**, same colour / opacity as the dial's arc (travelled
+    solid, remaining dotted). Decorative, hidden from VoiceOver.
+  - The **separate Up now row is removed**. Live updates on the 30 s tick, as now.
+- **Locked on the Moon, 7b:** the Up now cell gets the lock highlight like Moonrise / Moonset (1 pt `accent`
+  border, `accent` 10% fill, radius 14). The connector line stops at the outline. Unlocked: transparent border, so
+  nothing shifts on lock.
+- **Moon down, or other dates, 7c:** **no middle column.** Rise stays leading, set stays trailing, and **one dotted
+  line at 40%** joins their labels (matches the dim arc on the dial). The down line ("● Rises …") is **dropped**.
+- **Card height is the same in both states**, so nothing below it moves when the moon rises or sets.
+- **Fit:** at the default size, text in a cell (time, "Up now", "After midnight") scales down to **min 0.8x** before
+  wrapping; never an ellipsis. The connector is the first thing to give: it shrinks to a minimum of ~12 pt per side,
+  then hides. Report column widths and any scaling on the iPhone 17 and SE 3.
+- **AX sizes (proposed):** if three columns don't fit, keep rise / set as built (no connector) and show Up now as the
+  5.4.6a pill row under them.
+- **VoiceOver:** strings unchanged (§3); reading order Moonrise → Up now → Moonset.
+- **Watch on device:** in the morning the moon rose *last night*, but the Moonrise column shows *tonight's* rise
+  (7a: up at 7:54 AM, "11:10 PM" on the left). The solid "rise → now" line can read as "rose at 11:10 PM". Tessa
+  decides from the screenshots; no change in 5.4.7.
+- **Report:** space saved (pt) and the dial's bottom edge vs the fold on the iPhone 17, in `.agent-reports/5.4.7/`.
+- **Screenshots:** moon up unlocked · locked on Moon · locked on rise · moon up on a no-rise day ("After midnight")
+  · moon down · other date · AX1 · AX5. iPhone 17 and SE 3.
+- **Tests:** up → three cells in order with the live bearing; down → two cells, no down line; other date → two
+  cells; card height equal up vs down; lock on Moon → middle cell outlined; lock on rise / set unchanged; AX
+  fallback → pill row; connector hidden from VoiceOver; VoiceOver order.
+
+### 9.15 As built (5.4.7) — report `.agent-reports/5.4.7/5.4.7-upnow.md`
+- Card **46 pt shorter** up and down (the pill plus its 10 pt spacing); iPhone 17 face bottom 814 → 768 (106 above
+  the fold), SE 3 dial centre 628.5 → 582.5. Up = down height at every size (a hidden twin of the other state).
+- Rise and set hug the card's ends in both states; Up now centred between; lock outlines hug their cell.
+- Fit: connector (12 pt line + 4 pt clear each end) → no connector → 90% → 80% → wrap at 80% (default size) or the
+  pill fallback (other sizes). iPhone 17: connector, 100%. SE 3: no connector, 100%. No-rise day: wraps at 80% on both.
+  AX1 / AX5: pill fallback on both, VoiceOver order kept.
+- "Up now" Young Serif 20 pt on the times' baseline; glyph 16 pt (scales with `.footnote`); dots 2 / 5 pt.
+- AX5 "57° E…" fixed (direction and next-time lines take their own height).
+
 ## Decision log
 
 - **2026-10-02 (Tessa):** Compass 1.1 reviewed. Keep the Up now row, lock highlight, needle, ticks, crosshair,
@@ -337,3 +391,7 @@ placement are still 5.4.5's; those are covered by §9.3 and §9.4.
   midnight" + next time. §9.10.
 - **2026-10-03 (Tessa, after 5.4.6b):** readout/pill at the card time size with 0.7x capital directions; missing
   rise/set labels aligned, "After midnight" in the time font; needle ~28 pt; phase line always one line. §9.12.
+- **2026-10-03 (Tessa, sketch → mocks 7a–7c in `design/1.3-upnow/`):** 5.4.7: Up now moves into the rise / set row
+  as a middle column (rise · Up now · set) to win back vertical space; removed when the moon isn't up. Phase glyph on
+  a connector line (solid rise → now, dotted now → set); not up = one dotted line at 40%; card height equal in both
+  states; down line dropped; keep "today". Nothing else on the screen changes. §9.14.

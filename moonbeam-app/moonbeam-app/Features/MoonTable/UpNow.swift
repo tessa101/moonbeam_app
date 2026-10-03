@@ -5,8 +5,9 @@
 
 import Foundation
 
-/// The moon card's Up now line (COMPASS-1.1.md §3, §9.2), as display values:
-/// where the moon is now, or when it rises next.
+/// The moon card's Up now (COMPASS-1.1.md §3, §9.14), as display values:
+/// where the moon is now, or when it rises next. Since 5.4.7 only the up
+/// state shows (the middle column); the down state's text is kept, unshown.
 ///
 /// Built by `CompassViewModel` from the same moon position as the dial's
 /// live Moon target, so the card's bearing and the lock pill never disagree.
@@ -48,14 +49,9 @@ nonisolated struct UpNow: Equatable {
     /// Between the title and the bearing on the pill.
     static let separator = " · "
 
-    /// The card's one line (COMPASS-1.1.md §9.2): "Up now · 266° W" on the
-    /// pill, or "Rises 11:10 PM" while down. `nil` when the moon is down with
-    /// no rise in reach, since there's then nothing to show ("Below the
-    /// horizon" is no longer shown).
-    var line: String? {
-        switch state {
-        case let .up(bearing, _): title + Self.separator + bearing
-        case let .down(nextRise): nextRise
-        }
+    /// The pill's text, "Up now · 266° W": since 5.4.7 only the AX
+    /// fallback's, and only while the moon is up (COMPASS-1.1.md §9.14).
+    static func pillText(bearing: String) -> String {
+        UpNowFormatter.upTitle + separator + bearing
     }
 }

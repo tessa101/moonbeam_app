@@ -168,31 +168,26 @@ nonisolated struct UpNowFormatterTests {
         #expect(upNow.state == .down(nextRise: "Rises 9:12\(Self.nbsp)AM"))
     }
 
-    // MARK: - The card's line (COMPASS-1.1.md §9.2)
+    // MARK: - The AX fallback's pill (COMPASS-1.1.md §9.2, §9.14)
 
     @Test("Up: the pill reads \"Up now · 266° W\"")
-    func upLine() throws {
+    func upPillText() throws {
         let upNow = formatter.up(azimuth: 266, pass: try Self.pass(), at: try Self.now(), in: Self.losAngelesZone)
+        guard case let .up(bearing, _) = upNow.state else {
+            Issue.record("Expected the moon up")
+            return
+        }
 
-        #expect(upNow.line == "Up now · 266° W")
+        #expect(UpNow.pillText(bearing: bearing) == "Up now · 266° W")
     }
 
-    @Test("Down: the line is the next rise, with no \"Below the horizon\"", arguments: [
-        (34.0, "Rises in 34 min"),
-        (853.0, "Rises 10:06\u{202F}PM"),
-        (1519.0, "Rises tomorrow 9:12\u{202F}AM"),
-    ])
-    func downLine(minutesAway: Double, expected: String) throws {
+    @Test("Down: no pill and no down line (5.4.7 dropped \"Rises …\")", arguments: [34.0, 853.0, 1519.0])
+    func downHasNoPill(minutesAway: Double) throws {
         let now = try Self.now()
         let upNow = formatter.down(nextRise: now + Self.minutes(minutesAway), at: now, in: Self.losAngelesZone)
+        let layout = RiseSetLayout(upNow: upNow)
 
-        #expect(upNow.line == expected)
-    }
-
-    @Test("Down with no rise in reach: no line")
-    func downWithoutRiseHasNoLine() throws {
-        let upNow = formatter.down(nextRise: nil, at: try Self.now(), in: Self.losAngelesZone)
-
-        #expect(upNow.line == nil)
+        #expect(layout.cells == [.moonrise, .moonset])
+        #expect(!layout.fallback.showsPillRow)
     }
 }

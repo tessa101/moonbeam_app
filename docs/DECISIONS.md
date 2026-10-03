@@ -48,6 +48,34 @@
 - **Stale 5.4.6b tests fixed** on their first run: call counts with the next-day lookup, Mar Vista next rise 12:22 AM
   (the engine's value; STATUS's "00:21" was approximate). No tolerance changed.
 
+### 2026-10-03 · Build 5.4.7 [spike] as built: three columns, hidden twin, AX pill fallback
+- **Spec:** COMPASS-1.1.md §9.14; as built in §9.15. Report: `.agent-reports/5.4.7/5.4.7-upnow.md`.
+- **Saves 46 pt, not ~34:** the pill's 36 plus the card's 10 pt spacing above it.
+- **Equal height by a hidden twin:** the row lays out the other state (down: three columns with a placeholder
+  "359° NNW") hidden underneath, so up and down take the taller height at any size. Considered: a fixed minimum
+  height (breaks with Dynamic Type), measuring both and storing the max (two passes, flicker).
+- **Rise and set hug their ends in both states** (7a, 7c), so Moonset doesn't move when the moon rises; lock outlines
+  now hug the cell instead of half the row. Where two hugging cells don't fit, the 5.4.6c halves.
+- **Fit ladder:** connector at 100% → no connector at 100 / 90 / 80% → at the default size, wrap at 80%; at other
+  sizes, the pill fallback. AX1 and AX5 take the fallback on both phones, read Moonrise → Up now → Moonset.
+- **Connector needs 12 pt of line + 4 pt clear each end:** hidden on the SE 3 at the default size (15.75 pt gaps).
+  Dots 2 pt / 5 pt (the card's scale), at the arc's colours; the down line `accent` 40% as specified.
+- **`UpNow.line` replaced by `UpNow.pillText(bearing:)`:** the down line is gone. Three line tests became two.
+- **Fixed on the way:** AX5 cut the Moonrise direction to "57° E…" in the two halves, also without 5.4.7's
+  changes (likely since 5.4.6c's fill-to-row-height). The direction and next-time lines take their own height.
+- **Open (Tessa):** no-rise day wraps all three columns at 80%; no connector on the SE 3; moon down no longer speaks
+  the next rise in VoiceOver; AX1 "midnigh / t" (before 5.4.7).
+
+### 2026-10-03 · 5.4.7: Up now moves between Moonrise and Moonset
+- **Decision:** Remove the Up now pill row. With the moon up (today only) the rise / set row becomes three columns:
+  ↑ Moonrise · Up now · ↓ Moonset, the phase glyph on a connector line (solid rise → now, dotted now → set) and the
+  live bearing under "Up now". Lock on the Moon outlines that cell. Moon down or other dates: two columns joined by a
+  dotted line at 40%; the "Rises …" line is dropped. Card height equal in both states. Spec: COMPASS-1.1.md §9.14;
+  mocks `design/1.3-upnow/` 7a–7c.
+- **Why:** Wins back ~34 pt of vertical space for the dial without touching anything else on the screen.
+- **Considered:** Keeping the pill row (costs the space); a middle column with no connector (the mock reads better
+  with it). Open: tonight's rise shown left of "Up now" in the morning; Tessa judges from the screenshots.
+
 ### 2026-10-03 · After 5.4.6b on device: readout size, capitals, "After midnight" font, needle, one-line phase (Tessa)
 - **Spec:** COMPASS-1.1.md §9.12, built with 5.4.6c.
 - Readout and lock pill at the card time size (Young Serif 24); direction letters real capitals at 0.7x, not small caps.

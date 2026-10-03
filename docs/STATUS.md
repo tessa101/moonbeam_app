@@ -3,7 +3,7 @@
 > A living note on where things stand. Update it at the end of each work session
 > so the next session (you, or Claude) can pick up cold.
 
-_Last updated: 2026-10-03 (Build 5.4.6c [spike]: bottom bar, §9.12 fixes; all 797 cases pass in Xcode; next: Tessa's device check, then 5.6); 2026-10-02 (Build 5.4.6b [spike]: dial 260 pt, gaps, "After midnight"; next 5.4.6c; Build 5.4.6a [spike]: compact card; Compass 1.1 spike built, 5.4.1–5.4.5; sensors start when any part of the compass shows; next: the pinned-bar rule, then 5.5); 2026-10-01 (TestFlight build 4 prepared; onboarding Settings fix; Show onboarding in TestFlight; tap animation and DEBUG onboarding trigger built; next 5.5; Moon Signal app icon in; 5.8 moon arc built; next: DEBUG onboarding trigger, tap animation, then 5.5; TestFlight build 3 uploaded with 5.7; moon arc decided (option B, 5.8); Step 5.7 onboarding built ahead of 5.5/5.6; Step 5.3 madlib sentence built, with §3.1a; 5.2 follow-ups; Step 5.2 moon card built; 5.1 theme; Design 1.1 settled: DESIGN-1.1.md, Step 5; 4.14, Step 2.2 and 4.15 built; device checks pending)_
+_Last updated: 2026-10-03 (Build 5.4.7 [spike]: Up now between Moonrise and Moonset, card 46 pt shorter; all 809 cases pass in Xcode; next: Tessa's device check of 5.4.6 / 5.4.7, then 5.6); 2026-10-03 (Build 5.4.6c [spike]: bottom bar, §9.12 fixes; all 797 cases pass in Xcode; next: Tessa's device check, then 5.6); 2026-10-02 (Build 5.4.6b [spike]: dial 260 pt, gaps, "After midnight"; next 5.4.6c; Build 5.4.6a [spike]: compact card; Compass 1.1 spike built, 5.4.1–5.4.5; sensors start when any part of the compass shows; next: the pinned-bar rule, then 5.5); 2026-10-01 (TestFlight build 4 prepared; onboarding Settings fix; Show onboarding in TestFlight; tap animation and DEBUG onboarding trigger built; next 5.5; Moon Signal app icon in; 5.8 moon arc built; next: DEBUG onboarding trigger, tap animation, then 5.5; TestFlight build 3 uploaded with 5.7; moon arc decided (option B, 5.8); Step 5.7 onboarding built ahead of 5.5/5.6; Step 5.3 madlib sentence built, with §3.1a; 5.2 follow-ups; Step 5.2 moon card built; 5.1 theme; Design 1.1 settled: DESIGN-1.1.md, Step 5; 4.14, Step 2.2 and 4.15 built; device checks pending)_
 
 ## Where things live
 - **Local repo:** `~/app-ideas/moonbeam` (the one true folder)
@@ -262,6 +262,13 @@ _Last updated: 2026-10-03 (Build 5.4.6c [spike]: bottom bar, §9.12 fixes; all 7
        §9.13). On load a bar covers the dial's bottom (iPhone 17) or its centre (SE 3). Report and 84 screenshots:
        `.agent-reports/5.4.6/5.4.6c-bar.md`, `c/`. **521 tests / 797 cases, all pass** (Xcode's runner; three stale
        5.4.6b tests fixed). **Next:** Tessa's device check, then 5.6 (pinned bar).
+     - [x] **Build 5.4.7 [spike] (2026-10-03):** Up now moves into the rise / set row as a middle column (glyph on a
+       connector, solid rise → now, dotted now → set); moon down / other dates: two columns and a dim dotted line; the
+       pill row and "● Rises …" line are gone (AX sizes keep the pill as a fallback). Card **46 pt shorter**, same
+       height up and down; iPhone 17 dial face now 106 pt above the fold (COMPASS-1.1.md §9.14, §9.15). Fixed AX5
+       "57° E…". Report and 36 screenshots: `.agent-reports/5.4.7/`. **528 tests / 809 cases, all pass** (Xcode's
+       runner). **Open:** no-rise day wraps at 80%; no connector on the SE 3; moon down doesn't speak the next rise.
+       **Next:** Tessa's device check of 5.4.6 / 5.4.7, then 5.6 (pinned bar).
 
 5. [ ] Location: detect + search (Step 2)
    - Spec: **[LOCATION.md](LOCATION.md)** (decided 2026-09-25). Place model, CoreLocation one-shot fix,
