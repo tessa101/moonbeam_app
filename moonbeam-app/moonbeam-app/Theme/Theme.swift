@@ -36,7 +36,7 @@ nonisolated enum Theme {
         static let strokeRaised = Color(hex: 0x4A3B45)
         /// Body text, times, headings.
         static let textPrimary = Color(hex: 0xF5EADB)
-        /// Labels: "↑ Moonrise", the card's date, "75% lit at midnight".
+        /// Labels: "↑ Moonrise", the card's date, "75% lit".
         static let textSecondary = Color(hex: 0xC9B7A6)
         /// Onboarding body copy.
         static let textBody = Color(hex: 0xE4D6C6)
@@ -68,9 +68,10 @@ nonisolated enum Theme {
 
         /// The moon card (§2 "Card").
         static let cardCornerRadius: CGFloat = 24
-        static let cardPaddingVertical: CGFloat = 16
-        static let cardPaddingHorizontal: CGFloat = 18
-        static let cardSpacing: CGFloat = 14
+        /// Tightened in 5.4.6 (COMPASS-1.1.md §9.2): 16 / 18 / 14 before.
+        static let cardPaddingVertical: CGFloat = 12
+        static let cardPaddingHorizontal: CGFloat = 12
+        static let cardSpacing: CGFloat = 10
 
         /// ‹ › (§2): a 32 pt circle inside the 44 pt hit area.
         static let stepButtonSize: CGFloat = 32

@@ -3,7 +3,7 @@
 > A living note on where things stand. Update it at the end of each work session
 > so the next session (you, or Claude) can pick up cold.
 
-_Last updated: 2026-10-02 (Compass 1.1 spike built, 5.4.1–5.4.5; sensors start when any part of the compass shows; next: the pinned-bar rule, then 5.5); 2026-10-01 (TestFlight build 4 prepared; onboarding Settings fix; Show onboarding in TestFlight; tap animation and DEBUG onboarding trigger built; next 5.5; Moon Signal app icon in; 5.8 moon arc built; next: DEBUG onboarding trigger, tap animation, then 5.5; TestFlight build 3 uploaded with 5.7; moon arc decided (option B, 5.8); Step 5.7 onboarding built ahead of 5.5/5.6; Step 5.3 madlib sentence built, with §3.1a; 5.2 follow-ups; Step 5.2 moon card built; 5.1 theme; Design 1.1 settled: DESIGN-1.1.md, Step 5; 4.14, Step 2.2 and 4.15 built; device checks pending)_
+_Last updated: 2026-10-02 (Build 5.4.6a [spike]: compact card; next 5.4.6b, 5.4.6c; Compass 1.1 spike built, 5.4.1–5.4.5; sensors start when any part of the compass shows; next: the pinned-bar rule, then 5.5); 2026-10-01 (TestFlight build 4 prepared; onboarding Settings fix; Show onboarding in TestFlight; tap animation and DEBUG onboarding trigger built; next 5.5; Moon Signal app icon in; 5.8 moon arc built; next: DEBUG onboarding trigger, tap animation, then 5.5; TestFlight build 3 uploaded with 5.7; moon arc decided (option B, 5.8); Step 5.7 onboarding built ahead of 5.5/5.6; Step 5.3 madlib sentence built, with §3.1a; 5.2 follow-ups; Step 5.2 moon card built; 5.1 theme; Design 1.1 settled: DESIGN-1.1.md, Step 5; 4.14, Step 2.2 and 4.15 built; device checks pending)_
 
 ## Where things live
 - **Local repo:** `~/app-ideas/moonbeam` (the one true folder)
@@ -230,6 +230,9 @@ _Last updated: 2026-10-02 (Compass 1.1 spike built, 5.4.1–5.4.5; sensors start
      ("Where can I find / the moon today / in [city]?"). **5.4.1 done** (1fa2bed, bb6e4d2; scheme fix 6044e4c).
      **Next:** sensor threshold fix (§5a), then 5.4.2–5.4.5, then **5.4.6 spacing pass** (§9) after Tessa's device
      check, then the pinned-bar rule (§6), then 5.5.
+   - [ ] **5.9 Launch loader (decided 2026-10-02, after 5.4.6):** [LOADER.md](LOADER.md). Under 400 ms soft fade;
+     400 ms – 2 s skeleton (city and date as bars); over 2 s phase cycle. Fixes the "dummy main screen" launch bug
+     (DESIGN-REVIEW.md). Order: 5.4.2–5.4.5 → 5.4.6 → **5.9** → pinned-bar rule / 5.6 → 5.5.
      - [x] **Build 5.4.1 [spike] (2026-10-02):** Up now row + lock highlight, two commits. The row shows only where the
        compass does (today, Here / Nearby) and refreshes on the compass's tick: **decide** whether it should
        show for any place (DECISIONS.md 2026-10-02 as built). Moonrise/Moonset are now boxed cells, the
@@ -242,6 +245,10 @@ _Last updated: 2026-10-02 (Compass 1.1 spike built, 5.4.1–5.4.5; sensors start
      - [ ] **Fit (2026-10-02, `.agent-reports/5.4-fit/`):** on load at the default size, iPhone 17 with a good
        heading: dial face ends 6 pt above the screen bottom, the arc 10 pt past it; iPhone SE: the dial is ~160 pt
        below the fold. **Decide the pinned-bar rule (§6) next.**
+     - [x] **Build 5.4.6a [spike] (2026-10-02):** card header row (glyph · date over "Phase · N% lit" · ‹ ›),
+       tighter rise/set, Up now pill / "● Rises …" line (COMPASS-1.1.md §9.2). Builds; previews in
+       `.agent-reports/5.4.6/`. **Tests not run** (test runner can't launch in this environment); run them next.
+       **Next:** 5.4.6b (dial, spacing, fit report), 5.4.6c (bottom bar).
 
 5. [ ] Location: detect + search (Step 2)
    - Spec: **[LOCATION.md](LOCATION.md)** (decided 2026-09-25). Place model, CoreLocation one-shot fix,

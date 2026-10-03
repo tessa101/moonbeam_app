@@ -5,9 +5,10 @@
 
 import SwiftUI
 
-/// The moon card (DESIGN-1.1.md §3.2): the selected day with ‹ ›, the phase,
-/// then moonrise and moonset side by side, and on today the Up now row
-/// (COMPASS-1.1.md §3). A compass lock outlines the matching cell.
+/// The moon card (DESIGN-1.1.md §3.2, COMPASS-1.1.md §9.2): a header row
+/// (phase glyph, the selected day over the phase, ‹ ›), then moonrise and
+/// moonset side by side, and on today the Up now pill (or when it rises). A
+/// compass lock outlines the matching cell.
 ///
 /// Layout and announcements only. Day stepping is `LocationViewModel`'s
 /// (DATE.md), the card's text is `MoonTableViewModel`'s, Up now and the lock
@@ -17,23 +18,28 @@ struct MoonCard: View {
     let viewModel: LocationViewModel
     let table: MoonTableViewModel
 
-    // MARK: - Layout constants (§3.2, read from the HTML)
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
-    /// Between the date label and the ‹ › hit areas.
-    private static let headerSpacing: CGFloat = 8
-    /// The header's 44 pt hit areas reach into the card's padding, so the
-    /// 32 pt circles sit where the design draws them.
-    private static let headerTopOutset: CGFloat = 6
-    private static let headerTrailingOutset: CGFloat = 8
+    // MARK: - Header constants (COMPASS-1.1.md §9.2)
+
+    /// Between the glyph, the two text lines and the ‹ › hit areas.
+    private static let headerSpacing: CGFloat = 12
+    /// Between the date line and the phase line.
+    private static let headerTextSpacing: CGFloat = 2
+    /// The ‹ › 44 pt hit areas reach into the card's padding, so the 32 pt
+    /// circles sit where the design draws them.
+    private static let headerTrailingOutset: CGFloat = 6
+    private static let stepButtonSpacing: CGFloat = 0
 
     private static let glyphSize: CGFloat = 44
-    private static let phaseSpacing: CGFloat = 14
-    private static let phaseTextSpacing: CGFloat = 4
+    /// Between the phase name and its illumination ("Last Quarter · 53% lit").
+    private static let phaseSeparator = " · "
+
+    // MARK: - Rise/set constants
 
     /// Between the Moonrise and Moonset cells (the HTML's grid gap).
     private static let columnGap: CGFloat = 6
-    private static let columnMinHeight: CGFloat = 76
-    private static let columnSpacing: CGFloat = 6
+    private static let columnSpacing: CGFloat = 4
     /// Between a time and its zone abbreviation, side by side or stacked.
     private static let timeZoneSpacing: CGFloat = 4
     /// "No moonrise today" sits a little lower than a time would.
@@ -41,44 +47,31 @@ struct MoonCard: View {
 
     // MARK: - Cell constants (COMPASS-1.1.md §3, read from the HTML)
 
-    /// The data cells (`CellStyle`) reach this far into the card's padding, so their text sits
-    /// just inside the header's, as in the HTML (12 pt card padding there,
-    /// 18 here).
+    /// The data cells (`CellStyle`) reach this far into the card's padding,
+    /// so their text sits just inside the header's.
     private static let cellOutset: CGFloat = 6
 
-    // MARK: - Up now constants (COMPASS-1.1.md §3, read from the HTML)
+    // MARK: - Up now constants (COMPASS-1.1.md §9.2)
 
-    /// Between the headline and the bar.
-    private static let upNowSpacing: CGFloat = 7
-    /// Between the dot, the title, the bar and its times.
+    /// The pill's height on one line; its radius is half of it.
+    private static let pillHeight: CGFloat = 36
+    private static let pillPaddingHorizontal: CGFloat = 14
+    private static let pillPaddingVertical: CGFloat = 6
+    /// Between the dot and the text.
     private static let upNowItemSpacing: CGFloat = 8
-    /// The headline's two halves, stacked at large sizes.
-    private static let upNowStackedSpacing: CGFloat = 4
     private static let upNowDotSize: CGFloat = 8
-
-    private static let barHeight: CGFloat = 2
-    private static let barFillOpacity = 0.6
-    /// The bar never squeezes below this between its two times.
-    private static let barMinWidth: CGFloat = 40
-    /// The thumb: a mini phase glyph in a `surface` ring, softly glowing.
-    private static let thumbSize: CGFloat = 14
-    private static let thumbOutline: CGFloat = 1.5
-    private static let thumbGlowOpacity = 0.6
-    /// CSS `0 0 8px`: SwiftUI's radius is about half a CSS blur.
-    private static let thumbGlowRadius: CGFloat = 4
 
     // MARK: - Card
 
     var body: some View {
         VStack(alignment: .leading, spacing: Theme.Metrics.cardSpacing) {
             header
-            phaseRow
             hairline
             riseSetRow
             // COMPASS-1.1.md §3: today with the compass shown; hidden on
             // other dates.
-            if let upNow = viewModel.compass.upNow {
-                upNowRow(upNow)
+            if let upNow = viewModel.compass.upNow, let line = upNow.line {
+                upNowRow(upNow, line: line)
             }
         }
         .padding(.vertical, Theme.Metrics.cardPaddingVertical)
@@ -103,9 +96,48 @@ struct MoonCard: View {
 
     // MARK: - Header row
 
+    /// Glyph, the two text lines, ‹ ›. At accessibility sizes the text
+    /// gets its own full-width rows under the glyph and ‹ ›, since squeezed
+    /// between them it wraps a word per line.
+    @ViewBuilder
     private var header: some View {
-        HStack(spacing: Self.headerSpacing) {
+        if dynamicTypeSize.isAccessibilitySize {
+            VStack(alignment: .leading, spacing: Self.headerSpacing) {
+                HStack(spacing: Self.headerSpacing) {
+                    glyph
+                    Spacer(minLength: 0)
+                    stepButtons
+                }
+                .padding(.trailing, -Self.headerTrailingOutset)
+                headerText
+            }
+        } else {
+            HStack(spacing: Self.headerSpacing) {
+                glyph
+                headerText
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                stepButtons
+            }
+            .padding(.trailing, -Self.headerTrailingOutset)
+        }
+    }
+
+    private var glyph: some View {
+        PhaseGlyph(geometry: table.glyph)
+            .frame(width: Self.glyphSize, height: Self.glyphSize)
+            .accessibilityHidden(true)
+    }
+
+    /// "Today · Fri, Oct 2" over "Last Quarter · 53% lit".
+    private var headerText: some View {
+        VStack(alignment: .leading, spacing: Self.headerTextSpacing) {
             dateLabel
+            phaseLine
+        }
+    }
+
+    private var stepButtons: some View {
+        HStack(spacing: Self.stepButtonSpacing) {
             stepButton("Previous day", systemImage: "chevron.left", enabled: viewModel.canGoBack) {
                 viewModel.previousDay()
             }
@@ -113,8 +145,6 @@ struct MoonCard: View {
                 viewModel.nextDay()
             }
         }
-        .padding(.top, -Self.headerTopOutset)
-        .padding(.trailing, -Self.headerTrailingOutset)
     }
 
     /// For VoiceOver it's adjustable: swipe up or down moves a day, and the
@@ -123,7 +153,6 @@ struct MoonCard: View {
         Text(viewModel.cardDateLabel)
             .font(Theme.Fonts.label)
             .foregroundStyle(Theme.Colors.textSecondary)
-            .frame(maxWidth: .infinity, alignment: .leading)
             .accessibilityLabel("Date")
             .accessibilityValue(viewModel.dateAccessibilityValue)
             .accessibilityAdjustableAction { direction in
@@ -133,6 +162,29 @@ struct MoonCard: View {
                 @unknown default: break
                 }
             }
+    }
+
+    /// "Last Quarter · 53% lit" on one line; when that doesn't fit ("Waning
+    /// Crescent · 21% lit" on a 402 pt phone), the name over "21% lit", so
+    /// the "·" is never left at a line's end. VoiceOver keeps "at midnight".
+    private var phaseLine: some View {
+        let name = Text(table.phaseName)
+            .foregroundStyle(Theme.Colors.textPrimary)
+        let lit = Text(table.illuminationText)
+            .foregroundStyle(Theme.Colors.textSecondary)
+        let separator = Text(Self.phaseSeparator)
+            .foregroundStyle(Theme.Colors.textSecondary)
+        return ViewThatFits(in: .horizontal) {
+            Text("\(name)\(separator)\(lit)")
+                .lineLimit(1)
+            VStack(alignment: .leading, spacing: Self.headerTextSpacing) {
+                name
+                lit
+            }
+        }
+        .font(Theme.Fonts.phaseName)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(table.phaseAccessibilityLabel)
     }
 
     private func stepButton(
@@ -158,30 +210,11 @@ struct MoonCard: View {
         AccessibilityNotification.Announcement(viewModel.dateAccessibilityValue).post()
     }
 
-    // MARK: - Phase row
-
-    private var phaseRow: some View {
-        HStack(spacing: Self.phaseSpacing) {
-            PhaseGlyph(geometry: table.glyph)
-                .frame(width: Self.glyphSize, height: Self.glyphSize)
-            VStack(alignment: .leading, spacing: Self.phaseTextSpacing) {
-                Text(table.phaseName)
-                    .font(Theme.Fonts.phaseName)
-                    .foregroundStyle(Theme.Colors.textPrimary)
-                Text(table.illuminationText)
-                    .font(Theme.Fonts.detail)
-                    .foregroundStyle(Theme.Colors.textSecondary)
-            }
-        }
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(table.phaseAccessibilityLabel)
-    }
-
     // MARK: - Rise/set row
 
     /// Two equal cells, as tall as the taller one, so a highlighted cell's
-    /// outline matches its neighbour's height (COMPASS-1.1.md §3; they
-    /// replace 5.2's hairline divider, as in the HTML).
+    /// outline matches its neighbour's height (COMPASS-1.1.md §3). Since
+    /// 5.4.6 they hug their content (no minimum height).
     private var riseSetRow: some View {
         HStack(alignment: .top, spacing: Self.columnGap) {
             column(table.rise, isHighlighted: viewModel.highlightedCardCell == .moonrise)
@@ -210,7 +243,7 @@ struct MoonCard: View {
                     .padding(.top, Self.missingTopPadding)
             }
         }
-        .frame(maxWidth: .infinity, minHeight: Self.columnMinHeight, alignment: .topLeading)
+        .frame(maxWidth: .infinity, alignment: .topLeading)
         .modifier(CellStyle(isHighlighted: isHighlighted, restingFill: .clear))
         .frame(maxHeight: .infinity)
         .accessibilityElement(children: .ignore)
@@ -248,122 +281,35 @@ struct MoonCard: View {
         }
     }
 
-    // MARK: - Up now row (COMPASS-1.1.md §3)
+    // MARK: - Up now (COMPASS-1.1.md §9.2)
 
-    /// One element for VoiceOver, with the formatter's sentence. The bar's
-    /// line is kept while the moon is down, hidden, so the card keeps its
-    /// height as the moon rises or sets.
-    private func upNowRow(_ upNow: UpNow) -> some View {
+    /// Moon up: the pill "● Up now · 266° W", outlined when the compass is
+    /// locked on the Moon. Down: the plain line "● Rises 11:10 PM", same
+    /// height, so the card doesn't jump as the moon rises or sets. One
+    /// element for VoiceOver, with the formatter's sentence (§3).
+    private func upNowRow(_ upNow: UpNow, line: String) -> some View {
+        let isUp = upNow.isUp
         let isHighlighted = viewModel.highlightedCardCell == .upNow
-        return VStack(alignment: .leading, spacing: Self.upNowSpacing) {
-            upNowHeadline(upNow, isHighlighted: isHighlighted)
-            if case let .up(_, pass?) = upNow.state {
-                upNowBar(pass)
-            } else {
-                upNowBar(Self.placeholderPass)
-                    .hidden()
-            }
+        let shape = RoundedRectangle(cornerRadius: Self.pillHeight / 2)
+        return HStack(spacing: Self.upNowItemSpacing) {
+            Circle()
+                .fill(isUp ? Theme.Colors.moonLit : Theme.Colors.faint)
+                .frame(width: Self.upNowDotSize, height: Self.upNowDotSize)
+            Text(line)
+                .font(Theme.Fonts.label)
+                .foregroundStyle(isUp ? Theme.Colors.accent : Theme.Colors.textSecondary)
+                .fixedSize(horizontal: false, vertical: true)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .modifier(CellStyle(isHighlighted: isHighlighted, restingFill: Theme.Colors.surfaceInset))
+        .padding(.horizontal, Self.pillPaddingHorizontal)
+        .padding(.vertical, Self.pillPaddingVertical)
+        .frame(maxWidth: .infinity, minHeight: Self.pillHeight, alignment: .leading)
+        .background(isUp ? Theme.Colors.surfaceInset : .clear, in: shape)
+        .overlay {
+            shape.strokeBorder(isHighlighted ? Theme.Colors.accent : .clear, lineWidth: Theme.Metrics.hairline)
+        }
         .padding(.horizontal, -Self.cellOutset)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(upNow.accessibilityLabel)
-    }
-
-    /// Holds the bar's line open while the moon is down; never shown.
-    private static let placeholderPass = UpNow.Pass(progress: 0, riseTime: "12:00 PM", setTime: "12:00 PM")
-
-    /// "● Up now ……… 266° W" on one line, or stacked when the two don't fit
-    /// (AX sizes).
-    private func upNowHeadline(_ upNow: UpNow, isHighlighted: Bool) -> some View {
-        let title = HStack(spacing: Self.upNowItemSpacing) {
-            Circle()
-                .fill(upNow.isUp ? Theme.Colors.moonLit : Theme.Colors.faint)
-                .frame(width: Self.upNowDotSize, height: Self.upNowDotSize)
-            Text(upNow.title)
-                .font(Theme.Fonts.label)
-                .foregroundStyle(isHighlighted ? Theme.Colors.accent : Theme.Colors.textBody)
-        }
-        let detail = Self.detail(of: upNow).map { text in
-            Text(text)
-                .font(Theme.Fonts.label)
-                .foregroundStyle(upNow.isUp ? Theme.Colors.accent : Theme.Colors.textSecondary)
-        }
-        return ViewThatFits(in: .horizontal) {
-            HStack(spacing: Self.upNowItemSpacing) {
-                title
-                Spacer(minLength: Self.upNowItemSpacing)
-                detail
-            }
-            VStack(alignment: .leading, spacing: Self.upNowStackedSpacing) {
-                title
-                detail
-            }
-        }
-    }
-
-    /// The right side: the bearing, or when it rises.
-    private static func detail(of upNow: UpNow) -> String? {
-        switch upNow.state {
-        case let .up(bearing, _): bearing
-        case let .down(nextRise): nextRise
-        }
-    }
-
-    /// "10:06 PM ━━━━━●───── 1:28 PM", or at large sizes, where the times
-    /// leave the bar no room, the bar over the two times.
-    private func upNowBar(_ pass: UpNow.Pass) -> some View {
-        let rise = Text(pass.riseTime).fixedSize()
-        let set = Text(pass.setTime).fixedSize()
-        return ViewThatFits(in: .horizontal) {
-            HStack(spacing: Self.upNowItemSpacing) {
-                rise
-                progressBar(pass.progress)
-                    .frame(minWidth: Self.barMinWidth)
-                set
-            }
-            VStack(spacing: Self.upNowStackedSpacing) {
-                progressBar(pass.progress)
-                HStack(spacing: Self.upNowItemSpacing) {
-                    rise
-                    Spacer(minLength: 0)
-                    set
-                }
-            }
-        }
-        .font(Theme.Fonts.caption)
-        .foregroundStyle(Theme.Colors.textSecondary)
-    }
-
-    /// The track, the travelled part in amber, and the moon as the thumb.
-    /// The thumb's centre runs inset by its radius, so at either end it
-    /// stays clear of the times.
-    private func progressBar(_ progress: Double) -> some View {
-        let thumbDiameter = Self.thumbSize + 2 * Self.thumbOutline
-        return GeometryReader { proxy in
-            let radius = thumbDiameter / 2
-            let midY = proxy.size.height / 2
-            let thumbX = radius + max(proxy.size.width - thumbDiameter, 0) * progress
-            ZStack {
-                Capsule()
-                    .fill(Theme.Colors.stroke)
-                    .frame(width: proxy.size.width, height: Self.barHeight)
-                    .position(x: proxy.size.width / 2, y: midY)
-                Capsule()
-                    .fill(Theme.Colors.accent.opacity(Self.barFillOpacity))
-                    .frame(width: thumbX, height: Self.barHeight)
-                    .position(x: thumbX / 2, y: midY)
-                PhaseGlyph(geometry: table.glyph, glowCSSBlur: 0)
-                    .frame(width: Self.thumbSize, height: Self.thumbSize)
-                    .padding(Self.thumbOutline)
-                    .background(Theme.Colors.surface, in: Circle())
-                    .shadow(color: Theme.Colors.accent.opacity(Self.thumbGlowOpacity), radius: Self.thumbGlowRadius)
-                    .position(x: thumbX, y: midY)
-            }
-        }
-        .frame(height: thumbDiameter)
-        .accessibilityHidden(true)
     }
 }
 
@@ -396,8 +342,7 @@ private extension MoonCard {
 private struct CellStyle: ViewModifier {
 
     let isHighlighted: Bool
-    /// The fill while not highlighted: none for Moonrise and Moonset, the
-    /// inset fill for Up now.
+    /// The fill while not highlighted: none for Moonrise and Moonset.
     let restingFill: Color
 
     private static let paddingVertical: CGFloat = 8

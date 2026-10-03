@@ -5,6 +5,44 @@
 
 ---
 
+### 2026-10-02 · Build 5.4.6a [spike] as built: compact card header, Up now pill
+- **Spec:** COMPASS-1.1.md §9.2. Choices the spec left open:
+- **Padding:** 12 pt on all four sides (the spec said 16 → 12; horizontal was 18). Rise/set "hug content" read as
+  dropping the cells' 76 pt minimum height; the cells keep equal widths so the lock outlines match.
+- **Phase line:** "Last Quarter · 53% lit" on one line, else the name over "21% lit" (long names like Waning
+  Crescent don't fit beside the glyph and ‹ › on a 402 pt phone); a wrapped "·" at a line's end looked broken.
+- **AX sizes:** glyph and ‹ › on one row, the date and phase lines full width under them (squeezed between, the
+  text wrapped a word per line).
+- **Moon down, no rise found:** the line is hidden (the spec drops "Below the horizon", leaving nothing to say).
+- **Copy:** "Rises 10:06 PM" on screen (was "Rises at …"); VoiceOver still says "rises at".
+- **Kept for now:** `UpNow.Pass.progress` and `UpNow.title` "Below the horizon" are no longer shown; left in the
+  model to keep this step small. Remove when 5.4.6 settles.
+
+### 2026-10-02 · 5.4.6 layout pass: bigger dial, compact card, notes in a bottom bar, pinned-bar rule (Tessa)
+- **Spec:** COMPASS-1.1.md §9 (replaces the A / B / C spacing options). Source: `design/1.2-layout/` (Tessa's mocks).
+- **Card:** one header row (glyph · "Today · Fri, Oct 2" over "Last Quarter · 53% lit" · ‹ ›); "at midnight" dropped
+  visually, kept in VoiceOver; tighter rise/set, AM/PM stays small; Up now becomes a one-line pill ("● Up now · 266° W"),
+  "● Rises 11:10 PM" when down. No progress bar.
+- **Compass:** bigger dial (~300 pt face target), shorter needle, Moon glyph at 12 o'clock on lock, even label gaps,
+  more space between sentence / card / readout / dial, paid for by tightening. Degree numbers stay Nunito Sans.
+- **Notes:** Precise off, low accuracy (one copy line), aha and Nearby move to a fixed bar above the home indicator;
+  the dial dims in place. **Reverses 5.4.3** (notes under the readout). Precise copy: "Using your approximate location.
+  Precise gives a better reading." + **Use Precise**.
+- **Pinned bar (closes §6):** shows when the dial's centre is below the fold (SE, AX); "Compass ↓" scrolls to it;
+  amber on lock; sits above a bottom note. Built as 5.6.
+- **Kept:** "today" (mocks say "tonight"), real phase glyph, rise/set lock outline, location off / Far as built.
+- **Why:** on device (5.4.5) the dial ran ~90 pt below the fold and felt too small; the notes pushed it further.
+
+### 2026-10-02 · Launch loader by wait time: fade, skeleton, phase cycle (Tessa)
+- **Spec:** LOADER.md (Step 5.9, build after 5.4.6). Source: `design/1.1/Moon Signal Loader.dc.html`.
+- **Under 400 ms:** no loader; the main screen fades in softly.
+- **400 ms – 2 s:** skeleton of the main screen (concept 1c), with **the city and date tokens as skeleton bars**:
+  the location isn't known yet. Supersedes LOCATION.md §89's last-viewed name as a placeholder.
+- **Over 2 s:** the onboarding moon's **phase cycle** (concept 1a), for new and returning users; shown at least 700 ms.
+- **10 s:** timeout as LOCATION.md. Concept 1b and 1c's orbit-and-settle are not used.
+- **Why after 5.4.6:** the skeleton copies the final main-screen layout.
+- **Later:** transitions get an app-wide polish pass (DESIGN-REVIEW.md "Motion and feedback").
+
 ### 2026-10-02 · Compass sensors start when any part is visible; spacing pass after 5.4.5 (Tessa)
 - **Bug (device, after 5.4.1):** the Up now row pushed the dial partly below the fold, and the sensors only start at
   SwiftUI's default 0.5 visibility threshold, so the dial stayed frozen (blank readout, dimmed marks) until scrolled.

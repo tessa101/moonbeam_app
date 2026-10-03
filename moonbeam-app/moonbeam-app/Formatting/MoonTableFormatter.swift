@@ -59,9 +59,15 @@ nonisolated struct MoonTableFormatter {
     }
 
     /// "75% lit at midnight": the illumination is sampled at the end of the
-    /// selected day (DECISIONS.md 2026-09-23, PRODUCT FR5).
+    /// selected day (DECISIONS.md 2026-09-23, PRODUCT FR5). Spoken only since
+    /// the 5.4.6 card header, which shows `lit(_:)`.
     func illumination(_ fraction: Double) -> String {
-        "\(percent(fraction)) lit at midnight"
+        "\(lit(fraction)) at midnight"
+    }
+
+    /// "75% lit", for the card header (COMPASS-1.1.md §9.2).
+    func lit(_ fraction: Double) -> String {
+        "\(percent(fraction)) lit"
     }
 
     /// "Waning gibbous, 75% lit at midnight", for the phase row.

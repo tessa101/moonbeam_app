@@ -141,7 +141,7 @@ struct MoonTableViewModelTests {
         let table = Self.makeTable(service, day: try Self.farDay())
 
         #expect(table.phaseName == "Waning Gibbous")
-        #expect(table.illuminationText == "75% lit at midnight")
+        #expect(table.illuminationText == "75% lit")
         #expect(table.phaseAccessibilityLabel == "Waning Gibbous, 75% lit at midnight")
         #expect(table.glyph == PhaseGlyphGeometry(illumination: 0.75, phaseAngle: 240))
         #expect(table.glyph.litSide == .left)

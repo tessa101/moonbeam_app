@@ -52,7 +52,7 @@ final class MoonTableViewModel {
 
     /// "Waning Gibbous".
     let phaseName: String
-    /// "75% lit at midnight".
+    /// "75% lit"; VoiceOver's label still says "at midnight".
     let illuminationText: String
     let phaseAccessibilityLabel: String
     let glyph: PhaseGlyphGeometry
@@ -81,7 +81,7 @@ final class MoonTableViewModel {
         set = Self.column(.set, moonDay.set, place: place, deviceTimeZone: deviceTimeZone, formatter: formatter)
 
         phaseName = formatter.phaseName(for: moonDay.phase)
-        illuminationText = formatter.illumination(moonDay.illumination)
+        illuminationText = formatter.lit(moonDay.illumination)
         phaseAccessibilityLabel = formatter.phaseAccessibilityLabel(
             phase: moonDay.phase,
             illumination: moonDay.illumination

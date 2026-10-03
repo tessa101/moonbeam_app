@@ -71,7 +71,7 @@ nonisolated struct UpNowFormatter {
 
     // MARK: - Moon down
 
-    /// "Rises in 34 min", "Rises at 10:06 PM", "Rises tomorrow 9:12 AM", or
+    /// "Rises in 34 min", "Rises 10:06 PM", "Rises tomorrow 9:12 AM", or
     /// further out (a day with no moonrise in between) "Rises Sat 12:05 AM".
     ///
     /// - Parameter nextRise: the next moonrise after `now`; `nil` leaves the
@@ -104,7 +104,8 @@ nonisolated struct UpNowFormatter {
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = timeZone
         if calendar.isDate(rise, inSameDayAs: now) {
-            return ("Rises at \(time)", "rises at \(time)")
+            // COMPASS-1.1.md §9.2: no "at" on screen; VoiceOver keeps it.
+            return ("Rises \(time)", "rises at \(time)")
         }
         if let tomorrow = calendar.date(byAdding: .day, value: Self.daysToTomorrow, to: now),
            calendar.isDate(rise, inSameDayAs: tomorrow) {

@@ -123,7 +123,7 @@ nonisolated struct UpNowFormatterTests {
     func downLaterToday() throws {
         let upNow = formatter.down(nextRise: try Self.date(10, 2, 22, 6), at: try Self.now(), in: Self.losAngelesZone)
 
-        #expect(upNow.state == .down(nextRise: "Rises at 10:06\(Self.nbsp)PM"))
+        #expect(upNow.state == .down(nextRise: "Rises 10:06\(Self.nbsp)PM"))
         #expect(upNow.accessibilityLabel == "Moon below the horizon, rises at 10:06\(Self.nbsp)PM.")
     }
 
@@ -153,7 +153,8 @@ nonisolated struct UpNowFormatterTests {
     }
 
     /// "Today" is the place's: at 12:10 AM in Sydney it's still Oct 2 in
-    /// UTC and in Los Angeles, but a 9:12 AM rise there is today, so "at".
+    /// UTC and in Los Angeles, but a 9:12 AM rise there is today, so no
+    /// "tomorrow".
     @Test("Today and tomorrow are the place's days")
     func daysAreThePlacesDays() throws {
         let sydneyZone = TimeZone(identifier: "Australia/Sydney") ?? .gmt
@@ -164,6 +165,34 @@ nonisolated struct UpNowFormatterTests {
 
         let upNow = formatter.down(nextRise: rise, at: now, in: sydneyZone)
 
-        #expect(upNow.state == .down(nextRise: "Rises at 9:12\(Self.nbsp)AM"))
+        #expect(upNow.state == .down(nextRise: "Rises 9:12\(Self.nbsp)AM"))
+    }
+
+    // MARK: - The card's line (COMPASS-1.1.md §9.2)
+
+    @Test("Up: the pill reads \"Up now · 266° W\"")
+    func upLine() throws {
+        let upNow = formatter.up(azimuth: 266, pass: try Self.pass(), at: try Self.now(), in: Self.losAngelesZone)
+
+        #expect(upNow.line == "Up now · 266° W")
+    }
+
+    @Test("Down: the line is the next rise, with no \"Below the horizon\"", arguments: [
+        (34.0, "Rises in 34 min"),
+        (853.0, "Rises 10:06\u{202F}PM"),
+        (1519.0, "Rises tomorrow 9:12\u{202F}AM"),
+    ])
+    func downLine(minutesAway: Double, expected: String) throws {
+        let now = try Self.now()
+        let upNow = formatter.down(nextRise: now + Self.minutes(minutesAway), at: now, in: Self.losAngelesZone)
+
+        #expect(upNow.line == expected)
+    }
+
+    @Test("Down with no rise in reach: no line")
+    func downWithoutRiseHasNoLine() throws {
+        let upNow = formatter.down(nextRise: nil, at: try Self.now(), in: Self.losAngelesZone)
+
+        #expect(upNow.line == nil)
     }
 }

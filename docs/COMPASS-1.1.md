@@ -41,6 +41,8 @@ the 24 pt Moon glyph (28 locked), rise/set dots on the arc, lock pill, halo, hap
 
 ## 3. Up now row (moon card)
 
+> **Superseded by §9.2 (5.4.6a):** a one-line pill when up, "● Rises …" when down, no bar. VoiceOver unchanged.
+
 Third row in the card, under rise/set. Same height whether the moon is up or down.
 
 - **Moon up:** "Up now" (footnote 600, `textBody`) left, live bearing "266° W" (`accent`) right. Below, a
@@ -83,6 +85,8 @@ Geometry below is the mock's (104 pt dial radius) scaled to our 98 pt: multiply 
 - **Crosshair:** fixed, ±28 pt, 1 pt `#5E4D57`, 2 pt centre dot `tick`. Decorative, hidden from VoiceOver.
 
 ### 4.1 Accuracy notes move under the readout (Tessa, 2026-10-02)
+
+> **Superseded by §9.4 (5.4.6c):** the notes move to a fixed bar above the home indicator.
 In low accuracy there's no lock, so the space under the readout is free. Use it for the warning until it's
 resolved.
 
@@ -118,11 +122,9 @@ resolved.
 - **Fix:** `onScrollVisibilityChange(threshold: 0.1)` in `LocationScreen`; `onDisappear` unchanged. COMPASS.md §1
   "on screen" now means **any part of the compass visible**. Build before 5.4.2.
 
-## 6. Still open (before 5.5)
+## 6. Pinned-bar rule: decided (2026-10-02)
 
-- **Height / pinned bar:** the Up now row adds ~50 pt, on top of 5.8's ~47 pt, plus the accuracy note when it
-  shows. On smaller phones the dial will sit below the fold at the default size, so 5.6's pinned bar becomes a
-  default-size feature. Decide its rule before 5.5 (180 pt dial is the existing fallback).
+See §9.6: the bar shows when the dial's centre is below the fold (SE-size phones, AX sizes). Built as 5.6.
 
 ## 7. Build order (one commit each)
 
@@ -131,7 +133,7 @@ resolved.
 - **5.4.3** Accuracy notes under the readout (§4.1)
 - **5.4.4** Target labels outside the arc, collision rule, pulse + Reduce Motion (§5)
 - **5.4.5** Sentence: new lines, "today" token (§2)
-- **5.4.6** Spacing pass (§9), after Tessa reviews 5.4.2–5.4.5 on device
+- **5.4.6a–c** Layout pass (§9.8), after Tessa's device review of 5.4.2–5.4.5
 
 Screenshots for each, at default size on the smallest supported phone and a 393 pt phone: moon up / locked on
 set / locked on moon / moon down / low accuracy / Precise off / Nearby.
@@ -147,24 +149,103 @@ set / locked on moon / moon down / low accuracy / Precise off / Nearby.
 - Label collision: within the threshold, "Now" keeps its label
 - Pulse: on with the moon up and no lock yet this launch; off after the first lock and stays off; off when down
 
-## 9. 5.4.6 Spacing pass (later, after 5.4.5)
+## 9. 5.4.6 Layout pass (Tessa, 2026-10-02 evening)
 
-**Goal:** the whole dial (labels included) sits above the fold at the default size on a 402 pt iPhone 17. Smaller
-phones may still need the pinned bar (§6). **Not before 5.4.5:** the needle, accuracy note, outside labels and
-sentence all change the heights, so spacing is tuned once, on the finished screen.
+> Source: `design/1.2-layout/` (Tessa's mocks + the 5.4.5 device screenshot). Replaces the earlier A / B / C
+> spacing options. **Goal:** a bigger dial that, with its arc and labels, sits above the fold at the default size
+> on a 402 pt iPhone 17. SE-size phones and AX sizes use the pinned bar (§9.6).
 
-**First:** after 5.4.5, the agent reports the dial's bottom edge vs the screen bottom (iPhone 17 and the smallest
-supported phone, on load, no scroll; `.agent-reports/5.4-fit/`). Tessa picks from the options below with those numbers.
+### 9.1 Sentence
+- Tighter line height (the mock's lines sit closer than 1.5×; start at ~1.2× and match the mock).
+- **Keep "today"** (the mocks say "tonight"; ignore that). Fit rule unchanged.
+- More space between the sentence and the card than now (see §9.7).
 
-Options, with rough savings measured from the 5.4.1 device screenshot (dial bottom was ~70–90 pt below the fold):
-- **A. Tighten (recommended first):** card padding 16 → 12 and internal gap 14 → 10 (the mock's values);
-  rise/set columns hug their content (drop the 76 pt minimum); sentence line height 1.5 → 1.35; card → compass
-  gap 24 → 16. With 5.4.2's needle already removing the capsule band: ~70–90 pt.
-- **B. A + dial 196 → 180 pt** (the 5.8 fallback): ~30 pt more; numbers and labels get tighter.
-- **C. A + phase merged into the header row** (small glyph and "Last Quarter · 53%" beside the date, ‹ › kept):
-  ~45 pt more; a layout change that needs a mock first.
+### 9.2 Moon card
+- **Header row:** phase glyph (real `PhaseGlyph`, ~44 pt) left; two text lines; ‹ › right. Replaces the separate
+  phase block and its divider.
+  - Line 1: **"Today · Fri, Oct 2"** (date on top, as now). Line 2: **"Last Quarter · 53% lit"** (phase name
+    `textPrimary`, "· 53% lit" `textSecondary`). Drop "at midnight" (illumination is still computed at local
+    midnight; VoiceOver keeps "53 percent lit at midnight").
+  - Divider under the header row stays.
+- **Rise / set:** tighter padding and gaps (card padding 16 → 12, internal gap 14 → 10; columns hug content).
+  **AM / PM stays the smaller size, as built.** Time zone abbreviation unchanged.
+- **Up now (replaces §3's bar):**
+  - Moon up: one-line pill **"● Up now · 266° W"** (`accent` text, `#251C22` fill, radius = height / 2,
+    ~36 pt tall). No progress bar, no end times, no thumb.
+  - Locked on the Moon: pill gets the 1 pt `accent` outline (the lock highlight, §3).
+  - Moon down: plain line **"● Rises 11:10 PM"** (grey dot, `textSecondary`, no fill), "Rises in 34 min" under
+    60 min, "Rises tomorrow 9:12 AM" as before. No "Below the horizon" text.
+  - Other dates: hidden (unchanged).
+  - VoiceOver unchanged from §3.
+- **Lock highlight on rise / set:** unchanged (Moonrise / Moonset cell outlined).
+- **As built (5.4.6a):** card padding 12 all round (was 16 / 18), row gap 10, rise/set cells lose their 76 pt
+  minimum height (equal widths kept, for the lock outline). Phase line falls back to two lines ("Waning Crescent"
+  / "21% lit") when it doesn't fit, never a stranded "·". At AX sizes the two text lines sit under the glyph and
+  ‹ ›. Pill 36 pt min height, lock = 1 pt `accent` outline. Down with no rise in reach: the line is hidden.
 
-Then decide the pinned-bar rule (§6) and move on to 5.5.
+### 9.3 Compass
+- **Dial bigger:** target ~300 pt across the face (≈ 75–80 % of a 402 pt screen) with the arc close around it.
+  Scale ticks, numbers (still **Nunito Sans 11 pt fixed**), cardinals and crosshair with it. Find the largest
+  size that fits on the iPhone 17 at the default size with §9.7's spacing; report it.
+- **Needle:** shorter; starts just under the readout and ends in the tick ring (the readout → dial band shrinks).
+- **Locked on the Moon:** the Moon glyph sits at 12 o'clock on the arc, over the needle's top.
+- **Arc:** close around the face; travelled part solid when locked, dotted when unlocked (match the mock).
+- **Labels "↑ Rise" / "↓ Set" / "Now":** even gap from their dot at every angle (label placed along the radius,
+  ~10 pt from the dot's outer edge to the nearest edge of the text). Fixes the 5.4.4 uneven spacing.
+- Unchanged: readout 24 pt, lock pill, pulse until first lock (with "Now" label), collision rule, Reduce Motion.
+
+### 9.4 Bottom bar for notes (reverses 5.4.3 / §4.1)
+One bar just above the home indicator: radius 24, `#251C22` fill, 1 pt `stroke` border, 16 pt side margins,
+icon left, text (footnote, `textBody`), optional button right. **Fixed** to the bottom (`safeAreaInset(edge:
+.bottom)`), so content scrolls above it, never under it. The top of the screen never moves when it appears.
+
+| State | Icon | Copy | Button |
+|---|---|---|---|
+| Precise off | location-dotted | "Using your approximate location. Precise gives a better reading." | **Use Precise** (amber) |
+| Compass accuracy low | "!" in an amber circle | "Compass accuracy is low. Move away from metal or a charger, or wave your phone in a figure 8." (**one line of copy for every low-accuracy reason**) | none |
+| Aha | as built | as built ("There you are!…") and its timing | none |
+| Nearby | as built | as built | none |
+
+- Low accuracy: heading and dial stay put and dim to 50 %; no lock. When it recovers, the bar goes away and the
+  heading fades back in.
+- Priority if two apply: Precise off > low accuracy > Nearby > aha (one bar at a time).
+- **Unchanged:** location off and Far (dial hidden, note alone, as built).
+- **VoiceOver:** the bar reads right after the readout; the button stays reachable.
+- The 25° / 20° hysteresis stays for accuracy; the "dial jumps down" fallback is no longer needed.
+
+### 9.5 States to screenshot
+Moon up unlocked (pulse, "Now") · locked on Moon · locked on rise · locked on set · moon down · other date ·
+Precise off · low accuracy · aha · Nearby · location off · Far. On iPhone 17 (402 pt) and SE 3, at default,
+AX1 and AX5.
+
+### 9.6 Pinned bar rule (closes §6; build as 5.6)
+- Shows when the **dial's centre is below the fold** (in practice: SE-size phones and AX sizes). Hides once the
+  centre is on screen. Sensors keep running while it shows.
+- Glass bar: live readout left, **"Compass ↓"** (amber) right; tap scrolls the dial up under the heading.
+- On lock the bar turns amber and shows the lock text.
+- With a bottom note (§9.4) on small phones: the note keeps the bottom, the pinned bar sits on top of it.
+- AX sizes: same rules as before (DESIGN-1.1.md reflow); check on device.
+
+### 9.7 Spacing
+Tessa wants **more space** between: sentence → card, card → readout / pill, readout / pill → dial. Pay for it
+with §9.1–9.3's tightening. Start from the mock's proportions; report each gap in pt and the dial's bottom
+edge (arc and labels included) vs the fold on iPhone 17 and SE 3 in `.agent-reports/5.4.6/`. If it doesn't fit
+on the iPhone 17, shrink the dial before the gaps, and say by how much.
+
+### 9.8 Build order (one commit each)
+- **5.4.6a** Card: header row, tighter rise/set, Up now pill / down line (§9.2)
+- **5.4.6b** Compass: bigger dial, shorter needle, arc, Moon at 12 on lock, even labels, spacing, sentence line
+  height (§9.1, 9.3, 9.7) + fit report
+- **5.4.6c** Bottom bar for notes, reverting 5.4.3 (§9.4)
+- **5.6** Pinned bar (§9.6), after Tessa checks 5.4.6 on device
+
+### 9.9 Tests
+- Header: date line then "Phase · N% lit"; VoiceOver still says "at midnight"
+- Up now: up → pill text with bearing; locked on Moon → outlined; down → "Rises …" variants; hidden other dates
+- Bottom bar: Precise off / low accuracy / aha / Nearby → bar with the right copy and button; priority order;
+  location off / Far unchanged
+- Labels: gap from dot equal (± 1 pt) at 0°, 90°, 180°, 270° and 45° steps
+- Pinned bar: shows when the dial centre is below the fold, hides when on screen; lock turns it amber
 
 ## Decision log
 
@@ -178,3 +259,6 @@ Then decide the pinned-bar rule (§6) and move on to 5.5.
 - **2026-10-02 (Tessa, after the 5.4.1 device check):** the dial sits partly below the fold and stays frozen until
   scrolled. Fix the sensor threshold now (§5a). Spacing waits: build 5.4.2–5.4.5 first, then a **5.4.6 spacing pass**
   on the finished screen (§9), then the pinned-bar rule.
+- **2026-10-02 evening (Tessa, layout mocks in `design/1.2-layout/`):** bigger dial; compact card header (date over
+  "Phase · N% lit"); Up now as a one-line pill; notes in a fixed bottom bar (reverses 5.4.3); pinned-bar rule; even
+  label gaps. Keep "today", small AM/PM, Nunito Sans numbers, real phase glyph. Spec §9.
