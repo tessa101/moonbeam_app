@@ -95,7 +95,7 @@ struct LocationViewModelDayTests {
         #expect(viewModel.isOnToday)
         #expect(!viewModel.dateLabel.contains("Today"))
         #expect(viewModel.dateAccessibilityValue.hasPrefix("Today, "))
-        #expect(service.requestedDates.last == (try Self.date(2026, 9, 26, hour: 0, in: Self.losAngelesZone)))
+        #expect(service.requestedDates.contains(try Self.date(2026, 9, 26, hour: 0, in: Self.losAngelesZone)))
     }
 
     @Test("A new view model (relaunch) opens on today")
@@ -127,7 +127,7 @@ struct LocationViewModelDayTests {
         #expect(!viewModel.dateLabel.contains("Tomorrow"))
         #expect(viewModel.dateAccessibilityValue.hasPrefix("Tomorrow, "))
         #expect(!viewModel.isOnToday)
-        #expect(service.requestedDates.last == sep27)
+        #expect(service.requestedDates.contains(sep27))
         #expect(viewModel.moonTable?.day == sep27)
     }
 
@@ -241,7 +241,7 @@ struct LocationViewModelDayTests {
         #expect(viewModel.daySelection == .today)
         #expect(!viewModel.isCalendarPresented)
         #expect(viewModel.isOnToday)
-        #expect(service.requestedDates.last == (try Self.date(2026, 9, 26, hour: 0, in: Self.losAngelesZone)))
+        #expect(service.requestedDates.contains(try Self.date(2026, 9, 26, hour: 0, in: Self.losAngelesZone)))
     }
 
     // MARK: - Calendar sheet: the month/year wheel
@@ -375,7 +375,7 @@ struct LocationViewModelDayTests {
 
         #expect(viewModel.daySelection == .today)
         #expect(viewModel.dateAccessibilityValue.hasPrefix("Today, "))
-        #expect(service.requestedDates.last == (try Self.date(2026, 9, 27, hour: 0, in: Self.sydneyZone)))
+        #expect(service.requestedDates.contains(try Self.date(2026, 9, 27, hour: 0, in: Self.sydneyZone)))
     }
 
     @Test("City change on a picked date keeps the same calendar day")
@@ -389,7 +389,7 @@ struct LocationViewModelDayTests {
         viewModel.select(Self.sydney)
 
         #expect(viewModel.daySelection == .day(year: 2026, month: 10, day: 3))
-        #expect(service.requestedDates.last == (try Self.date(2026, 10, 3, hour: 0, in: Self.sydneyZone)))
+        #expect(service.requestedDates.contains(try Self.date(2026, 10, 3, hour: 0, in: Self.sydneyZone)))
     }
 
     // MARK: - Midnight rollover, on foreground (DATE.md §3)
@@ -407,7 +407,7 @@ struct LocationViewModelDayTests {
         let sep27 = try Self.date(2026, 9, 27, hour: 0, in: Self.losAngelesZone)
         #expect(viewModel.daySelection == .today)
         #expect(viewModel.moonTable?.day == sep27)
-        #expect(service.requestedDates.last == sep27)
+        #expect(service.requestedDates.contains(sep27))
     }
 
     @Test("Foreground after the place's midnight: a picked date stays put")
@@ -550,8 +550,8 @@ struct LocationViewModelDayTests {
     // MARK: - Values through the view model (engine-derived guards)
 
     /// ASTRONOMY.md §5 has no USNO row for this day yet. STATUS.md's engine
-    /// prediction: no rise (23:12 on 10/2, 00:21 on 10/4), set 14:27. FR2's
-    /// "No moonrise today" text.
+    /// prediction: no rise (23:12 on 10/2, 00:21 on 10/4), set 14:27. The
+    /// card says "After midnight" and the next rise (COMPASS-1.1.md §9.10).
     @Test("Mar Vista 2026-10-03: no moonrise (engine-derived)")
     func marVistaNoMoonrise() throws {
         let clock = TestClock(try Self.date(2026, 9, 26, hour: 12, in: Self.losAngelesZone))
@@ -562,7 +562,7 @@ struct LocationViewModelDayTests {
 
         let moonTable = try #require(viewModel.moonTable)
         #expect(moonTable.moonDay.rise == nil)
-        #expect(moonTable.rise.detail == .missing("No moonrise today"))
+        #expect(moonTable.rise.detail == .missing("After midnight", next: "Sun 12:21\u{202F}AM"))
         let set = try #require(moonTable.moonDay.set)
         try Self.expectNear(set.date, try Self.date(2026, 10, 3, hour: 14, minute: 27, in: Self.losAngelesZone))
     }

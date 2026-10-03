@@ -55,6 +55,12 @@ nonisolated struct CompassFormatter {
         "\(Self.wholeDegrees(azimuth).formatted())° \(abbreviation(for: azimuth))"
     }
 
+    /// `bearing(for:)` in two parts, the whole degrees ("72°") and the
+    /// abbreviation ("ENE"), so the readout can set the letters smaller.
+    func bearingParts(for azimuth: Double) -> (degrees: String, direction: String) {
+        ("\(Self.wholeDegrees(azimuth).formatted())°", abbreviation(for: azimuth))
+    }
+
     /// The spoken form of `bearing(for:)`, for example
     /// `"72 degrees east-northeast"`.
     func spokenBearing(for azimuth: Double) -> String {

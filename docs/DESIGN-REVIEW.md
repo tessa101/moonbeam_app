@@ -35,7 +35,8 @@ _Started: 2026-09-26_
 - [ ] Table layout: rise time + direction, set time + direction, phase, illumination %
 - [ ] **No moonrise / no moonset today** state (Mar Vista 2026-10-03 exercises it)
   - ~~Can't be checked in the app until there's date picking~~ Date picking is built (Step 3): pick Oct 3 to see it
-- [ ] **"No moonrise today" / "No moonset today" on other days.** Wrong once the selected day isn't today (e.g. "No moonrise on Oct 3"?). Not reworded in Step 3
+- [x] **Resolved 5.4.6b:** "After midnight" + the next time reads right on any day (COMPASS-1.1.md §9.10).
+  **"No moonrise today" / "No moonset today" on other days.** Wrong once the selected day isn't today (e.g. "No moonrise on Oct 3"?). Not reworded in Step 3
 - [ ] How to signal that illumination/phase are for **tonight's local midnight**
 - [ ] Time zone label placement in the table
 - [ ] Compass direction format ("105° ESE"): degrees, letters, or both?

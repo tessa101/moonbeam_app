@@ -545,6 +545,12 @@ struct CompassViewModelTests {
         #expect(harness.viewModel.lockedKind == .moonrise)
         #expect(harness.viewModel.lockText == "Moonrise · 72° ENE")
         #expect(harness.viewModel.headingText == "74° ENE")
+        // Split for the smaller direction letters (COMPASS-1.1.md §9.10),
+        // reading exactly like the plain forms.
+        #expect(harness.viewModel.lockReadout == CompassReadout(lead: "Moonrise · 72°", direction: "ENE"))
+        #expect(harness.viewModel.headingReadout == CompassReadout(lead: "74°", direction: "ENE"))
+        #expect(harness.viewModel.lockReadout?.string == harness.viewModel.lockText)
+        #expect(harness.viewModel.headingReadout?.string == harness.viewModel.headingText)
         #expect(harness.viewModel.lockAccessibilityLabel == "Pointing at moonrise, 72 degrees east-northeast")
         #expect(harness.viewModel.headingAccessibilityLabel == "Heading 74 degrees east-northeast")
     }

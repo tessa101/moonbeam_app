@@ -80,8 +80,9 @@ nonisolated enum Theme {
         /// status bar, and the gaps between the sentence, card and compass.
         static let screenMargin: CGFloat = 20
         static let contentTopSpacing: CGFloat = 12
-        static let sentenceToCard: CGFloat = 20
-        static let cardToCompass: CGFloat = 24
+        /// Opened up in 5.4.6b (COMPASS-1.1.md §9.7): 20 / 24 before.
+        static let sentenceToCard: CGFloat = 28
+        static let cardToCompass: CGFloat = 32
         /// The sentence sits a little further in than the card (the HTML's
         /// `h2` margin).
         static let sentenceInset: CGFloat = 4
@@ -116,7 +117,8 @@ nonisolated enum Theme {
         /// The madlib sentence. Line height is `sentenceLineHeightMultiple`.
         static let sentenceSize: CGFloat = 27
         static let sentence = Font.custom(FontName.youngSerif, size: sentenceSize, relativeTo: .title)
-        static let sentenceLineHeightMultiple: CGFloat = 1.5
+        /// 1.5 until 5.4.6b (COMPASS-1.1.md §9.1).
+        static let sentenceLineHeightMultiple: CGFloat = 1.2
         /// At the default size the sentence's lines shrink together this
         /// far (about 19 pt) before one wraps (§3.1a).
         static let sentenceMinimumScale: CGFloat = 0.7
@@ -132,7 +134,7 @@ nonisolated enum Theme {
         /// Onboarding screen titles.
         static let onboardingTitle = Font.custom(FontName.youngSerif, size: 30, relativeTo: .title)
 
-        /// Moonrise/moonset times, the heading readout and the lock pill.
+        /// Moonrise/moonset times.
         static let displaySize: CGFloat = 24
         static let display = Font.custom(FontName.youngSerif, size: displaySize, relativeTo: .title2)
         /// A time's day period ("PM"), smaller than its digits but in the
@@ -145,7 +147,13 @@ nonisolated enum Theme {
         )
 
         /// The phase name.
-        static let phaseName = Font.custom(FontName.nunitoSansSemiBold, size: 17, relativeTo: .headline)
+        static let phaseNameSize: CGFloat = 17
+        static let phaseName = Font.custom(FontName.nunitoSansSemiBold, size: phaseNameSize, relativeTo: .headline)
+        /// The card header's phase line shrunk to fit one line
+        /// (COMPASS-1.1.md §9.10), still scaling with Dynamic Type.
+        static func phaseName(scale: CGFloat) -> Font {
+            .custom(FontName.nunitoSansSemiBold, size: phaseNameSize * scale, relativeTo: .headline)
+        }
         /// Body text and "No moonrise today".
         static let body = Font.custom(FontName.nunitoSansRegular, size: 17, relativeTo: .body)
         /// Primary button titles.
@@ -172,12 +180,25 @@ nonisolated enum Theme {
         /// with `.subheadline` from this size but stop at
         /// `dialLetterMaxSize`, so the dial's geometry holds at AX sizes
         /// (§4). The view scales the size and builds the font with
-        /// `dialLetter(size:)`.
+        /// `dialLetter(size:dialScale:)`; both sizes are for the 196 pt dial
+        /// and grow with a bigger one (COMPASS-1.1.md §9.3).
         static let dialLetterSize: CGFloat = 15
         static let dialLetterMaxSize: CGFloat = 17
-        static func dialLetter(size: CGFloat) -> Font {
-            .custom(FontName.youngSerif, fixedSize: min(size, dialLetterMaxSize))
+        static func dialLetter(size: CGFloat, dialScale: CGFloat = 1) -> Font {
+            .custom(FontName.youngSerif, fixedSize: min(size, dialLetterMaxSize) * dialScale)
         }
+
+        /// The heading readout and the lock pill (COMPASS-1.1.md §9.10: 24
+        /// until 5.4.6b), with the direction letters ("ENE") set smaller,
+        /// like a time's day period, so the two match and nothing jumps on
+        /// lock.
+        static let readoutSize: CGFloat = 20
+        static let readout = Font.custom(FontName.youngSerif, size: readoutSize, relativeTo: .title2)
+        static let readoutDirection = Font.custom(
+            FontName.youngSerif,
+            size: readoutSize * dayPeriodScale,
+            relativeTo: .title2
+        )
 
         /// The dial's degree numbers (30, 60 …), fixed in size: no Dynamic
         /// Type, decorative (COMPASS-1.1.md §4).

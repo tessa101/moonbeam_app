@@ -26,8 +26,10 @@ final class MoonTableViewModel {
             /// place's zone abbreviation when it differs from the phone's
             /// ("AEST"), and "58° ENE".
             case time(TimeText, timeZone: String?, direction: String)
-            /// "No moonrise today".
-            case missing(String)
+            /// No rise (or set) this day (COMPASS-1.1.md §9.10): "After
+            /// midnight" and the next one, "Sun 12:20 AM"; or "Not today"
+            /// and `nil` when the next is more than a day away.
+            case missing(String, next: String?)
         }
 
         /// "↑ Moonrise".
@@ -77,8 +79,29 @@ final class MoonTableViewModel {
         self.day = day
         self.moonDay = moonDay
 
-        rise = Self.column(.rise, moonDay.rise, place: place, deviceTimeZone: deviceTimeZone, formatter: formatter)
-        set = Self.column(.set, moonDay.set, place: place, deviceTimeZone: deviceTimeZone, formatter: formatter)
+        // Only a day missing a rise or set needs the next day's, for "After
+        // midnight, Sun 12:20 AM" (COMPASS-1.1.md §9.10).
+        let nextDay: MoonDay? = if moonDay.rise == nil || moonDay.set == nil {
+            Self.dayAfter(day, in: place.timeZone).map { moonService.moonDay(for: place, on: $0) }
+        } else {
+            nil
+        }
+        rise = Self.column(
+            .rise,
+            moonDay.rise,
+            next: nextDay?.rise,
+            place: place,
+            deviceTimeZone: deviceTimeZone,
+            formatter: formatter
+        )
+        set = Self.column(
+            .set,
+            moonDay.set,
+            next: nextDay?.set,
+            place: place,
+            deviceTimeZone: deviceTimeZone,
+            formatter: formatter
+        )
 
         phaseName = formatter.phaseName(for: moonDay.phase)
         illuminationText = formatter.lit(moonDay.illumination)
@@ -91,9 +114,19 @@ final class MoonTableViewModel {
 
     // MARK: - Helpers
 
+    /// The start of the day after `day` in `timeZone`.
+    private static func dayAfter(_ day: Date, in timeZone: TimeZone) -> Date? {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = timeZone
+        return calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: day))
+    }
+
+    /// - Parameter next: the same event on the next day, for a day without
+    ///   one; `nil` there means it's more than a day away.
     private static func column(
         _ event: MoonTableFormatter.Event,
         _ moonEvent: MoonEvent?,
+        next: MoonEvent?,
         place: Place,
         deviceTimeZone: TimeZone,
         formatter: MoonTableFormatter
@@ -101,18 +134,25 @@ final class MoonTableViewModel {
         let abbreviation = moonEvent.flatMap {
             formatter.timeZoneAbbreviation(for: place, at: $0.date, deviceTimeZone: deviceTimeZone)
         }
-        let detail: Column.Detail = if let moonEvent {
-            .time(
+        let title = formatter.eventTitle(event)
+        guard let moonEvent else {
+            let nextText = next.map { formatter.nextEventText($0.date, in: place.timeZone) }
+            return Column(
+                title: title,
+                detail: .missing(
+                    nextText == nil ? MoonTableFormatter.notTodayText : MoonTableFormatter.afterMidnightText,
+                    next: nextText?.shown
+                ),
+                accessibilityLabel: formatter.missingAccessibilityLabel(for: event, nextSpoken: nextText?.spoken)
+            )
+        }
+        return Column(
+            title: title,
+            detail: .time(
                 formatter.timeText(moonEvent.date, in: place.timeZone),
                 timeZone: abbreviation,
                 direction: formatter.direction(for: moonEvent.azimuth)
-            )
-        } else {
-            .missing(formatter.missingText(event))
-        }
-        return Column(
-            title: formatter.eventTitle(event),
-            detail: detail,
+            ),
             accessibilityLabel: formatter.accessibilityLabel(
                 for: event,
                 moonEvent,

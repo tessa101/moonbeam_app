@@ -3,7 +3,7 @@
 > A living note on where things stand. Update it at the end of each work session
 > so the next session (you, or Claude) can pick up cold.
 
-_Last updated: 2026-10-02 (Build 5.4.6a [spike]: compact card; next 5.4.6b, 5.4.6c; Compass 1.1 spike built, 5.4.1–5.4.5; sensors start when any part of the compass shows; next: the pinned-bar rule, then 5.5); 2026-10-01 (TestFlight build 4 prepared; onboarding Settings fix; Show onboarding in TestFlight; tap animation and DEBUG onboarding trigger built; next 5.5; Moon Signal app icon in; 5.8 moon arc built; next: DEBUG onboarding trigger, tap animation, then 5.5; TestFlight build 3 uploaded with 5.7; moon arc decided (option B, 5.8); Step 5.7 onboarding built ahead of 5.5/5.6; Step 5.3 madlib sentence built, with §3.1a; 5.2 follow-ups; Step 5.2 moon card built; 5.1 theme; Design 1.1 settled: DESIGN-1.1.md, Step 5; 4.14, Step 2.2 and 4.15 built; device checks pending)_
+_Last updated: 2026-10-02 (Build 5.4.6b [spike]: dial 260 pt, gaps, "After midnight"; next 5.4.6c; Build 5.4.6a [spike]: compact card; Compass 1.1 spike built, 5.4.1–5.4.5; sensors start when any part of the compass shows; next: the pinned-bar rule, then 5.5); 2026-10-01 (TestFlight build 4 prepared; onboarding Settings fix; Show onboarding in TestFlight; tap animation and DEBUG onboarding trigger built; next 5.5; Moon Signal app icon in; 5.8 moon arc built; next: DEBUG onboarding trigger, tap animation, then 5.5; TestFlight build 3 uploaded with 5.7; moon arc decided (option B, 5.8); Step 5.7 onboarding built ahead of 5.5/5.6; Step 5.3 madlib sentence built, with §3.1a; 5.2 follow-ups; Step 5.2 moon card built; 5.1 theme; Design 1.1 settled: DESIGN-1.1.md, Step 5; 4.14, Step 2.2 and 4.15 built; device checks pending)_
 
 ## Where things live
 - **Local repo:** `~/app-ideas/moonbeam` (the one true folder)
@@ -249,6 +249,12 @@ _Last updated: 2026-10-02 (Build 5.4.6a [spike]: compact card; next 5.4.6b, 5.4.
        tighter rise/set, Up now pill / "● Rises …" line (COMPASS-1.1.md §9.2). Builds; previews in
        `.agent-reports/5.4.6/`. **Tests not run** (test runner can't launch in this environment); run them next.
        **Next:** 5.4.6b (dial, spacing, fit report), 5.4.6c (bottom bar).
+     - [x] **Build 5.4.6b [spike] (2026-10-02):** dial 260 pt (by width; 233 on SE 3), gaps 28 / 32 / ~35, short needle,
+       Moon at 12 on lock, even label gaps, sentence 1.2×, pill/readout 20 pt with small letters, phase line to 0.85×,
+       label → time 2 pt, "After midnight" + next time (COMPASS-1.1.md §9.11). Fit: iPhone 17 dial + labels on screen
+       (labels 22 pt into the home-indicator area); SE 3 dial centre on screen, face 72 pt below. Report and 78
+       screenshots: `.agent-reports/5.4.6/`. **Tests not run** (runner can't launch here). **Next:** Tessa's device
+       check, 5.4.6c (bottom bar).
 
 5. [ ] Location: detect + search (Step 2)
    - Spec: **[LOCATION.md](LOCATION.md)** (decided 2026-09-25). Place model, CoreLocation one-shot fix,

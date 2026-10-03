@@ -18,6 +18,31 @@
 - **Kept for now:** `UpNow.Pass.progress` and `UpNow.title` "Below the horizon" are no longer shown; left in the
   model to keep this step small. Remove when 5.4.6 settles.
 
+### 2026-10-02 · Build 5.4.6b [spike] as built: dial 260 pt by width, gaps, short needle, even labels
+- **Spec:** COMPASS-1.1.md §9.1, §9.3, §9.7, §9.10; as built in §9.11. Fit: `.agent-reports/5.4.6/5.4.6b-fit.md`.
+- **Dial sized by width, 260 pt on a 402 pt phone (233 on the SE 3), not ~300:** the side labels sit outside the
+  arc, so face radius + 16 arc gap + 7 dot + 10 label gap + ~38 label must end inside the screen. Height wasn't the
+  limit: on the iPhone 17 the whole dial, labels included, ends 12 pt above the screen's bottom (22 pt into the
+  home-indicator area). Considered: labels inside the arc at the sides (back to 5.4.3-style clutter), a fixed 300 pt
+  dial (labels off screen), a 238 pt face that clears the home indicator (smaller than the mock). **Tessa to check
+  on device** whether a label in the home-indicator band is OK.
+- **Gaps:** 28 / 32 / ~35 pt (§9.7); the dial's frame reserves a label's height above the arc, which is most of
+  the readout → needle gap.
+- **Needle:** built to §9.10's endpoints (43 pt); its "~28 pt" estimate doesn't match those endpoints.
+- **Moon at 12 on lock:** drawn at the heading (within the lock's 5° / 8°), over the needle.
+- **"After midnight":** the next day's `MoonDay`, no new `MoonService` method. FR2, ASTRONOMY.md, DESIGN-1.1.md
+  §3.2 and DESIGN-REVIEW.md updated.
+- **DEBUG `-screenState <kind>`** (`DebugScreenState`): opens the app on one faked compass state (13 kinds), so the
+  real app can be screenshotted on any simulator and text size; previews can't pick the device and the simulator
+  has no compass. Compiled out of release builds, like `-forceOnboarding`.
+
+### 2026-10-02 · After 5.4.6a on device: card, lock pill, needle, "After midnight" (Tessa)
+- **Spec:** COMPASS-1.1.md §9.10, built with 5.4.6b.
+- Phase line on one line (shrinks to 0.85x); label → time gap ~2 pt; lock pill and readout 20 pt with small direction
+  letters (like AM/PM); needle only reaches the major ticks; dial bigger (§9.3).
+- **"No moonrise today" → "After midnight"** with the next time under it ("Sun 12:20 AM"); cells top-aligned.
+  "Not today" if the next event is over a day away (polar). Supersedes the FR2 wording.
+
 ### 2026-10-02 · 5.4.6 layout pass: bigger dial, compact card, notes in a bottom bar, pinned-bar rule (Tessa)
 - **Spec:** COMPASS-1.1.md §9 (replaces the A / B / C spacing options). Source: `design/1.2-layout/` (Tessa's mocks).
 - **Card:** one header row (glyph · "Today · Fri, Oct 2" over "Last Quarter · 53% lit" · ‹ ›); "at midnight" dropped

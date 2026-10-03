@@ -5,15 +5,21 @@
 
 import SwiftUI
 
-/// The compass dial (DESIGN-1.1.md §3.3, §3.3a, COMPASS-1.1.md §4, COMPASS.md
-/// §1): a lit face with tick lines every 2° (longer every 10° and 30°), degree
-/// numbers every 30°, N/E/S/W in Young Serif and a fixed crosshair; outside
-/// the rim, the moon arc, the moon's pass from rise to set, with `moonLit`
-/// dots at moonrise and moonset, the live Moon as a phase glyph riding on it
-/// (pulsing until the first lock), and their labels beyond; and a fixed
-/// needle at 12 o'clock from above the arc into the ticks.
-/// Locked, the target's mark grows and glows and the dial gets a soft amber
-/// halo.
+/// The compass dial (DESIGN-1.1.md §3.3, §3.3a, COMPASS-1.1.md §4, §9.3,
+/// COMPASS.md §1): a lit face with tick lines every 2° (longer every 10° and
+/// 30°), degree numbers every 30°, N/E/S/W in Young Serif and a fixed
+/// crosshair; just outside the rim, the moon arc, the moon's pass from rise
+/// to set, with `moonLit` dots at moonrise and moonset and the live Moon as
+/// a phase glyph riding on it (pulsing until the first lock), their labels
+/// beyond; and a short fixed needle at 12 o'clock from just above the arc to
+/// the inner end of the heavy ticks. Locked, the target's mark grows and
+/// glows and the dial gets a soft amber halo; locked on the Moon, the glyph
+/// sits at 12 o'clock over the needle's top.
+///
+/// Sized by `faceDiameter` (5.4.6b: as big as the screen's width allows,
+/// `faceDiameter(forWidth:)`); ticks, numbers' and letters' distances,
+/// letters and crosshair scale with it from the 196 pt dial they were drawn
+/// for. The marks and the degree numbers' size don't.
 ///
 /// The face itself doesn't turn: everything is placed at its on-screen
 /// angle (azimuth − heading), so letters, labels and the Moon's phase are
@@ -27,6 +33,9 @@ import SwiftUI
 /// moonrise, 72 degrees east-northeast; …"); with no targets it's hidden.
 /// The arc adds nothing to it (§3.3a).
 struct CompassDial: View {
+
+    /// The face's diameter; see `faceDiameter(forWidth:)`.
+    let faceDiameter: CGFloat
 
     /// Degrees from true north the phone points, or `nil` with no heading.
     let heading: Double?
@@ -54,12 +63,47 @@ struct CompassDial: View {
     /// The letters scale with Dynamic Type up to `dialLetterMaxSize` (§2).
     @ScaledMetric(relativeTo: .subheadline) private var letterSize = Theme.Fonts.dialLetterSize
 
-    // MARK: - Constants (§3.3, §3.3a, measured from the HTML)
+    // MARK: - Size (COMPASS-1.1.md §9.3)
 
-    /// §3.3a: 196 pt, down from 5.4's 220, to make room for the arc. The AX
-    /// sizes' 260 pt dial is 5.5 (§4).
-    private static let diameter: CGFloat = 196
-    private static let dialRadius = diameter / 2
+    /// The dial the tick, number, letter and crosshair geometry below was
+    /// drawn for (§3.3a); a bigger face scales it by `scale`.
+    static let designDiameter: CGFloat = 196
+    /// §9.3's target; the screen's width caps it first on today's phones.
+    static let maxFaceDiameter: CGFloat = 300
+    static let minFaceDiameter = designDiameter
+    /// "↑ Rise", the widest label, at 12 pt bold, rounded up.
+    private static let widestLabelWidth: CGFloat = 38
+
+    /// The biggest face whose labels at 3 and 9 o'clock still end inside
+    /// the screen: they may reach into the screen's side margin, not past
+    /// it. 260 pt on a 402 pt phone, 233 pt on a 375 pt one.
+    ///
+    /// - Parameter width: the compass block's width (screen less margins).
+    static func faceDiameter(forWidth width: CGFloat) -> CGFloat {
+        let sideReach = arcGap + targetDotSize / 2 + CompassTargetLabels.labelGap + widestLabelWidth
+            - Theme.Metrics.screenMargin
+        return min(max(width - 2 * sideReach, minFaceDiameter), maxFaceDiameter)
+    }
+
+    private var radius: CGFloat { faceDiameter / 2 }
+    private var scale: CGFloat { faceDiameter / Self.designDiameter }
+    private var arcRadius: CGFloat { radius + Self.arcGap }
+
+    /// The view's frame: as wide as the arc and the Moon's disc on it (the
+    /// side labels may overhang, into the screen margin), and as tall as
+    /// that plus a label's room above and below the arc, so a label near 12
+    /// or 6 o'clock never runs into the readout or what's below.
+    private var frameSize: CGSize {
+        let sideReach = arcRadius + Self.moonMarkerSize / 2 + Self.moonDiscMargin
+        let verticalReach = arcRadius + Self.labelRoom
+        return CGSize(width: sideReach * 2, height: verticalReach * 2)
+    }
+
+    private var centre: CGPoint {
+        CGPoint(x: frameSize.width / 2, y: frameSize.height / 2)
+    }
+
+    // MARK: - Constants (§3.3, §3.3a, measured from the HTML)
 
     private static let fullTurnDegrees = 360
     private static let cardinalStepDegrees = 90
@@ -67,7 +111,7 @@ struct CompassDial: View {
     /// Ticks (COMPASS-1.1.md §4, the HTML's 104 pt dial scaled to 98 pt):
     /// every 2° minor, every 10° mid, every 30° heavy, from just inside the
     /// rim inwards. Minor ticks are under 3:1 and decorative; mid and heavy
-    /// carry the reading.
+    /// carry the reading. Lengths scale with the dial, widths don't.
     private static let minorTickStepDegrees = 2
     private static let midTickStepDegrees = 10
     private static let heavyTickStepDegrees = 30
@@ -77,14 +121,18 @@ struct CompassDial: View {
     private static let heavyTick = (length: CGFloat(15), width: CGFloat(2.2))
 
     /// Degree numbers every 30° except on the cardinals, this far from the
-    /// centre; cardinals at `letterCentreDistance`.
+    /// centre; cardinals at `letterCentreDistance` (both on the 196 pt dial).
     private static let numberCentreDistance: CGFloat = 72
     private static let letterCentreDistance: CGFloat = 58
-    /// Target labels ("↑ Rise", "↓ Set", "Now", COMPASS-1.1.md §5): centred
-    /// this far beyond the arc's track (138 pt from the centre), with a `bg`
-    /// halo so they read over the dots.
-    private static let labelGap: CGFloat = 24
+    /// Target labels ("↑ Rise", "↓ Set", "Now", COMPASS-1.1.md §5, §9.3):
+    /// `CompassTargetLabels.labelGap` from their mark, with a `bg` halo so
+    /// they read over the dots.
     private static let labelHaloRadius: CGFloat = 1.5
+    /// A 12 pt label's line, rounded up.
+    private static let labelLineHeight: CGFloat = 16
+    /// Room beyond the arc's track, above and below, for a label over the
+    /// Moon (the biggest unlocked mark).
+    private static let labelRoom = moonMarkerSize / 2 + CompassTargetLabels.labelGap + labelLineHeight
 
     /// The Moon's pulse (§5): a 2 pt `accent` ring growing from 10 to 24 pt
     /// radius as it fades from 80%, every 1.8 s. Reduce Motion: a still ring
@@ -96,20 +144,21 @@ struct CompassDial: View {
     private static let pulseStartOpacity = 0.8
     private static let pulseDuration = 1.8
 
-    /// The fixed crosshair: ±28 pt, 1 pt, with a 2 pt centre dot.
+    /// The fixed crosshair: ±28 pt on the 196 pt dial, 1 pt, with a 2 pt
+    /// centre dot.
     private static let crosshairReach: CGFloat = 28
     private static let crosshairDotSize: CGFloat = 2
 
-    /// The arc's track: this far outside the rim (114 pt from the centre).
+    /// The arc's track: this far outside the rim, at any dial size.
     private static let arcGap: CGFloat = 16
-    private static let arcRadius = dialRadius + arcGap
     /// Still to come: 3 pt round dots about 6.6 pt apart, `accent` 95%.
     private static let arcDotSize: CGFloat = 3
     private static let arcDotSpacing: CGFloat = 6.6
     /// A dash just long enough to draw its round caps: a dot.
     private static let arcDotDash: CGFloat = 0.01
     private static let arcRemainingOpacity = 0.95
-    /// Already travelled: a solid `accent` hairline at 30%.
+    /// Already travelled, at 30%: a solid hairline while locked, dots
+    /// otherwise (COMPASS-1.1.md §9.3, as the mock).
     private static let arcTravelledWidth: CGFloat = 1.5
     private static let arcTravelledOpacity = 0.3
     /// The moon is down: the next pass, all dotted, and its rise and set
@@ -148,20 +197,11 @@ struct CompassDial: View {
     private static let haloOverhang: CGFloat = 18
     private static let haloOpacity = 0.28
 
-    /// The room above the outer radius that 5.4's capsule indicator had,
-    /// kept so the dial doesn't move: the needle starts at its top.
-    private static let needleLead: CGFloat = 17
-    /// The needle (COMPASS-1.1.md §4): a 3 pt round-capped line from the top
-    /// of the view, across the arc at 12 o'clock, ending as deep in the ring
-    /// as a mid tick.
+    /// The needle (COMPASS-1.1.md §9.10): a 3 pt round-capped line from this
+    /// far above the arc's track to the inner end of the heavy ticks. It
+    /// only has to point at the degree.
     private static let needleWidth: CGFloat = 3
-    private static let needleDepth = tickOuterInset + midTick.length
-
-    /// The farthest anything reaches on every side but the top: the glyph's
-    /// disc on the arc. The view is this radius all round, plus the
-    /// needle's lead on top (about 277 pt tall in all).
-    private static let outerRadius = arcRadius + moonMarkerSize / 2 + moonDiscMargin
-    private static let outerSize = outerRadius * 2
+    private static let needleOverArc: CGFloat = 6
 
     /// The face: radial gradient centred at 50% / 40%, out to the farthest
     /// corner of its box (CSS `circle at 50% 40%`), a 1 pt inner highlight
@@ -193,6 +233,10 @@ struct CompassDial: View {
         targets.contains { $0.kind == .moon }
     }
 
+    private var marksOpacity: Double {
+        heading == nil ? Self.noHeadingOpacity : 1
+    }
+
     // MARK: - Body
 
     var body: some View {
@@ -200,12 +244,15 @@ struct CompassDial: View {
             halo
             face
             crosshair
-            marks
-                .opacity(heading == nil ? Self.noHeadingOpacity : 1)
+            dialMarks
+                .opacity(marksOpacity)
+            // Under the targets, so a mark at 12 o'clock (the Moon, locked)
+            // sits over the needle's top.
+            needle
+            targetMarks
+                .opacity(marksOpacity)
         }
-        .frame(width: Self.outerSize, height: Self.outerSize)
-        .overlay { needle }
-        .padding(.top, Self.needleLead)
+        .frame(width: frameSize.width, height: frameSize.height)
         .frame(maxWidth: .infinity)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(accessibilityTargets ?? "")
@@ -223,7 +270,7 @@ struct CompassDial: View {
                     colors: [Theme.Colors.dialTop, Theme.Colors.dialBottom],
                     center: Self.faceGradientCentre,
                     startRadius: 0,
-                    endRadius: Self.diameter * Self.faceGradientReach
+                    endRadius: faceDiameter * Self.faceGradientReach
                 )
             )
             .overlay {
@@ -236,7 +283,7 @@ struct CompassDial: View {
                 radius: Self.faceShadowRadius,
                 y: Self.faceShadowOffsetY
             )
-            .frame(width: Self.diameter, height: Self.diameter)
+            .frame(width: faceDiameter, height: faceDiameter)
     }
 
     /// Only while locked (§3.3): the whole dial sits in a soft amber glow.
@@ -245,7 +292,7 @@ struct CompassDial: View {
     @ViewBuilder
     private var halo: some View {
         if lockedKind != nil {
-            let reach = Self.dialRadius + Self.haloOverhang
+            let reach = radius + Self.haloOverhang
             Circle()
                 .fill(
                     RadialGradient(
@@ -260,55 +307,56 @@ struct CompassDial: View {
         }
     }
 
-    /// Fixed at 12 o'clock: where the phone points. From the top of the
-    /// view (just under the readout), across the arc, into the ticks; amber
-    /// while locked. Drawn over the marks, as in the HTML.
+    /// Fixed at 12 o'clock: where the phone points. From just above the
+    /// arc's track, across it, to the inner end of the heavy ticks; amber
+    /// while locked.
     private var needle: some View {
-        let capRadius = Self.needleWidth / 2
+        let top = arcRadius + Self.needleOverArc
+        let bottom = radius - Self.tickOuterInset - Self.heavyTick.length * scale
         return Path { path in
-            path.move(to: CGPoint(x: Self.outerRadius, y: capRadius - Self.needleLead))
-            path.addLine(to: CGPoint(x: Self.outerRadius, y: Self.outerRadius - Self.dialRadius + Self.needleDepth))
+            path.move(to: CGPoint(x: centre.x, y: centre.y - top))
+            path.addLine(to: CGPoint(x: centre.x, y: centre.y - bottom))
         }
         .stroke(
             lockedKind == nil ? Theme.Colors.textPrimary : Theme.Colors.accent,
             style: StrokeStyle(lineWidth: Self.needleWidth, lineCap: .round)
         )
-        .frame(width: Self.outerSize, height: Self.outerSize)
+        .frame(width: frameSize.width, height: frameSize.height)
         .accessibilityHidden(true)
     }
 
     /// Fixed, under the turning marks; decorative.
     private var crosshair: some View {
-        let centre = Self.outerRadius
-        let reach = Self.crosshairReach
+        let reach = Self.crosshairReach * scale
         return ZStack {
             Path { path in
-                path.move(to: CGPoint(x: centre - reach, y: centre))
-                path.addLine(to: CGPoint(x: centre + reach, y: centre))
-                path.move(to: CGPoint(x: centre, y: centre - reach))
-                path.addLine(to: CGPoint(x: centre, y: centre + reach))
+                path.move(to: CGPoint(x: centre.x - reach, y: centre.y))
+                path.addLine(to: CGPoint(x: centre.x + reach, y: centre.y))
+                path.move(to: CGPoint(x: centre.x, y: centre.y - reach))
+                path.addLine(to: CGPoint(x: centre.x, y: centre.y + reach))
             }
             .stroke(Theme.Colors.faint, lineWidth: Theme.Metrics.hairline)
             Circle()
                 .fill(Theme.Colors.tick)
                 .frame(width: Self.crosshairDotSize, height: Self.crosshairDotSize)
-                .position(x: centre, y: centre)
+                .position(centre)
         }
-        .frame(width: Self.outerSize, height: Self.outerSize)
+        .frame(width: frameSize.width, height: frameSize.height)
         .accessibilityHidden(true)
     }
 
     // MARK: - Marks
 
-    private var marks: some View {
+    /// What's printed on the dial and the arc: everything that turns but
+    /// the targets.
+    private var dialMarks: some View {
         ZStack {
             ticks
             numbers
             letters
             arcTrack
-            targetMarks
         }
-        .frame(width: Self.outerSize, height: Self.outerSize)
+        .frame(width: frameSize.width, height: frameSize.height)
     }
 
     /// One path per weight, so 180 ticks are four shapes, not 180 views.
@@ -331,13 +379,13 @@ struct CompassDial: View {
     }
 
     /// Ticks at every 2° that `include` keeps, from just inside the rim
-    /// inwards by `length`.
+    /// inwards by `length` (on the 196 pt dial).
     private func tickPath(where include: (Int) -> Bool, length: CGFloat) -> Path {
-        let outer = Self.dialRadius - Self.tickOuterInset
+        let outer = radius - Self.tickOuterInset
         var path = Path()
         for degrees in stride(from: 0, to: Self.fullTurnDegrees, by: Self.minorTickStepDegrees) where include(degrees) {
             path.move(to: point(at: Double(degrees), distance: outer))
-            path.addLine(to: point(at: Double(degrees), distance: outer - length))
+            path.addLine(to: point(at: Double(degrees), distance: outer - length * scale))
         }
         return path
     }
@@ -350,7 +398,7 @@ struct CompassDial: View {
                 .font(Theme.Fonts.dialNumber)
                 .monospacedDigit()
                 .foregroundStyle(Theme.Colors.dialNumber)
-                .position(point(at: Double(degrees), distance: Self.numberCentreDistance))
+                .position(point(at: Double(degrees), distance: Self.numberCentreDistance * scale))
         }
         .accessibilityHidden(true)
     }
@@ -359,15 +407,15 @@ struct CompassDial: View {
     private var letters: some View {
         ForEach(Self.cardinals, id: \.label) { cardinal in
             Text(cardinal.label)
-                .font(Theme.Fonts.dialLetter(size: letterSize))
+                .font(Theme.Fonts.dialLetter(size: letterSize, dialScale: scale))
                 .foregroundStyle(cardinal.degrees == 0 ? Theme.Colors.accent : Theme.Colors.textPrimary)
-                .position(point(at: cardinal.degrees, distance: Self.letterCentreDistance))
+                .position(point(at: cardinal.degrees, distance: Self.letterCentreDistance * scale))
         }
     }
 
-    /// The pass (§3.3a, option B). Moon up: a faint hairline from moonrise
-    /// to the Moon, dots from the Moon to moonset. Moon down: the next pass,
-    /// all dots, dimmed.
+    /// The pass (§3.3a, option B; §9.3). Moon up: from moonrise to the Moon
+    /// faint (a solid hairline while locked, dots otherwise), dots from the
+    /// Moon to moonset. Moon down: the next pass, all dots, dimmed.
     @ViewBuilder
     private var arcTrack: some View {
         if let arc {
@@ -382,11 +430,16 @@ struct CompassDial: View {
                 let low = min(arc.startAzimuth, arc.endAzimuth)
                 let high = max(arc.startAzimuth, arc.endAzimuth)
                 let seam = min(max(moonAzimuth, low), high)
-                arcPath(from: arc.startAzimuth, to: seam)
-                    .stroke(
-                        Theme.Colors.accent.opacity(Self.arcTravelledOpacity),
+                let travelled = arcPath(from: arc.startAzimuth, to: seam)
+                let travelledColor = Theme.Colors.accent.opacity(Self.arcTravelledOpacity)
+                if lockedKind != nil {
+                    travelled.stroke(
+                        travelledColor,
                         style: StrokeStyle(lineWidth: Self.arcTravelledWidth, lineCap: .round)
                     )
+                } else {
+                    travelled.stroke(travelledColor, style: dotted)
+                }
                 arcPath(from: seam, to: arc.endAzimuth)
                     .stroke(Theme.Colors.accent.opacity(Self.arcRemainingOpacity), style: dotted)
             } else {
@@ -402,35 +455,55 @@ struct CompassDial: View {
     /// locked target never does.
     private var targetMarks: some View {
         let labels = CompassTargetLabels.labels(for: targets, lockedKind: lockedKind)
-        return ForEach(targets, id: \.kind) { target in
-            let isLocked = target.kind == lockedKind
-            let size = Self.markSize(kind: target.kind, isLocked: isLocked)
-            if target.kind == .moon, showsMoonPulse {
-                MoonPulse(reduceMotion: reduceMotion)
-                    .position(point(at: target.azimuth, distance: Self.arcRadius))
-            }
-            // Grouped so the dot and its glow dim as one, then backed with
-            // `bg` so the arc's end dot doesn't show through a dimmed mark.
-            targetMark(kind: target.kind, isLocked: isLocked)
-                .compositingGroup()
-                .opacity(isMoonUp || isLocked ? 1 : Self.arcNextPassOpacity)
-                .background {
-                    Circle()
-                        .fill(Theme.Colors.bg)
-                        .frame(width: size, height: size)
+        return ZStack {
+            ForEach(targets, id: \.kind) { target in
+                let isLocked = target.kind == lockedKind
+                let size = Self.markSize(kind: target.kind, isLocked: isLocked)
+                let position = point(at: displayAzimuth(of: target), distance: arcRadius)
+                if target.kind == .moon, showsMoonPulse {
+                    MoonPulse(reduceMotion: reduceMotion)
+                        .position(position)
                 }
-                .position(point(at: target.azimuth, distance: Self.arcRadius))
-            if let label = labels[target.kind] {
-                Text(label)
-                    .font(Theme.Fonts.dialTargetLabel)
-                    .foregroundStyle(Theme.Colors.textBody)
-                    .fixedSize()
-                    .shadow(color: Theme.Colors.bg, radius: Self.labelHaloRadius)
-                    .shadow(color: Theme.Colors.bg, radius: Self.labelHaloRadius)
-                    .position(point(at: target.azimuth, distance: Self.arcRadius + Self.labelGap))
-                    .accessibilityHidden(true)
+                // Grouped so the dot and its glow dim as one, then backed with
+                // `bg` so the arc's end dot doesn't show through a dimmed mark.
+                targetMark(kind: target.kind, isLocked: isLocked)
+                    .compositingGroup()
+                    .opacity(isMoonUp || isLocked ? 1 : Self.arcNextPassOpacity)
+                    .background {
+                        Circle()
+                            .fill(Theme.Colors.bg)
+                            .frame(width: size, height: size)
+                    }
+                    .position(position)
+            }
+            ArcLabelLayout(trackRadius: arcRadius) {
+                ForEach(targets.filter { labels[$0.kind] != nil }, id: \.kind) { target in
+                    Text(labels[target.kind] ?? "")
+                        .font(Theme.Fonts.dialTargetLabel)
+                        .foregroundStyle(Theme.Colors.textBody)
+                        .fixedSize()
+                        .shadow(color: Theme.Colors.bg, radius: Self.labelHaloRadius)
+                        .shadow(color: Theme.Colors.bg, radius: Self.labelHaloRadius)
+                        .layoutValue(key: ArcLabelLayout.LabelAngle.self, value: screenAngle(of: target.azimuth))
+                        .layoutValue(
+                            key: ArcLabelLayout.MarkRadius.self,
+                            value: Self.markSize(kind: target.kind, isLocked: false) / 2
+                        )
+                        .accessibilityHidden(true)
+                }
             }
         }
+        .frame(width: frameSize.width, height: frameSize.height)
+    }
+
+    /// Where a target is drawn: its azimuth, except the Moon while locked,
+    /// which sits at 12 o'clock over the needle (§9.3), within the lock's
+    /// few degrees of where it really is.
+    private func displayAzimuth(of target: CompassTarget) -> Double {
+        if target.kind == .moon, lockedKind == .moon, let heading {
+            return heading
+        }
+        return target.azimuth
     }
 
     /// The ring round the Moon until the first lock this launch; hidden from
@@ -528,13 +601,18 @@ struct CompassDial: View {
 
     // MARK: - Geometry
 
+    /// On screen, clockwise from 12 o'clock: the azimuth less the heading.
+    private func screenAngle(of azimuth: Double) -> Double {
+        azimuth - (heading ?? 0)
+    }
+
     /// Where something at `azimuth` sits on screen, `distance` from the
-    /// dial's centre. Its on-screen angle is the azimuth less the heading.
+    /// dial's centre.
     private func point(at azimuth: Double, distance: CGFloat) -> CGPoint {
-        let angle = Angle.degrees(azimuth - (heading ?? 0)).radians
+        let angle = Angle.degrees(screenAngle(of: azimuth)).radians
         return CGPoint(
-            x: Self.outerRadius + distance * CGFloat(sin(angle)),
-            y: Self.outerRadius - distance * CGFloat(cos(angle))
+            x: centre.x + distance * CGFloat(sin(angle)),
+            y: centre.y - distance * CGFloat(cos(angle))
         )
     }
 
@@ -545,17 +623,63 @@ struct CompassDial: View {
         let steps = max(Int((abs(sweep) / Self.arcStepDegrees).rounded(.up)), 1)
         var path = Path()
         path.addLines((0...steps).map { step in
-            point(at: start + sweep * Double(step) / Double(steps), distance: Self.arcRadius)
+            point(at: start + sweep * Double(step) / Double(steps), distance: arcRadius)
         })
         return path
     }
+}
 
+// MARK: - Label layout (COMPASS-1.1.md §9.3)
+
+/// Places the target labels round the arc, each out along the radius
+/// through its mark by `CompassTargetLabels.centreDistance`, which needs
+/// the label's measured size: the same gap to the mark at any angle.
+private struct ArcLabelLayout: Layout {
+
+    /// A label's on-screen angle, clockwise from 12 o'clock.
+    struct LabelAngle: LayoutValueKey {
+        static let defaultValue = 0.0
+    }
+
+    /// Its mark's radius.
+    struct MarkRadius: LayoutValueKey {
+        static let defaultValue: CGFloat = 0
+    }
+
+    let trackRadius: CGFloat
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        proposal.replacingUnspecifiedDimensions()
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        for subview in subviews {
+            let size = subview.sizeThatFits(.unspecified)
+            let angle = subview[LabelAngle.self]
+            let distance = CompassTargetLabels.centreDistance(
+                trackRadius: trackRadius,
+                markRadius: subview[MarkRadius.self],
+                labelSize: size,
+                angle: angle
+            )
+            let radians = angle * .pi / 180
+            let point = CGPoint(
+                x: bounds.midX + distance * CGFloat(sin(radians)),
+                y: bounds.midY - distance * CGFloat(cos(radians))
+            )
+            subview.place(at: point, anchor: .center, proposal: ProposedViewSize(size))
+        }
+    }
 }
 
 // MARK: - Previews
 
+/// A 402 pt phone's compass block: the screen less its 20 pt margins.
+private let previewWidth: CGFloat = 362
+
 #Preview("Heading 72°, moon up") {
     CompassDial(
+        faceDiameter: CompassDial.faceDiameter(forWidth: previewWidth),
         heading: 72,
         targets: [
             CompassTarget(kind: .moonrise, azimuth: 58),
@@ -566,12 +690,13 @@ struct CompassDial: View {
         moonGlyph: PhaseGlyphGeometry(illumination: 0.64, phaseAngle: 240),
         arc: CompassArc(startAzimuth: 58, endAzimuth: 301, moonAzimuth: 140)
     )
-    .padding(40)
+    .padding(.vertical, 40)
     .background(Theme.Colors.bg)
 }
 
 #Preview("Moon down, next pass") {
     CompassDial(
+        faceDiameter: CompassDial.faceDiameter(forWidth: previewWidth),
         heading: 152,
         targets: [
             CompassTarget(kind: .moonrise, azimuth: 56),
@@ -580,7 +705,7 @@ struct CompassDial: View {
         lockedKind: nil,
         arc: CompassArc(startAzimuth: 56, endAzimuth: 304, moonAzimuth: nil)
     )
-    .padding(40)
+    .padding(.vertical, 40)
     .background(Theme.Colors.bg)
 }
 
@@ -588,6 +713,7 @@ struct CompassDial: View {
 /// anticlockwise from moonrise (60°) to moonset (300°, unwrapped to −60°).
 #Preview("Southern hemisphere") {
     CompassDial(
+        faceDiameter: CompassDial.faceDiameter(forWidth: previewWidth),
         heading: 0,
         targets: [
             CompassTarget(kind: .moonrise, azimuth: 60),
@@ -598,12 +724,13 @@ struct CompassDial: View {
         moonGlyph: PhaseGlyphGeometry(illumination: 0.64, phaseAngle: 240),
         arc: CompassArc(startAzimuth: 60, endAzimuth: -60, moonAzimuth: 20)
     )
-    .padding(40)
+    .padding(.vertical, 40)
     .background(Theme.Colors.bg)
 }
 
 #Preview("Locked on moonrise") {
     CompassDial(
+        faceDiameter: CompassDial.faceDiameter(forWidth: previewWidth),
         heading: 58,
         targets: [
             CompassTarget(kind: .moonrise, azimuth: 58),
@@ -612,12 +739,12 @@ struct CompassDial: View {
         lockedKind: .moonrise,
         arc: CompassArc(startAzimuth: 58, endAzimuth: 301, moonAzimuth: nil)
     )
-    .padding(40)
+    .padding(.vertical, 40)
     .background(Theme.Colors.bg)
 }
 
 #Preview("No heading") {
-    CompassDial(heading: nil, targets: [CompassTarget(kind: .moonset, azimuth: 252)], lockedKind: nil)
-        .padding(40)
+    CompassDial(faceDiameter: CompassDial.faceDiameter(forWidth: previewWidth), heading: nil, targets: [CompassTarget(kind: .moonset, azimuth: 252)], lockedKind: nil)
+        .padding(.vertical, 40)
         .background(Theme.Colors.bg)
 }

@@ -247,6 +247,49 @@ on the iPhone 17, shrink the dial before the gaps, and say by how much.
 - Labels: gap from dot equal (± 1 pt) at 0°, 90°, 180°, 270° and 45° steps
 - Pinned bar: shows when the dial centre is below the fold, hides when on screen; lock turns it amber
 
+
+### 9.10 Device check after 5.4.6a (Tessa, 2026-10-02 night) — fold into 5.4.6b
+Source: device screenshots, iPhone 17. 5.4.6b / 5.4.6c weren't built yet, so the dial size and the Precise note
+placement are still 5.4.5's; those are covered by §9.3 and §9.4.
+
+- **Phase line (option A):** "Phase · N% lit" stays on **one line**; at the default size it scales down to 0.85x
+  before wrapping (same idea as the sentence fit rule). Card height stays the same across phases.
+- **Card cells:** less space between the label ("↑ Moonrise") and the time: ~2 pt (was 4), keeping the Young Serif
+  ascenders clear. Time → direction gap unchanged.
+- **Lock pill smaller:** text 24 → **20 pt**, padding scaled down to match (~10 / 18). The **direction letters**
+  ("ENE", "S") use the smaller day-period treatment from the card times (smaller size, same baseline).
+  Apply the same to the **unlocked readout** so pill and readout still match (no jump on lock).
+- **Needle shorter:** it only needs to point at the degree. Starts ~6 pt above the arc track and ends at the inner
+  end of the major ticks (~28 pt total at the current dial; scale with the dial). Readout → dial gap shrinks with it.
+- **Dial bigger:** as §9.3 (~300 pt face target); the device dial still looks small.
+- **Missing rise / set:** cells **top-aligned** (label on the same line as the other column's label; nothing centred).
+  Copy replaces "No moonrise today" / "No moonset today":
+  - Line 2 (body, `textBody`): **"After midnight"**
+  - Line 3 (where the direction goes, `textSecondary`): the next event, **"Sun 12:20 AM"** (place's zone).
+  - VoiceOver: "Moonrise, after midnight, Sunday 12:20 AM."
+  - If the next event is more than a day away (polar edge): line 2 "Not today", no line 3.
+  - Why it's true: a day with no moonrise is always one where the moon rose late the night before and next rises
+    just after midnight.
+- **Precise / accuracy notes:** must be in the bottom bar (§9.4); still 5.4.6c.
+
+### 9.11 As built (5.4.6b) — fit report `.agent-reports/5.4.6/5.4.6b-fit.md`
+- **Dial size:** set by the screen's width, not height: the "↑ Rise" / "↓ Set" labels at 3 and 9 o'clock must end
+  inside the screen (they may use the 20 pt side margin). That caps the face at **260 pt on a 402 pt phone** (233 pt
+  on the SE 3); §9.3's ~300 pt would push a side label ~20 pt off screen. Vertically it fits on the iPhone 17, so
+  no shrink for height. Ticks, number and letter distances, letters and crosshair scale from the 196 pt dial.
+- **Gaps:** sentence → card 28 (was 20), card → readout 32 (was 24), readout → needle top ~35 (was ~12). The dial's
+  frame keeps a label's room (38 pt) above and below the arc, so a label near 12 o'clock never hits the readout.
+- **Needle:** 6 pt above the arc to the inner end of the heavy ticks: 43 pt at 260 pt (not §9.10's ~28 pt
+  estimate; those endpoints give 38 pt even at the old 196 pt dial).
+- **Labels:** placed by `CompassTargetLabels.centreDistance`, 10 pt from the mark's edge to the label's box at any
+  angle (the "Now" label from the Moon glyph's edge, 12 pt radius).
+- **Arc:** travelled part a solid hairline while locked, dots otherwise; still 30%.
+- **Lock pill / readout:** Young Serif 20 pt, direction letters at 0.6× (12 pt) on the baseline; pill padding 8 / 16.
+- **Phase line:** steps 1, 0.95, 0.9, 0.85 at the default size, then two lines. On the SE 3, "Waning Crescent ·
+  42% lit" still needs two lines at 0.85 (card +25 pt there).
+- **"After midnight":** the next day's event from `moonDay(for:on:)`, so no new service call; "Not today" when the
+  next day has none either.
+
 ## Decision log
 
 - **2026-10-02 (Tessa):** Compass 1.1 reviewed. Keep the Up now row, lock highlight, needle, ticks, crosshair,
@@ -262,3 +305,6 @@ on the iPhone 17, shrink the dial before the gaps, and say by how much.
 - **2026-10-02 evening (Tessa, layout mocks in `design/1.2-layout/`):** bigger dial; compact card header (date over
   "Phase · N% lit"); Up now as a one-line pill; notes in a fixed bottom bar (reverses 5.4.3); pinned-bar rule; even
   label gaps. Keep "today", small AM/PM, Nunito Sans numbers, real phase glyph. Spec §9.
+- **2026-10-02 night (Tessa, device after 5.4.6a):** phase line one line (0.85x); tighter label → time; lock pill
+  20 pt with small direction letters (readout too); shorter needle; bigger dial; missing rise/set top-aligned, "After
+  midnight" + next time. §9.10.

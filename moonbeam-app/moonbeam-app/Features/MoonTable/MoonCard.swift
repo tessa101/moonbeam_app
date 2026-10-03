@@ -34,16 +34,22 @@ struct MoonCard: View {
     private static let glyphSize: CGFloat = 44
     /// Between the phase name and its illumination ("Last Quarter · 53% lit").
     private static let phaseSeparator = " · "
+    /// At the default size the phase line shrinks in these steps, down to
+    /// 85%, before it wraps (COMPASS-1.1.md §9.10), so the card's height is
+    /// the same for every phase.
+    private static let phaseLineScales: [CGFloat] = [1, 0.95, 0.9, 0.85]
 
     // MARK: - Rise/set constants
 
     /// Between the Moonrise and Moonset cells (the HTML's grid gap).
     private static let columnGap: CGFloat = 6
-    private static let columnSpacing: CGFloat = 4
+    /// "↑ Moonrise" to the time: tight, but clear of Young Serif's
+    /// ascenders (COMPASS-1.1.md §9.10; 4 before).
+    private static let labelToTimeSpacing: CGFloat = 2
+    /// The time to its direction.
+    private static let timeToDirectionSpacing: CGFloat = 4
     /// Between a time and its zone abbreviation, side by side or stacked.
     private static let timeZoneSpacing: CGFloat = 4
-    /// "No moonrise today" sits a little lower than a time would.
-    private static let missingTopPadding: CGFloat = 4
 
     // MARK: - Cell constants (COMPASS-1.1.md §3, read from the HTML)
 
@@ -164,9 +170,10 @@ struct MoonCard: View {
             }
     }
 
-    /// "Last Quarter · 53% lit" on one line; when that doesn't fit ("Waning
-    /// Crescent · 21% lit" on a 402 pt phone), the name over "21% lit", so
-    /// the "·" is never left at a line's end. VoiceOver keeps "at midnight".
+    /// "Last Quarter · 53% lit" on one line, shrinking to 85% at the default
+    /// size if it must (COMPASS-1.1.md §9.10). Only past that (other sizes,
+    /// narrower phones) the name over "21% lit", so the "·" is never left at
+    /// a line's end. VoiceOver keeps "at midnight".
     private var phaseLine: some View {
         let name = Text(table.phaseName)
             .foregroundStyle(Theme.Colors.textPrimary)
@@ -174,9 +181,15 @@ struct MoonCard: View {
             .foregroundStyle(Theme.Colors.textSecondary)
         let separator = Text(Self.phaseSeparator)
             .foregroundStyle(Theme.Colors.textSecondary)
+        let oneLine = Text("\(name)\(separator)\(lit)")
+        // Only the default size shrinks, like the sentence (§3.1a).
+        let scales = MadlibScale.shrinks(at: dynamicTypeSize) ? Self.phaseLineScales : [1]
         return ViewThatFits(in: .horizontal) {
-            Text("\(name)\(separator)\(lit)")
-                .lineLimit(1)
+            ForEach(scales, id: \.self) { scale in
+                oneLine
+                    .font(Theme.Fonts.phaseName(scale: scale))
+                    .lineLimit(1)
+            }
             VStack(alignment: .leading, spacing: Self.headerTextSpacing) {
                 name
                 lit
@@ -224,23 +237,32 @@ struct MoonCard: View {
         .padding(.horizontal, -Self.cellOutset)
     }
 
+    /// Top-aligned in both states, so the two labels share a line.
+    /// Missing (§9.10): "After midnight" where the time goes, the next one
+    /// ("Sun 12:20 AM") where the direction goes.
     private func column(_ column: MoonTableViewModel.Column, isHighlighted: Bool) -> some View {
-        VStack(alignment: .leading, spacing: Self.columnSpacing) {
+        VStack(alignment: .leading, spacing: Self.labelToTimeSpacing) {
             Text(column.title)
                 .font(Theme.Fonts.label)
                 .foregroundStyle(isHighlighted ? Theme.Colors.accent : Theme.Colors.textSecondary)
 
-            switch column.detail {
-            case let .time(time, timeZone, direction):
-                timeView(time, timeZone: timeZone)
-                Text(direction)
-                    .font(Theme.Fonts.detail)
-                    .foregroundStyle(Theme.Colors.accent)
-            case let .missing(text):
-                Text(text)
-                    .font(Theme.Fonts.body)
-                    .foregroundStyle(Theme.Colors.textPrimary)
-                    .padding(.top, Self.missingTopPadding)
+            VStack(alignment: .leading, spacing: Self.timeToDirectionSpacing) {
+                switch column.detail {
+                case let .time(time, timeZone, direction):
+                    timeView(time, timeZone: timeZone)
+                    Text(direction)
+                        .font(Theme.Fonts.detail)
+                        .foregroundStyle(Theme.Colors.accent)
+                case let .missing(text, next):
+                    Text(text)
+                        .font(Theme.Fonts.body)
+                        .foregroundStyle(Theme.Colors.textBody)
+                    if let next {
+                        Text(next)
+                            .font(Theme.Fonts.detail)
+                            .foregroundStyle(Theme.Colors.textSecondary)
+                    }
+                }
             }
         }
         .frame(maxWidth: .infinity, alignment: .topLeading)

@@ -31,21 +31,27 @@ struct CompassView: View {
     /// the slot grows with the readout's text style.
     @ScaledMetric(relativeTo: .title2) private var readoutHeight = Self.readoutBaseHeight
 
+    /// The block's width, which sizes the dial (COMPASS-1.1.md §9.3).
+    @State private var availableWidth: CGFloat = 0
+
     // MARK: - Constants (§3.3, from the HTML)
 
-    private static let readoutBaseHeight: CGFloat = 40
-    /// Readout to dial (the dial adds its indicator's 17 pt itself), and
-    /// dial to notes.
-    private static let dialTopSpacing: CGFloat = 12
-    private static let dialBottomSpacing: CGFloat = 4
+    /// 40 until the readout went from 24 to 20 pt (COMPASS-1.1.md §9.10).
+    private static let readoutBaseHeight: CGFloat = 34
+    /// Readout to the dial's frame, and dial to notes. The dial's frame
+    /// keeps room for a label above the arc, so the needle starts further
+    /// down (the fit report has the visible gaps).
+    private static let dialTopSpacing: CGFloat = 0
+    private static let dialBottomSpacing: CGFloat = 0
     private static let notesTopSpacing: CGFloat = 14
     private static let notesSpacing: CGFloat = 10
     /// Buttons under a note are no wider than the widest note.
     private static let noteMaxWidth: CGFloat = 330
 
-    /// The lock pill: padding 9 / 18, `accent` glow 45% (CSS 36 px blur).
-    private static let pillPaddingVertical: CGFloat = 9
-    private static let pillPaddingHorizontal: CGFloat = 18
+    /// The lock pill: padding scaled with the text (COMPASS-1.1.md §9.10;
+    /// 9 / 18 at 24 pt), `accent` glow 45% (CSS 36 px blur).
+    private static let pillPaddingVertical: CGFloat = 8
+    private static let pillPaddingHorizontal: CGFloat = 16
     private static let pillGlowOpacity = 0.45
     private static let pillGlowRadius: CGFloat = 18
 
@@ -91,6 +97,7 @@ struct CompassView: View {
             accuracyNotes
 
             CompassDial(
+                faceDiameter: CompassDial.faceDiameter(forWidth: availableWidth),
                 heading: viewModel.heading,
                 targets: viewModel.targets,
                 lockedKind: viewModel.lockedKind,
@@ -109,6 +116,9 @@ struct CompassView: View {
             // above, and VoiceOver reads every target from the dial.
         }
         .animation(reduceMotion ? nil : Self.lockAnimation, value: viewModel.lockedKind)
+        .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { width in
+            availableWidth = width
+        }
         // One firm tap per lock acquired (4.5). Release and holding don't
         // change the count, so they're silent. System feedback follows the
         // user's System Haptics setting.
@@ -126,9 +136,8 @@ struct CompassView: View {
     /// untrustworthy number isn't read out), or "Pointing at moonrise, …".
     @ViewBuilder
     private var readout: some View {
-        if let lockText = viewModel.lockText {
-            Text(lockText)
-                .font(Theme.Fonts.display)
+        if let lockText = viewModel.lockText, let lockReadout = viewModel.lockReadout {
+            Self.text(for: lockReadout)
                 .foregroundStyle(Theme.Colors.onAccent)
                 .padding(.vertical, Self.pillPaddingVertical)
                 .padding(.horizontal, Self.pillPaddingHorizontal)
@@ -137,14 +146,22 @@ struct CompassView: View {
                 .transition(.opacity)
                 .accessibilityLabel(viewModel.lockAccessibilityLabel ?? lockText)
         } else {
-            Text(viewModel.headingText ?? "")
-                .font(Theme.Fonts.display)
+            Self.text(for: viewModel.headingReadout)
                 .monospacedDigit()
                 .foregroundStyle(viewModel.isLowAccuracy ? Theme.Colors.textSecondary : Theme.Colors.textPrimary)
                 .accessibilityElement(children: .ignore)
                 .accessibilityLabel(viewModel.headingAccessibilityLabel)
                 .accessibilityAddTraits(.updatesFrequently)
         }
+    }
+
+    /// "Moonrise · 58°" then "ENE" smaller, on one baseline, like a time's
+    /// day period. Empty with no heading.
+    private static func text(for readout: CompassReadout?) -> Text {
+        guard let readout else { return Text(verbatim: "") }
+        let lead = Text(verbatim: readout.lead + CompassReadout.separator).font(Theme.Fonts.readout)
+        let direction = Text(verbatim: readout.direction).font(Theme.Fonts.readoutDirection)
+        return Text("\(lead)\(direction)")
     }
 
     /// Under the dial: Nearby, which city the bearings are for.

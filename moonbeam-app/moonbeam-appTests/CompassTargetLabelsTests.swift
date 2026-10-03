@@ -3,11 +3,13 @@
 //  moonbeam-appTests
 //
 
+import CoreGraphics
 import Testing
 @testable import moonbeam_app
 
-/// The labels outside the arc (COMPASS-1.1.md §5, §8): text, the locked
-/// target dropping its label, and the collision rule.
+/// The labels outside the arc (COMPASS-1.1.md §5, §8, §9.9): text, the
+/// locked target dropping its label, the collision rule, and an even gap to
+/// the mark at every angle.
 @Suite("Compass target labels")
 nonisolated struct CompassTargetLabelsTests {
 
@@ -63,5 +65,45 @@ nonisolated struct CompassTargetLabelsTests {
         let labels = CompassTargetLabels.labels(for: [Self.set, Self.moon(at: 280)], lockedKind: .moon)
 
         #expect(labels == [.moonset: "↓ Set"])
+    }
+
+    // MARK: - Placement (§9.3, §9.9)
+
+    /// "↑ Rise" at 12 pt bold, about; a tall-and-narrow and a wide label too.
+    private static let labelSizes = [CGSize(width: 38, height: 16), CGSize(width: 28, height: 16), CGSize(width: 60, height: 30)]
+    private static let trackRadius: CGFloat = 146
+    private static let dotRadius: CGFloat = 7
+    private static let gapTolerance: CGFloat = 1
+
+    @Test(
+        "The label's gap to its mark is the same at every angle",
+        arguments: [0.0, 45, 90, 135, 180, 225, 270, 315], [0, 1, 2]
+    )
+    func evenGap(angle: Double, sizeIndex: Int) {
+        let size = Self.labelSizes[sizeIndex]
+        let distance = CompassTargetLabels.centreDistance(
+            trackRadius: Self.trackRadius,
+            markRadius: Self.dotRadius,
+            labelSize: size,
+            angle: angle
+        )
+
+        let gap = CompassTargetLabels.gap(from: distance - Self.trackRadius, labelSize: size, angle: angle)
+            - Self.dotRadius
+
+        #expect(abs(gap - CompassTargetLabels.labelGap) <= Self.gapTolerance)
+    }
+
+    /// At 3 o'clock a wide label sits further out than at 12, where its
+    /// height, not its width, faces the mark (5.4.4's one radius didn't).
+    @Test("Wide labels sit further out at the sides than at the top")
+    func sidesFurtherOut() {
+        let size = Self.labelSizes[0]
+        let top = CompassTargetLabels.centreDistance(trackRadius: Self.trackRadius, markRadius: Self.dotRadius, labelSize: size, angle: 0)
+        let side = CompassTargetLabels.centreDistance(trackRadius: Self.trackRadius, markRadius: Self.dotRadius, labelSize: size, angle: 90)
+
+        let expectedTop = Self.trackRadius + Self.dotRadius + CompassTargetLabels.labelGap + size.height / 2
+        #expect(abs(top - expectedTop) < Self.gapTolerance)
+        #expect(side > top)
     }
 }

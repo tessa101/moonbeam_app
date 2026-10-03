@@ -100,15 +100,37 @@ struct MoonTableViewModelTests {
         #expect(Self.direction(of: table.rise) == "0° N")
     }
 
-    @Test("A missing event shows the no-event text and says it")
-    func missingEvent() throws {
+    /// The fake has no rise or set on any day, so the next is more than a
+    /// day away: the polar case (COMPASS-1.1.md §9.10).
+    @Test("A missing event with none the next day: \"Not today\"")
+    func missingEventNotToday() throws {
         let table = Self.makeTable(FakeMoonService(), day: try Self.farDay())
 
-        #expect(table.rise.detail == .missing("No moonrise today"))
-        #expect(table.set.detail == .missing("No moonset today"))
-        #expect(table.rise.accessibilityLabel == "No moonrise today")
+        #expect(table.rise.detail == .missing("Not today", next: nil))
+        #expect(table.set.detail == .missing("Not today", next: nil))
+        #expect(table.rise.accessibilityLabel == "Moonrise, not today.")
         #expect(table.rise.title == "↑ Moonrise")
         #expect(table.set.title == "↓ Moonset")
+    }
+
+    /// No moonrise today, the next just after midnight: "After midnight"
+    /// and when, in the place's zone (COMPASS-1.1.md §9.10).
+    @Test("A missing event with one the next day: \"After midnight\" and the time")
+    func missingEventAfterMidnight() throws {
+        let day = try Self.farDay()
+        let nextRise = try #require(Calendar.current.date(byAdding: .minute, value: 24 * 60 + 20, to: day))
+        let service = NextDayRiseMoonService(day: day, nextRise: MoonEvent(date: nextRise, azimuth: 70))
+        let table = MoonTableViewModel(
+            moonService: service,
+            place: Self.marVista,
+            day: day,
+            deviceTimeZone: Self.losAngelesZone,
+            formatter: MoonTableFormatter(locale: Locale(identifier: "en_US"))
+        )
+
+        // 2020-01-16 is a Thursday.
+        #expect(table.rise.detail == .missing("After midnight", next: "Thu 12:20\u{202F}AM"))
+        #expect(table.rise.accessibilityLabel == "Moonrise, after midnight, Thursday 12:20\u{202F}AM.")
     }
 
     @Test("A time in the device's own zone has no abbreviation beside it")
@@ -162,4 +184,30 @@ struct MoonTableViewModelTests {
             TimeText.Run(text: dayPeriod, isDayPeriod: true),
         ])
     }
+}
+
+/// No moonrise on `day`, one on the day after (`nextRise`); a moonset on both.
+private struct NextDayRiseMoonService: MoonService {
+
+    let day: Date
+    let nextRise: MoonEvent
+
+    func moonDay(for place: Place, on date: Date) -> MoonDay {
+        MoonDay(
+            place: place,
+            rise: date > day ? nextRise : nil,
+            set: MoonEvent(date: date, azimuth: 290),
+            phase: .full,
+            phaseAngle: FakeMoonService.fullMoonPhaseAngle,
+            illumination: FakeMoonService.fullyLit
+        )
+    }
+
+    func moonPosition(for place: Place, at date: Date) -> MoonPosition {
+        MoonPosition(azimuth: 0, isUp: false)
+    }
+
+    func moonPass(for place: Place, containing date: Date) -> MoonPass? { nil }
+
+    func nextMoonrise(for place: Place, after date: Date) -> MoonEvent? { nil }
 }

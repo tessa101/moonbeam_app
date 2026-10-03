@@ -85,7 +85,7 @@ These must match USNO or the tests will drift.
 
 ## 4. Edge cases
 
-- **No rise or set in the window:** happens about monthly because the moon rises ~50 min later each day. Return `nil` and show "No moonrise today."
+- **No rise or set in the window:** happens about monthly because the moon rises ~50 min later each day. Return `nil`; the card shows "After midnight" and the next one's time (COMPASS-1.1.md §9.10; was "No moonrise today.").
 - **Set before rise** on the same day is normal. Don't assume order.
 - **DST transitions:** always compute with the city's `TimeZone`, never a fixed offset.
 - **High latitudes:** the moon can stay up or down for long stretches. Out of scope for V1, but it mustn't crash.

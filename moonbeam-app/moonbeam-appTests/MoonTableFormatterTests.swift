@@ -86,8 +86,18 @@ nonisolated struct MoonTableFormatterTests {
     func titlesAndMissingText() {
         #expect(formatter.eventTitle(.rise) == "↑ Moonrise")
         #expect(formatter.eventTitle(.set) == "↓ Moonset")
-        #expect(formatter.missingText(.rise) == "No moonrise today")
-        #expect(formatter.missingText(.set) == "No moonset today")
+        #expect(MoonTableFormatter.afterMidnightText == "After midnight")
+        #expect(MoonTableFormatter.notTodayText == "Not today")
+    }
+
+    @Test("The next rise or set reads as weekday and time, in the place's zone")
+    func nextEventText() throws {
+        // 2026-10-04 00:20 in Los Angeles is 07:20 UTC.
+        let date = try Self.date(2026, 10, 4, hour: 0, minute: 20, in: Self.losAngeles.timeZone)
+        let text = formatter.nextEventText(date, in: Self.losAngeles.timeZone)
+
+        #expect(text.shown == "Sun 12:20\u{202F}AM")
+        #expect(text.spoken == "Sunday 12:20\u{202F}AM")
     }
 
     /// 2026-09-23 23:13 in Sydney is 06:13 in Los Angeles: the place's clock
@@ -179,8 +189,9 @@ nonisolated struct MoonTableFormatterTests {
 
     @Test("Spoken label for a missing event")
     func accessibilityMissing() {
-        let label = formatter.accessibilityLabel(for: .rise, nil, place: Self.losAngeles, timeZoneAbbreviation: nil)
-        #expect(label == "No moonrise today")
+        #expect(formatter.missingAccessibilityLabel(for: .rise, nextSpoken: "Sunday 12:20\u{202F}AM")
+            == "Moonrise, after midnight, Sunday 12:20\u{202F}AM.")
+        #expect(formatter.missingAccessibilityLabel(for: .set, nextSpoken: nil) == "Moonset, not today.")
     }
 
     // MARK: - Helpers

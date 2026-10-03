@@ -275,6 +275,23 @@ final class CompassViewModel {
         lockedTarget.map(targetText(for:))
     }
 
+    /// `headingText` split for the readout (COMPASS-1.1.md §9.10): "72°"
+    /// then "ENE".
+    var headingReadout: CompassReadout? {
+        heading.map { heading in
+            let parts = formatter.bearingParts(for: heading)
+            return CompassReadout(lead: parts.degrees, direction: parts.direction)
+        }
+    }
+
+    /// `lockText` split for the pill: "Moonrise · 72°" then "ENE".
+    var lockReadout: CompassReadout? {
+        lockedTarget.map { target in
+            let parts = formatter.bearingParts(for: target.azimuth)
+            return CompassReadout(lead: "\(Self.name(of: target.kind)) · \(parts.degrees)", direction: parts.direction)
+        }
+    }
+
     var headingAccessibilityLabel: String {
         guard !isLowAccuracy, let heading else {
             guard let lowAccuracyReasonText else { return Self.lowAccuracyText }

@@ -182,6 +182,7 @@ beside it at default size for most times. At AX sizes the day period wraps under
    highlight, and an Up now row follows (COMPASS-1.1.md §3; DECISIONS.md 2026-10-02 as built).
    Each: label "↑ Moonrise" / "↓ Moonset" (footnote 600, `textSecondary`), time (Young Serif 24),
    direction "58° ENE" (subheadline, `accent`).
+   - _Superseded by COMPASS-1.1.md §9.10 (5.4.6b): "After midnight" + the next time ("Sun 12:20 AM")._
    - Missing event: the time and direction are replaced by **"No moonrise today"** (Nunito 17,
      `textPrimary`). Wording on other days is still open (DESIGN-REVIEW.md); keep it for now.
    - **Time zone** (§11 Q3, decided): when the place's zone differs from the phone's, a small zone

@@ -93,10 +93,32 @@ nonisolated struct MoonTableFormatter {
         }
     }
 
-    /// "No moonrise today" (FR2). Wording on other days is still open
-    /// (DESIGN-REVIEW.md); kept for now (§3.2).
-    func missingText(_ event: Event) -> String {
-        "No \(eventName(event).lowercased()) today"
+    // MARK: - No rise or set (COMPASS-1.1.md §9.10)
+
+    /// A day with no moonrise is one where the moon rose late the night
+    /// before and next rises just after midnight (likewise moonset), so
+    /// the card says when instead of "No moonrise today".
+    static let afterMidnightText = "After midnight"
+    /// The next one is more than a day away (polar edge).
+    static let notTodayText = "Not today"
+
+    /// "Sun 12:20 AM" and its spoken form "Sunday 12:20 AM": the next rise
+    /// or set, on the day after a day without one, in the place's zone.
+    func nextEventText(_ date: Date, in timeZone: TimeZone) -> (shown: String, spoken: String) {
+        let time = time(date, in: timeZone)
+        let weekday = Date.FormatStyle(locale: locale, timeZone: timeZone)
+        let short = date.formatted(weekday.weekday(.abbreviated))
+        let long = date.formatted(weekday.weekday(.wide))
+        return ("\(short) \(time)", "\(long) \(time)")
+    }
+
+    /// "Moonrise, after midnight, Sunday 12:20 AM.", or with no next event
+    /// in a day "Moonrise, not today."
+    func missingAccessibilityLabel(for event: Event, nextSpoken: String?) -> String {
+        guard let nextSpoken else {
+            return "\(eventName(event)), \(Self.notTodayText.lowercased())."
+        }
+        return "\(eventName(event)), \(Self.afterMidnightText.lowercased()), \(nextSpoken)."
     }
 
     /// "9:10 PM" in the place's zone, rounded to the nearest minute.
@@ -138,11 +160,10 @@ nonisolated struct MoonTableFormatter {
     /// label; §3.2). Directions are spoken in full, then the degrees.
     func accessibilityLabel(
         for event: Event,
-        _ moonEvent: MoonEvent?,
+        _ moonEvent: MoonEvent,
         place: Place,
         timeZoneAbbreviation: String?
     ) -> String {
-        guard let moonEvent else { return missingText(event) }
         var time = time(moonEvent.date, in: place.timeZone)
         if let timeZoneAbbreviation {
             time += " \(place.shortName) time, \(timeZoneAbbreviation)"

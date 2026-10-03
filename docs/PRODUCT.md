@@ -68,7 +68,8 @@ to catch a moonrise over the ocean or a skyline, you need the **time** and the
 ### Functional
 
 - **FR1:** Times display in the **selected city's** time zone, not the device's.
-- **FR2:** If there's no rise or set on a given day, show "No moonrise today," never a blank.
+- **FR2:** If there's no rise or set on a given day, show when the next one is, never a blank: "After midnight" and
+  "Sun 12:20 AM" (or "Not today" if it's over a day away). Was "No moonrise today" until 5.4.6b (COMPASS-1.1.md §9.10).
 - **FR3:** Direction shows as degrees + cardinal (e.g. `105° ESE`).
 - **FR4:** Geocoding failure shows a clear, recoverable error.
 - **FR5:** Illumination and phase are calculated for **tonight's local midnight** — the end of the selected day in the city's time zone. The app answers "how bright is the moon tonight?", so the value shouldn't drift as the day wears on. See ASTRONOMY.md §3.
