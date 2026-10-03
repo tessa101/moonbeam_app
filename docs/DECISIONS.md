@@ -36,6 +36,24 @@
   real app can be screenshotted on any simulator and text size; previews can't pick the device and the simulator
   has no compass. Compiled out of release builds, like `-forceOnboarding`.
 
+### 2026-10-03 · Build 5.4.6c [spike] as built: bottom bar, held note, text cap
+- **Spec:** COMPASS-1.1.md §9.4, §9.12; as built in §9.13. Report: `.agent-reports/5.4.6/5.4.6c-bar.md`.
+- **Use Precise beside the text below AX sizes, under it at AX sizes**, chosen by text size: `ViewThatFits` judged
+  the wrapping text by its one-line width and always stacked (127 pt bar).
+- **Bar text capped at AX1** (my call; Tessa to confirm): uncapped, AX5 bars covered half the iPhone 17 and three
+  quarters of the SE 3. Considered: a scrolling bar (fiddly for a short note), no cap.
+- **Held note while the sensors are paused:** the inset can cover the compass enough to stop the sensors, which
+  cleared the note and made the bar flicker. The last note stays until the next reading. Considered: measuring the
+  compass's visibility ignoring the bar (no clean way with `onScrollVisibilityChange`).
+- **Stale 5.4.6b tests fixed** on their first run: call counts with the next-day lookup, Mar Vista next rise 12:22 AM
+  (the engine's value; STATUS's "00:21" was approximate). No tolerance changed.
+
+### 2026-10-03 · After 5.4.6b on device: readout size, capitals, "After midnight" font, needle, one-line phase (Tessa)
+- **Spec:** COMPASS-1.1.md §9.12, built with 5.4.6c.
+- Readout and lock pill at the card time size (Young Serif 24); direction letters real capitals at 0.7x, not small caps.
+- Missing rise/set: labels aligned with the other column; "After midnight" in the time font.
+- Needle ~28 pt. Phase line always one line (0.7x, then drop " lit"). Bottom label near the home indicator: accepted.
+
 ### 2026-10-02 · After 5.4.6a on device: card, lock pill, needle, "After midnight" (Tessa)
 - **Spec:** COMPASS-1.1.md §9.10, built with 5.4.6b.
 - Phase line on one line (shrinks to 0.85x); label → time gap ~2 pt; lock pill and readout 20 pt with small direction

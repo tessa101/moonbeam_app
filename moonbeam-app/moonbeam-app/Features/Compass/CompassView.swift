@@ -6,10 +6,10 @@
 import SwiftUI
 
 /// The compass block under the moon card (DESIGN-1.1.md §3.3, COMPASS.md
-/// §1, §2): the heading readout (an amber pill when locked), the accuracy
-/// notes under it while they show (COMPASS-1.1.md §4.1), the dial, and the
-/// Nearby note under the dial; or, in place of the compass, the Far or
-/// location-off note.
+/// §1, §2): the heading readout (an amber pill when locked) and the dial,
+/// both dimmed in low accuracy; or, in place of the compass, the Far or
+/// location-off note. Its other notes (Precise Location, low accuracy,
+/// Nearby, aha) are in `LocationScreen`'s bottom bar (COMPASS-1.1.md §9.4).
 ///
 /// Every string and accessibility label comes from `CompassViewModel`.
 /// Where it sits and when it counts as on screen is `LocationScreen`'s job.
@@ -20,9 +20,6 @@ struct CompassView: View {
     /// The hint's button: the existing Location Off flow (the system prompt
     /// if not yet asked, otherwise the Location Off dialog).
     let onTurnOnLocation: () -> Void
-
-    /// Use Precise Location: iOS's temporary full-accuracy alert (4.12).
-    let onUsePreciseLocation: () -> Void
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -36,26 +33,25 @@ struct CompassView: View {
 
     // MARK: - Constants (§3.3, from the HTML)
 
-    /// 40 until the readout went from 24 to 20 pt (COMPASS-1.1.md §9.10).
-    private static let readoutBaseHeight: CGFloat = 34
-    /// Readout to the dial's frame, and dial to notes. The dial's frame
-    /// keeps room for a label above the arc, so the needle starts further
-    /// down (the fit report has the visible gaps).
-    private static let dialTopSpacing: CGFloat = 0
-    private static let dialBottomSpacing: CGFloat = 0
-    private static let notesTopSpacing: CGFloat = 14
+    private static let readoutBaseHeight: CGFloat = 40
+    /// Between the location-off note and its button.
     private static let notesSpacing: CGFloat = 10
     /// Buttons under a note are no wider than the widest note.
     private static let noteMaxWidth: CGFloat = 330
 
-    /// The lock pill: padding scaled with the text (COMPASS-1.1.md §9.10;
-    /// 9 / 18 at 24 pt), `accent` glow 45% (CSS 36 px blur).
-    private static let pillPaddingVertical: CGFloat = 8
-    private static let pillPaddingHorizontal: CGFloat = 16
+    /// The lock pill: padding 10 / 18 (COMPASS-1.1.md §9.12), `accent` glow
+    /// 45% (CSS 36 px blur).
+    private static let pillPaddingVertical: CGFloat = 10
+    private static let pillPaddingHorizontal: CGFloat = 18
     private static let pillGlowOpacity = 0.45
     private static let pillGlowRadius: CGFloat = 18
 
     private static let lockAnimation = Animation.easeOut(duration: 0.2)
+
+    /// Low accuracy (§9.4): the readout and dial stay put and dim to half,
+    /// and fade back in when it recovers.
+    private static let lowAccuracyOpacity = 0.5
+    private static let accuracyAnimation = Animation.easeInOut(duration: 0.3)
 
     // MARK: - Body
 
@@ -86,15 +82,12 @@ struct CompassView: View {
     // MARK: - Compass
 
     private var compass: some View {
+        // The dial's frame keeps room for a label above the arc, so it sits
+        // right under the readout's slot (the fit report has the gaps).
         VStack(spacing: 0) {
             readout
                 .fixedSize(horizontal: false, vertical: true)
                 .frame(height: readoutHeight)
-
-            // §4.1: no lock is possible in low accuracy, so the warning
-            // takes the space under the readout; the dial (and its needle)
-            // moves down while it shows.
-            accuracyNotes
 
             CompassDial(
                 faceDiameter: CompassDial.faceDiameter(forWidth: availableWidth),
@@ -106,15 +99,12 @@ struct CompassView: View {
                 arc: viewModel.arc,
                 showsMoonPulse: viewModel.showsMoonPulse
             )
-            .padding(.top, Self.dialTopSpacing)
-            .padding(.bottom, Self.dialBottomSpacing)
-
-            notes
-                .padding(.top, Self.notesTopSpacing)
 
             // No target rows (4.7): rise/set bearings are in the moon card
             // above, and VoiceOver reads every target from the dial.
         }
+        .opacity(viewModel.isLowAccuracy && viewModel.reading != nil ? Self.lowAccuracyOpacity : 1)
+        .animation(reduceMotion ? nil : Self.accuracyAnimation, value: viewModel.isLowAccuracy)
         .animation(reduceMotion ? nil : Self.lockAnimation, value: viewModel.lockedKind)
         .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { width in
             availableWidth = width
@@ -148,62 +138,21 @@ struct CompassView: View {
         } else {
             Self.text(for: viewModel.headingReadout)
                 .monospacedDigit()
-                .foregroundStyle(viewModel.isLowAccuracy ? Theme.Colors.textSecondary : Theme.Colors.textPrimary)
+                .foregroundStyle(Theme.Colors.textPrimary)
                 .accessibilityElement(children: .ignore)
                 .accessibilityLabel(viewModel.headingAccessibilityLabel)
                 .accessibilityAddTraits(.updatesFrequently)
         }
     }
 
-    /// "Moonrise · 58°" then "ENE" smaller, on one baseline, like a time's
-    /// day period. Empty with no heading.
+    /// "Moonrise · 58°" at the card's time size, then "ENE" in capitals at
+    /// 0.7x on the same baseline (COMPASS-1.1.md §9.12). Empty with no
+    /// heading.
     private static func text(for readout: CompassReadout?) -> Text {
         guard let readout else { return Text(verbatim: "") }
         let lead = Text(verbatim: readout.lead + CompassReadout.separator).font(Theme.Fonts.readout)
         let direction = Text(verbatim: readout.direction).font(Theme.Fonts.readoutDirection)
         return Text("\(lead)\(direction)")
-    }
-
-    /// Under the dial: Nearby, which city the bearings are for.
-    @ViewBuilder
-    private var notes: some View {
-        if let nearbyNote = viewModel.nearbyNote {
-            CompassNote(text: nearbyNote)
-        }
-    }
-
-    /// Under the readout (COMPASS-1.1.md §4.1): the status line (why
-    /// accuracy is low, or for a moment the aha line), then Use Precise
-    /// Location as a secondary button. Nothing, and no gap, while all's
-    /// well. VoiceOver order is unchanged: the readout already says why,
-    /// and the button comes after it.
-    @ViewBuilder
-    private var accuracyNotes: some View {
-        if viewModel.statusLineText != nil || viewModel.offersPreciseLocation {
-            statusNotes
-                .padding(.top, Self.notesSpacing)
-        }
-    }
-
-    private var statusNotes: some View {
-        VStack(spacing: Self.notesSpacing) {
-            if let statusLineText = viewModel.statusLineText {
-                CompassNote(text: statusLineText)
-                    .transition(.opacity)
-                    // Already in the readout's spoken label, and the aha
-                    // line is announced as it appears.
-                    .accessibilityHidden(true)
-            }
-
-            // One button only (4.14): the alert is iOS's own (Don't Allow /
-            // Allow Once), and permanent Precise lives in Settings.
-            if viewModel.offersPreciseLocation {
-                Button(CompassViewModel.usePreciseLocationTitle, action: onUsePreciseLocation)
-                    .buttonStyle(.secondary)
-                    .frame(maxWidth: Self.noteMaxWidth)
-            }
-        }
-        .animation(reduceMotion ? nil : .easeInOut, value: viewModel.preciseConfirmation)
     }
 
     // MARK: - DEBUG readout
@@ -253,7 +202,7 @@ private struct CompassPreview: View {
     var body: some View {
         ScrollView {
             if let viewModel {
-                CompassView(viewModel: viewModel, onTurnOnLocation: {}, onUsePreciseLocation: {})
+                CompassView(viewModel: viewModel, onTurnOnLocation: {})
                     .padding()
                     .font(Theme.Fonts.body)
                     .foregroundStyle(Theme.Colors.textPrimary)

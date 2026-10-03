@@ -94,23 +94,22 @@ final class CompassViewModel {
     /// Shown, and read by VoiceOver, while the heading can't be trusted.
     static let lowAccuracyText = "Compass accuracy is low"
 
-    /// The low-accuracy reason line, Precise Location off (4.12; replaces
-    /// 4.10's "Precise Location is off"). `city` is the selected place.
-    static func preciseLocationOffText(city: String) -> String {
-        "We think you're near \(city), but the compass needs Precise Location to point the right way."
-    }
+    /// The bottom bar, Precise Location off (COMPASS-1.1.md §9.4; replaces
+    /// 4.12's "We think you're near [city]…").
+    static let preciseLocationOffText = "Using your approximate location. Precise gives a better reading."
 
-    /// Its only button (4.14): iOS's temporary full-accuracy alert, one tap
-    /// and no trip to Settings. Lasts this session of use.
-    static let usePreciseLocationTitle = "Use Precise Location"
+    /// Its only button (4.14, §9.4): iOS's temporary full-accuracy alert,
+    /// one tap and no trip to Settings. Lasts this session of use.
+    static let usePreciseLocationTitle = "Use Precise"
 
     /// Replaces the reason line for a moment when Precise Location turns on
     /// with the compass on screen (4.12).
     static let preciseConfirmationText = "There you are! The compass is happy now."
 
-    /// The low-accuracy reason line, any other cause (4.10). "Charger" added
-    /// after the device test, where charging took accuracy to ±27°.
-    static let interferenceTip = "Move away from metal, magnets or a charger, or wave your phone in a figure 8"
+    /// The bottom bar in low accuracy, whatever the cause (COMPASS-1.1.md
+    /// §9.4: one line for every reason; replaces 4.10's tip). "Charger"
+    /// since the device test, where charging took accuracy to ±27°.
+    static let lowAccuracyNote = "Compass accuracy is low. Move away from metal or a charger, or wave your phone in a figure 8."
 
     /// Over the compass in the Nearby state (4.11): names where you are and
     /// the selected city. Says what it shows, not that it's approximate: at
@@ -173,14 +172,17 @@ final class CompassViewModel {
     /// From the context: Precise Location is off for the app.
     private(set) var isPreciseLocationOff = false
 
-    /// The selected place as "City, ST" (4.13), for the Precise Location
-    /// line. Stored because `context` isn't observed.
-    private(set) var placeName: String?
-
     /// The aha line while it shows (4.12), else `nil`. Only on Precise
     /// Location turning on with the compass on screen, never on an ordinary
     /// recovery from low accuracy, which would make it constant.
     private(set) var preciseConfirmation: String?
+
+    /// The bar's note when the sensors last stopped, kept until the next
+    /// reading. The bar is an inset, so at large text sizes it can cover the
+    /// compass enough to count as off screen; without this, stopping the
+    /// sensors cleared the reading, the note went, the compass came back on
+    /// screen and the bar flickered in and out.
+    private(set) var heldBottomNote: CompassBottomNote?
 
     /// From the context: something has been detected this session. Only the
     /// DEBUG readout uses it, to tell "Nothing detected" apart (4.8).
@@ -292,12 +294,19 @@ final class CompassViewModel {
         }
     }
 
+    /// The heading, then the bottom bar's note (COMPASS-1.1.md §9.4: the
+    /// bar reads right after the readout, so its text is spoken here and
+    /// the bar keeps only its button for VoiceOver). An untrustworthy
+    /// number isn't read out. The aha line is announced as it appears
+    /// instead.
     var headingAccessibilityLabel: String {
+        let note = bottomNote.flatMap { $0.kind == .aha ? nil : $0.text }
         guard !isLowAccuracy, let heading else {
-            guard let lowAccuracyReasonText else { return Self.lowAccuracyText }
-            return "\(Self.lowAccuracyText). \(lowAccuracyReasonText)"
+            // The low-accuracy note already starts "Compass accuracy is low."
+            if bottomNote?.kind == .lowAccuracy, let note { return note }
+            return [Self.lowAccuracyText, note].compactMap(\.self).joined(separator: ". ")
         }
-        return "Heading \(formatter.spokenBearing(for: heading))"
+        return ["Heading \(formatter.spokenBearing(for: heading))", note].compactMap(\.self).joined(separator: ". ")
     }
 
     /// Why accuracy is low (4.10), or `nil`: not low, no reading yet, or no
@@ -308,28 +317,39 @@ final class CompassViewModel {
         return isPreciseLocationOff ? .preciseLocationOff : .interference
     }
 
-    /// The one plain line under the heading that says why.
-    var lowAccuracyReasonText: String? {
-        switch lowAccuracyReason {
-        case .preciseLocationOff: placeName.map(Self.preciseLocationOffText(city:)) ?? Self.lowAccuracyText
-        case .interference: Self.interferenceTip
-        case nil: nil
+    /// The bar fixed above the home indicator (COMPASS-1.1.md §9.4), only
+    /// with the compass shown (Here or Nearby; location off and Far keep
+    /// their note in place of the compass). One at a time, by priority:
+    /// Precise off > low accuracy > Nearby > aha. Low accuracy needs a
+    /// reading, so nothing flashes up before the first one; with no compass
+    /// at all (`.unavailable`) it still shows, since the spec has one line
+    /// for every reason.
+    var bottomNote: CompassBottomNote? {
+        guard visibility.showsCompass else { return nil }
+        // Sensors paused or starting: the last note, unless Precise has
+        // been turned on meanwhile.
+        if reading == nil, let held = heldBottomNote,
+           held.kind != .preciseOff || isPreciseLocationOff {
+            return held
         }
+        return liveBottomNote
     }
 
-    /// What the line under the heading shows: the aha line while it's up
-    /// (it replaces the reason), otherwise in low accuracy the reason, or
-    /// the generic line when the cause isn't known. `nil` when all's well.
-    var statusLineText: String? {
-        if let preciseConfirmation { return preciseConfirmation }
-        guard isLowAccuracy else { return nil }
-        return lowAccuracyReasonText ?? Self.lowAccuracyText
-    }
-
-    /// Use Precise Location shows with the Precise Location line, and not
-    /// over the aha line.
-    var offersPreciseLocation: Bool {
-        lowAccuracyReason == .preciseLocationOff && preciseConfirmation == nil
+    /// `bottomNote` from the current reading and context.
+    private var liveBottomNote: CompassBottomNote? {
+        if lowAccuracyReason == .preciseLocationOff, preciseConfirmation == nil {
+            return CompassBottomNote(kind: .preciseOff, text: Self.preciseLocationOffText)
+        }
+        if isLowAccuracy, reading != nil {
+            return CompassBottomNote(kind: .lowAccuracy, text: Self.lowAccuracyNote)
+        }
+        if let nearbyNote {
+            return CompassBottomNote(kind: .nearby, text: nearbyNote)
+        }
+        if let preciseConfirmation {
+            return CompassBottomNote(kind: .aha, text: preciseConfirmation)
+        }
+        return nil
     }
 
     /// "Moonset · 288° WNW": the lock label's format.
@@ -390,7 +410,6 @@ final class CompassViewModel {
         if glyph != moonGlyph { moonGlyph = glyph }
         isPreciseLocationOff = context.isPreciseLocationOff
         hasDetectedPlace = context.detectedPlace != nil
-        placeName = context.place?.nameWithRegion
         visibility = Self.visibility(for: context)
         // Foreground isn't required: coming back from Settings, the context
         // arrives before the scene counts as active again.
@@ -620,6 +639,7 @@ final class CompassViewModel {
 
     private func apply(_ newReading: HeadingReading) {
         reading = newReading
+        if heldBottomNote != nil { heldBottomNote = nil }
         let low = CompassAccuracy.isLow(after: newReading, wasLow: isLowAccuracy)
         if low != isLowAccuracy { isLowAccuracy = low }
         updateLock()
@@ -677,6 +697,8 @@ final class CompassViewModel {
         moonRefreshTask?.cancel()
         moonRefreshTask = nil
 
+        // The aha line is a moment, not a state, so it isn't kept.
+        heldBottomNote = liveBottomNote.flatMap { $0.kind == .aha ? nil : $0 }
         reading = nil
         isLowAccuracy = true
         lockedKind = nil

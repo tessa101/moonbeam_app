@@ -74,6 +74,11 @@ nonisolated struct MoonTableFormatterTests {
         #expect(formatter.lit(fraction) == expected)
     }
 
+    @Test("The header's last resort: the percent alone")
+    func percentLit() {
+        #expect(formatter.percentLit(0.42) == "42%")
+    }
+
     @Test("The phase row is spoken as one line")
     func phaseAccessibilityLabel() {
         let label = formatter.phaseAccessibilityLabel(phase: .waningGibbous, illumination: 0.75)

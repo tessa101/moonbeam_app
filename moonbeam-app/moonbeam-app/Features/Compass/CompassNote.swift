@@ -5,11 +5,10 @@
 
 import SwiftUI
 
-/// A note under the dial (DESIGN-1.1.md §3.3): a rounded pill in `accent`
-/// 10% with a 20 pt amber "!" circle and footnote text, at most 330 pt wide.
-/// The design draws it for low accuracy; the same style carries Nearby,
-/// Precise Location, location off, Far and the aha line (proposed in §3.3).
-/// The copy is `CompassViewModel`'s, unchanged.
+/// A note in place of the compass (DESIGN-1.1.md §3.3): a rounded pill in
+/// `accent` 10% with a 20 pt amber "!" circle and footnote text, at most 330
+/// pt wide. Location off and Far; the other notes moved to the bottom bar
+/// (`CompassBottomBar`, COMPASS-1.1.md §9.4). The copy is `CompassViewModel`'s.
 struct CompassNote: View {
 
     let text: String
@@ -54,7 +53,7 @@ struct CompassNote: View {
 }
 
 #Preview {
-    CompassNote(text: CompassViewModel.interferenceTip)
+    CompassNote(text: CompassViewModel.locationOffHint)
         .padding()
         .background(Theme.Colors.bg)
 }

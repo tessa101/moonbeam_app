@@ -21,6 +21,9 @@ struct LocationScreen: View {
     var onShowOnboarding: (() -> Void)? = nil
 
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    private static let bottomBarAnimation = Animation.easeInOut(duration: 0.3)
 
     var body: some View {
         ScrollView {
@@ -77,6 +80,18 @@ struct LocationScreen: View {
             .padding(.top, Theme.Metrics.contentTopSpacing)
             .padding(.bottom, Theme.Metrics.screenMargin)
         }
+        // COMPASS-1.1.md §9.4: the compass's note in a bar fixed above the
+        // home indicator. An inset, so the content scrolls above it and the
+        // top of the screen doesn't move when it comes and goes.
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            if let note = viewModel.compass.bottomNote {
+                CompassBottomBar(note: note) {
+                    Task { await viewModel.usePreciseLocationForCompass() }
+                }
+                .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
+        }
+        .animation(reduceMotion ? nil : Self.bottomBarAnimation, value: viewModel.compass.bottomNote)
         // 4.15: content mustn't slide under the clock unreadably. The
         // system's soft edge effect, as in system apps; styling is the
         // design pass.
@@ -144,8 +159,7 @@ struct LocationScreen: View {
     private var compass: some View {
         CompassView(
             viewModel: viewModel.compass,
-            onTurnOnLocation: { Task { await viewModel.turnOnLocationForCompass() } },
-            onUsePreciseLocation: { Task { await viewModel.usePreciseLocationForCompass() } }
+            onTurnOnLocation: { Task { await viewModel.turnOnLocationForCompass() } }
         )
         .onScrollVisibilityChange(threshold: Self.compassVisibilityThreshold) { isVisible in
             viewModel.compass.setOnScreen(isVisible)

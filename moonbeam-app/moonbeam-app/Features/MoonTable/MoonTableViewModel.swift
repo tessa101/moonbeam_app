@@ -56,6 +56,8 @@ final class MoonTableViewModel {
     let phaseName: String
     /// "75% lit"; VoiceOver's label still says "at midnight".
     let illuminationText: String
+    /// "75%", when even a shrunk header line has no room for " lit".
+    let illuminationPercentText: String
     let phaseAccessibilityLabel: String
     let glyph: PhaseGlyphGeometry
 
@@ -105,6 +107,7 @@ final class MoonTableViewModel {
 
         phaseName = formatter.phaseName(for: moonDay.phase)
         illuminationText = formatter.lit(moonDay.illumination)
+        illuminationPercentText = formatter.percentLit(moonDay.illumination)
         phaseAccessibilityLabel = formatter.phaseAccessibilityLabel(
             phase: moonDay.phase,
             illumination: moonDay.illumination

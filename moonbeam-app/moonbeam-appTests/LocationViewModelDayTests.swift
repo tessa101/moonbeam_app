@@ -550,7 +550,7 @@ struct LocationViewModelDayTests {
     // MARK: - Values through the view model (engine-derived guards)
 
     /// ASTRONOMY.md §5 has no USNO row for this day yet. STATUS.md's engine
-    /// prediction: no rise (23:12 on 10/2, 00:21 on 10/4), set 14:27. The
+    /// prediction: no rise (23:12 on 10/2, 00:22 on 10/4), set 14:27. The
     /// card says "After midnight" and the next rise (COMPASS-1.1.md §9.10).
     @Test("Mar Vista 2026-10-03: no moonrise (engine-derived)")
     func marVistaNoMoonrise() throws {
@@ -562,7 +562,7 @@ struct LocationViewModelDayTests {
 
         let moonTable = try #require(viewModel.moonTable)
         #expect(moonTable.moonDay.rise == nil)
-        #expect(moonTable.rise.detail == .missing("After midnight", next: "Sun 12:21\u{202F}AM"))
+        #expect(moonTable.rise.detail == .missing("After midnight", next: "Sun 12:22\u{202F}AM"))
         let set = try #require(moonTable.moonDay.set)
         try Self.expectNear(set.date, try Self.date(2026, 10, 3, hour: 14, minute: 27, in: Self.losAngelesZone))
     }

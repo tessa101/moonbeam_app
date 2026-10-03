@@ -70,6 +70,12 @@ nonisolated struct MoonTableFormatter {
         "\(percent(fraction)) lit"
     }
 
+    /// "75%", the header's last resort when "· 75% lit" won't fit one line
+    /// even at 70% (COMPASS-1.1.md §9.12).
+    func percentLit(_ fraction: Double) -> String {
+        percent(fraction)
+    }
+
     /// "Waning gibbous, 75% lit at midnight", for the phase row.
     func phaseAccessibilityLabel(phase: MoonPhase, illumination fraction: Double) -> String {
         "\(phaseName(for: phase)), \(illumination(fraction))"

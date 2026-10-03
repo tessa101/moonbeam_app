@@ -23,6 +23,8 @@ struct DebugScreenState: View {
     enum Kind: String, CaseIterable {
         case moonUp, lockedOnMoon, lockedOnRise, lockedOnSet, moonDown, otherDate
         case preciseOff, lowAccuracy, aha, nearby, locationOff, far, noMoonrise
+        /// "Waning Crescent · 29% lit": the widest phase line, moon up.
+        case longPhaseName
     }
 
     /// The launch argument, then the kind's name.
@@ -114,7 +116,7 @@ struct DebugScreenState: View {
             let moonService: any MoonService = if state == .noMoonrise {
                 AstronomyEngineMoonService()
             } else {
-                Self.fakeMoon(isUp: state != .moonDown, now: now)
+                Self.fakeMoon(isUp: state != .moonDown, longPhaseName: state == .longPhaseName, now: now)
             }
             viewModel = LocationViewModel(
                 locationService: location,
@@ -127,12 +129,17 @@ struct DebugScreenState: View {
             )
         }
 
-        private static func fakeMoon(isUp: Bool, now: Date) -> FakeMoonService {
+        /// Last quarter, 53% (the design's); or a waning crescent, 29%.
+        private static let lastQuarter = (phaseAngle: 270.0, illumination: 0.53)
+        private static let waningCrescent = (phaseAngle: 300.0, illumination: 0.29)
+
+        private static func fakeMoon(isUp: Bool, longPhaseName: Bool, now: Date) -> FakeMoonService {
+            let phase = longPhaseName ? waningCrescent : lastQuarter
             let moon = FakeMoonService(
                 rise: MoonEvent(date: time(2, 23, 10), azimuth: riseAzimuth),
                 set: MoonEvent(date: time(2, 13, 28), azimuth: setAzimuth),
-                phaseAngle: 270,
-                illumination: 0.53,
+                phaseAngle: phase.phaseAngle,
+                illumination: phase.illumination,
                 position: MoonPosition(azimuth: moonAzimuth, isUp: isUp),
                 pass: MoonPass(
                     rise: MoonEvent(date: time(1, 22, 6), azimuth: 56),
@@ -197,4 +204,5 @@ struct DebugScreenState: View {
 #Preview("11 Location off") { DebugScreenState(.locationOff) }
 #Preview("12 Far") { DebugScreenState(.far) }
 #Preview("13 No moonrise, Sat Oct 3") { DebugScreenState(.noMoonrise) }
+#Preview("14 Long phase name") { DebugScreenState(.longPhaseName) }
 #endif

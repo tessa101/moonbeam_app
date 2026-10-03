@@ -137,6 +137,11 @@ nonisolated enum Theme {
         /// Moonrise/moonset times.
         static let displaySize: CGFloat = 24
         static let display = Font.custom(FontName.youngSerif, size: displaySize, relativeTo: .title2)
+        /// `display` shrunk to fit ("After midnight", COMPASS-1.1.md §9.12),
+        /// still scaling with Dynamic Type.
+        static func display(scale: CGFloat) -> Font {
+            .custom(FontName.youngSerif, size: displaySize * scale, relativeTo: .title2)
+        }
         /// A time's day period ("PM"), smaller than its digits but in the
         /// same face and text style, so the two scale together.
         static let dayPeriodScale: CGFloat = 0.6
@@ -188,15 +193,16 @@ nonisolated enum Theme {
             .custom(FontName.youngSerif, fixedSize: min(size, dialLetterMaxSize) * dialScale)
         }
 
-        /// The heading readout and the lock pill (COMPASS-1.1.md §9.10: 24
-        /// until 5.4.6b), with the direction letters ("ENE") set smaller,
-        /// like a time's day period, so the two match and nothing jumps on
+        /// The heading readout and the lock pill: the degrees at the card's
+        /// time size, the direction letters ("ENE") real capitals at 0.7x,
+        /// same face and text style (COMPASS-1.1.md §9.12; 20 pt with 0.6x
+        /// letters in 5.4.6b). Readout and pill match, so nothing jumps on
         /// lock.
-        static let readoutSize: CGFloat = 20
-        static let readout = Font.custom(FontName.youngSerif, size: readoutSize, relativeTo: .title2)
+        static let readout = display
+        static let readoutDirectionScale: CGFloat = 0.7
         static let readoutDirection = Font.custom(
             FontName.youngSerif,
-            size: readoutSize * dayPeriodScale,
+            size: displaySize * readoutDirectionScale,
             relativeTo: .title2
         )
 

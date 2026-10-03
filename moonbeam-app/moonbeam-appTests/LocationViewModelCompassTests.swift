@@ -441,10 +441,14 @@ struct LocationViewModelCompassTests {
     }
 
     /// The compass reads the table's `MoonDay`, so it adds no
-    /// `moonDay(for:on:)` calls of its own.
+    /// `moonDay(for:on:)` calls of its own. A rise and a set, so the table
+    /// doesn't also look up the next day for "After midnight".
     @Test("The compass doesn't ask the moon service for the day again")
     func noExtraMoonDayCalls() async {
-        let moon = FakeMoonService()
+        let moon = FakeMoonService(
+            rise: MoonEvent(date: Self.referenceDate, azimuth: 72),
+            set: MoonEvent(date: Self.referenceDate, azimuth: 288)
+        )
         let harness = Self.makeHarness(moonService: moon)
 
         await harness.viewModel.start()

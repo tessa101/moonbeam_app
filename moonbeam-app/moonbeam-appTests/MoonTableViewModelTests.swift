@@ -67,8 +67,12 @@ struct MoonTableViewModelTests {
     /// has to be the day the table was built for.
     @Test("The day reaches the moon service and is kept")
     func dayReachesTheService() throws {
-        let service = FakeMoonService()
         let day = try Self.farDay()
+        // A rise and a set, so there's no next-day lookup for "After midnight".
+        let service = FakeMoonService(
+            rise: MoonEvent(date: day, azimuth: 72),
+            set: MoonEvent(date: day, azimuth: 288)
+        )
 
         let table = Self.makeTable(service, day: day)
 

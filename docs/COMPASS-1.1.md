@@ -290,6 +290,33 @@ placement are still 5.4.5's; those are covered by §9.3 and §9.4.
 - **"After midnight":** the next day's event from `moonDay(for:on:)`, so no new service call; "Not today" when the
   next day has none either.
 
+
+### 9.12 Device check after 5.4.6b (Tessa, 2026-10-03) — fold into 5.4.6c
+- **Readout and lock pill:** degrees at the **card time size** (`Fonts.display`, Young Serif 24, `.title2`); direction
+  letters as **real capitals at 0.7x** (~17 pt), same face, on the baseline. Not small caps (single letters read as
+  lowercase "w"). Readout and pill stay identical so nothing jumps on lock. Pill padding back to ~10 / 18.
+- **Missing rise / set cell:** "↑ Moonrise" and "↓ Moonset" labels on the **same baseline** (the missing cell sits ~5 pt
+  low now). **"After midnight" / "Not today" use the time font** (`Fonts.display`, `textPrimary`) in the time's slot;
+  the next time ("Sun 12:20 AM") stays in the direction slot. If "After midnight" doesn't fit the column at the
+  default size, scale it down (min 0.8x) before wrapping.
+- **Needle:** ~28 pt as §9.10 asked. Keep the tip where it is (inner end of the heavy ticks) and start it lower, just
+  above the arc track, or shorten it into the tick ring; whichever gives ~28 pt. Report the length.
+- **Phase line:** **always one line** at the default size, on every phone. Steps down to 0.7x (was 0.85x); if it
+  still doesn't fit at 0.7x, drop " lit" ("Waning Crescent · 42%"). VoiceOver unchanged.
+- **Bottom label in the home-indicator band:** accepted for now; recheck with the bottom bar.
+
+### 9.13 As built (5.4.6c) — report `.agent-reports/5.4.6/5.4.6c-bar.md`
+- **Bar:** as §9.4. Heights at the default size: Precise 82 (Use Precise beside the text; under it at AX sizes),
+  low accuracy / Nearby 64, aha 48. Text capped at AX1, so a bar is at most ~193 pt (AX5 was up to 498 on the SE 3).
+- **On load it covers the dial's bottom:** iPhone 17 bar tops 758–792 vs face bottom 814 (centre 684 clear); SE 3 bar
+  tops 585–619 vs centre 628.5, so the centre is covered. Content scrolls clear above it.
+- **Held note:** the bar is a safe-area inset, so at large sizes it can push the compass off screen and stop the
+  sensors. The bar keeps its last note while they're paused, until the next reading (Precise's goes if Precise turns
+  on; aha isn't held). Without it the bar flickered in and out.
+- **§9.12:** readout / pill Young Serif 24, capitals at 0.7×, pill 10 / 18; missing-cell labels aligned, "After
+  midnight" in the time font (0.8× before wrapping); needle 28 pt to the heavy ticks; phase line to 0.7×, then
+  without " lit". On the SE 3 the no-moonrise "After midnight" still wraps at 0.8×.
+
 ## Decision log
 
 - **2026-10-02 (Tessa):** Compass 1.1 reviewed. Keep the Up now row, lock highlight, needle, ticks, crosshair,
@@ -308,3 +335,5 @@ placement are still 5.4.5's; those are covered by §9.3 and §9.4.
 - **2026-10-02 night (Tessa, device after 5.4.6a):** phase line one line (0.85x); tighter label → time; lock pill
   20 pt with small direction letters (readout too); shorter needle; bigger dial; missing rise/set top-aligned, "After
   midnight" + next time. §9.10.
+- **2026-10-03 (Tessa, after 5.4.6b):** readout/pill at the card time size with 0.7x capital directions; missing
+  rise/set labels aligned, "After midnight" in the time font; needle ~28 pt; phase line always one line. §9.12.

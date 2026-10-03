@@ -3,7 +3,7 @@
 > A living note on where things stand. Update it at the end of each work session
 > so the next session (you, or Claude) can pick up cold.
 
-_Last updated: 2026-10-02 (Build 5.4.6b [spike]: dial 260 pt, gaps, "After midnight"; next 5.4.6c; Build 5.4.6a [spike]: compact card; Compass 1.1 spike built, 5.4.1–5.4.5; sensors start when any part of the compass shows; next: the pinned-bar rule, then 5.5); 2026-10-01 (TestFlight build 4 prepared; onboarding Settings fix; Show onboarding in TestFlight; tap animation and DEBUG onboarding trigger built; next 5.5; Moon Signal app icon in; 5.8 moon arc built; next: DEBUG onboarding trigger, tap animation, then 5.5; TestFlight build 3 uploaded with 5.7; moon arc decided (option B, 5.8); Step 5.7 onboarding built ahead of 5.5/5.6; Step 5.3 madlib sentence built, with §3.1a; 5.2 follow-ups; Step 5.2 moon card built; 5.1 theme; Design 1.1 settled: DESIGN-1.1.md, Step 5; 4.14, Step 2.2 and 4.15 built; device checks pending)_
+_Last updated: 2026-10-03 (Build 5.4.6c [spike]: bottom bar, §9.12 fixes; all 797 cases pass in Xcode; next: Tessa's device check, then 5.6); 2026-10-02 (Build 5.4.6b [spike]: dial 260 pt, gaps, "After midnight"; next 5.4.6c; Build 5.4.6a [spike]: compact card; Compass 1.1 spike built, 5.4.1–5.4.5; sensors start when any part of the compass shows; next: the pinned-bar rule, then 5.5); 2026-10-01 (TestFlight build 4 prepared; onboarding Settings fix; Show onboarding in TestFlight; tap animation and DEBUG onboarding trigger built; next 5.5; Moon Signal app icon in; 5.8 moon arc built; next: DEBUG onboarding trigger, tap animation, then 5.5; TestFlight build 3 uploaded with 5.7; moon arc decided (option B, 5.8); Step 5.7 onboarding built ahead of 5.5/5.6; Step 5.3 madlib sentence built, with §3.1a; 5.2 follow-ups; Step 5.2 moon card built; 5.1 theme; Design 1.1 settled: DESIGN-1.1.md, Step 5; 4.14, Step 2.2 and 4.15 built; device checks pending)_
 
 ## Where things live
 - **Local repo:** `~/app-ideas/moonbeam` (the one true folder)
@@ -124,7 +124,7 @@ _Last updated: 2026-10-02 (Build 5.4.6b [spike]: dial 260 pt, gaps, "After midni
      |---|---|---|---|---|
      | Reykjavík (high latitude) | 2026-09-23 | 64.15, -21.94 · UTC, no DST | rise 19:07 · set 02:01 | `oneday?date=2026-09-23&coords=64.15,-21.94&tz=0&dst=false` |
      | Sydney (southern hemisphere) | 2026-09-23 | -33.87, 151.21 · AEST, no DST yet | rise 14:24 · set 03:41 | `oneday?date=2026-09-23&coords=-33.87,151.21&tz=10&dst=false` |
-     | Mar Vista (no moonrise) | 2026-10-03 | 34.00, -118.43 · PDT | **no rise** · set 14:27 (rise 23:12 on 10/2, 00:21 on 10/4) | `oneday?date=2026-10-03&coords=34.00,-118.43&tz=-8&dst=true` |
+     | Mar Vista (no moonrise) | 2026-10-03 | 34.00, -118.43 · PDT | **no rise** · set 14:27 (rise 23:12 on 10/2, 00:22 on 10/4) | `oneday?date=2026-10-03&coords=34.00,-118.43&tz=-8&dst=true` |
 
      Base URL: `https://aa.usno.navy.mil/api/rstt/`. Open from the Mac (the cloud sandbox is blocked).
 4. [ ] Build the SwiftUI table → **now part of Step 5 (Design 1.1), item 5.2**
@@ -255,6 +255,13 @@ _Last updated: 2026-10-02 (Build 5.4.6b [spike]: dial 260 pt, gaps, "After midni
        (labels 22 pt into the home-indicator area); SE 3 dial centre on screen, face 72 pt below. Report and 78
        screenshots: `.agent-reports/5.4.6/`. **Tests not run** (runner can't launch here). **Next:** Tessa's device
        check, 5.4.6c (bottom bar).
+     - [x] **Build 5.4.6c [spike] (2026-10-03):** notes in a bar fixed above the home indicator (Precise off with Use
+       Precise, low accuracy, Nearby, aha; one at a time), the dial dims in low accuracy; §9.12: readout / pill 24 pt
+       with 0.7× capitals, missing-cell labels aligned, "After midnight" in the time font, needle 28 pt, phase line
+       always one line. Text in the bar capped at AX1; the bar holds its note while the sensors pause (COMPASS-1.1.md
+       §9.13). On load a bar covers the dial's bottom (iPhone 17) or its centre (SE 3). Report and 84 screenshots:
+       `.agent-reports/5.4.6/5.4.6c-bar.md`, `c/`. **521 tests / 797 cases, all pass** (Xcode's runner; three stale
+       5.4.6b tests fixed). **Next:** Tessa's device check, then 5.6 (pinned bar).
 
 5. [ ] Location: detect + search (Step 2)
    - Spec: **[LOCATION.md](LOCATION.md)** (decided 2026-09-25). Place model, CoreLocation one-shot fix,

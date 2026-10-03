@@ -11,8 +11,8 @@ import SwiftUI
 /// crosshair; just outside the rim, the moon arc, the moon's pass from rise
 /// to set, with `moonLit` dots at moonrise and moonset and the live Moon as
 /// a phase glyph riding on it (pulsing until the first lock), their labels
-/// beyond; and a short fixed needle at 12 o'clock from just above the arc to
-/// the inner end of the heavy ticks. Locked, the target's mark grows and
+/// beyond; and a short fixed needle at 12 o'clock, 28 pt down to the inner
+/// end of the heavy ticks. Locked, the target's mark grows and
 /// glows and the dial gets a soft amber halo; locked on the Moon, the glyph
 /// sits at 12 o'clock over the needle's top.
 ///
@@ -197,11 +197,12 @@ struct CompassDial: View {
     private static let haloOverhang: CGFloat = 18
     private static let haloOpacity = 0.28
 
-    /// The needle (COMPASS-1.1.md §9.10): a 3 pt round-capped line from this
-    /// far above the arc's track to the inner end of the heavy ticks. It
-    /// only has to point at the degree.
+    /// The needle (COMPASS-1.1.md §9.12): a 3 pt round-capped line this
+    /// long, ending at the inner end of the heavy ticks. It only has to
+    /// point at the degree, so it starts outside the rim but under the
+    /// arc's track (5.4.6b's started 6 pt above the track: 43 pt).
     private static let needleWidth: CGFloat = 3
-    private static let needleOverArc: CGFloat = 6
+    static let needleLength: CGFloat = 28
 
     /// The face: radial gradient centred at 50% / 40%, out to the farthest
     /// corner of its box (CSS `circle at 50% 40%`), a 1 pt inner highlight
@@ -307,12 +308,14 @@ struct CompassDial: View {
         }
     }
 
-    /// Fixed at 12 o'clock: where the phone points. From just above the
-    /// arc's track, across it, to the inner end of the heavy ticks; amber
-    /// while locked.
+    /// Fixed at 12 o'clock: where the phone points. `needleLength` long,
+    /// down to the inner end of the heavy ticks; amber while locked.
     private var needle: some View {
-        let top = arcRadius + Self.needleOverArc
-        let bottom = radius - Self.tickOuterInset - Self.heavyTick.length * scale
+        // Distances from the centre; the round caps are inside the length.
+        let capRadius = Self.needleWidth / 2
+        let tip = radius - Self.tickOuterInset - Self.heavyTick.length * scale
+        let bottom = tip + capRadius
+        let top = tip + Self.needleLength - capRadius
         return Path { path in
             path.move(to: CGPoint(x: centre.x, y: centre.y - top))
             path.addLine(to: CGPoint(x: centre.x, y: centre.y - bottom))

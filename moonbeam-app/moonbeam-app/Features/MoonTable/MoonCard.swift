@@ -35,9 +35,11 @@ struct MoonCard: View {
     /// Between the phase name and its illumination ("Last Quarter · 53% lit").
     private static let phaseSeparator = " · "
     /// At the default size the phase line shrinks in these steps, down to
-    /// 85%, before it wraps (COMPASS-1.1.md §9.10), so the card's height is
-    /// the same for every phase.
-    private static let phaseLineScales: [CGFloat] = [1, 0.95, 0.9, 0.85]
+    /// 70%, then drops " lit" (COMPASS-1.1.md §9.12): always one line, so
+    /// the card's height is the same for every phase on every phone.
+    private static let phaseLineScales: [CGFloat] = [1, 0.95, 0.9, 0.85, 0.8, 0.75, 0.7]
+    /// "After midnight" / "Not today" shrink this far before wrapping.
+    private static let missingTextScales: [CGFloat] = [1, 0.9, 0.8]
 
     // MARK: - Rise/set constants
 
@@ -170,10 +172,11 @@ struct MoonCard: View {
             }
     }
 
-    /// "Last Quarter · 53% lit" on one line, shrinking to 85% at the default
-    /// size if it must (COMPASS-1.1.md §9.10). Only past that (other sizes,
-    /// narrower phones) the name over "21% lit", so the "·" is never left at
-    /// a line's end. VoiceOver keeps "at midnight".
+    /// "Last Quarter · 53% lit" on one line. At the default size always one
+    /// line, on every phone (COMPASS-1.1.md §9.12): it shrinks to 70%, then
+    /// drops " lit". At other sizes it doesn't shrink; the name goes over
+    /// "21% lit" instead, so the "·" is never left at a line's end.
+    /// VoiceOver keeps "at midnight".
     private var phaseLine: some View {
         let name = Text(table.phaseName)
             .foregroundStyle(Theme.Colors.textPrimary)
@@ -182,20 +185,33 @@ struct MoonCard: View {
         let separator = Text(Self.phaseSeparator)
             .foregroundStyle(Theme.Colors.textSecondary)
         let oneLine = Text("\(name)\(separator)\(lit)")
-        // Only the default size shrinks, like the sentence (§3.1a).
-        let scales = MadlibScale.shrinks(at: dynamicTypeSize) ? Self.phaseLineScales : [1]
-        return ViewThatFits(in: .horizontal) {
-            ForEach(scales, id: \.self) { scale in
-                oneLine
-                    .font(Theme.Fonts.phaseName(scale: scale))
-                    .lineLimit(1)
-            }
-            VStack(alignment: .leading, spacing: Self.headerTextSpacing) {
-                name
-                lit
+        return Group {
+            // Only the default size shrinks, like the sentence (§3.1a).
+            if MadlibScale.shrinks(at: dynamicTypeSize) {
+                ViewThatFits(in: .horizontal) {
+                    ForEach(Self.phaseLineScales, id: \.self) { scale in
+                        oneLine
+                            .font(Theme.Fonts.phaseName(scale: scale))
+                            .lineLimit(1)
+                    }
+                    // "Waning Crescent · 42%": the last resort, and what
+                    // ViewThatFits falls back to, so never a second line.
+                    Text("\(name)\(separator)\(Text(table.illuminationPercentText).foregroundStyle(Theme.Colors.textSecondary))")
+                        .font(Theme.Fonts.phaseName(scale: Self.phaseLineScales.last ?? 1))
+                        .lineLimit(1)
+                }
+            } else {
+                ViewThatFits(in: .horizontal) {
+                    oneLine
+                        .lineLimit(1)
+                    VStack(alignment: .leading, spacing: Self.headerTextSpacing) {
+                        name
+                        lit
+                    }
+                }
+                .font(Theme.Fonts.phaseName)
             }
         }
-        .font(Theme.Fonts.phaseName)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(table.phaseAccessibilityLabel)
     }
@@ -237,9 +253,10 @@ struct MoonCard: View {
         .padding(.horizontal, -Self.cellOutset)
     }
 
-    /// Top-aligned in both states, so the two labels share a line.
-    /// Missing (§9.10): "After midnight" where the time goes, the next one
-    /// ("Sun 12:20 AM") where the direction goes.
+    /// Top-aligned in both states, so the two labels share a baseline, and
+    /// as tall as its neighbour, so a lock outline matches it. Missing
+    /// (§9.10, §9.12): "After midnight" in the time's font and slot, the
+    /// next one ("Sun 12:20 AM") where the direction goes.
     private func column(_ column: MoonTableViewModel.Column, isHighlighted: Bool) -> some View {
         VStack(alignment: .leading, spacing: Self.labelToTimeSpacing) {
             Text(column.title)
@@ -254,9 +271,7 @@ struct MoonCard: View {
                         .font(Theme.Fonts.detail)
                         .foregroundStyle(Theme.Colors.accent)
                 case let .missing(text, next):
-                    Text(text)
-                        .font(Theme.Fonts.body)
-                        .foregroundStyle(Theme.Colors.textBody)
+                    missingText(text)
                     if let next {
                         Text(next)
                             .font(Theme.Fonts.detail)
@@ -265,11 +280,29 @@ struct MoonCard: View {
                 }
             }
         }
-        .frame(maxWidth: .infinity, alignment: .topLeading)
+        // Filled to the row's height, top first: 5.4.6b centred the shorter
+        // cell, which set its label ~5 pt low.
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .modifier(CellStyle(isHighlighted: isHighlighted, restingFill: .clear))
-        .frame(maxHeight: .infinity)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(column.accessibilityLabel)
+    }
+
+    /// "After midnight" / "Not today" like a time (§9.12); at the default
+    /// size it shrinks to 80% before it wraps.
+    private func missingText(_ text: String) -> some View {
+        let scales = MadlibScale.shrinks(at: dynamicTypeSize) ? Self.missingTextScales : [1]
+        return ViewThatFits(in: .horizontal) {
+            ForEach(scales, id: \.self) { scale in
+                Text(text)
+                    .font(Theme.Fonts.display(scale: scale))
+                    .lineLimit(1)
+            }
+            Text(text)
+                .font(Theme.Fonts.display)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .foregroundStyle(Theme.Colors.textPrimary)
     }
 
     /// "11:13 PM AEST", baseline-aligned; the zone wraps under the time when
