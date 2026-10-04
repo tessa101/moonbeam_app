@@ -3,7 +3,7 @@
 > A living note on where things stand. Update it at the end of each work session
 > so the next session (you, or Claude) can pick up cold.
 
-_Last updated: 2026-10-03 (TestFlight build 5 prepared, 1.0 (5): Compass 1.1 spike + 5.6; Release build checked; 823 cases pass; archive/upload are Tessa's); 2026-10-03 (Build 5.6 [spike]: pinned compass bar, never shows at the default size, shows at xxxLarge / AX; all 823 cases pass; next: device check, then 5.9, then 5.5); 2026-10-03 (Build 5.4.8 [spike]: "After midnight" 13 pt, one line, no-rise card no longer grows; all 812 cases pass in Xcode); 2026-10-03 (Order: 5.4.8 + 5.6 in one run, then 5.9, then 5.5 AX reflow last); 2026-10-03 (Build 5.4.7 [spike]: Up now between Moonrise and Moonset, card 46 pt shorter; all 809 cases pass in Xcode; next: Tessa's device check of 5.4.6 / 5.4.7, then 5.6); 2026-10-03 (Build 5.4.6c [spike]: bottom bar, §9.12 fixes; all 797 cases pass in Xcode; next: Tessa's device check, then 5.6); 2026-10-02 (Build 5.4.6b [spike]: dial 260 pt, gaps, "After midnight"; next 5.4.6c; Build 5.4.6a [spike]: compact card; Compass 1.1 spike built, 5.4.1–5.4.5; sensors start when any part of the compass shows; next: the pinned-bar rule, then 5.5); 2026-10-01 (TestFlight build 4 prepared; onboarding Settings fix; Show onboarding in TestFlight; tap animation and DEBUG onboarding trigger built; next 5.5; Moon Signal app icon in; 5.8 moon arc built; next: DEBUG onboarding trigger, tap animation, then 5.5; TestFlight build 3 uploaded with 5.7; moon arc decided (option B, 5.8); Step 5.7 onboarding built ahead of 5.5/5.6; Step 5.3 madlib sentence built, with §3.1a; 5.2 follow-ups; Step 5.2 moon card built; 5.1 theme; Design 1.1 settled: DESIGN-1.1.md, Step 5; 4.14, Step 2.2 and 4.15 built; device checks pending)_
+_Last updated: 2026-10-03 (TestFlight build is **1.0 (6)**, not 5: `CURRENT_PROJECT_VERSION` 5 → 6); 2026-10-03 (TestFlight build 5 prepared, 1.0 (5): Compass 1.1 spike + 5.6; Release build checked; 823 cases pass; archive/upload are Tessa's); 2026-10-03 (Build 5.6 [spike]: pinned compass bar, never shows at the default size, shows at xxxLarge / AX; all 823 cases pass; next: device check, then 5.9, then 5.5); 2026-10-03 (Build 5.4.8 [spike]: "After midnight" 13 pt, one line, no-rise card no longer grows; all 812 cases pass in Xcode); 2026-10-03 (Order: 5.4.8 + 5.6 in one run, then 5.9, then 5.5 AX reflow last); 2026-10-03 (Build 5.4.7 [spike]: Up now between Moonrise and Moonset, card 46 pt shorter; all 809 cases pass in Xcode; next: Tessa's device check of 5.4.6 / 5.4.7, then 5.6); 2026-10-03 (Build 5.4.6c [spike]: bottom bar, §9.12 fixes; all 797 cases pass in Xcode; next: Tessa's device check, then 5.6); 2026-10-02 (Build 5.4.6b [spike]: dial 260 pt, gaps, "After midnight"; next 5.4.6c; Build 5.4.6a [spike]: compact card; Compass 1.1 spike built, 5.4.1–5.4.5; sensors start when any part of the compass shows; next: the pinned-bar rule, then 5.5); 2026-10-01 (TestFlight build 4 prepared; onboarding Settings fix; Show onboarding in TestFlight; tap animation and DEBUG onboarding trigger built; next 5.5; Moon Signal app icon in; 5.8 moon arc built; next: DEBUG onboarding trigger, tap animation, then 5.5; TestFlight build 3 uploaded with 5.7; moon arc decided (option B, 5.8); Step 5.7 onboarding built ahead of 5.5/5.6; Step 5.3 madlib sentence built, with §3.1a; 5.2 follow-ups; Step 5.2 moon card built; 5.1 theme; Design 1.1 settled: DESIGN-1.1.md, Step 5; 4.14, Step 2.2 and 4.15 built; device checks pending)_
 
 ## Where things live
 - **Local repo:** `~/app-ideas/moonbeam` (the one true folder)
@@ -476,7 +476,7 @@ _Last updated: 2026-10-03 (TestFlight build 5 prepared, 1.0 (5): Compass 1.1 spi
        page or somewhere else)
      - Also with Location Services off entirely (Privacy & Security → Location Services)
 
-10. [ ] **TestFlight build 5 (1.0 (5), prepared 2026-10-03).** Everything since build 4 (`2be3270`): the Compass 1.1
+10. [ ] **TestFlight build 6 (1.0 (6), prepared 2026-10-03 as build 5, shipped as 6 per Tessa).** Everything since build 4 (`2be3270`): the Compass 1.1
    spike (COMPASS-1.1.md, 5.4.1–5.4.8) and 5.6:
    - **Sentence:** three lines, "Where can I find / the moon **today** / in 📍 Irvine, CA?" (another day reads "on Sat,
      Oct 3"); lines a little closer together.
@@ -497,7 +497,7 @@ _Last updated: 2026-10-03 (TestFlight build 5 prepared, 1.0 (5): Compass 1.1 spi
    - Still **not** in it: 5.5 (AX reflow), 5.9 (launch loader). The TestFlight-only Show onboarding button is still
      there.
 
-   Release build checked: CFBundleVersion **5** (MARKETING_VERSION 1.0); the four fonts in the bundle and in
+   Release build checked: CFBundleVersion **6** (MARKETING_VERSION 1.0; rebuilt after the 5 → 6 bump); the four fonts in the bundle and in
    `UIAppFonts`, both OFL texts; `PrivacyInfo.xcprivacy` (no tracking, no collected data, UserDefaults `CA92.1`);
    forced dark; display name "Moon Signal"; minimum iOS 26.0; `ITSAppUsesNonExemptEncryption` false; location
    purpose strings (When In Use, temporary `Compass`), no `NSLocationDefaultAccuracyReduced`; the icon's default,
