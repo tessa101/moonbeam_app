@@ -241,7 +241,11 @@ on the iPhone 17, shrink the dial before the gaps, and say by how much.
   height (§9.1, 9.3, 9.7) + fit report
 - **5.4.6c** Bottom bar for notes, reverting 5.4.3 (§9.4)
 - **5.4.7** Up now as the middle column (§9.14), after 5.4.6c
-- **5.6** Pinned bar (§9.6), after Tessa checks 5.4.6 / 5.4.7 on device
+- **5.4.8 + 5.6, one run (Tessa, 2026-10-03), one commit each, 5.4.8 first:**
+  - **5.4.8** "After midnight" smaller (§9.16 item 1; the ‹ › bug, item 2, is parked)
+  - **5.6** Pinned bar (§9.6); the 5.4.6 / 5.4.7 device check is done (§9.16). Fit report against the 5.4.8 card.
+    AX sizes: best effort, report what breaks; 5.5 fixes it.
+- Then **5.9** launch loader (LOADER.md), then **5.5** AX reflow last.
 
 ### 9.9 Tests
 - Header: date line then "Phase · N% lit"; VoiceOver still says "at midnight"
@@ -371,6 +375,39 @@ The mocks' sentence token ("now" / "tonight") is not adopted: **keep "today"**.
 - "Up now" Young Serif 20 pt on the times' baseline; glyph 16 pt (scales with `.footnote`); dots 2 / 5 pt.
 - AX5 "57° E…" fixed (direction and next-time lines take their own height).
 
+### 9.16 Device check after 5.4.7 (Tessa, 2026-10-03) — build as 5.4.8
+1. **"After midnight" / "Not today" smaller.** Its own smaller size in the time slot instead of `Fonts.display` 24
+   (supersedes §9.12's "time font" for these two strings only). Young Serif, `textPrimary`, the **largest size that fits
+   one line** in its column on the SE 3 at the default size, between **15 and 20 pt**; report the size. It no longer
+   pulls the other columns down to 80% (drop the shared scale for this case): the other cells stay at 100%, the card
+   keeps its normal height, and "Sun 12:20 AM" stays in the direction slot. AX sizes: wraps as now, never an ellipsis.
+2. **Parked (Tessa, 2026-10-03), not in 5.4.8; tracked in DESIGN-REVIEW.md "Date control".** ‹ › bug is back: the
+   tapped arrow floats out of the card. Tessa's device video (2026-10-03; frames
+   `design/bugs/arrows-float-frames.png`, 1/8 s apart): tap ›, the date changes, and the › button jumps ~40 pt **up,
+   above the card's top edge**, then slides back into the row over ~0.3–0.5 s; the other arrow stays put. Same with ‹ going back
+   (Oct 19). It happens on some taps, not all (seen Sun Oct 25 → Mon Oct 26). The rest of the card doesn't move.
+   - Looks like the button is animating from a stale or alternate position when the header re-lays out for the new
+     date (e.g. the phase line changing length: "Full Moon · 100% lit" → "Waning Gibbous · 98% lit"). Suspects: a
+     `ViewThatFits` / AX branch in the header row (the AX layout puts ‹ › on a different row) giving the button a new
+     identity, an implicit `.animation` on the header picking up the position change, or `PressFeedback`'s spring.
+     Find the real cause; don't just switch animation off for the card.
+   - **Rule:** stepping days must never move the ‹ › buttons, the card's height, the readout or the dial.
+     (Earlier related fix: DECISIONS.md "The date field fills the space between ‹ and ›".)
+   - **Test:** step ‹ › through 30 days either side of today (Irvine, include Oct 3, the no-rise day, and Oct 25 → 26)
+     on the iPhone 17 and SE 3 at the default size; ‹ › frames, card height and readout y identical every day, with
+     animations on. Add it as a UI/layout test so it can't come back. Report the cause.
+   - Also confirm the no-rise day's card no longer grows (~20 pt in 5.4.7); item 1 should fix that.
+
+### 9.17 As built (5.4.8) — report `.agent-reports/5.4.8/5.4.8-after-midnight.md`
+- **"After midnight" / "Not today": 13 pt Young Serif** (`Theme.Fonts.missingEvent`, scales with `.title2`), **below
+  item 1's 15–20 pt**. On the SE 3 with the moon up, the Moonrise column has 100.5 pt of text width beside Up now and
+  Moonset, and "After midnight" needs 113.4 pt at 15 pt. The largest size that fits is 13.3 pt (16.8 pt on the
+  iPhone 17). One line, the other columns at 100% and the same card height won over the range; Tessa to confirm.
+- Out of the columns' shared scale. It sits in a time's slot and on its baseline, so "Sun 12:20 AM" stays on the
+  directions' line. The same size in the two-column states.
+- No-rise card = normal card at the default size: iPhone 17 181.3 pt, SE 3 181.5 pt on both days (it grew ~20 pt
+  in 5.4.7). AX sizes wrap as before, never an ellipsis.
+
 ## Decision log
 
 - **2026-10-02 (Tessa):** Compass 1.1 reviewed. Keep the Up now row, lock highlight, needle, ticks, crosshair,
@@ -395,3 +432,6 @@ The mocks' sentence token ("now" / "tonight") is not adopted: **keep "today"**.
   as a middle column (rise · Up now · set) to win back vertical space; removed when the moon isn't up. Phase glyph on
   a connector line (solid rise → now, dotted now → set); not up = one dotted line at 40%; card height equal in both
   states; down line dropped; keep "today". Nothing else on the screen changes. §9.14.
+- **2026-10-03 (Tessa, device after 5.4.7):** "After midnight" in a smaller font (no shared 80% scale, no wrap); the
+  tapped ‹ › floats above the card when stepping days (video), written up in §9.16 item 2 but **parked** for later.
+  §9.16 item 1 builds as 5.4.8.

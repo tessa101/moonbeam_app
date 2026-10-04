@@ -137,7 +137,14 @@ nonisolated enum Theme {
         /// Moonrise/moonset times.
         static let displaySize: CGFloat = 24
         static let display = Font.custom(FontName.youngSerif, size: displaySize, relativeTo: .title2)
-        /// `display` shrunk to fit ("After midnight", COMPASS-1.1.md §9.12),
+        /// "After midnight" / "Not today" in a time's slot (COMPASS-1.1.md
+        /// §9.16): the largest size that fits one line beside Up now and
+        /// Moonset on the SE 3 at the default size (13.3 pt there). The
+        /// spec's 15–20 pt doesn't fit; DECISIONS.md 2026-10-03 "5.4.8 as
+        /// built".
+        static let missingEventSize: CGFloat = 13
+        static let missingEvent = Font.custom(FontName.youngSerif, size: missingEventSize, relativeTo: .title2)
+        /// `display` shrunk to fit (the three columns, COMPASS-1.1.md §9.14),
         /// still scaling with Dynamic Type.
         static func display(scale: CGFloat) -> Font {
             .custom(FontName.youngSerif, size: displaySize * scale, relativeTo: .title2)

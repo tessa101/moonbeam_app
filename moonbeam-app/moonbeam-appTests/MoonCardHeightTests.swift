@@ -69,7 +69,10 @@ struct MoonCardHeightTests {
     }
 
     private static func cardHeight(isMoonUp: Bool, width: CGFloat, size: DynamicTypeSize) throws -> CGFloat {
-        let viewModel = makeViewModel(isMoonUp: isMoonUp)
+        try render(makeViewModel(isMoonUp: isMoonUp), width: width, size: size)
+    }
+
+    private static func render(_ viewModel: LocationViewModel, width: CGFloat, size: DynamicTypeSize) throws -> CGFloat {
         let table = try #require(viewModel.moonTable)
         let renderer = ImageRenderer(
             content: MoonCard(viewModel: viewModel, table: table)
@@ -79,6 +82,35 @@ struct MoonCardHeightTests {
         renderer.proposedSize = ProposedViewSize(width: width, height: nil)
         let image = try #require(renderer.uiImage)
         return image.size.height
+    }
+
+    /// Irvine, detected, at 7:53 AM on `day` (Oct 2026), on the real engine.
+    private static func realEngineViewModel(day: Int) -> LocationViewModel {
+        let now = time(day, 7, 53)
+        let here = Place(
+            name: "Irvine",
+            region: "CA",
+            latitude: Place.irvine.latitude,
+            longitude: Place.irvine.longitude,
+            timeZone: zone,
+            isCurrentLocation: true
+        )
+        let viewModel = LocationViewModel(
+            locationService: FakeLocationService(authorizationState: .authorized, placeResult: .success(here)),
+            placeSearch: FakePlaceSearchService(),
+            placeStore: InMemoryPlaceStore(),
+            moonService: AstronomyEngineMoonService(),
+            headingService: FakeHeadingService(),
+            deviceTimeZone: zone,
+            now: { now }
+        )
+        viewModel.select(here)
+        return viewModel
+    }
+
+    private static func realEngineCardHeight(day: Int, width: CGFloat) throws -> CGFloat {
+        let viewModel = realEngineViewModel(day: day)
+        return try render(viewModel, width: width, size: .large)
     }
 
     // MARK: - Tests
@@ -94,6 +126,38 @@ struct MoonCardHeightTests {
         let down = try Self.cardHeight(isMoonUp: false, width: width, size: size)
 
         #expect(up == down)
+    }
+
+    /// COMPASS-1.1.md §9.16 (5.4.8): "After midnight" at its own size fits
+    /// one line and leaves the other columns at full size, so the no-rise
+    /// day's card is no taller (nor shorter) than the day before's. Real
+    /// engine, Irvine at 7:53 AM, moon up both days.
+    @Test("The no-rise day renders the same card height as a normal day", arguments: [
+        iPhone17CardWidth,
+        se3CardWidth,
+    ])
+    func noRiseDayKeepsHeight(width: CGFloat) throws {
+        let normal = try Self.realEngineCardHeight(day: 2, width: width)
+        let noRise = try Self.realEngineCardHeight(day: 3, width: width)
+
+        #expect(noRise == normal)
+    }
+
+    @Test("Sat, Oct 3 really has no moonrise and the moon up; Fri, Oct 2 has both")
+    func realEngineFixture() throws {
+        let noRise = try #require(Self.realEngineViewModel(day: 3).moonTable)
+        let normal = try #require(Self.realEngineViewModel(day: 2).moonTable)
+
+        guard case .missing = noRise.rise.detail else {
+            Issue.record("Expected no moonrise on Sat, Oct 3")
+            return
+        }
+        guard case .time = normal.rise.detail else {
+            Issue.record("Expected a moonrise on Fri, Oct 2")
+            return
+        }
+        #expect(Self.realEngineViewModel(day: 3).compass.upNow?.isUp == true)
+        #expect(Self.realEngineViewModel(day: 2).compass.upNow?.isUp == true)
     }
 
     @Test("The setup really is up vs down, today with the compass")

@@ -42,6 +42,7 @@ _Started: 2026-09-26_
 - [ ] Compass direction format ("105° ESE"): degrees, letters, or both?
 
 ## Date control and calendar sheet (Step 3, built plain; DATE.md §9)
+- [ ] **Bug, parked (Tessa, 2026-10-03): the tapped ‹ / › floats out of the card.** On some day steps the tapped arrow jumps ~40 pt up, above the card's top edge, then slides back over ~0.3–0.5 s; the other arrow and the card stay put (› Oct 25 → 26, ‹ to Oct 19; seen on the 5.4.6c build). Frames: `design/bugs/arrows-float-frames.png`. Full write-up, suspects and the day-stepping test: COMPASS-1.1.md §9.16 item 2. **Not in 5.4.8; come back to it later.**
 - [ ] **Copy that assumes "tonight"** when another date is picked: the screen prompt "Where are you watching the moon tonight?" and the midnight note (e.g. "Oct 3 · at midnight")
 - [ ] Getting back to today takes two taps (open calendar → Today). Revisit with the relative-day chips idea.
 - [ ] **Arrow styling and hit areas; the field's chevron**

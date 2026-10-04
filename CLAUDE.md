@@ -55,7 +55,7 @@ Log meaningful choices in `docs/DECISIONS.md`. Check `docs/STATUS.md` for curren
 xcodebuild -project moonbeam-app/moonbeam-app.xcodeproj -scheme moonbeam-app \
   -destination 'platform=iOS Simulator,name=iPhone 17' build
 
-# Test (528 tests / 809 cases in the moonbeam-appTests target)
+# Test (530 tests / 812 cases in the moonbeam-appTests target)
 xcodebuild test -project moonbeam-app/moonbeam-app.xcodeproj -scheme moonbeam-app \
   -destination 'platform=iOS Simulator,name=iPhone 17'
 ```

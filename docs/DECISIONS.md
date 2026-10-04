@@ -5,6 +5,37 @@
 
 ---
 
+### 2026-10-03 · Build 5.4.8 [spike] as built: "After midnight" 13 pt, below the 15–20 pt range
+- **Spec:** COMPASS-1.1.md §9.16 item 1; as built §9.17. Report `.agent-reports/5.4.8/5.4.8-after-midnight.md`.
+- **Decision:** 13 pt Young Serif (`Theme.Fonts.missingEvent`, relative to `.title2`), one size everywhere.
+- **Why below 15:** on the SE 3, moon up, the Moonrise column has 100.5 pt of text width (323 pt row − Up now 95 −
+  Moonset 95.5 − two 6 pt gaps − 20 cell padding). "After midnight" is 7.56 pt wide per point: 113.4 at 15 pt, 98.3
+  at 13 pt. Any size in the range either wraps (the card grows ~20 pt again) or needs the other columns shrunk;
+  item 1 rules out both.
+- **Considered:** 15 pt and wrap on the SE 3; trimming the missing cell's 10 pt padding (only reaches 14.6 pt);
+  sizing per phone (16 pt on the iPhone 17, 13 pt on the SE 3). **Tessa to pick** between 13 everywhere and per phone.
+- **Slot:** it holds a time's slot and baseline (a hidden time-sized sample, like "Up now"), so "Sun 12:20 AM" stays
+  on the directions' line and the card keeps its height.
+
+### 2026-10-03 · Build order: 5.4.8 + 5.6 in one run; 5.5 AX reflow last
+- **Decision:** build 5.4.8 ("After midnight" smaller, COMPASS-1.1.md §9.16 item 1) and 5.6 (pinned bar, §9.6) in
+  the same agent run, 5.4.8 first, **one commit each**. Then 5.9 launch loader, then **5.5 AX reflow last**.
+- **Why:** 5.4.8 is small, and Tessa's device check after 5.4.7 (§9.16) clears 5.6's gate. 5.4.8 goes first because
+  it changes the no-rise day's card height, which moves where the dial sits and so when the pinned bar shows.
+- **AX in 5.6:** build the bar at AX sizes as far as the current layout allows and report what breaks; fixing it
+  is 5.5's job, not a blocker for 5.6.
+- **Changes:** STATUS.md had 5.9 before 5.6; 5.9 now follows 5.6.
+
+### 2026-10-03 · 5.4.8: smaller "After midnight"; ‹ › bug parked
+- **Decision:** "After midnight" / "Not today" get their own smaller Young Serif size (15–20 pt, largest that fits one
+  line on the SE 3), so the no-rise day no longer scales every column to 80% and wraps. Spec: COMPASS-1.1.md §9.16
+  item 1.
+- **Parked:** the ‹ › bug is back (the tapped arrow floats ~40 pt above the card and slides back; frames
+  `design/bugs/arrows-float-frames.png`). Written up with suspects and a day-stepping test in §9.16 item 2 and
+  DESIGN-REVIEW.md "Date control"; Tessa will come back to it later.
+- **Why:** Tessa on device after 5.4.7: the wrapped "After midnight" was too big.
+- **Considered:** 70% for that cell only, or "Sun 12:20 AM" in the label slot (5.4.7 report options).
+
 ### 2026-10-02 · Build 5.4.6a [spike] as built: compact card header, Up now pill
 - **Spec:** COMPASS-1.1.md §9.2. Choices the spec left open:
 - **Padding:** 12 pt on all four sides (the spec said 16 → 12; horizontal was 18). Rise/set "hug content" read as

@@ -38,8 +38,6 @@ struct MoonCard: View {
     /// 70%, then drops " lit" (COMPASS-1.1.md §9.12): always one line, so
     /// the card's height is the same for every phase on every phone.
     private static let phaseLineScales: [CGFloat] = [1, 0.95, 0.9, 0.85, 0.8, 0.75, 0.7]
-    /// "After midnight" / "Not today" shrink this far before wrapping.
-    private static let missingTextScales: [CGFloat] = [1, 0.9, 0.8]
     /// The three columns' text, at the default size, shrinks in these steps
     /// before it wraps (COMPASS-1.1.md §9.14).
     fileprivate static let cellTextScales: [CGFloat] = [1, 0.9, 0.8]
@@ -391,7 +389,7 @@ struct MoonCard: View {
 
     /// Top-aligned in both states, so the labels share a baseline, and as
     /// tall as its neighbours, so a lock outline matches them. Missing
-    /// (§9.10, §9.12): "After midnight" in the time's font and slot, the
+    /// (§9.10, §9.16): "After midnight" smaller, in the time's slot, the
     /// next one ("Sun 12:20 AM") where the direction goes.
     ///
     /// - Parameters:
@@ -427,12 +425,7 @@ struct MoonCard: View {
                         .fixedSize(horizontal: false, vertical: true)
                         
                 case let .missing(text, next):
-                    if let rung {
-                        scaledText(Text(text), rung: rung)
-                            .foregroundStyle(Theme.Colors.textPrimary)
-                    } else {
-                        missingText(text)
-                    }
+                    missingText(text, slotScale: rung?.scale ?? 1, oneLine: rung?.oneLine == true)
                     if let next {
                         Text(next)
                             .font(Theme.Fonts.detail)
@@ -492,21 +485,27 @@ struct MoonCard: View {
         .accessibilityLabel(viewModel.compass.upNow?.accessibilityLabel ?? "")
     }
 
-    /// "After midnight" / "Not today" like a time (§9.12); at the default
-    /// size it shrinks to 80% before it wraps.
-    private func missingText(_ text: String) -> some View {
-        let scales = MadlibScale.shrinks(at: dynamicTypeSize) ? Self.missingTextScales : [1]
-        return ViewThatFits(in: .horizontal) {
-            ForEach(scales, id: \.self) { scale in
-                Text(text)
-                    .font(Theme.Fonts.display(scale: scale))
-                    .lineLimit(1)
-            }
+    /// "After midnight" / "Not today" (§9.16): its own smaller size, out of
+    /// the columns' shared scale, so it no longer pulls the times down to
+    /// 80%. It sits in a time's slot and on its baseline, so the next time
+    /// ("Sun 12:20 AM") lines up with the directions beside it and the card
+    /// keeps its height. Wraps where it doesn't fit (AX sizes), never an
+    /// ellipsis.
+    ///
+    /// - Parameters:
+    ///   - slotScale: the times' scale beside it, which sets the slot.
+    ///   - oneLine: a three-column step that must fit on one line.
+    private func missingText(_ text: String, slotScale: CGFloat, oneLine: Bool) -> some View {
+        ZStack(alignment: Alignment(horizontal: .leading, vertical: .firstTextBaseline)) {
+            Text(verbatim: Self.timeSlotSample)
+                .font(Theme.Fonts.display(scale: slotScale))
+                .hidden()
             Text(text)
-                .font(Theme.Fonts.display)
+                .font(Theme.Fonts.missingEvent)
+                .foregroundStyle(Theme.Colors.textPrimary)
+                .lineLimit(oneLine ? 1 : nil)
                 .fixedSize(horizontal: false, vertical: true)
         }
-        .foregroundStyle(Theme.Colors.textPrimary)
     }
 
     /// A time-font line at the rung's scale: one line, or wrapping.
