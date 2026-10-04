@@ -3,7 +3,7 @@
 > A living note on where things stand. Update it at the end of each work session
 > so the next session (you, or Claude) can pick up cold.
 
-_Last updated: 2026-10-03 (Build 5.6 [spike]: pinned compass bar, never shows at the default size, shows at xxxLarge / AX; all 823 cases pass; next: device check, then 5.9, then 5.5); 2026-10-03 (Build 5.4.8 [spike]: "After midnight" 13 pt, one line, no-rise card no longer grows; all 812 cases pass in Xcode); 2026-10-03 (Order: 5.4.8 + 5.6 in one run, then 5.9, then 5.5 AX reflow last); 2026-10-03 (Build 5.4.7 [spike]: Up now between Moonrise and Moonset, card 46 pt shorter; all 809 cases pass in Xcode; next: Tessa's device check of 5.4.6 / 5.4.7, then 5.6); 2026-10-03 (Build 5.4.6c [spike]: bottom bar, §9.12 fixes; all 797 cases pass in Xcode; next: Tessa's device check, then 5.6); 2026-10-02 (Build 5.4.6b [spike]: dial 260 pt, gaps, "After midnight"; next 5.4.6c; Build 5.4.6a [spike]: compact card; Compass 1.1 spike built, 5.4.1–5.4.5; sensors start when any part of the compass shows; next: the pinned-bar rule, then 5.5); 2026-10-01 (TestFlight build 4 prepared; onboarding Settings fix; Show onboarding in TestFlight; tap animation and DEBUG onboarding trigger built; next 5.5; Moon Signal app icon in; 5.8 moon arc built; next: DEBUG onboarding trigger, tap animation, then 5.5; TestFlight build 3 uploaded with 5.7; moon arc decided (option B, 5.8); Step 5.7 onboarding built ahead of 5.5/5.6; Step 5.3 madlib sentence built, with §3.1a; 5.2 follow-ups; Step 5.2 moon card built; 5.1 theme; Design 1.1 settled: DESIGN-1.1.md, Step 5; 4.14, Step 2.2 and 4.15 built; device checks pending)_
+_Last updated: 2026-10-03 (TestFlight build 5 prepared, 1.0 (5): Compass 1.1 spike + 5.6; Release build checked; 823 cases pass; archive/upload are Tessa's); 2026-10-03 (Build 5.6 [spike]: pinned compass bar, never shows at the default size, shows at xxxLarge / AX; all 823 cases pass; next: device check, then 5.9, then 5.5); 2026-10-03 (Build 5.4.8 [spike]: "After midnight" 13 pt, one line, no-rise card no longer grows; all 812 cases pass in Xcode); 2026-10-03 (Order: 5.4.8 + 5.6 in one run, then 5.9, then 5.5 AX reflow last); 2026-10-03 (Build 5.4.7 [spike]: Up now between Moonrise and Moonset, card 46 pt shorter; all 809 cases pass in Xcode; next: Tessa's device check of 5.4.6 / 5.4.7, then 5.6); 2026-10-03 (Build 5.4.6c [spike]: bottom bar, §9.12 fixes; all 797 cases pass in Xcode; next: Tessa's device check, then 5.6); 2026-10-02 (Build 5.4.6b [spike]: dial 260 pt, gaps, "After midnight"; next 5.4.6c; Build 5.4.6a [spike]: compact card; Compass 1.1 spike built, 5.4.1–5.4.5; sensors start when any part of the compass shows; next: the pinned-bar rule, then 5.5); 2026-10-01 (TestFlight build 4 prepared; onboarding Settings fix; Show onboarding in TestFlight; tap animation and DEBUG onboarding trigger built; next 5.5; Moon Signal app icon in; 5.8 moon arc built; next: DEBUG onboarding trigger, tap animation, then 5.5; TestFlight build 3 uploaded with 5.7; moon arc decided (option B, 5.8); Step 5.7 onboarding built ahead of 5.5/5.6; Step 5.3 madlib sentence built, with §3.1a; 5.2 follow-ups; Step 5.2 moon card built; 5.1 theme; Design 1.1 settled: DESIGN-1.1.md, Step 5; 4.14, Step 2.2 and 4.15 built; device checks pending)_
 
 ## Where things live
 - **Local repo:** `~/app-ideas/moonbeam` (the one true folder)
@@ -475,6 +475,55 @@ _Last updated: 2026-10-03 (Build 5.6 [spike]: pinned compass bar, never shows at
        "That's okay"; set it to While Using and come back → main screen. Note where Settings opens (Moon Signal's
        page or somewhere else)
      - Also with Location Services off entirely (Privacy & Security → Location Services)
+
+10. [ ] **TestFlight build 5 (1.0 (5), prepared 2026-10-03).** Everything since build 4 (`2be3270`): the Compass 1.1
+   spike (COMPASS-1.1.md, 5.4.1–5.4.8) and 5.6:
+   - **Sentence:** three lines, "Where can I find / the moon **today** / in 📍 Irvine, CA?" (another day reads "on Sat,
+     Oct 3"); lines a little closer together.
+   - **Moon card:** compact header (phase glyph · "Today · Fri, Oct 2" over "Last Quarter · 53% lit" · ‹ ›). With the
+     moon up today: **↑ Moonrise · Up now · ↓ Moonset** in one row, the phase glyph on a line between them (solid
+     rise → now, dotted now → set) and the live bearing under "Up now". Moon down or another day: rise and set with
+     a dim dotted line. The card is the same height either way. A compass lock outlines the matching cell. A day with
+     no moonrise shows "After midnight" (smaller) and the next time ("Sun 12:20 AM").
+   - **Compass:** bigger dial (260 pt on a 6.3" phone), short needle, ticks, degree numbers, serif N / E / S / W,
+     crosshair; readout and lock pill at the card's time size with smaller direction letters; "↑ Rise" / "↓ Set" /
+     "Now" labels outside the arc; the Moon pulses until your first lock; locked on the Moon, it sits at 12 o'clock.
+   - **Notes in a bottom bar** just above the home indicator: Precise off (with **Use Precise**), low accuracy (one
+     line for every cause; the dial dims and won't lock), Nearby, and the "There you are!" line. One at a time.
+   - **Sensors start as soon as any part of the compass is on screen** (it used to need half of it).
+   - **5.6 pinned compass bar:** when the dial's centre is below the fold, a glass bar near the bottom shows the live
+     heading and **Compass ↓** (scrolls to the dial); amber with the lock text when locked. At the default text size it
+     doesn't appear on the iPhone 17 or SE 3 (the two measured); it shows with larger text.
+   - Still **not** in it: 5.5 (AX reflow), 5.9 (launch loader). The TestFlight-only Show onboarding button is still
+     there.
+
+   Release build checked: CFBundleVersion **5** (MARKETING_VERSION 1.0); the four fonts in the bundle and in
+   `UIAppFonts`, both OFL texts; `PrivacyInfo.xcprivacy` (no tracking, no collected data, UserDefaults `CA92.1`);
+   forced dark; display name "Moon Signal"; minimum iOS 26.0; `ITSAppUsesNonExemptEncryption` false; location
+   purpose strings (When In Use, temporary `Compass`), no `NSLocationDefaultAccuracyReduced`; the icon's default,
+   dark and tinted renditions in `Assets.car`. DEBUG-only code compiled out: 0 symbols for `DebugScreenState` or the
+   compass's diagnostic readout, 0 `strings` hits for the launch arguments (`strings` can't see Swift strings of 15
+   bytes or fewer, so the symbol check is the real evidence; DECISIONS.md). `CompassPinnedBar` is in.
+   536 tests / 823 cases pass. **Archive and upload are Tessa's** (not done by the agent).
+   **What testers should check:**
+   - **Moon card, moon up today:** three columns; "Up now" and its bearing change as the moon moves (30 s); after the
+     moon sets the middle column goes and **nothing below the card moves**
+   - **In the morning:** the Moonrise column shows *tonight's* rise left of "Up now" (the moon rose last night). Does
+     the solid line from it read as "rose at …"? (COMPASS-1.1.md §9.14 watch item)
+   - **A no-moonrise day** (Irvine: Sat Oct 3, via ›): "After midnight" on one line, smaller, next to full-size times;
+     the card no taller than the day before. Is 13 pt too small? (DECISIONS.md "5.4.8 as built")
+   - **Compass:** dial size and spacing on your phone; turning feels smooth; the Moon's pulse stops after the first
+     lock; locking on rise / set / Moon outlines the matching card cell, with one haptic
+   - **Bottom bar:** turn Precise Location off (Settings → Moon Signal → Location) → the bar with Use Precise; tap it →
+     the iOS alert → "There you are!" for ~3 s; near a charger or metal → the low-accuracy bar, dial dimmed; pick a
+     nearby city → the Nearby bar
+   - **Pinned bar:** Settings → Display & Brightness → Text Size, largest (or Accessibility → Larger Text): the bar
+     shows near the bottom; **Compass ↓** scrolls to the dial and the bar goes; point at a target while it shows → the
+     bar turns amber; with a note showing, the bar sits on top of it
+   - **Smallest phone:** how far below the card the dial sits; any text that wraps or truncates
+   - Known, not fixed: at large / AX text sizes the main screen still uses the old layout and some of it breaks
+     (5.5; list in `.agent-reports/5.6/5.6-pinned-bar.md`); the tapped ‹ / › can float above the card for a moment
+     when stepping days (parked, DESIGN-REVIEW.md "Date control")
 
 Design-pass items (visuals, copy, a11y) are tracked in **[DESIGN-REVIEW.md](DESIGN-REVIEW.md)**.
 
