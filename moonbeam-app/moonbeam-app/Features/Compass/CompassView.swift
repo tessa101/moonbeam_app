@@ -21,6 +21,10 @@ struct CompassView: View {
     /// if not yet asked, otherwise the Location Off dialog).
     let onTurnOnLocation: () -> Void
 
+    /// The dial's centre, in global coordinates, whenever it moves: the
+    /// pinned bar's rule (COMPASS-1.1.md §9.6) is `LocationScreen`'s.
+    var onDialCentreChange: (CGFloat) -> Void = { _ in }
+
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     /// The readout's slot, so the dial doesn't move when the pill appears.
@@ -99,6 +103,10 @@ struct CompassView: View {
                 arc: viewModel.arc,
                 showsMoonPulse: viewModel.showsMoonPulse
             )
+            // The dial's frame is symmetric about the face's centre.
+            .onGeometryChange(for: CGFloat.self) { $0.frame(in: .global).midY } action: { centreY in
+                onDialCentreChange(centreY)
+            }
 
             // No target rows (4.7): rise/set bearings are in the moon card
             // above, and VoiceOver reads every target from the dial.
@@ -147,8 +155,8 @@ struct CompassView: View {
 
     /// "Moonrise · 58°" at the card's time size, then "ENE" in capitals at
     /// 0.7x on the same baseline (COMPASS-1.1.md §9.12). Empty with no
-    /// heading.
-    private static func text(for readout: CompassReadout?) -> Text {
+    /// heading. The pinned bar uses it too, so the two read alike.
+    static func text(for readout: CompassReadout?) -> Text {
         guard let readout else { return Text(verbatim: "") }
         let lead = Text(verbatim: readout.lead + CompassReadout.separator).font(Theme.Fonts.readout)
         let direction = Text(verbatim: readout.direction).font(Theme.Fonts.readoutDirection)

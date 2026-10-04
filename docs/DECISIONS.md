@@ -5,6 +5,24 @@
 
 ---
 
+### 2026-10-03 · Build 5.6 [spike] as built: pinned compass bar
+- **Spec:** COMPASS-1.1.md §9.6, DESIGN-1.1.md §4.1; as built §9.18. Report `.agent-reports/5.6/5.6-pinned-bar.md`.
+- **Rule as a view-model state:** `showsPinnedBar` = compass shown and `isDialCentreBelowFold`. The screen reports
+  the dial's centre and the fold (the scroll view's bottom edge: home indicator, or a bottom note's top) in global
+  coordinates. **Sensors:** shown && (on screen || bar showing) && foreground, so the bar's heading is live even at
+  AX5, where the whole compass is below the fold (DESIGN-1.1.md §4.1 asked for this rule).
+- **Overlay, not an inset:** the bar floats over the content so it doesn't move the fold it's shown for (an inset
+  would push the dial further down). It sits 8 pt above the bottom note's inset.
+- **"Compass ↓" scrolls the compass block to the top** (readout first, dial under it): my reading of "scrolls the
+  dial up under the heading".
+- **At AX sizes** "readout + Compass ↓" mostly doesn't fit, so the button becomes "↓" (VoiceOver: "Go to compass")
+  and the readout may shrink to 0.5×, instead of the ellipsis the first try showed. Text capped at AX1, like the
+  bottom bar.
+- **Fit (5.4.8 card):** at the default size the bar never shows on the iPhone 17 or the SE 3. On the SE 3 with the
+  Precise / low-accuracy note, the dial's centre is only 3 pt above the note (582.5 vs 585.5). It shows at xxxLarge
+  (SE 3 always; iPhone 17 with a note) and at every AX size.
+- **Not built:** a compact dial in the bar (DESIGN-1.1.md "not decided"); none in the spec.
+
 ### 2026-10-03 · Build 5.4.8 [spike] as built: "After midnight" 13 pt, below the 15–20 pt range
 - **Spec:** COMPASS-1.1.md §9.16 item 1; as built §9.17. Report `.agent-reports/5.4.8/5.4.8-after-midnight.md`.
 - **Decision:** 13 pt Young Serif (`Theme.Fonts.missingEvent`, relative to `.title2`), one size everywhere.

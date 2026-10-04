@@ -292,6 +292,10 @@ glass bar near the bottom: 64 pt tall capsule, 16 pt from the edges, ultra-thin 
 - In the design it's an AX feature, but the rule is "dial below the fold", so it can appear at any size.
 - VoiceOver order and gestures at AX2 are still to come from the designer.
 
+*As built (5.6, 2026-10-03):* rule from COMPASS-1.1.md §9.6 (the dial's **centre** below the fold, the fold
+being a bottom note's top when one shows); the sensors run while the bar shows (COMPASS.md §1). Sits 8 pt above
+the note. At AX sizes the button shortens to "↓" when "Compass ↓" doesn't fit. Details: COMPASS-1.1.md §9.18.
+
 ## 5. Onboarding (3d)
 Four full screens, `bg` background, 28 pt margins, buttons pinned to the bottom.
 

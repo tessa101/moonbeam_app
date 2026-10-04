@@ -67,6 +67,9 @@
 - Heading updates **and the location updates that true heading depends on** start together and stop together.
 - **Stop when the compass scrolls off screen or is hidden** (§2 state change), and on background. The main screen is a non-lazy `VStack` in a `ScrollView`, so `onAppear`/`onDisappear` fire only on insert/remove, not on scroll — scroll-out uses `onScrollVisibilityChange` (iOS 18+; target is 26). If that proves unreliable on device, background-only stop is acceptable for v1.
 - Sheets (search, calendar, location off) cover the compass without firing either; v1 leaves sensors running under a sheet.
+- **Pinned bar (5.6, COMPASS-1.1.md §9.6):** the sensors also run while the pinned compass bar shows (the dial's
+  centre below the fold), even with all of the compass off screen (AX sizes), since the bar shows the live heading.
+  Scrolled past the compass (off the top), there's no bar and they stop as before.
 
 ### Orientation
 

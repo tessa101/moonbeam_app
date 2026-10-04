@@ -51,6 +51,10 @@ nonisolated enum Theme {
         /// Dial face, a radial gradient from top to bottom.
         static let dialTop = Color(hex: 0x30252C)
         static let dialBottom = Color(hex: 0x221A1F)
+        /// The pinned compass bar's glass tint over the blur (DESIGN-1.1.md
+        /// §4.1: `#342830` at 82%), and its 1 pt white 12% border.
+        static let glassTint = Color(hex: 0x342830).opacity(0.82)
+        static let glassBorder = Color.white.opacity(0.12)
         /// Dial ticks (non-text): 3.15:1 on `dialTop`, 3.6:1 on `dialBottom`,
         /// so ≥ 3:1 across the face (5.4; was `#7E6C72`, 2.997:1 on `dialTop`).
         static let tick = Color(hex: 0x807075)

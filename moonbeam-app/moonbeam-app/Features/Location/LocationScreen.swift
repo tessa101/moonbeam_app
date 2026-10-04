@@ -24,8 +24,23 @@ struct LocationScreen: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private static let bottomBarAnimation = Animation.easeInOut(duration: 0.3)
+    private static let scrollToCompassAnimation = Animation.easeInOut(duration: 0.4)
+    /// The compass block's scroll target for the pinned bar's Compass ↓.
+    private static let compassScrollID = "compass"
+
+    /// For the pinned bar's rule (COMPASS-1.1.md §9.6), both in global
+    /// coordinates: the dial's centre, and the fold (the bottom of the
+    /// visible content: the screen's, or the bottom bar's top).
+    @State private var dialCentreY: CGFloat?
+    @State private var foldY: CGFloat?
 
     var body: some View {
+        ScrollViewReader { scrollProxy in
+            scrollView(scrollProxy)
+        }
+    }
+
+    private func scrollView(_ scrollProxy: ScrollViewProxy) -> some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
                 // DESIGN-1.1.md §3.1: the sentence is the header; its tokens
@@ -64,6 +79,7 @@ struct LocationScreen: View {
                 // the sensors still only run when it's shown.
                 if viewModel.compass.visibility != .hidden || Self.showsDebugReadout {
                     compass
+                        .id(Self.compassScrollID)
                         .padding(.top, Theme.Metrics.cardToCompass)
                 }
 
@@ -79,6 +95,29 @@ struct LocationScreen: View {
             .padding(.horizontal, Theme.Metrics.screenMargin)
             .padding(.top, Theme.Metrics.contentTopSpacing)
             .padding(.bottom, Theme.Metrics.screenMargin)
+        }
+        // COMPASS-1.1.md §9.6: over the content, not an inset, so it doesn't
+        // move the fold it's shown for. Inside the bottom bar's inset, so it
+        // sits on top of the note.
+        .overlay(alignment: .bottom) {
+            if viewModel.compass.showsPinnedBar {
+                CompassPinnedBar(viewModel: viewModel.compass) {
+                    withAnimation(reduceMotion ? nil : Self.scrollToCompassAnimation) {
+                        scrollProxy.scrollTo(Self.compassScrollID, anchor: .top)
+                    }
+                }
+                .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
+        }
+        .animation(reduceMotion ? nil : Self.bottomBarAnimation, value: viewModel.compass.showsPinnedBar)
+        // The fold: the scroll view's frame already stops at the home
+        // indicator, or at the bottom bar's top when a note shows (its
+        // safe-area inset); subtracting the insets again counted them twice.
+        .onGeometryChange(for: CGFloat.self) { proxy in
+            proxy.frame(in: .global).maxY
+        } action: { fold in
+            foldY = fold
+            updatePinnedBar()
         }
         // COMPASS-1.1.md §9.4: the compass's note in a bar fixed above the
         // home indicator. An inset, so the content scrolls above it and the
@@ -159,14 +198,30 @@ struct LocationScreen: View {
     private var compass: some View {
         CompassView(
             viewModel: viewModel.compass,
-            onTurnOnLocation: { Task { await viewModel.turnOnLocationForCompass() } }
+            onTurnOnLocation: { Task { await viewModel.turnOnLocationForCompass() } },
+            onDialCentreChange: { centreY in
+                dialCentreY = centreY
+                updatePinnedBar()
+            }
         )
         .onScrollVisibilityChange(threshold: Self.compassVisibilityThreshold) { isVisible in
             viewModel.compass.setOnScreen(isVisible)
         }
         .onDisappear {
             viewModel.compass.setOnScreen(false)
+            dialCentreY = nil
+            updatePinnedBar()
         }
+    }
+
+    /// Tells the compass whether its dial's centre is below the fold
+    /// (COMPASS-1.1.md §9.6). No dial, no bar.
+    private func updatePinnedBar() {
+        guard let dialCentreY, let foldY else {
+            viewModel.compass.setDialCentreBelowFold(false)
+            return
+        }
+        viewModel.compass.setDialCentreBelowFold(CompassViewModel.isBelowFold(dialCentreY: dialCentreY, foldY: foldY))
     }
 
     // MARK: - Actions

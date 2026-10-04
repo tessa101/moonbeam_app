@@ -533,6 +533,95 @@ struct CompassViewModelTests {
         #expect(harness.viewModel.headingText == nil)
     }
 
+    // MARK: - Pinned bar (COMPASS-1.1.md §9.6)
+
+    @Test("The rule: the dial's centre past the fold, not on it or above", arguments: [
+        (CGFloat(700), CGFloat(667), true),
+        (CGFloat(667), CGFloat(667), false),
+        (CGFloat(582.5), CGFloat(667), false),
+        (CGFloat(628.5), CGFloat(585), true),
+    ])
+    func pinnedBarRule(centre: CGFloat, fold: CGFloat, below: Bool) {
+        #expect(CompassViewModel.isBelowFold(dialCentreY: centre, foldY: fold) == below)
+    }
+
+    @Test("Shows while the dial's centre is below the fold; hides once it's on screen")
+    func pinnedBarShowsAndHides() {
+        let harness = Self.makeHarness()
+        harness.viewModel.update(Self.context())
+        #expect(!harness.viewModel.showsPinnedBar)
+
+        harness.viewModel.setDialCentreBelowFold(true)
+        #expect(harness.viewModel.showsPinnedBar)
+
+        harness.viewModel.setDialCentreBelowFold(false)
+        #expect(!harness.viewModel.showsPinnedBar)
+    }
+
+    @Test("Nearby shows it too")
+    func pinnedBarNearby() {
+        let harness = Self.makeHarness()
+        harness.viewModel.update(Self.context(place: Self.huntingtonBeach))
+        harness.viewModel.setDialCentreBelowFold(true)
+
+        #expect(harness.viewModel.visibility == .nearby)
+        #expect(harness.viewModel.showsPinnedBar)
+    }
+
+    @Test("No compass, no bar: Far, location off, nothing detected", arguments: [0, 1, 2])
+    func pinnedBarNeedsCompass(caseIndex: Int) {
+        let context = switch caseIndex {
+        case 0: Self.context(place: Self.sydney)
+        case 1: Self.context(auth: .denied)
+        default: Self.context(place: Self.searchedLosAngeles, detected: nil)
+        }
+        let harness = Self.makeHarness()
+        harness.viewModel.update(context)
+        harness.viewModel.setDialCentreBelowFold(true)
+
+        #expect(!harness.viewModel.visibility.showsCompass)
+        #expect(!harness.viewModel.showsPinnedBar)
+        #expect(!harness.heading.isRunning)
+    }
+
+    @Test("Sensors run while the bar shows, even with the compass off screen (AX sizes)")
+    func pinnedBarKeepsSensorsOn() {
+        let harness = Self.makeHarness()
+        harness.viewModel.update(Self.context())
+        #expect(!harness.heading.isRunning)
+
+        harness.viewModel.setDialCentreBelowFold(true)
+        #expect(harness.heading.isRunning)
+
+        // Scrolled to the dial: on screen, bar gone, sensors on, no restart.
+        harness.viewModel.setOnScreen(true)
+        harness.viewModel.setDialCentreBelowFold(false)
+        #expect(harness.heading.isRunning)
+        #expect(harness.heading.startCount == 1)
+
+        // Scrolled past it, off the top: no bar, sensors off.
+        harness.viewModel.setOnScreen(false)
+        #expect(!harness.viewModel.showsPinnedBar)
+        #expect(!harness.heading.isRunning)
+    }
+
+    @Test("The bar reads the heading, then the lock (amber) when locked")
+    func pinnedBarLock() async {
+        let harness = Self.makeHarness()
+        harness.viewModel.update(Self.context())
+        harness.viewModel.setDialCentreBelowFold(true)
+
+        harness.heading.send(Self.reading(200))
+        await waitUntil { harness.viewModel.heading == 200 }
+        #expect(harness.viewModel.headingReadout == CompassReadout(lead: "200°", direction: "SSW"))
+        #expect(harness.viewModel.lockReadout == nil)
+
+        harness.heading.send(Self.reading(74))
+        await waitUntil { harness.viewModel.lockedKind != nil }
+        #expect(harness.viewModel.lockReadout == CompassReadout(lead: "Moonrise · 72°", direction: "ENE"))
+        #expect(harness.viewModel.showsPinnedBar)
+    }
+
     // MARK: - Lock through readings
 
     @Test("Pointing at moonrise locks, with the target's bearing in the copy")

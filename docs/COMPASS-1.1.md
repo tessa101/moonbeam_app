@@ -408,6 +408,22 @@ The mocks' sentence token ("now" / "tonight") is not adopted: **keep "today"**.
 - No-rise card = normal card at the default size: iPhone 17 181.3 pt, SE 3 181.5 pt on both days (it grew ~20 pt
   in 5.4.7). AX sizes wrap as before, never an ellipsis.
 
+### 9.18 As built (5.6) — report `.agent-reports/5.6/5.6-pinned-bar.md`
+- **Rule:** `CompassViewModel.showsPinnedBar` = compass shown (Here / Nearby) and the dial's centre below the fold.
+  The fold is the scroll view's bottom edge, which is the home indicator's top, or the bottom bar's top when a note
+  shows. `LocationScreen` measures both in global coordinates. The sensors also run while the bar shows (COMPASS.md
+  §1).
+- **Bar:** 64 pt capsule, 16 pt side margins, 8 pt above the home indicator or the note (an overlay, so it doesn't
+  move the fold). Ultra-thin material under `#342830` at 82%, 1 pt white 12% border, shadow. Live readout left (as
+  the readout above the dial, dimmed in low accuracy); **Compass ↓** right, an amber capsule that scrolls the compass
+  block to the top (readout first, dial under it). Locked: amber fill, the lock text in `onAccent`, the button dark.
+  Text capped at AX1, like the bottom bar.
+- **Fit, default size (5.4.8 card):** the bar **never shows** on either phone. iPhone 17 centre 638 vs fold 840
+  (no note) / 759 (Precise). SE 3 centre 582.5 vs fold 667 / **585.5** (Precise, low accuracy: 3 pt clear) / 603.5
+  (Nearby). It shows at xxxLarge on the SE 3 always, and on the iPhone 17 with a note; at AX1 and up on both.
+- **AX:** "readout + Compass ↓" doesn't fit at AX1 for most readouts, so the button drops to **"↓"** (same label for
+  VoiceOver) and the readout may shrink to 0.5×; never an ellipsis. What breaks is 5.5's (see the report).
+
 ## Decision log
 
 - **2026-10-02 (Tessa):** Compass 1.1 reviewed. Keep the Up now row, lock highlight, needle, ticks, crosshair,

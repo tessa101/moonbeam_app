@@ -14,8 +14,8 @@ import Observation
 /// day or permission changes.
 ///
 /// **Sensors run only while all three hold:** the compass is shown (§2), it's
-/// on screen (the view reports scroll-in/out), and the app is in the
-/// foreground. While they run, a task holds the heading stream and iterates
+/// on screen (the view reports scroll-in/out) or the pinned bar shows its
+/// heading (COMPASS-1.1.md §9.6), and the app is in the foreground. While they run, a task holds the heading stream and iterates
 /// it; dropping it would end the session (`HeadingService`).
 ///
 /// Main-actor isolated (the project default), like the heading service it
@@ -198,6 +198,10 @@ final class CompassViewModel {
     /// relaunches; this view model lives as long as the app does.
     private(set) var hasLockedThisLaunch = false
 
+    /// The dial's centre is below the fold (the screen's bottom, or a
+    /// bottom bar's top), as the screen last reported it.
+    private(set) var isDialCentreBelowFold = false
+
     // MARK: - Dependencies
 
     private let headingService: any HeadingService
@@ -265,6 +269,20 @@ final class CompassViewModel {
     var lockedTarget: CompassTarget? {
         guard let lockedKind else { return nil }
         return targets.first { $0.kind == lockedKind }
+    }
+
+    /// The pinned compass bar (COMPASS-1.1.md §9.6, DESIGN-1.1.md §4.1):
+    /// with the compass shown (Here or Nearby) and its dial's centre below
+    /// the fold. It hides once the centre is on screen, and with the dial
+    /// scrolled off the top.
+    var showsPinnedBar: Bool {
+        visibility.showsCompass && isDialCentreBelowFold
+    }
+
+    /// The pinned bar's rule: the centre's y is past the fold's, both in
+    /// the same space (the screen's, from the top).
+    static func isBelowFold(dialCentreY: CGFloat, foldY: CGFloat) -> Bool {
+        dialCentreY > foldY
     }
 
     /// "72° ENE", or `nil` with no true heading.
@@ -437,6 +455,15 @@ final class CompassViewModel {
     /// The compass scrolled into or out of view, or was inserted or removed.
     func setOnScreen(_ onScreen: Bool) {
         isOnScreen = onScreen
+        updateSensors()
+    }
+
+    /// Where the dial's centre is against the fold (COMPASS-1.1.md §9.6).
+    /// The pinned bar shows the live heading, so the sensors run while it's
+    /// up, even with all of the compass below the fold (AX sizes).
+    func setDialCentreBelowFold(_ below: Bool) {
+        guard below != isDialCentreBelowFold else { return }
+        isDialCentreBelowFold = below
         updateSensors()
     }
 
@@ -648,7 +675,7 @@ final class CompassViewModel {
     // MARK: - Sensors (COMPASS.md §1 Sensor lifecycle)
 
     private var shouldSense: Bool {
-        visibility.showsCompass && isOnScreen && isInForeground
+        visibility.showsCompass && (isOnScreen || showsPinnedBar) && isInForeground
     }
 
     private func updateSensors() {
