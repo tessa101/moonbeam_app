@@ -99,8 +99,13 @@ Report and shots: `.agent-reports/5.9/`.
   `CompassViewModel`.
 - **Screen:** `LocationScreen` builds the real screen only at `ready`, so the sentence, card, compass, pinned bar,
   bottom note, DEBUG readout and Show onboarding can't show while loading (§5). The launch task, scene handling
-  and sheets moved to the outer container, so they run while loading. Every stage change fades 250 ms ease-out,
-  Reduce Motion included.
+  and sheets moved to the outer container, so they run while loading. ~~Every stage change fades 250 ms
+  ease-out, Reduce Motion included.~~ **5.9.1:** the phase cycle fades in 250 ms and out 200 ms (ease-out);
+  the real screen has no fade of its own. Its blocks load in (`ContentLoadIn`, §2.1's values): sentence → card
+  (with the Use my location / status rows) → compass (with Show onboarding and the bottom note bar), opacity
+  0 → 1 and an 8 pt rise as an offset (layout never moves), 300 ms ease-out, 70 ms apart; Reduce Motion drops
+  the rise. They run once, when the screen arrives: a compass or note that turns up later only slides in, as
+  before. Same after the phase cycle, while it fades out.
 - **Waiting (0–400 ms):** the screen's backdrop (`ScreenBackground`, `bg` plus the faint top glow) with nothing on
   it. The glow is kept so the backdrop doesn't change when the loader fades in.
 - **Phase cycle:** `LaunchPhaseCycle` (view) + `PhaseCycle` (pure maths). `PhaseGlyph` at 140 pt on `bg`, its

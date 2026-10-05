@@ -35,9 +35,11 @@ struct LocationScreen: View {
     @State private var dialCentreY: CGFloat?
     @State private var foldY: CGFloat?
 
-    /// LOADER.md §2.1: every launch stage change fades, Reduce Motion
-    /// included (opacity only).
-    private static let launchFadeAnimation = Animation.easeOut(duration: LaunchStage.fadeDuration)
+    /// LOADER.md §2.1, Reduce Motion included (opacity only): the phase
+    /// cycle fades in, and fades out faster as the content loads in.
+    private static func launchStageAnimation(to stage: LaunchStage) -> Animation {
+        .easeOut(duration: stage == .ready ? LaunchStage.phaseCycleFadeOutDuration : LaunchStage.fadeDuration)
+    }
 
     var body: some View {
         // LOADER.md: while the launch fetch runs, plain background and then
@@ -52,13 +54,15 @@ struct LocationScreen: View {
                     .transition(.opacity)
                     .onAppear(perform: announcePhaseCycle)
             case .ready:
+                // §2.1: no whole-screen fade. The screen arrives at once and
+                // its blocks load in (`ContentLoadIn`).
                 ScrollViewReader { scrollProxy in
                     scrollView(scrollProxy)
                 }
-                .transition(.opacity)
+                .transition(.identity)
             }
         }
-        .animation(Self.launchFadeAnimation, value: viewModel.launchStage)
+        .animation(Self.launchStageAnimation(to: viewModel.launchStage), value: viewModel.launchStage)
         .onChange(of: viewModel.launchStage) { old, new in
             // §4: focus leaves the vanished loader text for the screen's
             // first element, the sentence header.
@@ -110,6 +114,7 @@ struct LocationScreen: View {
                 // DESIGN-1.1.md §3.1: the sentence is the header; its tokens
                 // open the calendar and the search sheet.
                 MadlibSentence(viewModel: viewModel)
+                    .contentLoadIn(.sentence)
 
                 // Location controls and their status stay together, under
                 // the sentence whose place token they're the alternative to.
@@ -137,24 +142,30 @@ struct LocationScreen: View {
                     }
                 }
                 .padding(.top, Theme.Metrics.sentenceToCard)
+                .contentLoadIn(.card)
 
-                // COMPASS.md §1: at the bottom, below the moon card. DEBUG
-                // builds keep it in every state for its diagnostic readout;
-                // the sensors still only run when it's shown.
-                if viewModel.compass.visibility != .hidden || Self.showsDebugReadout {
-                    compass
-                        .id(Self.compassScrollID)
-                        .padding(.top, Theme.Metrics.cardToCompass)
-                }
+                // A stack that's always there, so the load-in runs once when
+                // the screen arrives, not again when the compass comes later.
+                VStack(alignment: .leading, spacing: 0) {
+                    // COMPASS.md §1: at the bottom, below the moon card. DEBUG
+                    // builds keep it in every state for its diagnostic readout;
+                    // the sensors still only run when it's shown.
+                    if viewModel.compass.visibility != .hidden || Self.showsDebugReadout {
+                        compass
+                            .id(Self.compassScrollID)
+                            .padding(.top, Theme.Metrics.cardToCompass)
+                    }
 
-                // At the very bottom, under the compass (and its DEBUG
-                // readout): out of the design's way.
-                if let onShowOnboarding {
-                    // The text-link style: amber, and a 44 pt target.
-                    Button("Show onboarding", action: onShowOnboarding)
-                        .buttonStyle(.textLink)
-                        .padding(.top)
+                    // At the very bottom, under the compass (and its DEBUG
+                    // readout): out of the design's way.
+                    if let onShowOnboarding {
+                        // The text-link style: amber, and a 44 pt target.
+                        Button("Show onboarding", action: onShowOnboarding)
+                            .buttonStyle(.textLink)
+                            .padding(.top)
+                    }
                 }
+                .contentLoadIn(.compass)
             }
             .padding(.horizontal, Theme.Metrics.screenMargin)
             .padding(.top, Theme.Metrics.contentTopSpacing)
@@ -187,12 +198,17 @@ struct LocationScreen: View {
         // home indicator. An inset, so the content scrolls above it and the
         // top of the screen doesn't move when it comes and goes.
         .safeAreaInset(edge: .bottom, spacing: 0) {
-            if let note = viewModel.compass.bottomNote {
-                CompassBottomBar(note: note) {
-                    Task { await viewModel.usePreciseLocationForCompass() }
+            // The compass's note loads in with the compass (§2.1); the stack
+            // is always there, so a note arriving later only slides in.
+            VStack(spacing: 0) {
+                if let note = viewModel.compass.bottomNote {
+                    CompassBottomBar(note: note) {
+                        Task { await viewModel.usePreciseLocationForCompass() }
+                    }
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
                 }
-                .transition(.move(edge: .bottom).combined(with: .opacity))
             }
+            .contentLoadIn(.compass)
         }
         .animation(reduceMotion ? nil : Self.bottomBarAnimation, value: viewModel.compass.bottomNote)
         // 4.15: content mustn't slide under the clock unreadably. The

@@ -356,5 +356,6 @@ struct PhaseCycleTests {
         #expect(LaunchStage.phaseCycleDelay == .milliseconds(400))
         #expect(LaunchStage.minimumPhaseCycleDuration == .milliseconds(700))
         #expect(LaunchStage.fadeDuration == 0.25)
+        #expect(LaunchStage.phaseCycleFadeOutDuration == 0.2)
     }
 }

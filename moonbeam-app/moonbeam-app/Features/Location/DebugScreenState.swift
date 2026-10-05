@@ -28,6 +28,9 @@ struct DebugScreenState: View {
         /// The launch loader (LOADER.md §3): the fix hangs, so the phase
         /// cycle runs until the 10 s timeout, then the empty state.
         case loading
+        /// A launch whose fix lands at 150 ms (no loader) or 2.5 s (the
+        /// phase cycle), then the moon-up screen loading in (LOADER.md §2.1).
+        case launchFast, launchSlow
     }
 
     /// The launch argument, then the kind's name.
@@ -85,6 +88,9 @@ struct DebugScreenState: View {
         private static let secondsPerMinute = 60.0
         /// Longer than the 10 s launch timeout, which ends it.
         private static let hangingFixDelay = Duration.seconds(30)
+        /// Either side of the 400 ms phase-cycle delay.
+        private static let fastFixDelay = Duration.milliseconds(150)
+        private static let slowFixDelay = Duration.milliseconds(2500)
 
         /// About 110 mi from Irvine: Far.
         private static let sanDiego = Place(
@@ -117,8 +123,11 @@ struct DebugScreenState: View {
             if state == .aha {
                 location.preciseOffAfterTemporaryRequest = false
             }
-            if state == .loading {
-                location.fixDelay = Self.hangingFixDelay
+            switch state {
+            case .loading: location.fixDelay = Self.hangingFixDelay
+            case .launchFast: location.fixDelay = Self.fastFixDelay
+            case .launchSlow: location.fixDelay = Self.slowFixDelay
+            default: break
             }
 
             let moonService: any MoonService = if state == .noMoonrise {
@@ -162,6 +171,8 @@ struct DebugScreenState: View {
         /// Polls for the screen's own start to show a place.
         private static let pollInterval = Duration.milliseconds(10)
         private static let pollLimit = 200
+        /// The launch kinds wait up to the 10 s launch timeout.
+        private static let launchPollLimit = 1_000
 
         /// Once the screen's own start has shown a place (detection has
         /// run), the place and day can change, and the compass can be fed a
@@ -169,7 +180,8 @@ struct DebugScreenState: View {
         func apply(_ state: Kind) async {
             // The loader is the screen's own launch; nothing to fake on top.
             guard state != .loading else { return }
-            for _ in 0..<Self.pollLimit where viewModel.moonTable == nil {
+            let limit = state == .launchFast || state == .launchSlow ? Self.launchPollLimit : Self.pollLimit
+            for _ in 0..<limit where viewModel.moonTable == nil {
                 try? await Task.sleep(for: Self.pollInterval)
             }
             switch state {
@@ -216,4 +228,6 @@ struct DebugScreenState: View {
 #Preview("13 No moonrise, Sat Oct 3") { DebugScreenState(.noMoonrise) }
 #Preview("14 Long phase name") { DebugScreenState(.longPhaseName) }
 #Preview("15 Launch loader") { DebugScreenState(.loading) }
+#Preview("16 Fast launch") { DebugScreenState(.launchFast) }
+#Preview("17 Slow launch") { DebugScreenState(.launchSlow) }
 #endif

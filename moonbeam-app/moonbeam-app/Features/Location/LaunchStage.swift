@@ -31,7 +31,10 @@ nonisolated enum LaunchStage: Equatable {
     /// flashes.
     static let minimumPhaseCycleDuration = Duration.milliseconds(700)
 
-    /// Every stage change fades over this, ease-out: the main screen in, the
-    /// phase cycle in, and the cross-fade between them.
+    /// The phase cycle fades in over this, ease-out. The main screen doesn't
+    /// fade as a whole: its blocks load in (`ContentLoadIn`, §2.1).
     static let fadeDuration: TimeInterval = 0.25
+
+    /// The phase cycle fades out over this as the content loads in (§2.1).
+    static let phaseCycleFadeOutDuration: TimeInterval = 0.2
 }
