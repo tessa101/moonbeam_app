@@ -51,7 +51,14 @@ final class LocationViewModel {
     /// Must match it, or iOS declines the request without showing anything.
     static let compassPrecisePurposeKey = "Compass"
 
+    /// LOADER.md §4: what VoiceOver says when the phase cycle appears.
+    static let phaseCycleAnnouncement = "Finding your location"
+
     // MARK: - Observed state
+
+    /// What the screen shows while the launch fetch runs (LOADER.md §2).
+    /// Starts out waiting, so nothing flashes before `start()` decides.
+    private(set) var launchStage: LaunchStage = .waiting
 
     /// The place the moon table is for, or `nil` for the empty first-launch
     /// state.
@@ -108,6 +115,7 @@ final class LocationViewModel {
     private let fetchTimeout: Duration
     private let deviceTimeZone: TimeZone
     private let now: () -> Date
+    private let sleep: @Sendable (Duration) async throws -> Void
     private let dayLabelFormatter = DayLabelFormatter()
     private let madlibFormatter = MadlibFormatter()
 
@@ -147,6 +155,10 @@ final class LocationViewModel {
     /// the screen opens with the search sheet up.
     @ObservationIgnored private var presentsSearchOnStart = false
 
+    /// LOADER.md §4: the announcement is made once per launch, however many
+    /// times the phase cycle shows (Show onboarding brings it back).
+    @ObservationIgnored private var hasAnnouncedPhaseCycle = false
+
     // MARK: - Init
 
     /// - Parameters:
@@ -155,6 +167,8 @@ final class LocationViewModel {
     ///     `TimeZone.current`.
     ///   - now: the clock. It decides the place's today, which the day
     ///     selection resolves against (DATE.md §3).
+    ///   - sleep: the launch loader's waits (LOADER.md §2), so tests can
+    ///     decide when 400 ms and 700 ms have passed.
     init(
         locationService: any LocationService,
         placeSearch: any PlaceSearchService,
@@ -163,7 +177,8 @@ final class LocationViewModel {
         headingService: any HeadingService,
         fetchTimeout: Duration = LocationViewModel.defaultFetchTimeout,
         deviceTimeZone: TimeZone = .current,
-        now: @escaping () -> Date = Date.init
+        now: @escaping () -> Date = Date.init,
+        sleep: @escaping @Sendable (Duration) async throws -> Void = { try await Task.sleep(for: $0) }
     ) {
         self.locationService = locationService
         self.placeSearch = placeSearch
@@ -172,6 +187,7 @@ final class LocationViewModel {
         self.fetchTimeout = fetchTimeout
         self.deviceTimeZone = deviceTimeZone
         self.now = now
+        self.sleep = sleep
         lastSeenAuthState = locationService.authorizationState
         compass = CompassViewModel(headingService: headingService, moonService: moonService, now: now)
     }
@@ -243,17 +259,55 @@ final class LocationViewModel {
         }
 
         if state.isAuthorized {
-            await locate(userInitiated: false)
+            await locateAtLaunch()
         } else if let lastViewed {
             show(lastViewed, remember: false)
         }
+        launchStage = .ready
     }
 
     /// Call before the screen appears, with how onboarding ended (§5).
     /// Allowed and declined need nothing extra: `start()`'s normal launch
     /// flow finds the city, or leaves the empty "a city" state.
+    ///
+    /// The screen goes back to waiting, so `start()`'s fetch after onboarding
+    /// gets the launch loader too (LOADER.md §1), and a forced onboarding
+    /// doesn't flash the old screen first.
     func onboardingDidFinish(_ outcome: OnboardingViewModel.Outcome) {
         presentsSearchOnStart = outcome == .searchInstead
+        launchStage = .waiting
+    }
+
+    /// The launch fetch, with the loader timed around it (LOADER.md §2): no
+    /// loader for a fix inside 400 ms; past that the phase cycle, held at
+    /// least 700 ms. A fetch that fails or times out falls back as before;
+    /// the loader only decides what shows meanwhile.
+    private func locateAtLaunch() async {
+        launchStage = .waiting
+        let sleep = sleep
+        let loader = Task { [weak self] in
+            try await sleep(LaunchStage.phaseCycleDelay)
+            // The fix may land just as the delay ends; cancelled means it won.
+            guard let self, !Task.isCancelled else { return }
+            launchStage = .phaseCycle
+            try await sleep(LaunchStage.minimumPhaseCycleDuration)
+        }
+
+        await locate(userInitiated: false)
+
+        if launchStage == .phaseCycle {
+            try? await loader.value
+        } else {
+            loader.cancel()
+        }
+    }
+
+    /// Call when the phase cycle comes on screen. Returns what VoiceOver
+    /// should announce the first time per launch, `nil` after (LOADER.md §4).
+    func phaseCycleDidAppear() -> String? {
+        guard !hasAnnouncedPhaseCycle else { return nil }
+        hasAnnouncedPhaseCycle = true
+        return Self.phaseCycleAnnouncement
     }
 
     // MARK: - Permission branches (§4)

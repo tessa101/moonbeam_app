@@ -8,7 +8,7 @@ _Started: 2026-09-26_
 ## Location screen (Step 2, built plain)
 - [ ] **Visual design** of `LocationScreen`: prompt, search button (opens the sheet), "Use my location" ("Back to {City}" chip removed, Decision C)
 - [ ] **Time zone label wording.** Currently "Sydney · GMT+10". Options: GMT+10 (precise, dev-ish) · "Sydney time" (friendliest, no lookup table) · AEST (familiar, needs a table). Leaning "Sydney time" with the offset in the VoiceOver label
-- [x] **Launch loading state** → **Decided 2026-10-02: LOADER.md (Step 5.9).** while the location fetch runs (up to 10 s): last-viewed name as placeholder, or a spinner? **Bug / to fix later (Tessa, device, 2026-10-01):** with no saved place, launch shows the real main screen with placeholder content: the sentence with its "a city" token, a stock `ProgressView` "Finding your location…" (`LocationScreen`), and the Show onboarding button; Xcode builds also show the compass DEBUG readout (`heading: none…`, `showsDebugReadout`, never in Release). It reads as a broken main screen. **Wanted:** a real loading screen, spinner or another animation, with no dummy content, handing over to the main screen when the fix (or the failure message) arrives. Open: a moon-themed animation vs a plain spinner; Reduce Motion version; keep "a city" off screen while locating; what a returning user with a saved place sees (the last-viewed name, per LOCATION.md §89); VoiceOver says "Finding your location"
+- [x] **Launch loading state** → **Decided 2026-10-02: LOADER.md (Step 5.9). Built 2026-10-05 (Build 5.9, LOADER.md §8); device check pending.** while the location fetch runs (up to 10 s): last-viewed name as placeholder, or a spinner? **Bug / to fix later (Tessa, device, 2026-10-01):** with no saved place, launch shows the real main screen with placeholder content: the sentence with its "a city" token, a stock `ProgressView` "Finding your location…" (`LocationScreen`), and the Show onboarding button; Xcode builds also show the compass DEBUG readout (`heading: none…`, `showsDebugReadout`, never in Release). It reads as a broken main screen. **Wanted:** a real loading screen, spinner or another animation, with no dummy content, handing over to the main screen when the fix (or the failure message) arrives. Open: a moon-themed animation vs a plain spinner; Reduce Motion version; keep "a city" off screen while locating; what a returning user with a saved place sees (the last-viewed name, per LOCATION.md §89); VoiceOver says "Finding your location"
 - [ ] **Failed fetch message** is placeholder text: "Couldn't find your location. Try again, or search for a city." Check placement, tone, and that it doesn't vanish too quickly
 - [ ] **Suggestions list states:** no results ("No matching cities") and network error ("Can't search right now. Check your connection.")
 - [ ] **First-launch empty state:** does the empty field + prompt feel inviting, or does it need something moon-y?
@@ -71,6 +71,8 @@ _Started: 2026-09-26_
 
 ## Accessibility (part of the design pass)
 - [ ] Dynamic Type up to the largest accessibility sizes, on every screen
+  - Tessa, 2026-10-03 (device, after 5.4.8 / 5.6): Dynamic Type still scales the **old** layout, not the Compass 1.1
+    card and dial. Fine for now; fix in **5.5** (with the AX breakages in `.agent-reports/5.6/5.6-pinned-bar.md`).
 - [ ] VoiceOver labels and reading order (e.g. "ESE" read as "east-southeast", time zone read in full)
 - [ ] Color contrast (WCAG AA), especially on dark/night themes
 - [ ] Touch targets ≥ 44 pt (clear button, "Use my location", Cancel)

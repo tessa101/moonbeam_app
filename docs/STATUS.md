@@ -3,7 +3,7 @@
 > A living note on where things stand. Update it at the end of each work session
 > so the next session (you, or Claude) can pick up cold.
 
-_Last updated: 2026-10-03 (TestFlight build is **1.0 (6)**, not 5: `CURRENT_PROJECT_VERSION` 5 → 6); 2026-10-03 (TestFlight build 5 prepared, 1.0 (5): Compass 1.1 spike + 5.6; Release build checked; 823 cases pass; archive/upload are Tessa's); 2026-10-03 (Build 5.6 [spike]: pinned compass bar, never shows at the default size, shows at xxxLarge / AX; all 823 cases pass; next: device check, then 5.9, then 5.5); 2026-10-03 (Build 5.4.8 [spike]: "After midnight" 13 pt, one line, no-rise card no longer grows; all 812 cases pass in Xcode); 2026-10-03 (Order: 5.4.8 + 5.6 in one run, then 5.9, then 5.5 AX reflow last); 2026-10-03 (Build 5.4.7 [spike]: Up now between Moonrise and Moonset, card 46 pt shorter; all 809 cases pass in Xcode; next: Tessa's device check of 5.4.6 / 5.4.7, then 5.6); 2026-10-03 (Build 5.4.6c [spike]: bottom bar, §9.12 fixes; all 797 cases pass in Xcode; next: Tessa's device check, then 5.6); 2026-10-02 (Build 5.4.6b [spike]: dial 260 pt, gaps, "After midnight"; next 5.4.6c; Build 5.4.6a [spike]: compact card; Compass 1.1 spike built, 5.4.1–5.4.5; sensors start when any part of the compass shows; next: the pinned-bar rule, then 5.5); 2026-10-01 (TestFlight build 4 prepared; onboarding Settings fix; Show onboarding in TestFlight; tap animation and DEBUG onboarding trigger built; next 5.5; Moon Signal app icon in; 5.8 moon arc built; next: DEBUG onboarding trigger, tap animation, then 5.5; TestFlight build 3 uploaded with 5.7; moon arc decided (option B, 5.8); Step 5.7 onboarding built ahead of 5.5/5.6; Step 5.3 madlib sentence built, with §3.1a; 5.2 follow-ups; Step 5.2 moon card built; 5.1 theme; Design 1.1 settled: DESIGN-1.1.md, Step 5; 4.14, Step 2.2 and 4.15 built; device checks pending)_
+_Last updated: 2026-10-05 (Build 5.9: launch loader, the phase-cycle moon past 400 ms; 552 tests / 843 cases pass; next: Tessa's device check, then 5.5); 2026-10-03 (TestFlight 1.0 (6) and 1.0 (7) uploaded, same build twice; `CURRENT_PROJECT_VERSION` 7, next upload 8); 2026-10-03 (TestFlight build 5 prepared, 1.0 (5): Compass 1.1 spike + 5.6; Release build checked; 823 cases pass; archive/upload are Tessa's); 2026-10-03 (Build 5.6 [spike]: pinned compass bar, never shows at the default size, shows at xxxLarge / AX; all 823 cases pass; next: device check, then 5.9, then 5.5); 2026-10-03 (Build 5.4.8 [spike]: "After midnight" 13 pt, one line, no-rise card no longer grows; all 812 cases pass in Xcode); 2026-10-03 (Order: 5.4.8 + 5.6 in one run, then 5.9, then 5.5 AX reflow last); 2026-10-03 (Build 5.4.7 [spike]: Up now between Moonrise and Moonset, card 46 pt shorter; all 809 cases pass in Xcode; next: Tessa's device check of 5.4.6 / 5.4.7, then 5.6); 2026-10-03 (Build 5.4.6c [spike]: bottom bar, §9.12 fixes; all 797 cases pass in Xcode; next: Tessa's device check, then 5.6); 2026-10-02 (Build 5.4.6b [spike]: dial 260 pt, gaps, "After midnight"; next 5.4.6c; Build 5.4.6a [spike]: compact card; Compass 1.1 spike built, 5.4.1–5.4.5; sensors start when any part of the compass shows; next: the pinned-bar rule, then 5.5); 2026-10-01 (TestFlight build 4 prepared; onboarding Settings fix; Show onboarding in TestFlight; tap animation and DEBUG onboarding trigger built; next 5.5; Moon Signal app icon in; 5.8 moon arc built; next: DEBUG onboarding trigger, tap animation, then 5.5; TestFlight build 3 uploaded with 5.7; moon arc decided (option B, 5.8); Step 5.7 onboarding built ahead of 5.5/5.6; Step 5.3 madlib sentence built, with §3.1a; 5.2 follow-ups; Step 5.2 moon card built; 5.1 theme; Design 1.1 settled: DESIGN-1.1.md, Step 5; 4.14, Step 2.2 and 4.15 built; device checks pending)_
 
 ## Where things live
 - **Local repo:** `~/app-ideas/moonbeam` (the one true folder)
@@ -230,9 +230,17 @@ _Last updated: 2026-10-03 (TestFlight build is **1.0 (6)**, not 5: `CURRENT_PROJ
      ("Where can I find / the moon today / in [city]?"). **5.4.1 done** (1fa2bed, bb6e4d2; scheme fix 6044e4c).
      **Next:** sensor threshold fix (§5a), then 5.4.2–5.4.5, then **5.4.6 spacing pass** (§9) after Tessa's device
      check, then the pinned-bar rule (§6), then 5.5.
-   - [ ] **5.9 Launch loader (decided 2026-10-02, after 5.4.6):** [LOADER.md](LOADER.md). Under 400 ms soft fade;
-     400 ms – 2 s skeleton (city and date as bars); over 2 s phase cycle. Fixes the "dummy main screen" launch bug
+   - [x] **5.9 Launch loader (decided 2026-10-02, after 5.4.6):** [LOADER.md](LOADER.md). Under 400 ms soft fade;
+     over 400 ms the centred phase-cycle moon only (skeleton dropped 2026-10-03). Fixes the "dummy main screen" launch bug
      (DESIGN-REVIEW.md). Order (Tessa, 2026-10-03): 5.4.8 + 5.6 → **5.9** → 5.5 last.
+     - [x] **Build 5.9 (2026-10-05):** as LOADER.md §8. Fix inside 400 ms: no loader, the screen fades in (250 ms);
+       past that the 140 pt phase-cycle moon, forward, 4.8 s month, glow brightest at full, held ≥ 700 ms, cross-fade.
+       Nothing else on screen while loading (no pinned bar, DEBUG readout, Show onboarding, "a city"). Reduce
+       Motion: still full moon, glow fades. VoiceOver: announced once, then focus to the sentence. DEBUG
+       `-screenState loading`. **Open for Tessa:** no failed-fetch note on a launch timeout (LOCATION.md §3 says
+       quiet; LOADER.md §2 mentions a note). Simulator only: Reduce Motion and VoiceOver not checked on screen.
+       Report, 20 shots + 4 contact sheets: `.agent-reports/5.9/`. **552 tests / 843 cases, all pass.**
+       **Next:** Tessa's device check (a real slow fix), then 5.5 AX reflow last.
      - [x] **Build 5.4.1 [spike] (2026-10-02):** Up now row + lock highlight, two commits. The row shows only where the
        compass does (today, Here / Nearby) and refreshes on the compass's tick: **decide** whether it should
        show for any place (DECISIONS.md 2026-10-02 as built). Moonrise/Moonset are now boxed cells, the
@@ -476,7 +484,7 @@ _Last updated: 2026-10-03 (TestFlight build is **1.0 (6)**, not 5: `CURRENT_PROJ
        page or somewhere else)
      - Also with Location Services off entirely (Privacy & Security → Location Services)
 
-10. [ ] **TestFlight build 6 (1.0 (6), prepared 2026-10-03 as build 5, shipped as 6 per Tessa).** Everything since build 4 (`2be3270`): the Compass 1.1
+10. [x] **TestFlight builds 6 and 7 (1.0 (6), 1.0 (7), uploaded 2026-10-03; same content, uploaded twice; prepared as build 5).** Latest is **1.0 (7)**; the next upload is **8**. Everything since build 4 (`2be3270`): the Compass 1.1
    spike (COMPASS-1.1.md, 5.4.1–5.4.8) and 5.6:
    - **Sentence:** three lines, "Where can I find / the moon **today** / in 📍 Irvine, CA?" (another day reads "on Sat,
      Oct 3"); lines a little closer together.

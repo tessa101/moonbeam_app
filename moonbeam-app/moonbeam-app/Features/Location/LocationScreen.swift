@@ -34,9 +34,69 @@ struct LocationScreen: View {
     @State private var dialCentreY: CGFloat?
     @State private var foldY: CGFloat?
 
+    /// LOADER.md §2.1: every launch stage change fades, Reduce Motion
+    /// included (opacity only).
+    private static let launchFadeAnimation = Animation.easeOut(duration: LaunchStage.fadeDuration)
+
     var body: some View {
-        ScrollViewReader { scrollProxy in
-            scrollView(scrollProxy)
+        // LOADER.md: while the launch fetch runs, plain background and then
+        // the phase cycle. The real screen (with its compass, pinned bar,
+        // DEBUG readout and Show onboarding) isn't built until it's ready.
+        ZStack {
+            switch viewModel.launchStage {
+            case .waiting:
+                Color.clear
+            case .phaseCycle:
+                LaunchPhaseCycle()
+                    .transition(.opacity)
+                    .onAppear(perform: announcePhaseCycle)
+            case .ready:
+                ScrollViewReader { scrollProxy in
+                    scrollView(scrollProxy)
+                }
+                .transition(.opacity)
+            }
+        }
+        .animation(Self.launchFadeAnimation, value: viewModel.launchStage)
+        .onChange(of: viewModel.launchStage) { old, new in
+            // §4: focus leaves the vanished loader text for the screen's
+            // first element, the sentence header.
+            if old == .phaseCycle, new == .ready {
+                AccessibilityNotification.ScreenChanged().post()
+            }
+        }
+        .background { ScreenBackground() }
+        .task {
+            await viewModel.start()
+        }
+        .onChange(of: scenePhase) { _, phase in
+            switch phase {
+            case .active:
+                Task { await viewModel.sceneDidBecomeActive() }
+            case .background:
+                viewModel.sceneDidEnterBackground()
+            default:
+                // Inactive (Control Center, the permission prompt) keeps the
+                // compass running; only the background stops it (§1).
+                break
+            }
+        }
+        .sheet(item: $viewModel.locationOffDialog, onDismiss: viewModel.locationOffDialogDidDismiss) { variant in
+            LocationOffDialog(
+                variant: variant,
+                onSearch: viewModel.searchInsteadOfLocation,
+                onOpenedSettings: viewModel.dismissLocationOffDialog
+            )
+        }
+        .sheet(isPresented: $viewModel.isSearchPresented, onDismiss: searchDidDismiss) {
+            if let searchSheet = viewModel.searchSheet {
+                SearchSheet(viewModel: searchSheet)
+                    .presentationDetents([.large])
+                    .presentationDragIndicator(.visible)
+            }
+        }
+        .sheet(isPresented: $viewModel.isCalendarPresented) {
+            CalendarSheet(viewModel: viewModel)
         }
     }
 
@@ -136,39 +196,6 @@ struct LocationScreen: View {
         // design pass.
         .scrollEdgeEffectStyle(.soft, for: .top)
         .modifier(StatusBarBackdrop())
-        .background { ScreenBackground() }
-        .task {
-            await viewModel.start()
-        }
-        .onChange(of: scenePhase) { _, phase in
-            switch phase {
-            case .active:
-                Task { await viewModel.sceneDidBecomeActive() }
-            case .background:
-                viewModel.sceneDidEnterBackground()
-            default:
-                // Inactive (Control Center, the permission prompt) keeps the
-                // compass running; only the background stops it (§1).
-                break
-            }
-        }
-        .sheet(item: $viewModel.locationOffDialog, onDismiss: viewModel.locationOffDialogDidDismiss) { variant in
-            LocationOffDialog(
-                variant: variant,
-                onSearch: viewModel.searchInsteadOfLocation,
-                onOpenedSettings: viewModel.dismissLocationOffDialog
-            )
-        }
-        .sheet(isPresented: $viewModel.isSearchPresented, onDismiss: searchDidDismiss) {
-            if let searchSheet = viewModel.searchSheet {
-                SearchSheet(viewModel: searchSheet)
-                    .presentationDetents([.large])
-                    .presentationDragIndicator(.visible)
-            }
-        }
-        .sheet(isPresented: $viewModel.isCalendarPresented) {
-            CalendarSheet(viewModel: viewModel)
-        }
     }
 
     // MARK: - Compass
@@ -225,6 +252,13 @@ struct LocationScreen: View {
     }
 
     // MARK: - Actions
+
+    /// §4: "Finding your location", once per launch.
+    private func announcePhaseCycle() {
+        if let announcement = viewModel.phaseCycleDidAppear() {
+            AccessibilityNotification.Announcement(announcement).post()
+        }
+    }
 
     private func searchDidDismiss() {
         Task { await viewModel.searchDidDismiss() }

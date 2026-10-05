@@ -32,6 +32,22 @@ final class FakeLocationService: LocationService {
     /// How long `currentPlace()` takes, so a caller's timeout can be tested.
     var fixDelay: Duration = .zero
 
+    /// Holds every fix until `releaseFixes()`, so a test decides when it
+    /// lands relative to the launch loader's waits (LOADER.md §7).
+    var holdsFixes = false
+
+    private var heldFixes: [CheckedContinuation<Void, Never>] = []
+
+    /// Fixes waiting on `releaseFixes()`.
+    var heldFixCount: Int { heldFixes.count }
+
+    /// Lets every held fix finish with `placeResult`.
+    func releaseFixes() {
+        let held = heldFixes
+        heldFixes = []
+        held.forEach { $0.resume() }
+    }
+
     // MARK: - Record
 
     private(set) var requestAuthorizationCount = 0
@@ -78,6 +94,10 @@ final class FakeLocationService: LocationService {
 
     func currentPlace() async throws -> Place {
         currentPlaceCount += 1
+
+        if holdsFixes {
+            await withCheckedContinuation { heldFixes.append($0) }
+        }
 
         if fixDelay > .zero {
             do {

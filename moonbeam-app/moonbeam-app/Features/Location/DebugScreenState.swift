@@ -25,6 +25,9 @@ struct DebugScreenState: View {
         case preciseOff, lowAccuracy, aha, nearby, locationOff, far, noMoonrise
         /// "Waning Crescent · 29% lit": the widest phase line, moon up.
         case longPhaseName
+        /// The launch loader (LOADER.md §3): the fix hangs, so the phase
+        /// cycle runs until the 10 s timeout, then the empty state.
+        case loading
     }
 
     /// The launch argument, then the kind's name.
@@ -80,6 +83,8 @@ struct DebugScreenState: View {
         private static let lockOffset = 1.0
         private static let minutesToRise = 34.0
         private static let secondsPerMinute = 60.0
+        /// Longer than the 10 s launch timeout, which ends it.
+        private static let hangingFixDelay = Duration.seconds(30)
 
         /// About 110 mi from Irvine: Far.
         private static let sanDiego = Place(
@@ -111,6 +116,9 @@ struct DebugScreenState: View {
             location.isPreciseLocationOff = state == .preciseOff || state == .aha
             if state == .aha {
                 location.preciseOffAfterTemporaryRequest = false
+            }
+            if state == .loading {
+                location.fixDelay = Self.hangingFixDelay
             }
 
             let moonService: any MoonService = if state == .noMoonrise {
@@ -159,6 +167,8 @@ struct DebugScreenState: View {
         /// run), the place and day can change, and the compass can be fed a
         /// heading.
         func apply(_ state: Kind) async {
+            // The loader is the screen's own launch; nothing to fake on top.
+            guard state != .loading else { return }
             for _ in 0..<Self.pollLimit where viewModel.moonTable == nil {
                 try? await Task.sleep(for: Self.pollInterval)
             }
@@ -205,4 +215,5 @@ struct DebugScreenState: View {
 #Preview("12 Far") { DebugScreenState(.far) }
 #Preview("13 No moonrise, Sat Oct 3") { DebugScreenState(.noMoonrise) }
 #Preview("14 Long phase name") { DebugScreenState(.longPhaseName) }
+#Preview("15 Launch loader") { DebugScreenState(.loading) }
 #endif

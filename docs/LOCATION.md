@@ -86,7 +86,7 @@ Principle: **never force current location.** Looking up a city you're not in is 
 | Authorized, fetch fails or times out (10 s) | Fall back to last-viewed place (if any). Retry is the sheet's "Use my location" row (4.11). |
 | Not determined / denied / restricted / services off | Show last-viewed place if one exists, otherwise the empty first-launch state. "Use my location" is visible on the empty state only; otherwise it's the sheet row (4.11). |
 
-~~While the fetch is in progress, show the last-viewed place's name as a placeholder, or a small loading state if there's no saved place. Don't show a blank screen.~~ **Superseded 2026-10-02 (LOADER.md):** under 400 ms the screen fades in; then a skeleton with the city as a placeholder bar (never the last-viewed name); after 2 s the phase-cycle loader.
+~~While the fetch is in progress, show the last-viewed place's name as a placeholder, or a small loading state if there's no saved place. Don't show a blank screen.~~ **Superseded 2026-10-02 (LOADER.md), simplified 2026-10-03, built 5.9:** under 400 ms the screen fades in; past that the centred phase-cycle loader (never the last-viewed name), held at least 700 ms. ~~Then a skeleton with the city as a placeholder bar; after 2 s the phase-cycle loader.~~
 
 Picking any place (search or detect ~~, or chip~~) makes it the new **last-viewed place**. A launch fix doesn't: the saved place stays the fallback for a later launch where location is off or fails. Picks from search also become **recents** (SEARCH-RECENTS.md §3).
 

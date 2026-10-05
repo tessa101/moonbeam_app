@@ -5,6 +5,27 @@
 
 ---
 
+### 2026-10-05 · Build 5.9 as built: launch loader
+- **Spec:** LOADER.md (all sections); as built §8. Report `.agent-reports/5.9/5.9-launch-loader.md`.
+- **Stage as view-model state:** `LocationViewModel.launchStage` (`waiting` → `phaseCycle` → `ready`), set only by
+  the launch fetch; the screen builds the real content only at `ready`, which is what keeps the pinned bar, DEBUG
+  readout, Show onboarding and "a city" off the loader (§5). Waits injected as `sleep`, like `CompassViewModel`.
+- **Choices not in the spec:** the 0–400 ms screen keeps the backdrop's faint top glow (so nothing changes when the
+  loader fades in); the month starts at new when the loader appears (as the mock); text at `body` 17 pt (mock 16).
+- **Not done:** no failed-fetch note on a launch timeout. LOADER.md §2 mentions one, but defers to LOCATION.md §3,
+  which falls back quietly. **Tessa to confirm.**
+
+### 2026-10-03 · Launch loader simplified: the phase-cycle moon only
+- **Decision (Tessa):** "There's no compass dial, just a moon loading." Under 400 ms, no loader (soft fade in);
+  over 400 ms, the centred 1a phase cycle (140 pt moon, 4.8 s month, "Finding your location…"), held at least
+  700 ms; 10 s timeout as LOCATION.md. Spec LOADER.md (rewritten).
+- **Dropped:** the 400 ms – 2 s skeleton (sentence/card bars + quiet dial). It predated 5.4.7's two card shapes,
+  and two loaders in a row read as busy.
+- **Also:** the 2026-10-02 proposed timings (250 ms fades, 700 ms hold) are locked as interim values; the pinned
+  compass bar is hidden while loading.
+- **Direction:** the phase cycle runs forward, as the real month (lit right while waxing), not reversed as in the
+  mock recording (`design/1.1/loader-1a-phase-cycle.mov`).
+
 ### 2026-10-03 · Build 5.6 [spike] as built: pinned compass bar
 - **Spec:** COMPASS-1.1.md §9.6, DESIGN-1.1.md §4.1; as built §9.18. Report `.agent-reports/5.6/5.6-pinned-bar.md`.
 - **Rule as a view-model state:** `showsPinnedBar` = compass shown and `isDialCentreBelowFold`. The screen reports
