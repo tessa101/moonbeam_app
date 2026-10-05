@@ -41,7 +41,40 @@ nonisolated enum PhaseCycle {
     /// Reduce Motion (§3): the glyph holds still at full.
     static let stillGeometry = PhaseGlyphGeometry(illumination: 1, phaseAngle: fullMoonPhaseAngle)
 
+    /// Where the month starts when the loader appears (Tessa, 2026-10-05): a
+    /// waxing crescent about a quarter lit, so even a short wait shows a moon
+    /// rather than the dark new-moon disc.
+    static let startLitFraction = 0.25
+
+    /// Halvings in `elapsed(forWaxingLitFraction:)`: far below a frame.
+    private static let bisectionSteps = 40
+
+    /// How far into the month `startLitFraction` falls. Solved rather than
+    /// written down, because the eased angle has no simple inverse.
+    static let startElapsed = elapsed(forWaxingLitFraction: startLitFraction)
+
     // MARK: - Over time
+
+    /// The month's time for the loader, `seconds` after it appeared.
+    static func loaderElapsed(sinceAppeared seconds: TimeInterval) -> TimeInterval {
+        startElapsed + seconds
+    }
+
+    /// The moment in the waxing half when the moon is `fraction` lit. The lit
+    /// fraction only grows there, so a bisection finds it.
+    static func elapsed(forWaxingLitFraction fraction: Double) -> TimeInterval {
+        var low = 0.0
+        var high = period / 2
+        for _ in 0..<bisectionSteps {
+            let middle = (low + high) / 2
+            if geometry(at: middle).litFraction < fraction {
+                low = middle
+            } else {
+                high = middle
+            }
+        }
+        return (low + high) / 2
+    }
 
     /// How far through the month, `0..<1`.
     static func progress(at elapsed: TimeInterval) -> Double {

@@ -111,8 +111,11 @@ Report and shots: `.agent-reports/5.9/`.
 - **Phase cycle:** `LaunchPhaseCycle` (view) + `PhaseCycle` (pure maths). `PhaseGlyph` at 140 pt on `bg`, its
   `PhaseGlyphGeometry` from an angle eased per half month with the mock's `cubic-bezier(.45, 0, .55, 1)`; lit
   fraction `(1 − cos φ) / 2`, forward. Glow: `accent` 32% radial, 2.2 moons across, opacity .45 → 1 and scale
-  .92 → 1.06 on the same loop, brightest at full; the disc's own glow is the mock's 40 px. Starts at new when it
-  appears, as the mock does. Text: `Theme.Fonts.body` (17 pt; the mock has 16), `textSecondary`, 28 pt below.
+  .92 → 1.06 on the same loop, brightest at full; the disc's own glow is the mock's 40 px. ~~Starts at new when
+  it appears, as the mock does.~~ **5.9.1 (Tessa):** starts at a waxing crescent, 25% lit (phase angle 60°,
+  `PhaseCycle.startElapsed`, 0.97 s into the month), then runs on as before. 25% sits on the fast part of the
+  ease, so it reaches first quarter 0.23 s after appearing and full at 1.43 s. Text: `Theme.Fonts.body` (17 pt;
+  the mock has 16), `textSecondary`, 28 pt below.
 - **Reduce Motion:** glyph still at full; the glow keeps its opacity fade, no scale.
 - **VoiceOver:** "Finding your location" announced once per launch (`phaseCycleDidAppear()`); glyph hidden; on
   `phaseCycle → ready` a screen-changed notification moves focus to the first element, the sentence header.

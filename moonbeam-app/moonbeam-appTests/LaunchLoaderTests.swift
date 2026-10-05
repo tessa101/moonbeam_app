@@ -303,7 +303,7 @@ struct PhaseCycleTests {
 
     private static let tolerance = 1e-6
 
-    @Test("Starts at new, dark, with the glow at its dimmest")
+    @Test("The month's zero is new, dark, with the glow at its dimmest")
     func startsAtNew() {
         let geometry = PhaseCycle.geometry(at: 0)
         #expect(geometry.litFraction < Self.tolerance)
@@ -344,6 +344,29 @@ struct PhaseCycleTests {
         #expect(PhaseCycle.period == 4.8)
         #expect(abs(PhaseCycle.phaseAngle(at: moment) - PhaseCycle.phaseAngle(at: moment + PhaseCycle.period)) < 1e-6)
         #expect(PhaseCycle.geometry(at: moment) != PhaseCycle.geometry(at: moment + PhaseCycle.period / 3))
+    }
+
+    // MARK: - Where the loader's month starts (Tessa, 2026-10-05)
+
+    @Test("The loader appears on a waxing crescent, about 25% lit")
+    func loaderStartsAtWaxingCrescent() {
+        let start = PhaseCycle.geometry(at: PhaseCycle.loaderElapsed(sinceAppeared: 0))
+        #expect(abs(start.litFraction - 0.25) < 1e-6)
+        #expect(start.litSide == .right)
+        // Lit 25% is a phase angle of 60°: a crescent, short of first quarter.
+        #expect(abs(PhaseCycle.phaseAngle(at: PhaseCycle.startElapsed) - 60) < 1e-4)
+        #expect(PhaseCycle.startElapsed > 0)
+        #expect(PhaseCycle.startElapsed < PhaseCycle.period / 4)
+    }
+
+    @Test("From the crescent it keeps waxing forward, and still loops every 4.8 s")
+    func loaderRunsOnFromCrescent() {
+        let atStart = PhaseCycle.geometry(at: PhaseCycle.loaderElapsed(sinceAppeared: 0))
+        let soon = PhaseCycle.geometry(at: PhaseCycle.loaderElapsed(sinceAppeared: 0.3))
+        #expect(soon.litFraction > atStart.litFraction)
+        #expect(soon.litSide == .right)
+        let aMonthOn = PhaseCycle.geometry(at: PhaseCycle.loaderElapsed(sinceAppeared: PhaseCycle.period))
+        #expect(abs(aMonthOn.litFraction - atStart.litFraction) < 1e-6)
     }
 
     @Test("Reduce Motion holds the glyph still at full")

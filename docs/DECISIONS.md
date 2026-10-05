@@ -12,6 +12,8 @@
   takes it as an `@autoclosure`; no other API change.
 - **4.8 retry:** skipped until `launchStage == .ready`, rather than letting `locate()` refuse to cancel a launch
   fetch: `start()` owns the launch, and a failed launch still gets its retry on the next foreground.
+- **Loader month starts at a waxing crescent, 25% lit (Tessa)**, replacing 5.9's "starts at new, as the mock".
+  The start is solved from the eased angle (bisection) rather than hard-coded, so it stays 25% if the curve changes.
 - **Not done:** no Instruments trace. This session can't write the per-user cache folder `xctrace` needs; the
   timings came from a temporary probe (removed). The signposts stay for Tessa's own trace.
 

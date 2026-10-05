@@ -18,7 +18,8 @@ struct LaunchPhaseCycle: View {
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
-    /// The month starts at new when the loader appears, as in the mock.
+    /// When the loader appeared. Its month starts there at a waxing
+    /// crescent, not at new as the mock does (`PhaseCycle.startElapsed`).
     @State private var startDate = Date.now
 
     // MARK: - Constants
@@ -39,7 +40,7 @@ struct LaunchPhaseCycle: View {
     var body: some View {
         VStack(spacing: Self.moonToText) {
             TimelineView(.animation) { context in
-                moon(elapsed: context.date.timeIntervalSince(startDate))
+                moon(elapsed: PhaseCycle.loaderElapsed(sinceAppeared: context.date.timeIntervalSince(startDate)))
             }
             .frame(width: Self.moonSize, height: Self.moonSize)
             .accessibilityHidden(true)
