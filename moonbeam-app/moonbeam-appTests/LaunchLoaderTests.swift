@@ -218,6 +218,54 @@ struct LaunchLoaderTests {
         #expect(harness.viewModel.launchStage == .waiting)
     }
 
+    // MARK: - Foreground during the launch (LOADER.md §9, LOCATION.md 4.8)
+
+    /// On a device the scene turns active while the launch fetch runs. The
+    /// 4.8 retry (nothing detected yet, nothing locating yet) used to start
+    /// a detection-only fetch there, which cancelled the launch's own fetch:
+    /// the launch then dropped its fix and opened with no place.
+    @Test("A foreground during the launch fetch doesn't cancel it")
+    func foregroundDuringLaunchKeepsLaunchFetch() async {
+        let harness = Self.makeHarness(lastViewed: Place.marVista)
+        let viewModel = harness.viewModel
+        // Both queued before either runs, as when the scene activates right
+        // after the screen appears: start() reaches its fetch first.
+        let launch = Task { await viewModel.start() }
+        let foreground = Task { await viewModel.sceneDidBecomeActive() }
+        await Self.settle { harness.location.heldFixCount >= 1 && harness.sleeper.pendingCount == 1 }
+        // Let the foreground run to wherever it stops (a retry's fix would
+        // be held too, so it can't be awaited before the release).
+        await Self.settle { false }
+
+        harness.location.releaseFixes()
+        await launch.value
+        harness.location.releaseFixes()
+        await foreground.value
+
+        #expect(harness.location.currentPlaceCount == 1)
+        #expect(harness.viewModel.place == Self.detected)
+        #expect(harness.viewModel.launchStage == .ready)
+        #expect(!harness.viewModel.isLocating)
+        harness.sleeper.cancelAll()
+    }
+
+    @Test("A foreground after a failed launch fetch still retries (4.8)")
+    func foregroundAfterFailedLaunchRetries() async {
+        let harness = Self.makeHarness(lastViewed: Place.marVista)
+        harness.location.holdsFixes = false
+        harness.location.placeResult = .failure(LocationError.locationUnavailable)
+        await harness.viewModel.start()
+        #expect(harness.viewModel.place == Place.marVista)
+
+        harness.location.placeResult = .success(Self.detected)
+        await harness.viewModel.sceneDidBecomeActive()
+
+        #expect(harness.location.currentPlaceCount == 2)
+        // Detection only: the place stays the last-viewed one.
+        #expect(harness.viewModel.place == Place.marVista)
+        harness.sleeper.cancelAll()
+    }
+
     // MARK: - What the loader shows (§3, §5)
 
     @Test("The loader never shows the last-viewed place or the compass")

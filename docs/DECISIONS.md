@@ -5,6 +5,23 @@
 
 ---
 
+### 2026-10-05 · 5.9.1: the launch stall, fixed at its likely cause
+- **Spec:** LOADER.md §9 (findings). Report `.agent-reports/5.9.1/5.9.1-launch-fix.md`.
+- **Not reproduced** on the T2 iPhone; fixed at the likely cause: `locationServicesEnabled()` (a main-thread
+  blocking call Xcode flagged on this device) is read only for `notDetermined` / `denied`. `LocationAuthState`
+  takes it as an `@autoclosure`; no other API change.
+- **4.8 retry:** skipped until `launchStage == .ready`, rather than letting `locate()` refuse to cancel a launch
+  fetch: `start()` owns the launch, and a failed launch still gets its retry on the next foreground.
+- **Not done:** no Instruments trace. This session can't write the per-user cache folder `xctrace` needs; the
+  timings came from a temporary probe (removed). The signposts stay for Tessa's own trace.
+
+### 2026-10-05 · Launch: content loads in; the device stall is a bug
+- **Decision (Tessa):** a quick launch shows the content **loading in** (sentence → card → compass, fade + 8 pt
+  rise, staggered), not a whole-screen fade that reads as a scrim lifting. The background never changes. Same
+  load-in after the phase cycle. Values proposed in LOADER.md §2.1.
+- **Bug:** on her iPhone (existing install) the backdrop showed well past 400 ms, several seconds, and the phase
+  cycle never appeared (LOADER.md §9). Any wait over 400 ms must show the moon.
+
 ### 2026-10-05 · Build 5.9 as built: launch loader
 - **Spec:** LOADER.md (all sections); as built §8. Report `.agent-reports/5.9/5.9-launch-loader.md`.
 - **Stage as view-model state:** `LocationViewModel.launchStage` (`waiting` → `phaseCycle` → `ready`), set only by

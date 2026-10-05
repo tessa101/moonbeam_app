@@ -5,6 +5,7 @@
 
 import Foundation
 import Observation
+import os
 
 /// Gets the user to a `Place`, by detecting it or by city search, and owns
 /// the launch logic (LOCATION.md §3) and permission branches (§4) that decide
@@ -58,7 +59,12 @@ final class LocationViewModel {
 
     /// What the screen shows while the launch fetch runs (LOADER.md §2).
     /// Starts out waiting, so nothing flashes before `start()` decides.
-    private(set) var launchStage: LaunchStage = .waiting
+    private(set) var launchStage: LaunchStage = .waiting {
+        didSet {
+            guard launchStage != oldValue else { return }
+            LaunchSignposts.signposter.emitEvent("launchStage", "\(String(describing: self.launchStage))")
+        }
+    }
 
     /// The place the moon table is for, or `nil` for the empty first-launch
     /// state.
@@ -249,6 +255,10 @@ final class LocationViewModel {
 
     /// Runs once when the screen appears. Never prompts for permission.
     func start() async {
+        let signposter = LaunchSignposts.signposter
+        let interval = signposter.beginInterval("start")
+        defer { signposter.endInterval("start", interval) }
+
         lastViewed = placeStore.lastViewed
         let state = locationService.authorizationState
         lastSeenAuthState = state
@@ -283,10 +293,15 @@ final class LocationViewModel {
     /// least 700 ms. A fetch that fails or times out falls back as before;
     /// the loader only decides what shows meanwhile.
     private func locateAtLaunch() async {
+        let signposter = LaunchSignposts.signposter
+        let interval = signposter.beginInterval("locateAtLaunch")
+        defer { signposter.endInterval("locateAtLaunch", interval) }
+
         launchStage = .waiting
         let sleep = sleep
         let loader = Task { [weak self] in
             try await sleep(LaunchStage.phaseCycleDelay)
+            signposter.emitEvent("phaseCycleDelay elapsed", "cancelled: \(Task.isCancelled)")
             // The fix may land just as the delay ends; cancelled means it won.
             guard let self, !Task.isCancelled else { return }
             launchStage = .phaseCycle
@@ -367,6 +382,7 @@ final class LocationViewModel {
     /// selected day rolls over past the place's midnight (DATE.md §3), and
     /// where the compass re-checks permission and restarts its sensors.
     func sceneDidBecomeActive() async {
+        LaunchSignposts.signposter.emitEvent("sceneDidBecomeActive", "isLocating: \(self.isLocating)")
         refreshDayIfNeeded()
         // Permission may have changed in Settings; the compass hides or shows
         // its hint before anything else.
@@ -374,6 +390,10 @@ final class LocationViewModel {
         compass.sceneDidBecomeActive()
 
         guard !isRequestingPermission else { return }
+        // The scene turns active while the launch is still loading. The
+        // launch's own fetch decides the place then; a retry here would
+        // cancel it, and the launch would open with no place (LOADER.md §9).
+        guard launchStage == .ready else { return }
 
         let state = locationService.authorizationState
         let wasAuthorized = lastSeenAuthState.isAuthorized
@@ -709,6 +729,9 @@ final class LocationViewModel {
     /// - Parameter detectionOnly: record the fix for the compass without
     ///   showing it; the selected place stays put (COMPASS.md §2, 4.6).
     private func locate(userInitiated: Bool, detectionOnly: Bool = false) async {
+        if locateTask != nil {
+            LaunchSignposts.signposter.emitEvent("locate cancels previous", "detectionOnly: \(detectionOnly)")
+        }
         locateTask?.cancel()
         let task = Task { [weak self] in
             guard let self else { return }
@@ -719,6 +742,10 @@ final class LocationViewModel {
     }
 
     private func performLocate(userInitiated: Bool, detectionOnly: Bool) async {
+        let signposter = LaunchSignposts.signposter
+        let interval = signposter.beginInterval("performLocate", "detectionOnly: \(detectionOnly)")
+        defer { signposter.endInterval("performLocate", interval, "cancelled: \(Task.isCancelled)") }
+
         isLocating = true
         locationFailed = false
 

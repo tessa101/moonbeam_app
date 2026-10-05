@@ -3,6 +3,7 @@
 //  moonbeam-app
 //
 
+import os
 import SwiftUI
 
 /// Picks the place, then shows its moon table (LOCATION.md §3).
@@ -66,6 +67,9 @@ struct LocationScreen: View {
             }
         }
         .background { ScreenBackground() }
+        .onAppear {
+            LaunchSignposts.signposter.emitEvent("LocationScreen.onAppear")
+        }
         .task {
             await viewModel.start()
         }

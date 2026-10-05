@@ -76,6 +76,29 @@ struct LocationServiceTests {
         #expect(LocationAuthState(status: .restricted, servicesEnabled: false) == .restricted)
     }
 
+    /// LOADER.md §9: the system-wide switch comes from a call that can block
+    /// the main thread, so it's read only when the status needs it. An
+    /// authorized launch never reads it.
+    @Test(
+        "The system-wide switch is read only for not determined and denied",
+        arguments: [
+            (CLAuthorizationStatus.notDetermined, true),
+            (.denied, true),
+            (.authorizedWhenInUse, false),
+            (.authorizedAlways, false),
+            (.restricted, false),
+        ]
+    )
+    func servicesEnabledReadOnlyWhenNeeded(status: CLAuthorizationStatus, isRead: Bool) {
+        var reads = 0
+        func servicesEnabled() -> Bool {
+            reads += 1
+            return true
+        }
+        _ = LocationAuthState(status: status, servicesEnabled: servicesEnabled())
+        #expect(reads == (isRead ? 1 : 0))
+    }
+
     @Test("Only authorized reports as authorized")
     func isAuthorized() {
         #expect(LocationAuthState.authorized.isAuthorized)

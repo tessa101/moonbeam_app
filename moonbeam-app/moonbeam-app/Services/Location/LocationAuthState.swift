@@ -30,14 +30,18 @@ nonisolated enum LocationAuthState: Equatable, Sendable {
     /// `denied`, so both `denied` and `notDetermined` have to be re-read
     /// against `servicesEnabled` — otherwise a user who never refused
     /// Moonbeam would get the dialog that blames Moonbeam's own setting.
-    init(status: CLAuthorizationStatus, servicesEnabled: Bool) {
+    ///
+    /// `servicesEnabled` is read only for those two statuses. Its real source,
+    /// `CLLocationManager.locationServicesEnabled()`, can block the main
+    /// thread, and an authorized launch has no need for it (LOADER.md §9).
+    init(status: CLAuthorizationStatus, servicesEnabled: @autoclosure () -> Bool) {
         switch status {
         case .notDetermined:
-            self = servicesEnabled ? .notDetermined : .servicesOff
+            self = servicesEnabled() ? .notDetermined : .servicesOff
         case .restricted:
             self = .restricted
         case .denied:
-            self = servicesEnabled ? .denied : .servicesOff
+            self = servicesEnabled() ? .denied : .servicesOff
         case .authorizedAlways, .authorizedWhenInUse:
             self = .authorized
         @unknown default:

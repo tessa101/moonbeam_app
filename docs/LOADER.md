@@ -31,11 +31,16 @@ computed on the device and is effectively instant, so the fetch is the only wait
 Between launch and 400 ms the screen is plain `bg` (no content, no spinner), so a fast fix never flashes a loader.
 
 ### 2.1 Transitions
-- **Main screen in (under 400 ms):** opacity 0 → 1 over 250 ms, ease-out. No slide.
+- **Main screen in (under 400 ms) — content loads in, not a scrim fading out (Tessa, 2026-10-05):** the
+  background stays solid and unchanged; nothing dims or lifts over the whole screen. The content blocks animate in
+  where they'll sit, top to bottom: **sentence → moon card → compass**, each opacity 0 → 1 with an **8 pt rise**,
+  300 ms ease-out, **staggered 70 ms**. Same load-in after the phase cycle (instead of a whole-screen cross-fade):
+  the loader fades out (200 ms) and the blocks load in as it goes. **(proposed values)**
+- **Reduce Motion:** opacity only, no rise; the stagger may stay.
 - **Phase cycle in (at 400 ms):** opacity 0 → 1 over 250 ms.
-- **Phase cycle → real screen:** once the phase cycle shows, keep it **at least 700 ms**, then cross-fade to the main
-  screen over 250 ms, so it never flashes.
-- **Reduce Motion:** fades stay (opacity only); no phase animation (§3).
+- **Phase cycle → real screen:** once the phase cycle shows, keep it **at least 700 ms**, then the load-in above, so it
+  never flashes.
+- Phase cycle under Reduce Motion: no phase animation (§3).
 - Interim values; transitions get an app-wide polish pass later (DESIGN-REVIEW.md "Motion and feedback").
 
 ## 3. Phase cycle
@@ -110,7 +115,33 @@ Report and shots: `.agent-reports/5.9/`.
   launch; §2's "with the failed-fetch note" isn't in LOCATION.md, which this follows. Flagged for Tessa.
 - **DEBUG:** `-screenState loading` (a fix that hangs until the 10 s timeout) for screenshots.
 
+## 9. Device bug (2026-10-05, build 5e2ba79)
+
+On Tessa's iPhone (existing install, location authorized) the launch showed **plain background for well over a few
+seconds**, then faded to the screen. **The phase cycle never appeared**, though the wait was far past 400 ms. The
+simulator shots were fine. Likely something holds the main actor during launch (so the 400 ms timer can't fire), or
+the stage logic misses a path on device. Either way: **any launch wait over 400 ms must show the moon.**
+
+**Findings (Build 5.9.1, 2026-10-05).** Report `.agent-reports/5.9.1/5.9.1-launch-fix.md`.
+- **Not reproduced** on the T2 iPhone (iPhone 17 Pro, iOS 26.6.2): ~10 cold launches, from the Mac and from the
+  home screen (one probably after a restart), all `ready` in 0.25–0.45 s after process start; no prewarm. The
+  stage logic works on the device: with the fix held 3 s, the phase cycle was on screen at 579 ms.
+- **Likely cause:** `CLLocationManager.locationServicesEnabled()`, read on the main thread twice in `App.init`
+  (before the first frame) and again in `start()` (before the 400 ms wait starts). Xcode recorded its runtime
+  warning on this device ("can cause UI unresponsiveness if invoked on the main thread"). A stall there shows
+  plain background, then the screen, and never the moon: the reported symptom. It measured 0 ms in every launch
+  traced here, so this is the fit, not a capture. **Fix:** it's read only when the status is `notDetermined` or
+  `denied` (the two it changes), so an authorized launch never calls it.
+- **Also fixed:** the 4.8 foreground retry could cancel the launch fetch when the scene turned active before the
+  fetch started; the launch then dropped its fix and opened with no place. `sceneDidBecomeActive` now leaves
+  fetching to `start()` until the stage is `ready`.
+- **Kept:** `os_signpost` intervals around the launch (`LaunchSignposts`, subsystem `com.t-alien.moonbeam-app`,
+  category `Launch`), so a stall on device can be caught in Instruments' os_signpost / Time Profiler.
+
 ## Decision log
+
+- **2026-10-05 (Tessa):** Device launch waited several seconds with no moon: a bug, fix it. A quick launch should
+  show the **content loading in**, not a scrim fading out (§2.1).
 
 - **2026-10-03 (Tessa):** No compass dial, just the moon loading. Skeleton tier dropped; over 400 ms the 1a phase
   cycle shows for everyone. Interim transition values locked.

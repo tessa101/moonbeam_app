@@ -5,6 +5,7 @@
 //  Created by TC on 9/23/26.
 //
 
+import os
 import SwiftUI
 
 @main
@@ -22,8 +23,14 @@ struct moonbeam_appApp: App {
     /// them through initializers. Onboarding and the main screen share the
     /// location service and place store.
     init() {
+        let signposter = LaunchSignposts.signposter
+        let appInit = signposter.beginInterval("App.init")
+        defer { signposter.endInterval("App.init", appInit) }
+
         // Astronomy Engine spike scaffolding; remove with MoonTableSpike.
+        let spike = signposter.beginInterval("MoonTableSpike.run")
         MoonTableSpike.run()
+        signposter.endInterval("MoonTableSpike.run", spike)
 
         let locationService = CoreLocationService()
         let placeStore = UserDefaultsPlaceStore()

@@ -5,6 +5,7 @@
 
 import CoreLocation
 import MapKit
+import os
 
 /// `LocationService` backed by CoreLocation and MapKit.
 ///
@@ -46,7 +47,12 @@ final class CoreLocationService: LocationService {
     // MARK: - LocationService
 
     var authorizationState: LocationAuthState {
-        LocationAuthState(
+        let signposter = LaunchSignposts.signposter
+        let read = signposter.beginInterval("authorizationState")
+        defer { signposter.endInterval("authorizationState", read) }
+        // Lazy: only `notDetermined` and `denied` need the system-wide
+        // switch, and reading it can block the main thread (LOADER.md §9).
+        return LocationAuthState(
             status: manager.authorizationStatus,
             servicesEnabled: CLLocationManager.locationServicesEnabled()
         )
