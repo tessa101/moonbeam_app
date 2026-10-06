@@ -37,6 +37,12 @@ final class CoreLocationService: LocationService {
     /// prompt instead of both iterating `authorizationChanges`.
     private var pendingAuthorization: Task<LocationAuthState, Never>?
 
+    /// The device-wide Location Services switch, as last read off the main
+    /// actor by `refreshAuthorizationState()`. Assumed on until then: it's
+    /// only consulted for `notDetermined` and `denied`, and every caller that
+    /// branches on those refreshes first.
+    private var servicesEnabled = true
+
     init() {
         let (changes, continuation) = AsyncStream<Void>.makeStream()
         authorizationChanges = changes
@@ -50,12 +56,31 @@ final class CoreLocationService: LocationService {
         let signposter = LaunchSignposts.signposter
         let read = signposter.beginInterval("authorizationState")
         defer { signposter.endInterval("authorizationState", read) }
-        // Lazy: only `notDetermined` and `denied` need the system-wide
-        // switch, and reading it can block the main thread (LOADER.md §9).
-        return LocationAuthState(
-            status: manager.authorizationStatus,
-            servicesEnabled: CLLocationManager.locationServicesEnabled()
-        )
+        return LocationAuthState(status: manager.authorizationStatus, servicesEnabled: servicesEnabled)
+    }
+
+    func refreshAuthorizationState() async -> LocationAuthState {
+        let status = manager.authorizationStatus
+        // Only `notDetermined` and `denied` change with the switch, so an
+        // authorized launch never reads it at all.
+        if status == .notDetermined || status == .denied {
+            let signposter = LaunchSignposts.signposter
+            let read = signposter.beginInterval("locationServicesEnabled")
+            servicesEnabled = await Self.readOffMainActor { CLLocationManager.locationServicesEnabled() }
+            signposter.endInterval("locationServicesEnabled", read)
+        }
+        return authorizationState
+    }
+
+    /// Runs a read that may block on a detached task, so the main actor
+    /// (and the launch loader's 400 ms clock) keeps running meanwhile.
+    /// `CLLocationManager.locationServicesEnabled()` is a synchronous call
+    /// into the location daemon; Xcode flags it as able to make the UI
+    /// unresponsive on the main thread (LOADER.md §9, §10.7).
+    nonisolated static func readOffMainActor<Value: Sendable>(
+        _ read: @escaping @Sendable () -> Value
+    ) async -> Value {
+        await Task.detached(priority: .userInitiated, operation: read).value
     }
 
     var isPreciseLocationOff: Bool {
@@ -63,7 +88,8 @@ final class CoreLocationService: LocationService {
     }
 
     func requestAuthorization() async -> LocationAuthState {
-        let current = authorizationState
+        // With the switch off iOS shows no prompt, so know it first.
+        let current = await refreshAuthorizationState()
         guard current == .notDetermined else { return current }
 
         if let pendingAuthorization {
@@ -97,11 +123,11 @@ final class CoreLocationService: LocationService {
         manager.requestWhenInUseAuthorization()
 
         for await _ in authorizationChanges {
-            let state = authorizationState
+            let state = await refreshAuthorizationState()
             if state != .notDetermined { return state }
         }
 
-        return authorizationState
+        return await refreshAuthorizationState()
     }
 
     // MARK: - One-shot fix

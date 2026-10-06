@@ -48,8 +48,25 @@ final class FakeLocationService: LocationService {
         held.forEach { $0.resume() }
     }
 
+    /// Holds every `refreshAuthorizationState()` until
+    /// `releaseAuthorizationRefreshes()`: a Location Services read that
+    /// blocks, as it can on a device (LOADER.md §9).
+    var holdsAuthorizationRefresh = false
+
+    private var heldRefreshes: [CheckedContinuation<Void, Never>] = []
+
+    /// Refreshes waiting on `releaseAuthorizationRefreshes()`.
+    var heldRefreshCount: Int { heldRefreshes.count }
+
+    func releaseAuthorizationRefreshes() {
+        let held = heldRefreshes
+        heldRefreshes = []
+        held.forEach { $0.resume() }
+    }
+
     // MARK: - Record
 
+    private(set) var refreshCount = 0
     private(set) var requestAuthorizationCount = 0
     private(set) var currentPlaceCount = 0
 
@@ -76,6 +93,14 @@ final class FakeLocationService: LocationService {
     }
 
     // MARK: - LocationService
+
+    func refreshAuthorizationState() async -> LocationAuthState {
+        refreshCount += 1
+        if holdsAuthorizationRefresh {
+            await withCheckedContinuation { heldRefreshes.append($0) }
+        }
+        return authorizationState
+    }
 
     func requestAuthorization() async -> LocationAuthState {
         requestAuthorizationCount += 1

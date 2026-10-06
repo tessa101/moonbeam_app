@@ -194,7 +194,9 @@ final class LocationViewModel {
         self.deviceTimeZone = deviceTimeZone
         self.now = now
         self.sleep = sleep
-        lastSeenAuthState = locationService.authorizationState
+        // `start()` reads the real state, off the main actor where it can
+        // block; nothing reads this before then (LOADER.md §9).
+        lastSeenAuthState = .notDetermined
         compass = CompassViewModel(headingService: headingService, moonService: moonService, now: now)
     }
 
@@ -254,14 +256,24 @@ final class LocationViewModel {
     // MARK: - Launch (§3)
 
     /// Runs once when the screen appears. Never prompts for permission.
+    ///
+    /// The loader is timed around the whole launch (LOADER.md §2): no loader
+    /// if it's done inside 400 ms; past that the phase cycle, held at least
+    /// 700 ms. Its clock starts before anything that could block, the
+    /// permission read included, so any wait past 400 ms shows the moon
+    /// (§9). A fetch that fails or times out falls back as before; the
+    /// loader only decides what shows meanwhile.
     func start() async {
         let signposter = LaunchSignposts.signposter
         let interval = signposter.beginInterval("start")
         defer { signposter.endInterval("start", interval) }
 
-        lastViewed = placeStore.lastViewed
-        let state = locationService.authorizationState
+        launchStage = .waiting
+        let loader = startLoaderClock()
+
+        let state = await locationService.refreshAuthorizationState()
         lastSeenAuthState = state
+        lastViewed = placeStore.lastViewed
 
         if presentsSearchOnStart {
             presentsSearchOnStart = false
@@ -269,9 +281,17 @@ final class LocationViewModel {
         }
 
         if state.isAuthorized {
-            await locateAtLaunch()
+            let fetch = signposter.beginInterval("locateAtLaunch")
+            await locate(userInitiated: false)
+            signposter.endInterval("locateAtLaunch", fetch)
         } else if let lastViewed {
             show(lastViewed, remember: false)
+        }
+
+        if launchStage == .phaseCycle {
+            await loader.value
+        } else {
+            loader.cancel()
         }
         launchStage = .ready
     }
@@ -288,32 +308,23 @@ final class LocationViewModel {
         launchStage = .waiting
     }
 
-    /// The launch fetch, with the loader timed around it (LOADER.md §2): no
-    /// loader for a fix inside 400 ms; past that the phase cycle, held at
-    /// least 700 ms. A fetch that fails or times out falls back as before;
-    /// the loader only decides what shows meanwhile.
-    private func locateAtLaunch() async {
+    /// The loader's clock: the phase cycle at 400 ms, then its 700 ms hold.
+    /// Cancelled if the launch is done first.
+    private func startLoaderClock() -> Task<Void, Never> {
         let signposter = LaunchSignposts.signposter
-        let interval = signposter.beginInterval("locateAtLaunch")
-        defer { signposter.endInterval("locateAtLaunch", interval) }
-
-        launchStage = .waiting
         let sleep = sleep
-        let loader = Task { [weak self] in
-            try await sleep(LaunchStage.phaseCycleDelay)
-            signposter.emitEvent("phaseCycleDelay elapsed", "cancelled: \(Task.isCancelled)")
-            // The fix may land just as the delay ends; cancelled means it won.
-            guard let self, !Task.isCancelled else { return }
-            launchStage = .phaseCycle
-            try await sleep(LaunchStage.minimumPhaseCycleDuration)
-        }
-
-        await locate(userInitiated: false)
-
-        if launchStage == .phaseCycle {
-            try? await loader.value
-        } else {
-            loader.cancel()
+        return Task { [weak self] in
+            do {
+                try await sleep(LaunchStage.phaseCycleDelay)
+                signposter.emitEvent("phaseCycleDelay elapsed", "cancelled: \(Task.isCancelled)")
+                // The launch may finish just as the delay ends; cancelled
+                // means it won.
+                guard let self, !Task.isCancelled else { return }
+                launchStage = .phaseCycle
+                try await sleep(LaunchStage.minimumPhaseCycleDuration)
+            } catch {
+                // Cancelled: nothing more to show.
+            }
         }
     }
 
@@ -351,7 +362,8 @@ final class LocationViewModel {
     }
 
     private func runLocationFlow(detectionOnly: Bool) async {
-        switch locationService.authorizationState {
+        // "Off" and "denied" get different dialogs, so read the switch now.
+        switch await locationService.refreshAuthorizationState() {
         case .notDetermined:
             isRequestingPermission = true
             let state = await locationService.requestAuthorization()
@@ -384,8 +396,9 @@ final class LocationViewModel {
     func sceneDidBecomeActive() async {
         LaunchSignposts.signposter.emitEvent("sceneDidBecomeActive", "isLocating: \(self.isLocating)")
         refreshDayIfNeeded()
-        // Permission may have changed in Settings; the compass hides or shows
-        // its hint before anything else.
+        // Permission or the device-wide switch may have changed in Settings;
+        // the compass hides or shows its hint before anything else.
+        let state = await locationService.refreshAuthorizationState()
         updateCompass()
         compass.sceneDidBecomeActive()
 
@@ -395,7 +408,6 @@ final class LocationViewModel {
         // cancel it, and the launch would open with no place (LOADER.md §9).
         guard launchStage == .ready else { return }
 
-        let state = locationService.authorizationState
         let wasAuthorized = lastSeenAuthState.isAuthorized
         lastSeenAuthState = state
 

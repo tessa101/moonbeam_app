@@ -101,6 +101,23 @@ struct OnboardingViewModelTests {
         #expect(shows == (!hasSavedPlace && !isCompleted))
     }
 
+    /// It runs in `App.init`, before the first frame (LOADER.md §9).
+    @Test("An existing install decides without reading the permission", arguments: [(true, false), (false, true)])
+    func existingInstallSkipsPermissionRead(hasSavedPlace: Bool, isCompleted: Bool) {
+        var reads = 0
+        let shows = OnboardingViewModel.shouldShow(
+            hasSavedPlace: hasSavedPlace,
+            authorizationState: {
+                reads += 1
+                return .notDetermined
+            }(),
+            isCompleted: isCompleted
+        )
+
+        #expect(!shows)
+        #expect(reads == 0)
+    }
+
     // MARK: - The prompt only comes from a tap
 
     @Test("Launch and Get started never prompt; Get started shows the upsell")

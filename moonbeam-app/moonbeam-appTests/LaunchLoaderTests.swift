@@ -205,7 +205,54 @@ struct LaunchLoaderTests {
         #expect(harness.viewModel.launchStage == .ready)
         #expect(harness.viewModel.place == Place.marVista)
         #expect(harness.location.currentPlaceCount == 0)
-        #expect(harness.sleeper.requestedDurations.isEmpty)
+        // The 400 ms clock starts on every launch (§9), but this one was
+        // done before it ran out: no phase cycle, so no hold.
+        #expect(!harness.sleeper.requestedDurations.contains(LaunchStage.minimumPhaseCycleDuration))
+        harness.sleeper.cancelAll()
+    }
+
+    // MARK: - A slow permission read (LOADER.md §9, §10.7)
+
+    /// The 5.9 device stall: the permission read sat on the main actor
+    /// before the 400 ms clock started, so a slow read showed plain
+    /// background for seconds and never the moon.
+    @Test("The 400 ms clock runs while the permission read is slow")
+    func slowPermissionReadShowsMoon() async {
+        let harness = Self.makeHarness()
+        harness.location.holdsAuthorizationRefresh = true
+        let viewModel = harness.viewModel
+        let launch = Task { await viewModel.start() }
+        await Self.settle { harness.location.heldRefreshCount == 1 && harness.sleeper.pendingCount == 1 }
+
+        // The read hasn't come back, and the clock is already running.
+        #expect(harness.location.currentPlaceCount == 0)
+        harness.sleeper.fire()
+        await Self.settle { viewModel.launchStage == .phaseCycle }
+        #expect(viewModel.launchStage == .phaseCycle)
+
+        harness.location.releaseAuthorizationRefreshes()
+        await Self.settle { harness.location.heldFixCount == 1 }
+        harness.location.releaseFixes()
+        await Self.settle { harness.sleeper.pendingCount == 1 }
+        harness.sleeper.fire()
+        await launch.value
+
+        #expect(viewModel.launchStage == .ready)
+        #expect(viewModel.place == Self.detected)
+    }
+
+    @Test("The launch reads the permission through the off-main refresh")
+    func launchRefreshesPermission() async {
+        let harness = Self.makeHarness(authorizationState: .denied, lastViewed: Place.marVista)
+        await harness.viewModel.start()
+        #expect(harness.location.refreshCount == 1)
+        harness.sleeper.cancelAll()
+    }
+
+    @Test("The Location Services read runs off the main thread")
+    nonisolated func servicesReadIsOffMain() async {
+        let ranOnMain = await CoreLocationService.readOffMainActor { Thread.isMainThread }
+        #expect(!ranOnMain)
     }
 
     @Test("After onboarding the screen waits again, for the first fetch")

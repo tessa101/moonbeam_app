@@ -18,8 +18,16 @@ import Foundation
 /// rule in §3 is enforced by the call site, not by luck.
 protocol LocationService {
 
-    /// The current permission state, read fresh each time. Cheap.
+    /// The permission state, from the app's status read fresh and the
+    /// device-wide Location Services switch as last seen by
+    /// `refreshAuthorizationState()`. Never blocks: safe on the main actor.
     var authorizationState: LocationAuthState { get }
+
+    /// Re-reads the device-wide Location Services switch, off the main actor
+    /// (it can block the thread that calls it: LOADER.md §9, §10.7), then
+    /// returns the state. Call it where the switch may have changed: at
+    /// launch, back in the foreground, before branching on "off" vs "denied".
+    func refreshAuthorizationState() async -> LocationAuthState
 
     /// Precise Location is off for the app (`accuracyAuthorization` is
     /// `.reducedAccuracy`). Not a permission state: the moon maths is fine

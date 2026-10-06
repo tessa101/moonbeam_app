@@ -33,7 +33,8 @@ nonisolated enum LocationAuthState: Equatable, Sendable {
     ///
     /// `servicesEnabled` is read only for those two statuses. Its real source,
     /// `CLLocationManager.locationServicesEnabled()`, can block the main
-    /// thread, and an authorized launch has no need for it (LOADER.md §9).
+    /// thread, so `CoreLocationService` reads it off the main actor and passes
+    /// the last value here (LOADER.md §9, §10.7).
     init(status: CLAuthorizationStatus, servicesEnabled: @autoclosure () -> Bool) {
         switch status {
         case .notDetermined:

@@ -108,12 +108,16 @@ final class OnboardingViewModel {
 
     /// New installs only: no saved place, permission never asked, and
     /// onboarding not already left once. Existing installs skip it.
+    ///
+    /// The permission is read last, and only if needed: this runs in
+    /// `App.init`, before the first frame, and an existing install shouldn't
+    /// touch CoreLocation there (LOADER.md §9).
     static func shouldShow(
         hasSavedPlace: Bool,
-        authorizationState: LocationAuthState,
+        authorizationState: @autoclosure () -> LocationAuthState,
         isCompleted: Bool
     ) -> Bool {
-        !hasSavedPlace && authorizationState == .notDetermined && !isCompleted
+        !hasSavedPlace && !isCompleted && authorizationState() == .notDetermined
     }
 
     // MARK: - Actions
@@ -132,7 +136,9 @@ final class OnboardingViewModel {
     /// declined anything: Settings opens instead and the upsell stays.
     func useMyLocation() async {
         guard step == .locationUpsell, !isRequestingPermission else { return }
-        let before = locationService.authorizationState
+        isRequestingPermission = true
+        let before = await locationService.refreshAuthorizationState()
+        isRequestingPermission = false
         if before == .servicesOff || before == .denied {
             requestSettings()
             return
