@@ -17,9 +17,11 @@ struct OnboardingMoon: View {
 
     // MARK: - Constants
 
-    /// A fixed waning gibbous, as the HTML draws it: its two-circle moon is
-    /// about 83% lit, on the left.
-    static let geometry = PhaseGlyphGeometry(illumination: 0.83, phaseAngle: 240)
+    /// A fixed waxing gibbous, about 83% lit as the HTML's two-circle moon,
+    /// lit on the right with the dark sliver on the left: the loader's hold
+    /// phase (LOADER.md §10.2), mirrored from the HTML's waning one (Tessa,
+    /// 2026-10-06).
+    static let geometry = PhaseGlyphGeometry(illumination: 0.83, phaseAngle: 120)
 
     /// The HTML's glyph glow grows with the glyph (CSS blur 27 at 64 pt, 63
     /// at 150 pt).

@@ -5,6 +5,12 @@
 
 ---
 
+### 2026-10-06 · Hold phase mirrored to a waxing gibbous
+- **Decision (Tessa):** the loader's hold phase and the onboarding moon are a waxing gibbous (~83% lit, dark sliver on
+  the left), not the handoff's waning one. LOADER.md §10.2.
+- **Why:** from rest the month grows toward full; Aha's run to full is ~0.2 s instead of going round through new
+  (seen in the 4/6 recording, where Aha's line was in before the moon was full).
+
 ### 2026-10-06 · 5.9.2 (4/6): "Aha" after a recovery, as built
 - **Spec:** LOADER.md §10.4 (as built). The loader stays over the screen during the flight, so the moon can fly
   into the card glyph's real frame; the screen fades in under it instead of the staggered load-in.

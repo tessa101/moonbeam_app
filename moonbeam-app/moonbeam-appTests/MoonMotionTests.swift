@@ -32,8 +32,9 @@ struct MoonMotionTests {
     func stopsAtHold() throws {
         let running = MoonMotion.held(at: 1, since: Self.t0).running(from: Self.t0)
         let stopping = running.stopping(at: PhaseCycle.holdElapsed, from: Self.at(1))
-        // At 1 s the moon is at 2 s into the month.
-        let distance = PhaseCycle.holdElapsed - 2
+        // At 1 s the moon is at 2 s into the month, past the hold phase, so
+        // it goes round.
+        let distance = PhaseCycle.wrapped(PhaseCycle.holdElapsed - 2)
         let settle = try #require(stopping.settleDate)
         #expect(abs(settle.timeIntervalSince(Self.at(1)) - distance / MoonMotion.runOutRate) < Self.tolerance)
         #expect(abs(stopping.elapsed(at: Self.at(1.1)) - (2 + 0.1 * MoonMotion.runOutRate)) < Self.tolerance)
@@ -79,6 +80,9 @@ struct MoonMotionTests {
             .stopping(at: PhaseCycle.fullElapsed, from: Self.t0)
         let settle = motion.timeToSettle(from: Self.t0)
         #expect(PhaseCycle.geometry(at: motion.elapsed(at: Self.at(settle))).litFraction > 0.999_999)
+        // From the waxing hold phase, full is just ahead: well under a
+        // quarter of the run-out's month (§10.2).
+        #expect(settle < PhaseCycle.period / MoonMotion.runOutRate / 4)
     }
 
     @Test("Run-out speed and cycle start are the handoff's")

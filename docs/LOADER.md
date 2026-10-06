@@ -173,8 +173,12 @@ override the handoff README.
 
 ### 10.2 Moon
 - **Real direction:** forward month via `PhaseGlyph` (lit right while waxing). The handoff's sliding-shadow math runs
-  it in reverse; don't use it. Keep its timing and the idea of a **hold phase** (the onboarding moon: lit, a thin
-  dark sliver on the right) where the moon starts, and where it stops when searching stops.
+  it in reverse; don't use it. Keep its timing and the idea of a **hold phase** where the moon starts, and where it
+  stops when searching stops.
+- **Hold phase = a waxing gibbous (Tessa, 2026-10-06):** ~83% lit, lit on the right, a thin dark sliver on the
+  **left**, mirrored from the handoff's waning one (sliver on the right). From rest the month grows toward full, so
+  the cycle starts by brightening and "Aha" (§10.4) reaches full in a fraction of a second rather than running
+  through new. The onboarding moon (`OnboardingMoon`) matches it.
 - **Entrance:** the moon appears at the hold phase (fade + 8 pt rise), the label follows at 320 ms, the cycle starts
   at 840 ms (handoff "Entrance"). Replaces "start at a waxing crescent".
 - **Stopping:** keep running forward (2.6× speed) to the hold phase, then freeze; never stop mid-cycle. Glow switches

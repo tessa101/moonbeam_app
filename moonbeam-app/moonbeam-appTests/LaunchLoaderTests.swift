@@ -428,16 +428,16 @@ struct PhaseCycleTests {
     // MARK: - The hold phase (LOADER.md §10.2)
 
     /// Main actor: `OnboardingMoon` is a view, so its `geometry` is too.
-    @Test("The hold phase is the onboarding moon: waning gibbous, dark sliver on the right")
+    @Test("The hold phase is the onboarding moon: waxing gibbous, dark sliver on the left")
     @MainActor
     func holdPhaseIsOnboardingMoon() {
         let hold = PhaseCycle.geometry(at: PhaseCycle.holdElapsed)
         #expect(abs(hold.litFraction - OnboardingMoon.geometry.litFraction) < 1e-6)
         #expect(hold.litSide == OnboardingMoon.geometry.litSide)
-        #expect(hold.litSide == .left)
-        // Just past full, in the waning half.
-        #expect(PhaseCycle.holdElapsed > PhaseCycle.fullElapsed)
-        #expect(PhaseCycle.holdElapsed < PhaseCycle.period * 3 / 4)
+        #expect(hold.litSide == .right)
+        // Just short of full, in the waxing half.
+        #expect(PhaseCycle.holdElapsed > PhaseCycle.period / 4)
+        #expect(PhaseCycle.holdElapsed < PhaseCycle.fullElapsed)
     }
 
     @Test("The loader appears on the hold phase and holds it 840 ms, then runs forward")
@@ -448,10 +448,11 @@ struct PhaseCycleTests {
         #expect(motion.elapsed(at: appeared.addingTimeInterval(0.8)) == PhaseCycle.holdElapsed)
         let later = motion.elapsed(at: appeared.addingTimeInterval(0.84 + 0.3))
         #expect(abs(later - (PhaseCycle.holdElapsed + 0.3)) < 1e-9)
-        // Forward from just past full: the lit part shrinks, still on the left.
+        // Forward from just short of full: the lit part grows, still on the
+        // right.
         let shape = PhaseCycle.geometry(at: later)
-        #expect(shape.litFraction < PhaseCycle.holdLitFraction)
-        #expect(shape.litSide == .left)
+        #expect(shape.litFraction > PhaseCycle.holdLitFraction)
+        #expect(shape.litSide == .right)
     }
 
     @Test("Reduce Motion holds the glyph still at the hold phase")

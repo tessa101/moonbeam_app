@@ -39,10 +39,12 @@ nonisolated enum PhaseCycle {
     private static let fullMoonPhaseAngle = 180.0
 
     /// The hold phase (LOADER.md §10.2): the onboarding moon, lit with a
-    /// thin dark sliver on the right. In the forward month that's a waning
-    /// gibbous just past full. The loader appears on it, starts its month
-    /// from it, and stops on it when searching stops. `OnboardingMoon`'s
-    /// lit fraction (a test keeps the two in step).
+    /// thin dark sliver on the left, a waxing gibbous just short of full
+    /// (Tessa, 2026-10-06: mirrored from the waning one, so the month grows
+    /// toward full from rest and "Aha" reaches full quickly). The loader
+    /// appears on it, starts its month from it, and stops on it when
+    /// searching stops. `OnboardingMoon`'s lit fraction (a test keeps the
+    /// two in step).
     static let holdLitFraction = 0.83
 
     /// Halvings in the lit-fraction searches: far below a frame.
@@ -50,7 +52,7 @@ nonisolated enum PhaseCycle {
 
     /// How far into the month the hold phase falls. Solved rather than
     /// written down, because the eased angle has no simple inverse.
-    static let holdElapsed = elapsed(forWaningLitFraction: holdLitFraction)
+    static let holdElapsed = elapsed(forWaxingLitFraction: holdLitFraction)
 
     /// Full moon, where "Aha" runs to (§10.4).
     static let fullElapsed = period / 2
