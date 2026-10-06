@@ -150,6 +150,39 @@ struct LoaderFlowTests {
         #expect(harness.viewModel.place == Place.marVista)
     }
 
+    // MARK: - Forget saved place (DEBUG / TestFlight, temporary)
+
+    @Test("Forget saved place: last-viewed and recents cleared, then the loader stops on the message")
+    func forgetSavedPlaceShowsMessage() async {
+        let harness = Self.makeHarness(.denied, lastViewed: Place.marVista)
+        harness.store.addRecent(Place.marVista)
+        await harness.viewModel.start()
+        #expect(harness.viewModel.launchStage == .ready)
+
+        await harness.viewModel.forgetSavedPlace()
+
+        #expect(harness.store.lastViewed == nil)
+        #expect(harness.store.recents.isEmpty)
+        #expect(harness.viewModel.place == nil)
+        #expect(harness.viewModel.moonTable == nil)
+        #expect(harness.viewModel.launchStage == .phaseCycle)
+        #expect(harness.viewModel.loaderIssue == .appDenied)
+    }
+
+    @Test("Forget saved place, authorized: the launch finds you again")
+    func forgetSavedPlaceRelocates() async {
+        let harness = Self.makeHarness(.authorized, lastViewed: Place.marVista)
+        await harness.viewModel.start()
+        let fixesBefore = harness.location.currentPlaceCount
+
+        await harness.viewModel.forgetSavedPlace()
+
+        #expect(harness.location.currentPlaceCount == fixesBefore + 1)
+        #expect(harness.viewModel.launchStage == .ready)
+        #expect(harness.viewModel.place == Self.detected)
+        #expect(harness.store.recents.isEmpty)
+    }
+
     // MARK: - Search → message (§10.3)
 
     @Test("Searching shows 1.2 s before the message, even when the reason is known")

@@ -5,6 +5,14 @@
 
 ---
 
+### 2026-10-06 · Forget saved place (DEBUG / TestFlight, temporary)
+- **Decision (Tessa):** a "Forget saved place" button beside Show onboarding, in the same builds (`BuildChannel.
+  showsOnboardingButton`), **removed with it before the 1.0 App Store build**. Clears the last-viewed place and
+  recents, then runs the launch flow again (`LocationViewModel.forgetSavedPlace()`), so the no-saved-place loader,
+  its messages and Aha can be tried without reinstalling. Permission and the onboarding flag are left alone.
+- **As built:** the two links sit side by side, stacked when they don't fit (`ViewThatFits`). Authorized, the flow
+  just finds you again (an ordinary launch); to see a message, turn location off for Moon Signal first.
+
 ### 2026-10-06 · Loader timing: known reasons, minimum hold, Aha from the fix
 - **Decisions (Tessa), on the flow pass's A/B/C:**
   - **A.** A reason already known when the loader appears (permission off etc., no saved place): no spin. The moon

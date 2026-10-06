@@ -21,6 +21,10 @@ struct LocationScreen: View {
     /// only (`BuildChannel`); `nil` hides the button. Temporary.
     var onShowOnboarding: (() -> Void)? = nil
 
+    /// The Forget saved place button, beside Show onboarding: same builds,
+    /// same removal before 1.0 (DECISIONS.md 2026-10-06). `nil` hides it.
+    var onForgetSavedPlace: (() -> Void)? = nil
+
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -180,11 +184,13 @@ struct LocationScreen: View {
 
                     // At the very bottom, under the compass (and its DEBUG
                     // readout): out of the design's way.
-                    if let onShowOnboarding {
-                        // The text-link style: amber, and a 44 pt target.
-                        Button("Show onboarding", action: onShowOnboarding)
-                            .buttonStyle(.textLink)
-                            .padding(.top)
+                    if onShowOnboarding != nil || onForgetSavedPlace != nil {
+                        // Side by side while they fit, stacked at large sizes.
+                        ViewThatFits(in: .horizontal) {
+                            HStack(spacing: Theme.Metrics.screenMargin) { debugButtons }
+                            VStack(alignment: .leading, spacing: 0) { debugButtons }
+                        }
+                        .padding(.top)
                     }
                 }
                 .contentLoadIn(.compass)
@@ -238,6 +244,20 @@ struct LocationScreen: View {
         // design pass.
         .scrollEdgeEffectStyle(.soft, for: .top)
         .modifier(StatusBarBackdrop())
+    }
+
+    /// Show onboarding and Forget saved place, in the text-link style
+    /// (amber, 44 pt targets). Temporary, both.
+    @ViewBuilder
+    private var debugButtons: some View {
+        if let onShowOnboarding {
+            Button("Show onboarding", action: onShowOnboarding)
+                .buttonStyle(.textLink)
+        }
+        if let onForgetSavedPlace {
+            Button("Forget saved place", action: onForgetSavedPlace)
+                .buttonStyle(.textLink)
+        }
     }
 
     // MARK: - Compass

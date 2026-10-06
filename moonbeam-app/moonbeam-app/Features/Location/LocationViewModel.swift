@@ -321,7 +321,25 @@ final class LocationViewModel {
         launchStage = .waiting
     }
 
-    /// The loader's clock: the phase cycle at 400 ms, then its 700 ms hold.
+    /// The Forget saved place button: DEBUG and TestFlight only, temporary,
+    /// removed with Show onboarding before 1.0 (DECISIONS.md 2026-10-06).
+    /// Clears the last-viewed place and recents, then runs the launch flow
+    /// again, so the no-saved-place loader and its messages can be tried
+    /// without reinstalling. Permission and onboarding are left alone.
+    func forgetSavedPlace() async {
+        stopLocating()
+        placeStore.lastViewed = nil
+        placeStore.recents = []
+        lastViewed = nil
+        place = nil
+        detectedPlace = nil
+        locationFailed = false
+        daySelection = .today
+        reloadMoonTable()
+        await start()
+    }
+
+    /// The loader's clock: the phase cycle at 400 ms, then its 1.1 s hold.
     /// Cancelled if the launch is done first.
     private func startLoaderClock() -> Task<Void, Never> {
         let signposter = LaunchSignposts.signposter

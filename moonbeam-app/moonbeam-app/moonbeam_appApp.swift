@@ -90,12 +90,15 @@ struct moonbeam_appApp: App {
             OnboardingView(viewModel: onboardingViewModel)
         } else {
             // The chosen place drives the moon card.
-            // Show onboarding: DEBUG and TestFlight only, temporary
-            // (DECISIONS.md 2026-10-01).
+            // Show onboarding and Forget saved place: DEBUG and TestFlight
+            // only, temporary (DECISIONS.md 2026-10-01, 2026-10-06).
             LocationScreen(
                 viewModel: locationViewModel,
                 onShowOnboarding: BuildChannel.showsOnboardingButton
                     ? { onboardingViewModel.forceShow() }
+                    : nil,
+                onForgetSavedPlace: BuildChannel.showsOnboardingButton
+                    ? { Task { await locationViewModel.forgetSavedPlace() } }
                     : nil
             )
         }
