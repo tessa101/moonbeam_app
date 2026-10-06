@@ -206,6 +206,10 @@ prompt → app permission off.
   3 pt up; the screen fades in (0.6 s after 0.25 s, no rise) and the card's own glyph appears as the moon lands.
   Lines don't repeat within a session (not persisted across launches). Reduce Motion: no fly, the loader fades.
   DEBUG `-screenState recoveryAha`.
+- **Fix (default-size flow pass, 2026-10-06):** after 1.8 s of searching from the hold phase the moon is already
+  past full (waning, ~80% lit), so the run-out to full goes round through new (~1.5 s), and Aha's text was fully in
+  over a dark moon. Now the run-out happens **under the label**; the label goes, the glow flares and Aha comes in
+  only once the moon is at full. Aha appears ≤ 1.85 s later than before (≈ 1.5 s for a fix right away).
 
 ### 10.5 Small screens and large text
 - When the message block doesn't fit under the moon (SE 3, AX sizes), **scale down**: the moon shrinks (to ~96 pt)

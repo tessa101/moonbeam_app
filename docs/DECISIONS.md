@@ -5,6 +5,16 @@
 
 ---
 
+### 2026-10-06 · Aha waits for a full moon
+- **Found (default-size flow pass):** the waxing hold phase was meant to make Aha reach full in ~0.3 s, but Aha starts
+  after 1.8 s of searching, by which point the moon has passed full. The run-out to full then went through new
+  (~1.5 s at 2.6×) while Aha's text faded in (fully in at 1.1 s): text over a dark moon. The 4/6 follow-up test
+  measured from the hold phase, not where the flow actually is.
+- **Decision (agent, within Tessa's "fix jumps and awkward pauses"):** run out to full under "Finding your location…";
+  label out, flare and Aha only at full. Keeps the handoff's order (moon full → flare → Aha) and the never-backwards
+  rule. Cost: Aha up to 1.85 s later. **Alternative for Tessa:** cut the search minimum so the moon is still waxing
+  (≤ 0.88 s after the label), which keeps Aha fast but departs from the handoff's 1.8 s. LOADER.md §10.4.
+
 ### 2026-10-06 · Default-size flows and animations first; accessibility deferred
 - **Decision (Tessa):** defer Build 5.9.2 step 6/6 (VoiceOver, Reduce Motion and other accessibility work) for now.
   Focus next on the main location flows and animations at default text size: fast/slow launch, messages,

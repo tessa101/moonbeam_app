@@ -488,6 +488,8 @@ struct LocationLoaderStepTests {
     private final class Clock {
         var date = Date(timeIntervalSinceReferenceDate: 0)
         var waits: [Duration] = []
+        /// Runs at the start of each wait, before the clock moves.
+        var onWait: (() -> Void)?
     }
 
     private static func makeLoader(_ clock: Clock) -> LocationLoader {
@@ -496,6 +498,7 @@ struct LocationLoaderStepTests {
             sleep: { [clock] duration in
                 await MainActor.run {
                     clock.waits.append(duration)
+                    clock.onWait?()
                     clock.date = clock.date.addingTimeInterval(TimeInterval(duration.components.seconds)
                         + TimeInterval(duration.components.attoseconds) / 1e18)
                 }
@@ -548,7 +551,7 @@ struct LocationLoaderStepTests {
         #expect(loader.moon.elapsed(at: after) != loader.moon.elapsed(at: clock.date))
     }
 
-    @Test("Aha: label up 1.8 s, then the moon runs to full, the glow flares and it holds 2 s")
+    @Test("Aha: label up 1.8 s, the moon runs to full under it, then the glow flares and it holds 2 s")
     func ahaStep() async {
         let clock = Clock()
         let loader = Self.makeLoader(clock)
@@ -564,8 +567,13 @@ struct LocationLoaderStepTests {
         let waits = clock.waits.dropFirst(waitsBefore).map {
             Double($0.components.attoseconds) / 1e18 + Double($0.components.seconds)
         }
-        #expect(waits.count == 2)
+        // 1.8 s of normal running from the hold phase is past full, so the
+        // run-out goes round through new: (period − (hold + 1.8 − full)) / 2.6.
+        let pastFull = PhaseCycle.holdElapsed + LocationLoader.minimumSearchBeforeAha - PhaseCycle.fullElapsed
+        let runOut = (PhaseCycle.period - pastFull) / MoonMotion.runOutRate
+        #expect(waits.count == 3)
         #expect(abs((waits.first ?? 0) - 1.3) < 1e-6)
+        #expect(abs(waits[1] - runOut) < 1e-6)
         #expect(abs((waits.last ?? 0) - LocationLoader.ahaHold) < 1e-6)
         #expect(loader.content == .aha(greeting))
         #expect(loader.glow.mode == .flare)
@@ -576,6 +584,31 @@ struct LocationLoaderStepTests {
         #expect(loader.flightStartedAt == clock.date)
         loader.didLand()
         #expect(loader.flightStartedAt == nil)
+    }
+
+    @Test("Aha never comes in over a moon short of full: label and breathing glow through the run-out")
+    func ahaWaitsForFull() async {
+        let clock = Clock()
+        let loader = Self.makeLoader(clock)
+        loader.appear()
+        await loader.showMessage(.noFix)
+        await loader.resume()
+
+        let greeting = AhaGreeting(line: AhaGreeting.lines[0], city: "Irvine, CA")
+        let waitsBefore = clock.waits.count
+        var checkedRunOut = false
+        clock.onWait = { [clock] in
+            // Aha's second wait is the run-out: still searching there.
+            guard clock.waits.count == waitsBefore + 2 else { return }
+            checkedRunOut = true
+            #expect(loader.content == .searching)
+            #expect(loader.showsLabel)
+            #expect(loader.glow.mode == .breathe)
+        }
+        #expect(await loader.showAha(greeting))
+        #expect(checkedRunOut)
+        #expect(loader.content == .aha(greeting))
+        #expect(abs(loader.moon.elapsed(at: clock.date) - PhaseCycle.fullElapsed) < 1e-6)
     }
 
     @Test("Already on a message, a new one swaps in place, no wait")

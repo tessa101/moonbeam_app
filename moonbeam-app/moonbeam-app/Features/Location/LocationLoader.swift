@@ -164,8 +164,14 @@ final class LocationLoader {
     }
 
     /// Search → Aha (§10.4), only after a recovery: "Finding your
-    /// location…" stays up at least 1.8 s, then goes; the moon runs forward
-    /// to full, the glow flares and the greeting comes in; it holds 2 s.
+    /// location…" stays up at least 1.8 s while the moon runs on, then the
+    /// moon runs forward to full under the label; only at full does the
+    /// label go, the glow flare and the greeting come in. It holds 2 s.
+    ///
+    /// The run-out waits under the label because 1.8 s from the hold phase
+    /// is already past full: the moon has to go round through new to reach
+    /// full again (up to 1.85 s at 2.6×), and the greeting used to be in
+    /// over a dark moon.
     ///
     /// - Returns: false if another step took over meanwhile. True means the
     ///   moon is at full and it's time to fly (`flyAway()`).
@@ -176,14 +182,15 @@ final class LocationLoader {
         let searched = now().timeIntervalSince(searchStartedAt)
         guard await wait(Self.minimumSearchBeforeAha - searched, step: step) else { return false }
 
-        let date = now()
-        moon = moon.stopping(at: PhaseCycle.fullElapsed, from: date)
-        glow = glow.switching(to: .flare, at: date, elapsed: moon.elapsed(at: date))
+        let runOutDate = now()
+        moon = moon.stopping(at: PhaseCycle.fullElapsed, from: runOutDate)
+        guard await wait(moon.timeToSettle(from: runOutDate), step: step) else { return false }
+
+        let full = now()
+        glow = glow.switching(to: .flare, at: full, elapsed: moon.elapsed(at: full))
         showsLabel = false
         content = .aha(greeting)
-        // At 2.6× the moon reaches full within 1.85 s, inside the hold; the
-        // max only guards a longer run-out.
-        return await wait(max(Self.ahaHold, moon.timeToSettle(from: date)), step: step)
+        return await wait(Self.ahaHold, step: step)
     }
 
     /// The moon leaves for the card's phase slot (§10.4). The caller brings
