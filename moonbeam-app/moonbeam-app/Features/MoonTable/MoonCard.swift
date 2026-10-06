@@ -19,6 +19,7 @@ struct MoonCard: View {
     let table: MoonTableViewModel
 
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @Environment(\.hidesCardPhaseGlyph) private var hidesPhaseGlyph
 
     // MARK: - Header constants (COMPASS-1.1.md §9.2)
 
@@ -144,9 +145,13 @@ struct MoonCard: View {
         }
     }
 
+    /// LOADER.md §10.4: "Aha"'s moon lands here, so the slot reports its
+    /// frame, and the glyph waits hidden until it has.
     private var glyph: some View {
         PhaseGlyph(geometry: table.glyph)
             .frame(width: Self.glyphSize, height: Self.glyphSize)
+            .opacity(hidesPhaseGlyph ? 0 : 1)
+            .anchorPreference(key: CardPhaseSlotKey.self, value: .bounds) { $0 }
             .accessibilityHidden(true)
     }
 

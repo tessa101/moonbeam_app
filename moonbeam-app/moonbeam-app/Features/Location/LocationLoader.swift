@@ -27,6 +27,9 @@ final class LocationLoader {
         case searching
         /// Stopped, with a message (§10.3).
         case message(LocationIssue)
+        /// Found after a recovery (§10.4): the moon at full, the line and
+        /// city under it.
+        case aha(AhaGreeting)
     }
 
     // MARK: - Timings (§10.2, §10.3; the handoff's "Entrance" and "Search → message")
@@ -40,6 +43,18 @@ final class LocationLoader {
 
     /// Back from a message, the label comes in this long after it's gone.
     nonisolated static let resumeLabelDelay: TimeInterval = 0.2
+
+    // MARK: - Timings (§10.4; the handoff's "Search → Aha → city")
+
+    /// After a recovery, "Finding your location…" stays up at least this
+    /// long before "Aha".
+    nonisolated static let minimumSearchBeforeAha: TimeInterval = 1.8
+
+    /// "Aha" holds this long before the moon flies into the card.
+    nonisolated static let ahaHold: TimeInterval = 2.0
+
+    /// The fly into the card's phase slot.
+    nonisolated static let flightDuration: TimeInterval = 0.85
 
     // MARK: - Observed state
 
@@ -60,6 +75,11 @@ final class LocationLoader {
     /// When searching last started: the entrance, or a return from a
     /// message.
     private(set) var searchStartedAt: Date = .distantPast
+
+    /// When the moon started flying into the card after "Aha" (§10.4);
+    /// `nil` once it has landed, or if it never flew. The screen is up
+    /// under it meanwhile.
+    private(set) var flightStartedAt: Date?
 
     // MARK: - Dependencies
 
@@ -90,6 +110,7 @@ final class LocationLoader {
         moon = .entrance(at: date)
         glow = .breathing
         showsLabel = true
+        flightStartedAt = nil
     }
 
     /// Search → message (§10.3): searching for at least 1.2 s, then the moon
@@ -140,6 +161,41 @@ final class LocationLoader {
         searchStartedAt = resumed
         moon = moon.running(from: resumed)
         return true
+    }
+
+    /// Search → Aha (§10.4), only after a recovery: "Finding your
+    /// location…" stays up at least 1.8 s, then goes; the moon runs forward
+    /// to full, the glow flares and the greeting comes in; it holds 2 s.
+    ///
+    /// - Returns: false if another step took over meanwhile. True means the
+    ///   moon is at full and it's time to fly (`flyAway()`).
+    @discardableResult
+    func showAha(_ greeting: AhaGreeting) async -> Bool {
+        generation += 1
+        let step = generation
+        let searched = now().timeIntervalSince(searchStartedAt)
+        guard await wait(Self.minimumSearchBeforeAha - searched, step: step) else { return false }
+
+        let date = now()
+        moon = moon.stopping(at: PhaseCycle.fullElapsed, from: date)
+        glow = glow.switching(to: .flare, at: date, elapsed: moon.elapsed(at: date))
+        showsLabel = false
+        content = .aha(greeting)
+        // At 2.6× the moon reaches full within 1.85 s, inside the hold; the
+        // max only guards a longer run-out.
+        return await wait(max(Self.ahaHold, moon.timeToSettle(from: date)), step: step)
+    }
+
+    /// The moon leaves for the card's phase slot (§10.4). The caller brings
+    /// the screen up under it in the same turn.
+    func flyAway() {
+        generation += 1
+        flightStartedAt = now()
+    }
+
+    /// The flying moon has settled in the card.
+    func didLand() {
+        flightStartedAt = nil
     }
 
     /// The loader is going: any step still waiting stops.

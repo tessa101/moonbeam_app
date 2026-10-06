@@ -166,7 +166,9 @@ override the handoff README.
   location note. The message screens are for **no saved place only**.
 - **New installs:** onboarding asks for location as now. **First ask** is only for existing installs that report
   `notDetermined` (Ask Next Time, expired Allow Once).
-- **Restricted:** app-permission copy, **no Open Settings**; "Search for a city" becomes the primary button.
+- **Restricted:** app-permission headline, **no Open Settings**; "Search for a city" becomes the primary button.
+  Body (Tessa, 2026-10-06): "Location access is limited on this iPhone. You can still search for a city." The
+  button sits where the other messages' button does (the missing link's room is kept).
 - **Offline / city can't be named** (reverse geocoding fails without the network, fast, no 10 s wait) → **No fix**.
 
 ### 10.2 Moon
@@ -192,6 +194,14 @@ prompt → app permission off.
 - Timing per the handoff ("Search → Aha → city"): moon runs to full, glow flares, hold ~2 s, then the moon flies into
   the card's phase slot (real frame) and settles on the real phase while the screen fades in.
 - **VoiceOver:** "<line> <City, ST>", e.g. "Aha, there you are! Rancho Santa Margarita, CA".
+- **As built (5.9.2 4/6):** plays after Try again, Allow at First ask's prompt, a return from Settings and the
+  search sheet's Use my location from a message. "Finding your location…" stays ≥ 1.8 s after it returns, then
+  `LocationLoader.showAha`: moon runs out at 2.6× to full, glow flares, Aha fades in (0.6 s after 0.5 s, rises
+  10 pt), hold 2 s. Then the screen is built under the loader (`launchStage = .ready`) and the moon flies 0.85 s
+  into the card glyph's real frame (anchor preference), full → the day's phase, glow → 0.35; Aha out in 0.22 s,
+  3 pt up; the screen fades in (0.6 s after 0.25 s, no rise) and the card's own glyph appears as the moon lands.
+  Lines don't repeat within a session (not persisted across launches). Reduce Motion: no fly, the loader fades.
+  DEBUG `-screenState recoveryAha`.
 
 ### 10.5 Small screens and large text
 - When the message block doesn't fit under the moon (SE 3, AX sizes), **scale down**: the moon shrinks (to ~96 pt)

@@ -152,6 +152,10 @@ nonisolated enum Theme {
         static func messageBody(scale: CGFloat = 1) -> Font {
             .custom(FontName.nunitoSansRegular, size: messageBodySize * scale, relativeTo: .body)
         }
+        /// "Aha" after a recovery (LOADER.md §10.4, the handoff's Young Serif
+        /// 25 / 1.2) and its city row (Nunito Sans SemiBold 16, `accent`).
+        static let ahaLine = Font.custom(FontName.youngSerif, size: 25, relativeTo: .title2)
+        static let ahaCity = Font.custom(FontName.nunitoSansSemiBold, size: 16, relativeTo: .callout)
 
         /// Moonrise/moonset times.
         static let displaySize: CGFloat = 24

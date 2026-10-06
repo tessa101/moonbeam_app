@@ -34,6 +34,10 @@ struct DebugScreenState: View {
         /// The loader's messages (LOADER.md §10.3): no saved place, and the
         /// permission state (or, for No fix, a fix that fails) behind each.
         case messageFirstAsk, messageDenied, messageServicesOff, messageRestricted, messageNoFix
+        /// "Aha" after a recovery (LOADER.md §10.4): No fix, then a fix
+        /// lands and Try again is tapped for you, so "Aha" and the fly into
+        /// the card follow.
+        case recoveryAha
     }
 
     /// The launch argument, then the kind's name.
@@ -72,6 +76,8 @@ struct DebugScreenState: View {
         let viewModel: LocationViewModel
         let heading = FakeHeadingService()
         let location: FakeLocationService
+        /// Irvine, as detected.
+        private let here: Place
 
         // MARK: Sky
 
@@ -119,6 +125,7 @@ struct DebugScreenState: View {
                 timeZone: Self.zone,
                 isCurrentLocation: true
             )
+            self.here = here
             let now = state == .noMoonrise ? Self.time(3, 7, 53) : Self.time(2, 7, 53)
             let authState: LocationAuthState = switch state {
             case .locationOff, .messageDenied: .denied
@@ -127,7 +134,7 @@ struct DebugScreenState: View {
             case .messageRestricted: .restricted
             default: .authorized
             }
-            let placeResult: Result<Place, any Error> = state == .messageNoFix
+            let placeResult: Result<Place, any Error> = state == .messageNoFix || state == .recoveryAha
                 ? .failure(LocationError.locationUnavailable)
                 : .success(here)
             location = FakeLocationService(authorizationState: authState, placeResult: placeResult)
@@ -186,6 +193,9 @@ struct DebugScreenState: View {
         /// The launch kinds wait up to the 10 s launch timeout.
         private static let launchPollLimit = 1_000
 
+        /// How long `recoveryAha` sits on No fix before Try again.
+        private static let recoveryMessageHold = Duration.seconds(1.5)
+
         private static let messageKinds: Set<Kind> = [
             .messageFirstAsk, .messageDenied, .messageServicesOff, .messageRestricted, .messageNoFix,
         ]
@@ -194,6 +204,10 @@ struct DebugScreenState: View {
         /// run), the place and day can change, and the compass can be fed a
         /// heading.
         func apply(_ state: Kind) async {
+            if state == .recoveryAha {
+                await recover()
+                return
+            }
             // The loader and its messages are the screen's own launch;
             // nothing to fake on top.
             guard state != .loading, !Self.messageKinds.contains(state) else { return }
@@ -213,6 +227,16 @@ struct DebugScreenState: View {
             // Let the compass's stream task start before sending.
             await Task.yield()
             heading.send(Self.reading(for: state))
+        }
+
+        /// Waits for No fix, lets it show, then a fix lands and Try again.
+        private func recover() async {
+            for _ in 0..<Self.launchPollLimit where viewModel.loaderIssue != .noFix {
+                try? await Task.sleep(for: Self.pollInterval)
+            }
+            try? await Task.sleep(for: Self.recoveryMessageHold)
+            location.placeResult = .success(here)
+            await viewModel.performLoaderAction()
         }
 
         private static func reading(for state: Kind) -> HeadingReading {
@@ -252,4 +276,5 @@ struct DebugScreenState: View {
 #Preview("20 Message: Services off") { DebugScreenState(.messageServicesOff) }
 #Preview("21 Message: Restricted") { DebugScreenState(.messageRestricted) }
 #Preview("22 Message: No fix") { DebugScreenState(.messageNoFix) }
+#Preview("23 Aha after a recovery") { DebugScreenState(.recoveryAha) }
 #endif

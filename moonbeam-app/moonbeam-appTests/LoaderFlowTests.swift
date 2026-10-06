@@ -3,6 +3,7 @@
 //  moonbeam-appTests
 //
 
+import CoreGraphics
 import Foundation
 import Testing
 @testable import moonbeam_app
@@ -75,7 +76,8 @@ struct LoaderFlowTests {
             moonService: AstronomyEngineMoonService(),
             headingService: FakeHeadingService(),
             now: { reference },
-            sleep: { [sleeper] duration in await sleeper.sleep(duration) }
+            sleep: { [sleeper] duration in await sleeper.sleep(duration) },
+            loaderNow: { reference }
         )
         return Harness(viewModel: viewModel, location: location, store: store, sleeper: sleeper)
     }
@@ -355,7 +357,8 @@ struct LoaderFlowTests {
             moonService: AstronomyEngineMoonService(),
             headingService: FakeHeadingService(),
             now: { Self.reference },
-            sleep: { [sleeper] duration in try await sleeper.sleep(duration) }
+            sleep: { [sleeper] duration in try await sleeper.sleep(duration) },
+            loaderNow: { Self.reference }
         )
         let launch = Task { await viewModel.start() }
         await Self.settle { viewModel.launchStage == .phaseCycle && sleeper.pendingCount == 1 }
@@ -366,6 +369,87 @@ struct LoaderFlowTests {
 
         #expect(viewModel.launchStage == .ready)
         #expect(viewModel.loader.content == .searching)
+    }
+
+    // MARK: - "Aha" (§10.4)
+
+    @Test("A fix after a message: \"Aha\" with the city, then the moon flies as the screen comes up")
+    func ahaAfterRecovery() async {
+        let harness = Self.makeHarness(.authorized, placeResult: .failure(LocationError.locationUnavailable))
+        await harness.viewModel.start()
+        harness.location.placeResult = .success(Self.detected)
+
+        await harness.viewModel.performLoaderAction()
+
+        let loader = harness.viewModel.loader
+        #expect(harness.sleeper.durations.contains(.seconds(1.8)))
+        #expect(harness.sleeper.durations.contains(.seconds(2)))
+        guard case .aha(let greeting) = loader.content else {
+            Issue.record("expected Aha, got \(loader.content)")
+            return
+        }
+        #expect(AhaGreeting.lines.contains(greeting.line))
+        #expect(greeting.city == "Irvine, CA")
+        #expect(loader.glow.mode == .flare)
+        #expect(!loader.showsLabel)
+        #expect(loader.flightStartedAt == Self.reference)
+        #expect(harness.viewModel.launchStage == .ready)
+    }
+
+    @Test("Allow at the iOS prompt from First ask: \"Aha\" too")
+    func ahaAfterPrompt() async {
+        let harness = Self.makeHarness(.notDetermined)
+        await harness.viewModel.start()
+        harness.location.stateAfterRequest = .authorized
+
+        await harness.viewModel.performLoaderAction()
+
+        #expect(harness.viewModel.loader.flightStartedAt != nil)
+        if case .aha = harness.viewModel.loader.content {} else {
+            Issue.record("expected Aha")
+        }
+    }
+
+    @Test("An ordinary launch with a fix: no \"Aha\", the content loads in")
+    func noAhaOnOrdinaryLaunch() async {
+        let harness = Self.makeHarness(.authorized)
+        await harness.viewModel.start()
+        #expect(harness.viewModel.launchStage == .ready)
+        #expect(harness.viewModel.loader.content == .searching)
+        #expect(harness.viewModel.loader.flightStartedAt == nil)
+        #expect(!harness.sleeper.durations.contains(.seconds(1.8)))
+    }
+
+    @Test("Never the same line twice in a row")
+    func linesRotate() {
+        for previous in AhaGreeting.lines {
+            for pick in 0..<(AhaGreeting.lines.count - 1) {
+                #expect(AhaGreeting.line(after: previous, pick: { _ in pick }) != previous)
+            }
+        }
+        // Out-of-range picks are clamped, not a crash.
+        #expect(AhaGreeting.lines.contains(AhaGreeting.line(after: nil, pick: { _ in 99 })))
+    }
+
+    @Test("VoiceOver reads the line, then the city")
+    func ahaAccessibilityLabel() {
+        let greeting = AhaGreeting(line: "Aha, there you are!", city: "Rancho Santa Margarita, CA")
+        #expect(greeting.accessibilityLabel == "Aha, there you are! Rancho Santa Margarita, CA")
+    }
+
+    @Test("The flight runs from the loader moon at full to the card's slot and phase")
+    func flightEnds() {
+        let start = CGRect(x: 126, y: 300, width: 140, height: 140)
+        let slot = CGRect(x: 32, y: 120, width: 44, height: 44)
+        let landing = PhaseGlyphGeometry(illumination: 0.53, phaseAngle: 270)
+        let began = Self.reference
+
+        #expect(AhaFlight.progress(since: began, at: began) == 0)
+        #expect(AhaFlight.progress(since: began, at: began.addingTimeInterval(LocationLoader.flightDuration)) == 1)
+        #expect(AhaFlight.frame(from: start, to: slot, progress: 0) == start)
+        #expect(AhaFlight.frame(from: start, to: slot, progress: 1) == slot)
+        #expect(AhaFlight.geometry(landingOn: landing, progress: 0).litFraction == 1)
+        #expect(AhaFlight.geometry(landingOn: landing, progress: 1) == landing)
     }
 
     // MARK: - Copy and actions
@@ -382,6 +466,8 @@ struct LoaderFlowTests {
         #expect(LocationIssue.noFix.primaryTitle == "Try again")
         // §10.1: restricted has the app-permission copy, and no Settings.
         #expect(LocationIssue.restricted.headline == LocationIssue.appDenied.headline)
+        #expect(LocationIssue.restricted.body
+            == "Location access is limited on this iPhone. You can still search for a city.")
         #expect(LocationIssue.restricted.primaryAction == .search)
         #expect(!LocationIssue.restricted.showsSearchLink)
         #expect(LocationIssue.appDenied.showsSearchLink)
@@ -460,6 +546,36 @@ struct LocationLoaderStepTests {
         #expect(loader.searchStartedAt == resumeStart.addingTimeInterval(0.2))
         let after = clock.date.addingTimeInterval(1)
         #expect(loader.moon.elapsed(at: after) != loader.moon.elapsed(at: clock.date))
+    }
+
+    @Test("Aha: label up 1.8 s, then the moon runs to full, the glow flares and it holds 2 s")
+    func ahaStep() async {
+        let clock = Clock()
+        let loader = Self.makeLoader(clock)
+        loader.appear()
+        await loader.showMessage(.appDenied)
+        await loader.resume()
+        clock.date = clock.date.addingTimeInterval(0.5)
+        let waitsBefore = clock.waits.count
+
+        let greeting = AhaGreeting(line: AhaGreeting.lines[1], city: "Irvine, CA")
+        #expect(await loader.showAha(greeting))
+
+        let waits = clock.waits.dropFirst(waitsBefore).map {
+            Double($0.components.attoseconds) / 1e18 + Double($0.components.seconds)
+        }
+        #expect(waits.count == 2)
+        #expect(abs((waits.first ?? 0) - 1.3) < 1e-6)
+        #expect(abs((waits.last ?? 0) - LocationLoader.ahaHold) < 1e-6)
+        #expect(loader.content == .aha(greeting))
+        #expect(loader.glow.mode == .flare)
+        #expect(!loader.showsLabel)
+        #expect(abs(loader.moon.elapsed(at: clock.date) - PhaseCycle.fullElapsed) < 1e-6)
+
+        loader.flyAway()
+        #expect(loader.flightStartedAt == clock.date)
+        loader.didLand()
+        #expect(loader.flightStartedAt == nil)
     }
 
     @Test("Already on a message, a new one swaps in place, no wait")

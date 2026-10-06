@@ -47,28 +47,51 @@ struct LocationScreen: View {
         // DEBUG readout and Show onboarding) isn't built until it's ready.
         ZStack {
             switch viewModel.launchStage {
-            case .waiting:
+            case .waiting, .phaseCycle:
                 Color.clear
-            case .phaseCycle:
-                // §10.2: the loader brings its own entrance, so it only
-                // fades on the way out.
-                LaunchPhaseCycle(
-                    loader: viewModel.loader,
-                    onPrimary: { Task { await viewModel.performLoaderAction() } },
-                    onSearch: viewModel.presentSearch
-                )
-                    .transition(.asymmetric(insertion: .identity, removal: .opacity))
-                    .onAppear(perform: announcePhaseCycle)
             case .ready:
                 // §2.1: no whole-screen fade. The screen arrives at once and
-                // its blocks load in (`ContentLoadIn`).
+                // its blocks load in (`ContentLoadIn`). Under "Aha"'s flying
+                // moon it fades in instead, and the card's glyph waits for
+                // the moon (§10.4).
                 ScrollViewReader { scrollProxy in
                     scrollView(scrollProxy)
                 }
+                .environment(\.contentArrivesAfterAha, isAhaFlying)
+                .environment(\.hidesCardPhaseGlyph, isAhaFlying)
                 .transition(.identity)
             }
         }
+        // The loader sits over the screen, so it can stay up while "Aha"'s
+        // moon flies into the card's phase slot, reported from below.
+        .overlayPreferenceValue(CardPhaseSlotKey.self) { slot in
+            GeometryReader { proxy in
+                if viewModel.launchStage == .phaseCycle || isAhaFlying {
+                    // §10.2: the loader brings its own entrance, so it only
+                    // fades on the way out.
+                    LaunchPhaseCycle(
+                        loader: viewModel.loader,
+                        onPrimary: { Task { await viewModel.performLoaderAction() } },
+                        onSearch: viewModel.presentSearch,
+                        landingSlot: slot.map { globalFrame(of: $0, in: proxy) },
+                        landingGlyph: viewModel.moonTable?.glyph
+                    )
+                    .allowsHitTesting(!isAhaFlying)
+                    .transition(.asymmetric(insertion: .identity, removal: .opacity))
+                    .onAppear(perform: announcePhaseCycle)
+                }
+            }
+        }
         .animation(Self.launchStageAnimation(to: viewModel.launchStage), value: viewModel.launchStage)
+        // §10.4: the moon has landed (or, with Reduce Motion, never flew)
+        // and the card's own glyph takes over.
+        .task(id: viewModel.loader.flightStartedAt) {
+            guard viewModel.loader.flightStartedAt != nil else { return }
+            if !reduceMotion {
+                try? await Task.sleep(for: .seconds(LocationLoader.flightDuration))
+            }
+            viewModel.loader.didLand()
+        }
         .onChange(of: viewModel.launchStage) { old, new in
             // §4: focus leaves the vanished loader text for the screen's
             // first element, the sentence header.
@@ -268,6 +291,19 @@ struct LocationScreen: View {
             return
         }
         viewModel.compass.setDialCentreBelowFold(CompassViewModel.isBelowFold(dialCentreY: dialCentreY, foldY: foldY))
+    }
+
+    // MARK: - Aha (LOADER.md §10.4)
+
+    /// The loader's moon is flying into the card. Reduce Motion: no fly,
+    /// the loader just fades.
+    private var isAhaFlying: Bool {
+        viewModel.loader.flightStartedAt != nil && !reduceMotion
+    }
+
+    private func globalFrame(of anchor: Anchor<CGRect>, in proxy: GeometryProxy) -> CGRect {
+        let origin = proxy.frame(in: .global).origin
+        return proxy[anchor].offsetBy(dx: origin.x, dy: origin.y)
     }
 
     // MARK: - Actions

@@ -64,7 +64,9 @@ nonisolated enum LocationIssue: Equatable, Sendable {
     var body: String {
         switch self {
         case .firstAsk: "\(AppInfo.name) uses your location to show when and where the moon rises and sets."
-        case .appDenied, .restricted: "Allow location access to see where the moon is from here."
+        case .appDenied: "Allow location access to see where the moon is from here."
+        // Tessa, 2026-10-06: a restricted user can't allow it.
+        case .restricted: "Location access is limited on this iPhone. You can still search for a city."
         case .servicesOff: "Turn them on to see where the moon is from here."
         case .noFix: "Check your signal and try again, or search for a city."
         }

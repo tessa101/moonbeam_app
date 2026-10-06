@@ -66,10 +66,14 @@ struct LoaderMessage: View {
             VStack(spacing: Self.buttonToLink) {
                 Button(issue.primaryTitle, action: onPrimary)
                     .buttonStyle(.primary)
-                if issue.showsSearchLink {
-                    Button(LocationIssue.searchLinkTitle, action: onSearch)
-                        .buttonStyle(.textLink)
-                }
+                // With no link (restricted), its room is kept, so the button
+                // sits where it does on the other messages (Tessa,
+                // 2026-10-06).
+                Button(LocationIssue.searchLinkTitle, action: onSearch)
+                    .buttonStyle(.textLink)
+                    .opacity(issue.showsSearchLink ? 1 : 0)
+                    .disabled(!issue.showsSearchLink)
+                    .accessibilityHidden(!issue.showsSearchLink)
             }
         }
         .frame(maxWidth: .infinity, maxHeight: fillsHeight ? .infinity : nil)

@@ -168,6 +168,10 @@ final class LocationViewModel {
     /// times the phase cycle shows (Show onboarding brings it back).
     @ObservationIgnored private var hasAnnouncedPhaseCycle = false
 
+    /// The last "Aha" line, so the next is a different one (LOADER.md
+    /// §10.4). This session only.
+    @ObservationIgnored private var lastAhaLine: String?
+
     // MARK: - Init
 
     /// - Parameters:
@@ -178,6 +182,9 @@ final class LocationViewModel {
     ///     selection resolves against (DATE.md §3).
     ///   - sleep: the launch loader's waits (LOADER.md §2), so tests can
     ///     decide when 400 ms and 700 ms have passed.
+    ///   - loaderNow: the loader's own clock. Its moon is drawn against the
+    ///     display's real time, so it stays real when `now` is a fixed
+    ///     "today" (DEBUG screen states); tests pin both.
     init(
         locationService: any LocationService,
         placeSearch: any PlaceSearchService,
@@ -187,7 +194,8 @@ final class LocationViewModel {
         fetchTimeout: Duration = LocationViewModel.defaultFetchTimeout,
         deviceTimeZone: TimeZone = .current,
         now: @escaping () -> Date = Date.init,
-        sleep: @escaping @Sendable (Duration) async throws -> Void = { try await Task.sleep(for: $0) }
+        sleep: @escaping @Sendable (Duration) async throws -> Void = { try await Task.sleep(for: $0) },
+        loaderNow: @escaping () -> Date = Date.init
     ) {
         self.locationService = locationService
         self.placeSearch = placeSearch
@@ -201,7 +209,7 @@ final class LocationViewModel {
         // block; nothing reads this before then (LOADER.md §9).
         lastSeenAuthState = .notDetermined
         compass = CompassViewModel(headingService: headingService, moonService: moonService, now: now)
-        loader = LocationLoader(now: now, sleep: sleep)
+        loader = LocationLoader(now: loaderNow, sleep: sleep)
     }
 
     // MARK: - Derived state
@@ -389,18 +397,31 @@ final class LocationViewModel {
         }
     }
 
-    /// Back to searching from a message, then the fix: the screen if it
-    /// lands, the right message again if not.
+    /// Back to searching from a message, then the fix: "Aha" and the screen
+    /// if it lands, the right message again if not.
     private func recoverFromLoader() async {
         guard await loader.resume() else { return }
         await locate(userInitiated: true)
         guard launchStage == .phaseCycle else { return }
-        if place != nil {
-            finishLoader()
+        if let place {
+            await finishWithAha(for: place)
         } else {
             let state = await locationService.refreshAuthorizationState()
             await loader.showMessage(LocationIssue(state) ?? .noFix)
         }
+    }
+
+    /// LOADER.md §10.4: a fix after a message (or the iOS prompt) gets
+    /// "Aha" before the screen; then the moon flies into the card as the
+    /// screen comes up under it. A pick meanwhile ends the loader, and
+    /// with it the wait.
+    private func finishWithAha(for place: Place) async {
+        let line = AhaGreeting.line(after: lastAhaLine)
+        lastAhaLine = line
+        guard await loader.showAha(AhaGreeting(line: line, city: place.nameWithRegion)) else { return }
+        guard launchStage == .phaseCycle else { return }
+        loader.flyAway()
+        finishLoader()
     }
 
     /// Back in the foreground on a message: permission granted in Settings

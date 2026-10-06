@@ -8,7 +8,8 @@ import SwiftUI
 /// The launch loader (LOADER.md §3, §10; design concept 1a): the onboarding
 /// moon on a clean screen, running through its phases over a breathing glow,
 /// with "Finding your location…" under it; or, stopped, a message saying why
-/// and what to do. `LocationViewModel.launchStage` decides when it shows and
+/// and what to do; or, found after a recovery, "Aha" and the moon flying
+/// into the card's phase slot (§10.4). `LocationViewModel.launchStage` decides when it shows and
 /// `LocationLoader` how the moon, glow, label and message move.
 ///
 /// The screen's backdrop (with its faint top glow) comes from
@@ -22,6 +23,12 @@ struct LaunchPhaseCycle: View {
     let onPrimary: () -> Void
     let onSearch: () -> Void
 
+    /// Where "Aha"'s moon lands (§10.4): the card's phase slot, in global
+    /// coordinates, and the glyph it settles on. `nil` until the screen is
+    /// up under the loader.
+    var landingSlot: CGRect?
+    var landingGlyph: PhaseGlyphGeometry?
+
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.openURL) private var openURL
 
@@ -30,6 +37,10 @@ struct LaunchPhaseCycle: View {
     @State private var moonHasRisen = false
     @State private var labelIsIn = false
     @State private var labelHasRisen = false
+
+    /// The moon's resting frame, in global coordinates: where the flight
+    /// starts.
+    @State private var moonFrame: CGRect = .zero
 
     // MARK: - Constants
 
@@ -83,6 +94,16 @@ struct LaunchPhaseCycle: View {
                     label
                         .padding(.top, Self.moonToText)
                         .padding(.horizontal, Theme.Metrics.screenMargin)
+                    if case .aha(let greeting) = loader.content {
+                        AhaGreetingIn(leaving: loader.flightStartedAt != nil) {
+                            AhaGreetingView(greeting: greeting)
+                        }
+                        .padding(.top, Self.moonToText)
+                        .padding(.horizontal, Theme.Metrics.screenMargin)
+                        .onAppear {
+                            AccessibilityNotification.Announcement(greeting.accessibilityLabel).post()
+                        }
+                    }
                     if case .message(let issue) = loader.content {
                         LoaderMessageIn {
                             LoaderMessage(issue: issue, onPrimary: { primary(issue) }, onSearch: onSearch)
@@ -110,6 +131,11 @@ struct LaunchPhaseCycle: View {
             moon(at: context.date)
         }
         .frame(width: Self.moonSize, height: Self.moonSize)
+        .onGeometryChange(for: CGRect.self) { proxy in
+            proxy.frame(in: .global)
+        } action: { frame in
+            moonFrame = frame
+        }
         .opacity(moonIsIn ? 1 : 0)
         .offset(y: moonHasRisen || reduceMotion ? 0 : Self.entranceRise)
         .accessibilityHidden(true)
@@ -119,18 +145,45 @@ struct LaunchPhaseCycle: View {
     /// fades, with no swell (§10.6).
     private func moon(at date: Date) -> some View {
         let elapsed = loader.moon.elapsed(at: date)
-        let look = loader.glow.look(at: date, elapsed: elapsed)
-        return PhaseGlyph(
-            geometry: reduceMotion ? PhaseCycle.stillGeometry : PhaseCycle.geometry(at: elapsed),
-            discColor: Theme.Colors.bg,
-            glowCSSBlur: Self.glyphGlowCSSBlur
-        )
-        .background {
-            // Behind the glyph and outside layout, so it never moves the text.
-            glow
-                .opacity(look.opacity)
-                .scaleEffect(reduceMotion ? 1 : look.scale)
+        var look = loader.glow.look(at: date, elapsed: elapsed)
+        var geometry = reduceMotion ? PhaseCycle.stillGeometry : PhaseCycle.geometry(at: elapsed)
+        var glowBlur = Self.glyphGlowCSSBlur
+        var scale: CGFloat = 1
+        var offset: CGSize = .zero
+
+        // §10.4: flying into the card, from full to the day's phase.
+        if let flight = flight(at: date) {
+            geometry = AhaFlight.geometry(landingOn: flight.glyph, progress: flight.progress)
+            look.opacity = AhaFlight.interpolate(look.opacity, AhaFlight.landingGlowOpacity, flight.progress)
+            // Drawn before the shrink, so it lands as the card's glow.
+            let landingBlur = PhaseGlyph.cardGlowCSSBlur * moonFrame.width / flight.landingWidth
+            glowBlur += (landingBlur - glowBlur) * flight.progress
+            scale = flight.frame.width / moonFrame.width
+            offset = CGSize(width: flight.frame.midX - moonFrame.midX, height: flight.frame.midY - moonFrame.midY)
         }
+
+        return PhaseGlyph(geometry: geometry, discColor: Theme.Colors.bg, glowCSSBlur: glowBlur)
+            .background {
+                // Behind the glyph and outside layout, so it never moves the text.
+                glow
+                    .opacity(look.opacity)
+                    .scaleEffect(reduceMotion ? 1 : look.scale)
+            }
+            .scaleEffect(scale)
+            .offset(offset)
+    }
+
+    /// Where the flight is at `date`, once it has somewhere to land.
+    private func flight(
+        at date: Date
+    ) -> (progress: Double, frame: CGRect, landingWidth: CGFloat, glyph: PhaseGlyphGeometry)? {
+        guard let start = loader.flightStartedAt, let landingSlot, let landingGlyph,
+              moonFrame.width > 0, landingSlot.width > 0 else {
+            return nil
+        }
+        let progress = AhaFlight.progress(since: start, at: date)
+        let frame = AhaFlight.frame(from: moonFrame, to: landingSlot, progress: progress)
+        return (progress, frame, landingSlot.width, landingGlyph)
     }
 
     private var glow: some View {
@@ -213,6 +266,50 @@ enum LoaderMotion {
     /// `cubic-bezier(.2, .7, .3, 1)`: the message's rise.
     static func messageRise(duration: TimeInterval) -> Animation {
         .timingCurve(0.2, 0.7, 0.3, 1, duration: duration)
+    }
+}
+
+// MARK: - Aha in and out
+
+/// "Search → Aha" (§10.4): "Aha" fades in over 0.6 s after 0.5 s and rises
+/// 10 pt over 0.8 s; when the moon flies it fades out fast, 0.22 s, drifting
+/// up 3 pt. Reduce Motion: 0.3 s cross-fades, no rise or drift.
+private struct AhaGreetingIn<Content: View>: View {
+
+    let leaving: Bool
+    @ViewBuilder let content: Content
+
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var isIn = false
+    @State private var hasRisen = false
+
+    private static var rise: CGFloat { 10 }
+    private static var delay: TimeInterval { 0.5 }
+    private static var fadeDuration: TimeInterval { 0.6 }
+    private static var riseDuration: TimeInterval { 0.8 }
+    private static var leaveDrift: CGFloat { 3 }
+    private static var leaveDuration: TimeInterval { 0.22 }
+    private static var reduceMotionFade: TimeInterval { 0.3 }
+
+    var body: some View {
+        content
+            .opacity(isIn && !leaving ? 1 : 0)
+            .offset(y: yOffset)
+            .onAppear {
+                if reduceMotion {
+                    withAnimation(.easeOut(duration: Self.reduceMotionFade)) { isIn = true }
+                    return
+                }
+                withAnimation(.easeOut(duration: Self.fadeDuration).delay(Self.delay)) { isIn = true }
+                withAnimation(LoaderMotion.rise(duration: Self.riseDuration).delay(Self.delay)) { hasRisen = true }
+            }
+            .animation(.easeOut(duration: reduceMotion ? Self.reduceMotionFade : Self.leaveDuration), value: leaving)
+    }
+
+    private var yOffset: CGFloat {
+        if reduceMotion { return 0 }
+        if leaving { return -Self.leaveDrift }
+        return hasRisen ? 0 : Self.rise
     }
 }
 

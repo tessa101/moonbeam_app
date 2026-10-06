@@ -5,6 +5,16 @@
 
 ---
 
+### 2026-10-06 · 5.9.2 (4/6): "Aha" after a recovery, as built
+- **Spec:** LOADER.md §10.4 (as built). The loader stays over the screen during the flight, so the moon can fly
+  into the card glyph's real frame; the screen fades in under it instead of the staggered load-in.
+- **The loader has its own clock** (`LocationViewModel(loaderNow:)`, real time by default): its moon is drawn against
+  the display's real time, and DEBUG screen states pin `now` to a fixed "today", which made the flight read as
+  already over. Tests pin both.
+- **Line rotation is per session**, kept in memory: persisting the last line would need a new store value (asked
+  before adding).
+- **Restricted** (Tessa): own body copy; button aligned with the other messages'.
+
 ### 2026-10-05 · Location flow handoff adopted, with amendments
 - **Source:** Tessa's handoff `design/1.4-location-flow/`; spec LOADER.md §10 (supersedes the earlier §10 draft).
 - **Amendments (Tessa):** saved place opens directly; onboarding stays for new installs (First ask = existing
