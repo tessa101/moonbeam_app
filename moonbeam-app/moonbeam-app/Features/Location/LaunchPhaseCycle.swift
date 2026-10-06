@@ -38,6 +38,12 @@ struct LaunchPhaseCycle: View {
     @State private var labelIsIn = false
     @State private var labelHasRisen = false
 
+    /// Natural message heights at the two §10.5 scales. Measuring the real
+    /// text (including the current Dynamic Type size) keeps the fit decision
+    /// correct for every message and accessibility size.
+    @State private var regularMessageHeight: CGFloat = 0
+    @State private var compactMessageHeight: CGFloat = 0
+
     /// The moon's resting frame, in global coordinates: where the flight
     /// starts.
     @State private var moonFrame: CGRect = .zero
@@ -46,6 +52,10 @@ struct LaunchPhaseCycle: View {
 
     /// §3: the built size, over the handoff's 132 pt.
     private static let moonSize: CGFloat = 140
+    /// §10.5: when the message doesn't fit, the moon gives the copy more room.
+    private static let compactMoonSize: CGFloat = 96
+    private static let compactMoonRise: CGFloat = 28
+    private static let compactTextScale: CGFloat = 0.8
     /// The handoff puts the moon's centre 13 pt above the screen's.
     private static let moonCentreAboveScreenCentre: CGFloat = 13
     /// The mock's gap between the moon and the label.
@@ -84,12 +94,19 @@ struct LaunchPhaseCycle: View {
             let bottom = proxy.safeAreaInsets.bottom
             // §10: placed from the screen's centre, not the safe area's.
             let screenHeight = proxy.size.height + top + bottom
-            let moonTop = screenHeight / 2 - Self.moonCentreAboveScreenCentre - Self.moonSize / 2 - top
             let bottomInset = max(Self.messageBottomInset - bottom, Self.minimumAboveHomeIndicator)
+            let layout = messageLayout(
+                screenHeight: screenHeight,
+                safeAreaTop: top,
+                bottomInset: bottomInset
+            )
+            let moonSize = layout == .regular ? Self.moonSize : Self.compactMoonSize
+            let moonRise = layout == .regular ? 0 : Self.compactMoonRise
+            let moonTop = screenHeight / 2 - Self.moonCentreAboveScreenCentre - moonSize / 2 - top - moonRise
 
             VStack(spacing: 0) {
                 Color.clear.frame(height: max(0, moonTop))
-                moon
+                moon(size: moonSize)
                 ZStack(alignment: .top) {
                     label
                         .padding(.top, Self.moonToText)
@@ -105,18 +122,17 @@ struct LaunchPhaseCycle: View {
                         }
                     }
                     if case .message(let issue) = loader.content {
-                        LoaderMessageIn {
-                            LoaderMessage(issue: issue, onPrimary: { primary(issue) }, onSearch: onSearch)
-                        }
-                        .id(issue)
-                        .padding(.top, Self.moonToMessage)
-                        .padding(.horizontal, Theme.Metrics.onboardingMargin)
-                        .padding(.bottom, bottomInset)
+                        message(issue, layout: layout, bottomInset: bottomInset)
                     }
                 }
                 .frame(maxHeight: .infinity, alignment: .top)
             }
             .frame(maxWidth: .infinity)
+            .overlay {
+                if case .message(let issue) = loader.content {
+                    messageMeasurements(issue)
+                }
+            }
         }
         .onAppear(perform: enter)
         .onChange(of: loader.showsLabel) { _, shows in
@@ -126,11 +142,11 @@ struct LaunchPhaseCycle: View {
 
     // MARK: - Moon
 
-    private var moon: some View {
+    private func moon(size: CGFloat) -> some View {
         TimelineView(.animation(paused: reduceMotion)) { context in
-            moon(at: context.date)
+            moon(at: context.date, size: size)
         }
-        .frame(width: Self.moonSize, height: Self.moonSize)
+        .frame(width: size, height: size)
         .onGeometryChange(for: CGRect.self) { proxy in
             proxy.frame(in: .global)
         } action: { frame in
@@ -143,7 +159,7 @@ struct LaunchPhaseCycle: View {
 
     /// Reduce Motion: the glyph holds at the hold phase and the glow only
     /// fades, with no swell (§10.6).
-    private func moon(at date: Date) -> some View {
+    private func moon(at date: Date, size: CGFloat) -> some View {
         let elapsed = loader.moon.elapsed(at: date)
         var look = loader.glow.look(at: date, elapsed: elapsed)
         var geometry = reduceMotion ? PhaseCycle.stillGeometry : PhaseCycle.geometry(at: elapsed)
@@ -165,7 +181,7 @@ struct LaunchPhaseCycle: View {
         return PhaseGlyph(geometry: geometry, discColor: Theme.Colors.bg, glowCSSBlur: glowBlur)
             .background {
                 // Behind the glyph and outside layout, so it never moves the text.
-                glow
+                glow(size: size)
                     .opacity(look.opacity)
                     .scaleEffect(reduceMotion ? 1 : look.scale)
             }
@@ -186,8 +202,8 @@ struct LaunchPhaseCycle: View {
         return (progress, frame, landingSlot.width, landingGlyph)
     }
 
-    private var glow: some View {
-        let diameter = Self.moonSize * Self.glowDiameterPerMoon
+    private func glow(size: CGFloat) -> some View {
+        let diameter = size * Self.glowDiameterPerMoon
         return Circle()
             .fill(
                 RadialGradient(
@@ -198,6 +214,100 @@ struct LaunchPhaseCycle: View {
                 )
             )
             .frame(width: diameter, height: diameter)
+    }
+
+    // MARK: - Message layout
+
+    private enum MessageLayout {
+        case regular
+        case compact
+        case scroll
+    }
+
+    /// Uses the natural height of the current message at the current Dynamic
+    /// Type size. Compact buys room by shrinking and lifting the moon and by
+    /// stepping the headline/body down together; scrolling is the final AX
+    /// fallback, so no copy or action is clipped.
+    private func messageLayout(
+        screenHeight: CGFloat,
+        safeAreaTop: CGFloat,
+        bottomInset: CGFloat
+    ) -> MessageLayout {
+        guard case .message = loader.content, regularMessageHeight > 0 else { return .regular }
+
+        let regularTop = screenHeight / 2 - Self.moonCentreAboveScreenCentre
+            - Self.moonSize / 2 - safeAreaTop
+        let regularRoom = screenHeight - safeAreaTop - regularTop - Self.moonSize
+            - Self.moonToMessage - bottomInset
+        if regularMessageHeight <= regularRoom { return .regular }
+
+        guard compactMessageHeight > 0 else { return .compact }
+        let compactTop = screenHeight / 2 - Self.moonCentreAboveScreenCentre
+            - Self.compactMoonSize / 2 - safeAreaTop - Self.compactMoonRise
+        let compactRoom = screenHeight - safeAreaTop - compactTop - Self.compactMoonSize
+            - Self.moonToMessage - bottomInset
+        return compactMessageHeight <= compactRoom ? .compact : .scroll
+    }
+
+    @ViewBuilder
+    private func message(_ issue: LocationIssue, layout: MessageLayout, bottomInset: CGFloat) -> some View {
+        let scale = layout == .regular ? 1 : Self.compactTextScale
+
+        LoaderMessageIn {
+            if layout == .scroll {
+                ScrollView {
+                    LoaderMessage(
+                        issue: issue,
+                        textScale: scale,
+                        fillsHeight: false,
+                        onPrimary: { primary(issue) },
+                        onSearch: onSearch
+                    )
+                }
+                .scrollIndicators(.hidden)
+            } else {
+                LoaderMessage(
+                    issue: issue,
+                    textScale: scale,
+                    onPrimary: { primary(issue) },
+                    onSearch: onSearch
+                )
+            }
+        }
+        .id(issue)
+        .padding(.top, Self.moonToMessage)
+        .padding(.horizontal, Theme.Metrics.onboardingMargin)
+        .padding(.bottom, bottomInset)
+    }
+
+    /// Off-layout copies report their ideal heights without affecting the
+    /// visible hierarchy or accessibility tree.
+    private func messageMeasurements(_ issue: LocationIssue) -> some View {
+        ZStack {
+            measuredMessage(issue, scale: 1) { regularMessageHeight = $0 }
+            measuredMessage(issue, scale: Self.compactTextScale) { compactMessageHeight = $0 }
+        }
+        .padding(.horizontal, Theme.Metrics.onboardingMargin)
+        .hidden()
+        .accessibilityHidden(true)
+    }
+
+    private func measuredMessage(
+        _ issue: LocationIssue,
+        scale: CGFloat,
+        update: @escaping (CGFloat) -> Void
+    ) -> some View {
+        LoaderMessage(
+            issue: issue,
+            textScale: scale,
+            fillsHeight: false,
+            onPrimary: {},
+            onSearch: {}
+        )
+        .frame(maxWidth: .infinity)
+        .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { height in
+            update(height)
+        }
     }
 
     // MARK: - Label
