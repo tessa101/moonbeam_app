@@ -65,6 +65,10 @@ struct LoaderMessage: View {
             // The button keeps its 56 pt (§10.5), so it isn't scaled.
             VStack(spacing: Self.buttonToLink) {
                 Button(issue.primaryTitle, action: onPrimary)
+                    // §10.5 keeps this control at the designed 56 pt even
+                    // when the surrounding message uses an AX text size.
+                    // The full title remains available to VoiceOver.
+                    .dynamicTypeSize(.large)
                     .buttonStyle(.primary)
                 // With no link (restricted), its room is kept, so the button
                 // sits where it does on the other messages (Tessa,

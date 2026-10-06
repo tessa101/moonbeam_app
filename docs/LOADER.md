@@ -215,8 +215,9 @@ prompt → app permission off.
 - **As built (5.9.2 5/6):** the loader measures the current message at the current Dynamic Type size. It keeps the
   140 pt centred moon and full-size copy when that natural height fits; otherwise the moon becomes 96 pt and rises
   28 pt while the headline and body use 0.8× base sizes (still relative to Dynamic Type). If that compact form does
-  not fit, only the message region scrolls. Buttons keep their existing 56 pt minimum height and can grow if their
-  titles wrap.
+  not fit, only the message region scrolls. The primary CTA stays exactly 56 pt high; its visual title uses the
+  default content size while the full title remains available to VoiceOver. Secondary text actions continue to
+  scale and wrap.
 
 ### 10.6 Reduce Motion, VoiceOver
 Per the handoff: moon still at the hold phase, no rise / pulse / fly, every step cross-fades 0.3 s. VoiceOver:

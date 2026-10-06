@@ -255,8 +255,10 @@ _Last updated: 2026-10-05 (Location Services switch read off the main actor, loa
        Parts 1–5 of 6 are built: `bg` launch screen; waxing-gibbous hold phase and entrance; no-place message
        states; recovery-only Aha and moon flight; message layout that measures the actual Dynamic Type content,
        shrinks/lifts the moon and steps headline/body to 0.8× when needed, then scrolls as the AX fallback.
-       **918 / 918 tests pass.** Runtime screenshot validation of 5/6 is still pending because device interaction
-       requires a delegated agent unavailable in this session. **Next:** §10.6 Reduce Motion and VoiceOver (6/6).
+       Visual matrix: all five messages × iPhone 17 / SE 3 × default / AX1 / AX5 pass. Primary CTA is exactly
+       56 pt high throughout; all text/actions remain accessible and every overflow state scrolls successfully.
+       Eight lean screenshots and the full findings are in `.agent-reports/5.9.2/5-ax/`.
+       **918 / 918 tests pass. Next:** §10.6 Reduce Motion and VoiceOver (6/6).
      - [x] **Build 5.4.1 [spike] (2026-10-02):** Up now row + lock highlight, two commits. The row shows only where the
        compass does (today, Here / Nearby) and refreshes on the compass's tick: **decide** whether it should
        show for any place (DECISIONS.md 2026-10-02 as built). Moonrise/Moonset are now boxed cells, the
