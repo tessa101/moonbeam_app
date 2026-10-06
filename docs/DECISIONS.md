@@ -5,6 +5,17 @@
 
 ---
 
+### 2026-10-06 · Default-size flows and animations first; accessibility deferred
+- **Decision (Tessa):** defer Build 5.9.2 step 6/6 (VoiceOver, Reduce Motion and other accessibility work) for now.
+  Focus next on the main location flows and animations at default text size: fast/slow launch, messages,
+  permission Allow/Don't Allow, return from Settings, retry, city search, saved-place fallback and recovery → Aha
+  → main screen.
+- **Review:** moon entrance, forward cycle, stop at the waxing hold phase, recovery to full, greeting timing and
+  flight into the card; fix jumps, flashes, overlaps and awkward pauses. Record simulator checks and anything
+  needing a real-device check.
+- **Deferred, not removed:** LOADER.md §10.6 remains pending, including hiding the invisible outgoing searching
+  label from VoiceOver. Preserve the completed step 5/6 small-screen and large-text layouts.
+
 ### 2026-10-06 · Hold phase mirrored to a waxing gibbous
 - **Decision (Tessa):** the loader's hold phase and the onboarding moon are a waxing gibbous (~83% lit, dark sliver on
   the left), not the handoff's waning one. LOADER.md §10.2.

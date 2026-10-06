@@ -220,6 +220,11 @@ prompt → app permission off.
   scale and wrap.
 
 ### 10.6 Reduce Motion, VoiceOver
+
+**Deferred by Tessa, 2026-10-06:** step 6/6 and other accessibility work are pending. The next pass focuses on
+main location flows and animations at default text size (DECISIONS.md, "Default-size flows and animations
+first"). Preserve the completed §10.5 layouts. The invisible outgoing "Finding your location…" label's VoiceOver
+exposure is a known deferred issue.
 Per the handoff: moon still at the hold phase, no rise / pulse / fly, every step cross-fades 0.3 s. VoiceOver:
 "Finding your location" once, then the message headline (focus moves to it).
 

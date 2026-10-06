@@ -258,7 +258,12 @@ _Last updated: 2026-10-05 (Location Services switch read off the main actor, loa
        Visual matrix: all five messages × iPhone 17 / SE 3 × default / AX1 / AX5 pass. Primary CTA is exactly
        56 pt high throughout; all text/actions remain accessible and every overflow state scrolls successfully.
        Eight lean screenshots and the full findings are in `.agent-reports/5.9.2/5-ax/`.
-       **918 / 918 tests pass. Next:** §10.6 Reduce Motion and VoiceOver (6/6).
+       **918 / 918 tests pass. Next (Tessa, 2026-10-06):** review and polish the main location flows and animations
+       at default text size: fast/slow launch, messages, permission outcomes, return from Settings, retry, city
+       search, saved-place fallback and recovery → Aha → main screen. Check entrance/cycle/hold, greeting timing
+       and flight into the card; record simulator findings and remaining device checks.
+       **Deferred:** §10.6 Reduce Motion and VoiceOver (6/6), and other accessibility work, including the invisible
+       outgoing searching label's VoiceOver exposure. Preserve the completed small-screen and large-text layouts.
      - [x] **Build 5.4.1 [spike] (2026-10-02):** Up now row + lock highlight, two commits. The row shows only where the
        compass does (today, Here / Nearby) and refreshes on the compass's tick: **decide** whether it should
        show for any place (DECISIONS.md 2026-10-02 as built). Moonrise/Moonset are now boxed cells, the
