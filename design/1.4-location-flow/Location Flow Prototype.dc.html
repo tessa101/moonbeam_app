@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link href="https://fonts.googleapis.com/css2?family=Young+Serif&family=Nunito+Sans:opsz,wght@6..12,400;6..12,600;6..12,700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#E7E5E1;font-family:'Nunito Sans',sans-serif;color:#1C1B19}a{color:#5B4A2A}a:hover{color:#1C1B19}
+@keyframes ms-breathe{0%,100%{opacity:.45;transform:scale(.92)}50%{opacity:1;transform:scale(1.06)}}
+@keyframes ms-pulse{0%,100%{opacity:.35;transform:scale(.9)}50%{opacity:1;transform:scale(1.18)}}
+@keyframes ms-flare{0%{opacity:.5;transform:scale(1)}30%{opacity:1;transform:scale(1.7)}100%{opacity:.8;transform:scale(1.15)}}
+</style>
+</helmet>
+
+<section data-screen-label="Location flow v3" style="padding:64px;display:flex;flex-direction:column;gap:36px">
+  <header style="display:flex;flex-direction:column;gap:8px;max-width:980px">
+    <div style="font:500 13px/1 'IBM Plex Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:#6B665E">Moon Signal · location flow · v3 (from 2a)</div>
+    <h1 style="margin:0;font:400 40px/1.1 'Young Serif',serif">Find, explain, fix</h1>
+    <p style="margin:0;font:400 16px/1.5 'Nunito Sans',sans-serif;color:#4A463F;text-wrap:pretty">The moon fades up in place, then "Finding your location…" follows, then the phases start. If the search can't finish, the moon stops and pulses and the message appears under it. The fix now plays out too: the system prompt on a first ask, or Settings after that. Pick a scenario to replay it. You can tap the buttons inside the phone.</p>
+  </header>
+
+  <div id="3a" style="display:flex;flex-direction:column;gap:24px;padding:40px;background:#DCD9D3;border-radius:28px;align-self:flex-start">
+    <div style="display:flex;align-items:baseline;gap:12px;flex-wrap:wrap">
+      <span style="font:600 13px/1 'IBM Plex Mono',monospace;background:#1C1B19;color:#EEEAE3;padding:6px 9px;border-radius:6px">3a</span>
+      <span style="font:400 26px/1.2 'Young Serif',serif;white-space:nowrap">Stop in place, with the fix</span>
+    </div>
+
+    <div style="display:flex;gap:40px;align-items:flex-start;flex-wrap:wrap">
+      <div style="display:flex;flex-direction:column;gap:14px;align-items:center">
+        <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center;max-width:440px">
+          <sc-for list="{{ scs }}" as="c" hint-placeholder-count="5">
+            <div onClick="{{ c.go }}" style="font:600 13px/1 'Nunito Sans',sans-serif;padding:9px 12px;border-radius:18px;border:1px solid #1C1B19;white-space:nowrap;background:{{ c.bg }};color:{{ c.fg }};cursor:pointer">{{ c.l }}</div>
+          </sc-for>
+        </div>
+
+        <div style="position:relative;width:393px;height:852px;border-radius:56px;overflow:hidden;background:#1B1519;box-shadow:0 0 0 11px #050505,0 30px 60px rgba(0,0,0,.25);color:#F5EADB">
+          <div style="position:absolute;top:-120px;left:50%;margin-left:-260px;width:520px;height:420px;border-radius:50%;background:radial-gradient(closest-side,rgba(242,194,123,.08),rgba(242,194,123,0))"></div>
+          <div style="position:absolute;top:11px;left:50%;margin-left:-62px;width:124px;height:36px;border-radius:20px;background:#000;z-index:20"></div>
+          <div style="position:absolute;top:18px;left:44px;font:600 17px/1 -apple-system,system-ui,sans-serif;z-index:20;color:#F5EADB">8:31</div>
+          <div style="position:absolute;top:21px;right:36px;width:25px;height:12px;border:1.5px solid #F5EADB;border-radius:4px;z-index:20"><div style="margin:1.5px;width:15px;height:6px;background:#F5EADB;border-radius:1.5px"></div></div>
+
+          <div style="position:absolute;top:66px;left:20px;right:20px;bottom:34px;z-index:2;opacity:{{ cityOp }};transition:opacity .6s ease {{ cityDelay }};pointer-events:none">
+            <h2 style="margin:0 4px;height:170px;font:400 27px/1.5 'Young Serif',serif;text-wrap:pretty">Where will the moon be <span style="color:#F2C27B;text-decoration:underline;text-decoration-thickness:1.5px;text-underline-offset:7px;text-decoration-color:rgba(242,194,123,.55)">tonight</span> in <span style="color:#F2C27B;text-decoration:underline;text-decoration-thickness:1.5px;text-underline-offset:7px;text-decoration-color:rgba(242,194,123,.55)">Rancho Santa Margarita, CA</span>?</h2>
+            <div style="border:1px solid #3D3139;border-radius:24px;background:#1E171C;padding:16px 18px;display:flex;flex-direction:column;gap:14px">
+              <div style="display:flex;align-items:center;gap:14px">
+                <div style="width:44px;height:44px;flex:none"></div>
+                <div style="display:flex;flex-direction:column;gap:2px"><div style="font:400 18px/1.2 'Young Serif',serif">Waxing gibbous</div><div style="font:400 14px/1.2 'Nunito Sans',sans-serif;color:#C9B7A6">78% lit</div></div>
+              </div>
+              <div style="height:1px;background:#3D3139"></div>
+              <div style="display:grid;grid-template-columns:minmax(0,1fr) 1px minmax(0,1fr);column-gap:18px">
+                <div style="display:flex;flex-direction:column;gap:4px"><div style="font:600 13px/1.15 'Nunito Sans',sans-serif;color:#C9B7A6">↑ Moonrise</div><div style="font:400 22px/1.1 'Young Serif',serif">2:14 PM</div><div style="font:400 13px/1.1 'Nunito Sans',sans-serif;color:#F2C27B">112° ESE</div></div>
+                <div style="background:#3D3139"></div>
+                <div style="display:flex;flex-direction:column;gap:4px"><div style="font:600 13px/1.15 'Nunito Sans',sans-serif;color:#C9B7A6">↓ Moonset</div><div style="font:400 22px/1.1 'Young Serif',serif">1:02 AM</div><div style="font:400 13px/1.1 'Nunito Sans',sans-serif;color:#F2C27B">251° WSW</div></div>
+              </div>
+            </div>
+          </div>
+
+          {{ moon }}
+
+          <div style="position:absolute;top:510px;left:20px;right:20px;text-align:center;font:400 16px/1.3 'Nunito Sans',sans-serif;color:#C9B7A6;z-index:3;opacity:{{ searchOp }};transform:translateY({{ searchY }}px);transition:opacity .7s ease-out {{ searchDelay }}, transform .9s cubic-bezier(.16,1,.3,1) {{ searchDelay }}">Finding your location…</div>
+
+          <div style="position:absolute;top:506px;left:20px;right:20px;display:flex;flex-direction:column;align-items:center;gap:10px;z-index:3;opacity:{{ foundOp }};transform:translateY({{ foundY }}px);transition:opacity {{ foundDur }} ease-out {{ foundDelay }}, transform .8s cubic-bezier(.16,1,.3,1) {{ foundDelay }}">
+            <div style="font:400 25px/1.2 'Young Serif',serif;white-space:nowrap">Aha! There you are.</div>
+            <div style="display:flex;align-items:center;gap:6px;font:600 16px/1.2 'Nunito Sans',sans-serif;color:#F2C27B"><svg width="14" height="17" viewBox="0 0 16 19"><path d="M8 18s6.2-5.6 6.2-10.4A6.2 6.2 0 0 0 1.8 7.6C1.8 12.4 8 18 8 18z" fill="none" stroke="#F2C27B" stroke-width="1.8"></path><circle cx="8" cy="7.6" r="2.3" fill="#F2C27B"></circle></svg>Rancho Santa Margarita, CA</div>
+          </div>
+
+          <div style="position:absolute;top:500px;left:28px;right:28px;bottom:40px;display:flex;flex-direction:column;align-items:center;text-align:center;z-index:3;opacity:{{ msgOp }};transform:translateY({{ msgY }}px);pointer-events:{{ msgEvents }};transition:opacity {{ msgDur }} ease {{ msgDelay }}, transform .6s cubic-bezier(.2,.7,.3,1) {{ msgDelay }}">
+            <h2 style="margin:0;font:400 28px/1.22 'Young Serif',serif;text-wrap:balance">{{ m.h }}</h2>
+            <p style="margin:12px 0 0;font:400 17px/1.45 'Nunito Sans',sans-serif;color:#E4D6C6;text-wrap:balance">{{ m.b }}</p>
+            <div style="flex:1"></div>
+            <div style="align-self:stretch;display:flex;flex-direction:column;align-items:center;gap:22px">
+              <div onClick="{{ fix }}" style="align-self:stretch;height:56px;border-radius:28px;background:#F2C27B;color:#1B1519;display:flex;align-items:center;justify-content:center;font:700 18px/1 'Nunito Sans',sans-serif;cursor:pointer;box-shadow:0 0 30px rgba(242,194,123,.18)">{{ m.btn }}</div>
+              <div style="font:600 17px/1 'Nunito Sans',sans-serif;color:#F2C27B;padding:6px">Search for a city instead</div>
+            </div>
+          </div>
+
+          <div style="position:absolute;inset:0;z-index:10;background:rgba(0,0,0,.5);opacity:{{ alertOp }};pointer-events:{{ alertEvents }};transition:opacity .3s ease">
+            <div style="position:absolute;left:18px;right:18px;top:150px;padding:22px 20px 20px;border-radius:34px;background:rgba(46,43,48,.97);border:1px solid rgba(255,255,255,.08);display:flex;flex-direction:column;gap:12px;transform:scale({{ alertScale }});transition:transform .3s cubic-bezier(.2,.9,.3,1.2);font-family:-apple-system,system-ui,sans-serif;color:#fff">
+              <div style="font:600 18px/1.25 -apple-system,system-ui,sans-serif;text-align:center;text-wrap:balance">Allow “Moon Signal” to use your location?</div>
+              <div style="font:400 13.5px/1.4 -apple-system,system-ui,sans-serif;text-align:center;color:#E6E3EA;text-wrap:pretty">Moon Signal uses your location to show when and where the moon rises and sets, and to point the compass. Keep Precise Location on so the compass can find the moon.</div>
+              <div style="position:relative;height:136px;border-radius:18px;background:repeating-linear-gradient(135deg,#37343A 0 10px,#3D3A40 10px 20px);display:flex;align-items:center;justify-content:center">
+                <div style="position:absolute;top:10px;left:10px;padding:6px 10px;border-radius:14px;background:#1C1B1E;font:600 13px/1 -apple-system,system-ui,sans-serif">Precise: On</div>
+                <div style="font:500 12px/1 'IBM Plex Mono',monospace;color:#A9A5AD">system map preview</div>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:8px">
+                <div onClick="{{ allow }}" style="height:48px;border-radius:24px;background:#47444B;display:flex;align-items:center;justify-content:center;font:400 17px/1 -apple-system,system-ui,sans-serif;cursor:pointer">Allow Once</div>
+                <div onClick="{{ allow }}" style="height:48px;border-radius:24px;background:#47444B;display:flex;align-items:center;justify-content:center;font:400 17px/1 -apple-system,system-ui,sans-serif;cursor:pointer">Allow While Using App</div>
+                <div onClick="{{ deny }}" style="height:48px;border-radius:24px;background:#47444B;display:flex;align-items:center;justify-content:center;font:400 17px/1 -apple-system,system-ui,sans-serif;cursor:pointer">Don’t Allow</div>
+              </div>
+            </div>
+          </div>
+
+          <div style="position:absolute;inset:0;z-index:12;background:#000;transform:translateX({{ setX }}%);transition:transform .45s cubic-bezier(.3,.7,.2,1);font-family:-apple-system,system-ui,sans-serif;color:#fff">
+            <sc-if value="{{ isApp }}" hint-placeholder-val="{{ false }}">
+              <div style="position:absolute;top:60px;left:12px;font:400 17px/1 -apple-system,system-ui,sans-serif;color:#0A84FF">‹ Moon Signal</div>
+              <div style="position:absolute;top:98px;left:20px;font:700 34px/1 -apple-system,system-ui,sans-serif">Location</div>
+              <div style="position:absolute;top:156px;left:16px;right:16px;display:flex;flex-direction:column;gap:8px">
+                <div style="padding:0 16px;font:400 13px/1 -apple-system,system-ui,sans-serif;color:#8E8E93;text-transform:uppercase">Allow location access</div>
+                <div style="border-radius:12px;background:#1C1C1E;overflow:hidden">
+                  <div style="height:48px;padding:0 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:.5px solid #38383A"><span style="font-size:17px">Never</span><span style="color:#0A84FF;font-size:17px;opacity:{{ chkNever }}">✓</span></div>
+                  <div style="height:48px;padding:0 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:.5px solid #38383A"><span style="font-size:17px">Ask Next Time Or When I Share</span></div>
+                  <div onClick="{{ allow }}" style="height:48px;padding:0 16px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;background:{{ rowHl }};transition:background .2s"><span style="font-size:17px">While Using the App</span><span style="color:#0A84FF;font-size:17px;opacity:{{ chkOn }}">✓</span></div>
+                </div>
+                <div style="padding:0 16px;font:400 13px/1.35 -apple-system,system-ui,sans-serif;color:#8E8E93">App explanation: “Moon Signal uses your location to show when and where the moon rises and sets, and to point the compass.”</div>
+                <div style="margin-top:18px;border-radius:12px;background:#1C1C1E;height:48px;padding:0 16px;display:flex;align-items:center;justify-content:space-between"><span style="font-size:17px">Precise Location</span><div style="width:51px;height:31px;border-radius:16px;background:#34C759;position:relative"><div style="position:absolute;top:2px;left:22px;width:27px;height:27px;border-radius:50%;background:#fff"></div></div></div>
+              </div>
+            </sc-if>
+            <sc-if value="{{ isSys }}" hint-placeholder-val="{{ false }}">
+              <div style="position:absolute;top:60px;left:12px;font:400 17px/1 -apple-system,system-ui,sans-serif;color:#0A84FF">‹ Privacy &amp; Security</div>
+              <div style="position:absolute;top:98px;left:20px;font:700 34px/1 -apple-system,system-ui,sans-serif">Location Services</div>
+              <div style="position:absolute;top:156px;left:16px;right:16px;display:flex;flex-direction:column;gap:8px">
+                <div onClick="{{ allow }}" style="border-radius:12px;background:#1C1C1E;height:48px;padding:0 16px;display:flex;align-items:center;justify-content:space-between;cursor:pointer"><span style="font-size:17px">Location Services</span><div style="width:51px;height:31px;border-radius:16px;background:{{ tgBg }};position:relative;transition:background .25s"><div style="position:absolute;top:2px;left:2px;width:27px;height:27px;border-radius:50%;background:#fff;transform:translateX({{ tgX }}px);transition:transform .25s"></div></div></div>
+                <div style="padding:0 16px;font:400 13px/1.35 -apple-system,system-ui,sans-serif;color:#8E8E93">Location Services uses GPS, Bluetooth, and crowd-sourced Wi‑Fi hotspot and cell tower locations to determine your approximate location.</div>
+                <div style="margin-top:18px;border-radius:12px;background:#1C1C1E;height:48px;padding:0 16px;display:flex;align-items:center;justify-content:space-between;opacity:{{ appRowOp }};transition:opacity .3s"><span style="font-size:17px">Moon Signal</span><span style="font-size:17px;color:#8E8E93">While Using ›</span></div>
+              </div>
+            </sc-if>
+          </div>
+
+          <div style="position:absolute;bottom:9px;left:50%;margin-left:-67px;width:134px;height:5px;border-radius:3px;background:#F5EADB;z-index:20"></div>
+        </div>
+
+        <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center;max-width:440px">
+          <sc-for list="{{ chips }}" as="c" hint-placeholder-count="6">
+            <div onClick="{{ c.go }}" style="font:500 12px/1 'IBM Plex Mono',monospace;padding:8px 10px;border-radius:8px;border:1px solid #1C1B19;white-space:nowrap;background:{{ c.bg }};color:{{ c.fg }};cursor:pointer">{{ c.l }}</div>
+          </sc-for>
+          <div onClick="{{ replay }}" style="font:500 12px/1 'IBM Plex Mono',monospace;padding:8px 10px;border-radius:8px;background:#F2C27B;color:#1B1519;cursor:pointer;white-space:nowrap">▶ Replay</div>
+        </div>
+      </div>
+
+      <div style="width:320px;display:flex;flex-direction:column;gap:18px">
+        <div style="display:flex;flex-direction:column;gap:10px;padding:26px;background:#1B1519;border-radius:26px;color:#E4D6C6;font:400 14px/1.45 'Nunito Sans',sans-serif">
+          <div style="font:600 12px/1 'Nunito Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#C9B7A6">This scenario</div>
+          <sc-for list="{{ notes }}" as="n" hint-placeholder-count="3"><div style="text-wrap:pretty">{{ n }}</div></sc-for>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px;padding:26px;background:#1B1519;border-radius:26px;color:#E4D6C6;font:400 14px/1.45 'Nunito Sans',sans-serif">
+          <div style="font:600 12px/1 'Nunito Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#C9B7A6">Entrance</div>
+          <div>0 ms: the moon drifts up 8 pt as it fades in over 0.9 s, already at its onboarding phase.</div>
+          <div>~320 ms: "Finding your location…" fades up the same way.</div>
+          <div>~840 ms: the phase cycle starts.</div>
+          <div>After permission is granted, the message is already gone when they come back. They see just the moon, and the search starts right away.</div>
+          <div>Only one message is on screen at a time. The old one fades out in 0.3 s, then the next waits about 0.5 s before it fades in. After a fix, "Finding your location…" holds for at least 1.8 s before "Aha!".</div>
+          <div>Each time the app returns to the foreground, check permission again. If location is on, go straight back to searching.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { sc: 'first', s: 0, ready: false, intro: 0, done: false, ret: 'cut', run: true };
+  ph = 0.18; timers = [];
+  ovRef = el => { this.ov = el; };
+
+  ease(x) {
+    let t = x;
+    for (let i = 0; i < 8; i++) {
+      const X = ((0.7 * t - 1.05) * t + 1.35) * t - x, dX = (2.1 * t - 2.1) * t + 1.35;
+      if (Math.abs(dX) < 1e-6) break; t = Math.min(1, Math.max(0, t - X / dX));
+    }
+    return (3 - 2 * t) * t * t;
+  }
+  xAt(p) { return p < 0.5 ? 100 * this.ease(p * 2) : -100 + 100 * this.ease((p - 0.5) * 2); }
+
+  componentDidMount() {
+    let lo = 0, hi = 1;
+    for (let i = 0; i < 30; i++) { const m = (lo + hi) / 2; this.ease(m) < 0.75 ? lo = m : hi = m; }
+    this.hold = lo / 2;
+    this.last = performance.now();
+    const loop = t => {
+      const dt = Math.min(0.05, (t - this.last) / 1000); this.last = t;
+      const st = this.state; let p = this.ph;
+      if ((st.s === 0 && st.intro >= 3) || (st.s === 2 && st.run)) p = (p + dt / 4.8) % 1;
+      else {
+        const d = ((st.s === 3 ? 0.499 : this.hold) - p + 1) % 1;
+        if (d > 0.002 && d < 0.998) p = (p + Math.min(d, dt * 2.6 / 4.8)) % 1;
+        else if (st.s === 1 && !st.ready) this.setState({ ready: true });
+      }
+      this.ph = p;
+      if (this.ov) this.ov.style.transform = `translateX(${this.xAt(p)}%)`;
+      this.raf = requestAnimationFrame(loop);
+    };
+    this.raf = requestAnimationFrame(loop);
+    this.play('first');
+  }
+  componentWillUnmount() { cancelAnimationFrame(this.raf); this.clear(); }
+  clear() { this.timers.forEach(clearTimeout); this.timers = []; }
+  at(ms, o) { this.timers.push(setTimeout(() => this.setState(o), ms)); }
+  go(s) { this.clear(); this.setState({ s, ready: false, intro: 3, done: false, run: true }); }
+  rd() { return this.state.ret === 'fade' ? 1100 : 200; }
+  resume(d) { this.at(d, { s: 2, run: false }); this.at(d + this.rd(), { run: true }); this.finish(d); }
+  play(sc) {
+    sc = sc || this.state.sc;
+    this.clear(); this.ph = this.hold ?? 0.18;
+    this.setState({ sc, s: 0, ready: false, intro: 0, done: false });
+    this.at(60, { intro: 1 }); this.at(380, { intro: 2 }); this.at(900, { intro: 3 });
+    if (sc === 'found') { this.at(3800, { s: 3 }); this.at(5400, { s: 4 }); return; }
+    this.at(3400, { s: 1, ready: false });
+    if (sc === 'timeout') { this.resume(7200); return; }
+    this.at(7200, { s: 5 }); this.at(8800, { done: true });
+    this.resume(9800);
+  }
+  fix() { this.clear(); if (this.state.sc === 'timeout') this.resume(0); else this.setState({ s: 5, done: false }); }
+  finish(d) { this.at(d + this.rd() + 1800, { s: 3 }); this.at(d + this.rd() + 3800, { s: 4 }); }
+  allow() { if (this.state.s !== 5) return; this.clear(); this.setState({ done: true }); this.resume(800); }
+  deny() { this.clear(); this.setState({ sc: 'app', s: 1, ready: false, done: false }); }
+
+  moon(st) {
+    const e = React.createElement, s = st.s;
+    const pos = s === 4 ? { sz: 44, l: 39, t: 253 } : { sz: 132, l: 130.5, t: 347 };
+    const glow = (s === 0 || s === 2) ? 'ms-breathe 4.8s ease-in-out infinite'
+      : (s === 1 && st.ready) || s === 5 ? 'ms-pulse 1.8s ease-in-out infinite'
+      : s === 1 ? 'ms-breathe 4.8s ease-in-out infinite'
+      : s === 3 ? 'ms-flare 1.4s ease-out forwards' : 'none';
+    const tr = 'cubic-bezier(.65,0,.25,1)';
+    const transition = s === 0 && st.intro === 0 ? 'none'
+      : s === 4 ? `left .85s ${tr}, top .85s ${tr}, width .85s ${tr}, height .85s ${tr}`
+      : 'opacity .9s ease-out, transform 1.2s cubic-bezier(.16,1,.3,1)';
+    const hidden = s === 0 && st.intro === 0;
+    return e('div', { style: { position: 'absolute', left: pos.l, top: pos.t, width: pos.sz, height: pos.sz, zIndex: 5, pointerEvents: 'none',
+        opacity: hidden ? 0 : 1, transform: `translateY(${hidden ? 8 : 0}px)`, transition } },
+      e('div', { key: 'g', style: { position: 'absolute', inset: '-60%', borderRadius: '50%', background: 'radial-gradient(closest-side, rgba(242,194,123,.32), rgba(242,194,123,0))', animation: glow, opacity: s === 4 ? 0.35 : undefined } }),
+      e('div', { key: 'd', style: { position: 'absolute', inset: 0, borderRadius: '50%', overflow: 'hidden', background: '#F2E6CF', boxShadow: '0 0 40px rgba(242,194,123,.35)' } },
+        e('div', { ref: this.ovRef, style: { position: 'absolute', inset: 0, borderRadius: '50%', background: '#1B1519' } })));
+  }
+
+  renderVals() {
+    const st = this.state, s = st.s, sc = st.sc;
+    const MSG = {
+      first: { h: 'Find the moon from where you are', b: 'Moon Signal uses your location to show when and where the moon rises and sets.', btn: 'Use my location' },
+      sys: { h: 'Location Services are off', b: 'Turn them on to see where the moon is from here.', btn: 'Open Settings' },
+      app: { h: 'Moon Signal can\u2019t see your location', b: 'Allow location access to see where the moon is from here.', btn: 'Open Settings' },
+      timeout: { h: 'Couldn\u2019t find your location', b: 'Check your signal and try again, or search for a city.', btn: 'Try again' },
+      found: { h: '', b: '', btn: '' },
+    };
+    const NOTES = {
+      first: ['Permission was never asked, for example because they skipped onboarding or reinstalled.', '"Use my location" brings up the system prompt over the paused loader. Allow Once or Allow While Using App goes straight back to searching.', 'Don\u2019t Allow switches to the "can\u2019t see your location" message, since from then on only Settings can fix it.'],
+      app: ['Moon Signal\u2019s permission is set to Never.', 'Open Settings deep-links to Moon Signal\u2019s Location page. They choose While Using the App and switch back, and the search resumes when the app returns to the foreground.'],
+      sys: ['Location Services is off for the whole phone.', 'Open Settings can only reach Moon Signal\u2019s page, so they still need to go to Privacy & Security, then Location Services. The mock skips those taps.', 'When they turn it on and switch back, the search resumes.'],
+      timeout: ['Permission is fine, but there\u2019s no location fix after 10 seconds.', 'Try again restarts the search in place, with no trip to Settings.'],
+      found: ['The common case: the loader runs, "Aha!" appears, and the moon flies into the card on the city screen.'],
+    };
+    const fixLabel = sc === 'first' ? 'System prompt' : 'Settings';
+    const steps = sc === 'found' ? [[0, 'Searching'], [3, 'Aha!'], [4, 'City']]
+      : sc === 'timeout' ? [[0, 'Searching'], [1, 'Message'], [2, 'Searching again'], [3, 'Aha!'], [4, 'City']]
+      : [[0, 'Searching'], [1, 'Message'], [5, fixLabel], [2, 'Searching again'], [3, 'Aha!'], [4, 'City']];
+    const SC = [['first', 'First ask'], ['app', 'App permission off'], ['sys', 'Location Services off'], ['timeout', 'No fix'], ['found', 'Found']];
+    const show = (s === 1 && st.ready) || s === 5;
+    const fade = st.ret === 'fade';
+    const alertOn = s === 5 && sc === 'first';
+    const setOn = s === 5 && (sc === 'app' || sc === 'sys');
+    return {
+      m: MSG[sc], notes: NOTES[sc],
+      moon: this.moon(st),
+      searchOp: (s === 0 && st.intro >= 2) || s === 2 || (s === 1 && !st.ready) ? 1 : 0,
+      searchY: s === 0 && st.intro < 2 ? 8 : 0,
+      searchDelay: s === 2 ? (fade ? '1.1s' : '.2s') : '0s', foundDelay: s === 3 ? '.5s' : '0s',
+      msgDelay: show ? '.35s' : s === 2 && fade ? '.45s' : '0s',
+      msgDur: show ? '.45s' : s === 2 ? (fade ? '.5s' : '0s') : '.3s',
+      rets: [['fade', 'Fade out in place'], ['cut', 'Gone instantly']].map(([v, l]) => ({ l, bg: v === st.ret ? '#1C1B19' : 'transparent', fg: v === st.ret ? '#EEEAE3' : '#1C1B19', go: () => { this.setState({ ret: v }); setTimeout(() => this.play(), 0); } })),
+      foundOp: s === 3 ? 1 : 0, foundY: s === 3 ? 0 : s === 4 ? -3 : 10, foundDur: s === 4 ? '.22s' : '.6s',
+      msgOp: show ? 1 : 0, msgY: show || s >= 2 ? 0 : 16, msgEvents: s === 1 && st.ready ? 'auto' : 'none',
+      cityOp: s === 4 ? 1 : 0, cityDelay: s === 4 ? '.25s' : '0s',
+      alertOp: alertOn ? 1 : 0, alertScale: alertOn ? 1 : 1.08, alertEvents: alertOn ? 'auto' : 'none',
+      setX: setOn ? 0 : 102, isApp: sc === 'app', isSys: sc === 'sys',
+      chkNever: st.done ? 0 : 1, chkOn: st.done ? 1 : 0, rowHl: st.done ? '#2C2C2E' : 'transparent',
+      tgBg: st.done ? '#34C759' : '#39393D', tgX: st.done ? 20 : 0, appRowOp: st.done ? 1 : 0,
+      scs: SC.map(([v, l]) => ({ l, bg: v === sc ? '#1C1B19' : 'transparent', fg: v === sc ? '#EEEAE3' : '#1C1B19', go: () => this.play(v) })),
+      chips: steps.map(([i, l], n) => ({ l: `${n + 1} ${l}`, bg: i === s ? '#1C1B19' : 'transparent', fg: i === s ? '#EEEAE3' : '#1C1B19', go: () => this.go(i) })),
+      replay: () => this.play(),
+      fix: () => this.fix(), allow: () => this.allow(), deny: () => this.deny(),
+    };
+  }
+}
+</script>
+</body>
+</html>

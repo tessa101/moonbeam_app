@@ -146,8 +146,77 @@ the stage logic misses a path on device. Either way: **any launch wait over 400 
 - **Kept:** `os_signpost` intervals around the launch (`LaunchSignposts`, subsystem `com.t-alien.moonbeam-app`,
   category `Launch`), so a stall on device can be caught in Instruments' os_signpost / Time Profiler.
 
+**Follow-up (2026-10-05, §10.7).** The switch is now never read on the main actor: `LocationService` gained
+`refreshAuthorizationState()`, which reads `locationServicesEnabled()` on a detached task (still only for
+`notDetermined` / `denied`) and caches it; `authorizationState` stays synchronous and never blocks. The launch's
+400 ms clock now starts **before** the permission read, so a slow read shows the moon. `App.init`'s onboarding check
+reads the permission only for a new install. Device probe (T2 iPhone, 3 cold launches, authorized): `ready` at
+250–430 ms, the switch never read; the only main-thread gap (100–140 ms) is SwiftUI's first layout, before any
+location work.
+
+## 10. Location flow: messages, recovery and "Aha" (Tessa's handoff, 2026-10-05)
+
+**Source:** `design/1.4-location-flow/` (README.md, `Location Flow Prototype.dc.html`, `LocationFlowReference.swift`).
+The handoff is a **prototype**: follow its **flow, timing, copy and motion ideas**; where it differs from the built
+loader, **the built version wins** (moon 140 pt, label 17 pt `body`, `PhaseGlyph`, theme tokens). Amendments below
+override the handoff README.
+
+### 10.1 When it applies
+- **Saved place:** any issue (off, denied, restricted, not asked, no fix) → **open the saved place** with its small
+  location note. The message screens are for **no saved place only**.
+- **New installs:** onboarding asks for location as now. **First ask** is only for existing installs that report
+  `notDetermined` (Ask Next Time, expired Allow Once).
+- **Restricted:** app-permission copy, **no Open Settings**; "Search for a city" becomes the primary button.
+- **Offline / city can't be named** (reverse geocoding fails without the network, fast, no 10 s wait) → **No fix**.
+
+### 10.2 Moon
+- **Real direction:** forward month via `PhaseGlyph` (lit right while waxing). The handoff's sliding-shadow math runs
+  it in reverse; don't use it. Keep its timing and the idea of a **hold phase** (the onboarding moon: lit, a thin
+  dark sliver on the right) where the moon starts, and where it stops when searching stops.
+- **Entrance:** the moon appears at the hold phase (fade + 8 pt rise), the label follows at 320 ms, the cycle starts
+  at 840 ms (handoff "Entrance"). Replaces "start at a waxing crescent".
+- **Stopping:** keep running forward (2.6× speed) to the hold phase, then freeze; never stop mid-cycle. Glow switches
+  from breathe to pulse (handoff timings).
+
+### 10.3 Messages
+Handoff copy and buttons (first ask / app permission off / services off / no fix), searching ≥ 1.2 s before any
+message, label out 0.3 s, then the message fades in and rises 16 pt (handoff "Search → message"). Return after a fix:
+message removed instantly, glow back to breathe, label back in 0.2 s later, cycle resumes. Don't Allow in the iOS
+prompt → app permission off.
+
+### 10.4 "Aha" — only after a recovery
+- Plays **only** when a fix lands after a message or the iOS prompt. Ordinary launches (fast or slow) use the
+  content load-in (§2.1), not Aha.
+- Line rotates (don't repeat the previous one): **"Aha, there you are!"**, **"Hey, found you."**, **"There we are."**
+  (Tessa may add more), with the city row under it (pin + "City, ST").
+- Timing per the handoff ("Search → Aha → city"): moon runs to full, glow flares, hold ~2 s, then the moon flies into
+  the card's phase slot (real frame) and settles on the real phase while the screen fades in.
+- **VoiceOver:** "<line> <City, ST>", e.g. "Aha, there you are! Rancho Santa Margarita, CA".
+
+### 10.5 Small screens and large text
+- When the message block doesn't fit under the moon (SE 3, AX sizes), **scale down**: the moon shrinks (to ~96 pt)
+  and moves up, and the headline / body step down together (to ~0.8×); the button keeps its 56 pt height. Scroll
+  only if it still doesn't fit at AX sizes.
+- Check: iPhone 17 and SE 3 at default, AX1, AX5, for each message.
+
+### 10.6 Reduce Motion, VoiceOver
+Per the handoff: moon still at the hold phase, no rise / pulse / fly, every step cross-fades 0.3 s. VoiceOver:
+"Finding your location" once, then the message headline (focus moves to it).
+
+### 10.7 Engineering notes
+- `CLLocationManager.locationServicesEnabled()` (used to tell "services off" from "denied") can block the main
+  thread; call it off the main actor. It may be behind the launch stall (§9).
+- Re-check status on authorization changes and when the scene becomes active.
+- Hidden on every loader / message screen: pinned bar, DEBUG readout, Show onboarding, "a city".
+
 ## Decision log
 
+- **2026-10-05 (Tessa):** Location flow from her handoff (`design/1.4-location-flow/`), amended in §10: saved place
+  wins; onboarding stays for new installs; restricted has no Settings button; offline = No fix; scale down on small
+  screens / large text; real moon direction; "Aha" only after a recovery, with rotating lines; built sizes win, the
+  handoff's timing and flow are what matter.
+- **2026-10-05 (Tessa):** Location off with no saved place: no "a city" screen. Brief moon attempt, then the moon
+  stops in place and a message + Turn on Location CTA move in from the bottom (§10). With a saved place, show it.
 - **2026-10-05 (Tessa):** Device launch waited several seconds with no moon: a bug, fix it. A quick launch should
   show the **content loading in**, not a scrim fading out (§2.1).
 

@@ -5,6 +5,21 @@
 
 ---
 
+### 2026-10-05 · Location flow handoff adopted, with amendments
+- **Source:** Tessa's handoff `design/1.4-location-flow/`; spec LOADER.md §10 (supersedes the earlier §10 draft).
+- **Amendments (Tessa):** saved place opens directly; onboarding stays for new installs (First ask = existing
+  installs only); restricted: no Open Settings; offline → No fix; small screens / AX: moon and text scale down;
+  moon runs the real direction; "Aha" only after a recovery, rotating lines ("Aha, there you are!", "Hey, found
+  you.", "There we are."), VoiceOver reads line + city; built sizes win (140 pt moon, 17 pt label), the handoff's
+  timing and flow are what matter.
+
+### 2026-10-05 · Location off, no saved place: attempt, then an on-screen prompt
+- **Decision (Tessa):** instead of the "a city" + Use my location screen, a brief phase-cycle attempt (~1.2 s), then
+  the moon stops in place and "Can't find your location" + **Turn on Location** (opens Settings) move in from the
+  bottom (small rise, fade in). Search for a city as a secondary link. Spec LOADER.md §10.
+- **With a saved place:** unchanged; show it with the location-off note.
+- **Considered:** the existing Location Off sheet over the moon (rejected: on-screen is calmer, no pop-up).
+
 ### 2026-10-05 · 5.9.1: the launch stall, fixed at its likely cause
 - **Spec:** LOADER.md §9 (findings). Report `.agent-reports/5.9.1/5.9.1-launch-fix.md`.
 - **Not reproduced** on the T2 iPhone; fixed at the likely cause: `locationServicesEnabled()` (a main-thread
