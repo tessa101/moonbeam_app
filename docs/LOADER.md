@@ -38,7 +38,7 @@ Between launch and 400 ms the screen is plain `bg` (no content, no spinner), so 
   the loader fades out (200 ms) and the blocks load in as it goes. **(proposed values)**
 - **Reduce Motion:** opacity only, no rise; the stagger may stay.
 - **Phase cycle in (at 400 ms):** opacity 0 → 1 over 250 ms.
-- **Phase cycle → real screen:** once the phase cycle shows, keep it **at least 700 ms**, then the load-in above, so it
+- **Phase cycle → real screen:** once the phase cycle shows, keep it **at least 1.1 s** (700 ms until 2026-10-06; Tessa raised it so the §10.2 entrance isn't cut off), then the load-in above, so it
   never flashes.
 - Phase cycle under Reduce Motion: no phase animation (§3).
 - Interim values; transitions get an app-wide polish pass later (DESIGN-REVIEW.md "Motion and feedback").
@@ -81,7 +81,7 @@ Concept 1a, the onboarding moon, on a clean screen (no sentence, card, compass o
 ## 7. Tests
 
 - Tier selection on a fake clock and fake location service: fix at 300 ms → no loader, main screen fade;
-  at 1 s → phase cycle; phase cycle shown at least 700 ms even when the fix lands right after 400 ms
+  at 1 s → phase cycle; phase cycle shown at least 1.1 s (was 700 ms) even when the fix lands right after 400 ms
 - 10 s timeout → last-viewed place or empty state, as LOCATION.md
 - No fetch (denied / not determined / off) → no loader
 - The loader never shows the last-viewed place's name, the pinned bar, the DEBUG readout or Show onboarding

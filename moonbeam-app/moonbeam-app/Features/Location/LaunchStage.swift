@@ -28,8 +28,9 @@ nonisolated enum LaunchStage: Equatable {
     static let phaseCycleDelay = Duration.milliseconds(400)
 
     /// Once the phase cycle shows, it stays at least this long, so it never
-    /// flashes.
-    static let minimumPhaseCycleDuration = Duration.milliseconds(700)
+    /// flashes: long enough for the entrance to finish (the label is in at
+    /// 1.02 s; Tessa, 2026-10-06, was 700 ms).
+    static let minimumPhaseCycleDuration = Duration.milliseconds(1100)
 
     /// The phase cycle fades in over this, ease-out. The main screen doesn't
     /// fade as a whole: its blocks load in (`ContentLoadIn`, §2.1).

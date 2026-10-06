@@ -463,7 +463,7 @@ struct PhaseCycleTests {
     @Test("The loader's timings are the interim values in LOADER.md §2.1")
     func timings() {
         #expect(LaunchStage.phaseCycleDelay == .milliseconds(400))
-        #expect(LaunchStage.minimumPhaseCycleDuration == .milliseconds(700))
+        #expect(LaunchStage.minimumPhaseCycleDuration == .milliseconds(1100))
         #expect(LaunchStage.fadeDuration == 0.25)
         #expect(LaunchStage.phaseCycleFadeOutDuration == 0.2)
     }
