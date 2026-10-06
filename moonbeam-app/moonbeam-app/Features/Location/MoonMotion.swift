@@ -93,6 +93,12 @@ nonisolated struct MoonMotion: Equatable {
         return anchorDate.addingTimeInterval(distance / rate)
     }
 
+    /// Still waiting to move at `date`: the entrance's 840 ms before the
+    /// cycle starts.
+    func isWaitingToStart(at date: Date) -> Bool {
+        rate > 0 && date < anchorDate
+    }
+
     /// How long from `date` until it freezes: zero once frozen.
     func timeToSettle(from date: Date) -> TimeInterval {
         guard let settleDate else { return 0 }

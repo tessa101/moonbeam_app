@@ -189,6 +189,9 @@ Handoff copy and buttons (first ask / app permission off / services off / no fix
 message, label out 0.3 s, then the message fades in and rises 16 pt (handoff "Search → message"). Return after a fix:
 message removed instantly, glow back to breathe, label back in 0.2 s later, cycle resumes. Don't Allow in the iOS
 prompt → app permission off.
+- **Known reason (Tessa, 2026-10-06):** if the message is asked for before the cycle has started (the entrance's
+  840 ms), the moon stays at the hold phase instead of starting and then spinning a whole month back to it. The
+  1.2 s minimum stays; the message is in at ~1.55 s (was ~3.3 s).
 
 ### 10.4 "Aha" — only after a recovery
 - Plays **only** when a fix lands after a message or the iOS prompt. Ordinary launches (fast or slow) use the

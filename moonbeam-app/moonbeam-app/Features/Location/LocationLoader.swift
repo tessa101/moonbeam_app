@@ -118,6 +118,11 @@ final class LocationLoader {
     /// goes and the message comes in. Already on a message (Don't Allow
     /// after First ask), the message just changes.
     ///
+    /// A reason known before the cycle starts (permission off at launch)
+    /// keeps the moon at the hold phase: started, it would be just past the
+    /// hold at 1.2 s and spin a whole month at 2.6× to get back, ~3.3 s to
+    /// the message (Tessa, 2026-10-06). Held, the message is in at ~1.55 s.
+    ///
     /// - Returns: false if another step took over meanwhile.
     @discardableResult
     func showMessage(_ issue: LocationIssue) async -> Bool {
@@ -128,7 +133,12 @@ final class LocationLoader {
             return true
         }
 
-        let searched = now().timeIntervalSince(searchStartedAt)
+        let date = now()
+        if moon.isWaitingToStart(at: date) {
+            moon = .held(at: PhaseCycle.holdElapsed, since: date)
+        }
+
+        let searched = date.timeIntervalSince(searchStartedAt)
         guard await wait(Self.minimumSearchBeforeMessage - searched, step: step) else { return false }
 
         let stopDate = now()

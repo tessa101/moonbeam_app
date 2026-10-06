@@ -5,7 +5,17 @@
 
 ---
 
-### 2026-10-06 · Aha waits for a full moon
+### 2026-10-06 · Loader timing: known reasons, minimum hold, Aha from the fix
+- **Decisions (Tessa), on the flow pass's A/B/C:**
+  - **A.** A reason already known when the loader appears (permission off etc., no saved place): no spin. The moon
+    stays at the hold phase and the message is in at ~1.55 s, not ~3.3 s. "Waiting 3 s just to be told location is
+    off feels slow." Built: if the cycle hasn't started (840 ms), the moon holds; the 1.2 s minimum stays.
+  - **B.** Minimum loader time 0.7 → 1.1 s, so the entrance isn't cut off halfway.
+  - **C.** Not "Aha up to 1.85 s later": start the run to full **as soon as the fix lands**; Aha comes in when the
+    moon is at full. The 1.8 s search minimum goes; the label still gets 0.7 s (its fade-in) so it never flashes.
+    Supersedes the entry below.
+
+### 2026-10-06 · Aha waits for a full moon _(superseded above, C)_
 - **Found (default-size flow pass):** the waxing hold phase was meant to make Aha reach full in ~0.3 s, but Aha starts
   after 1.8 s of searching, by which point the moon has passed full. The run-out to full then went through new
   (~1.5 s at 2.6×) while Aha's text faded in (fully in at 1.1 s): text over a dark moon. The 4/6 follow-up test

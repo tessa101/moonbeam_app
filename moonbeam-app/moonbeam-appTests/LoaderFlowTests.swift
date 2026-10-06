@@ -517,6 +517,24 @@ struct LocationLoaderStepTests {
         #expect(abs((first ?? 0) - 0.7) < 1e-6)
     }
 
+    @Test("A reason known before the cycle starts: the moon stays at the hold, message after 1.2 s, no spin")
+    func knownReasonHolds() async {
+        let clock = Clock()
+        let loader = Self.makeLoader(clock)
+        loader.appear()
+        let start = clock.date
+
+        await loader.showMessage(.appDenied)
+
+        let waits = clock.waits.map { Double($0.components.attoseconds) / 1e18 + Double($0.components.seconds) }
+        #expect(waits.count == 1)
+        #expect(abs((waits.first ?? 0) - LocationLoader.minimumSearchBeforeMessage) < 1e-6)
+        #expect(abs(clock.date.timeIntervalSince(start) - LocationLoader.minimumSearchBeforeMessage) < 1e-6)
+        // Never moved: at the hold phase all the way through.
+        #expect(abs(loader.moon.elapsed(at: start.addingTimeInterval(1)) - PhaseCycle.holdElapsed) < 1e-6)
+        #expect(loader.content == .message(.appDenied))
+    }
+
     @Test("A running moon runs out at 2.6× to the hold phase before the message")
     func runsOutBeforeMessage() async {
         let clock = Clock()
