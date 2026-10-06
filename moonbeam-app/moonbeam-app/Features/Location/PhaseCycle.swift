@@ -38,42 +38,62 @@ nonisolated enum PhaseCycle {
     /// Phase angles: 0° new, 180° full (`MoonDay.phaseAngle`).
     private static let fullMoonPhaseAngle = 180.0
 
-    /// Reduce Motion (§3): the glyph holds still at full.
-    static let stillGeometry = PhaseGlyphGeometry(illumination: 1, phaseAngle: fullMoonPhaseAngle)
+    /// The hold phase (LOADER.md §10.2): the onboarding moon, lit with a
+    /// thin dark sliver on the right. In the forward month that's a waning
+    /// gibbous just past full. The loader appears on it, starts its month
+    /// from it, and stops on it when searching stops. `OnboardingMoon`'s
+    /// lit fraction (a test keeps the two in step).
+    static let holdLitFraction = 0.83
 
-    /// Where the month starts when the loader appears (Tessa, 2026-10-05): a
-    /// waxing crescent about a quarter lit, so even a short wait shows a moon
-    /// rather than the dark new-moon disc.
-    static let startLitFraction = 0.25
-
-    /// Halvings in `elapsed(forWaxingLitFraction:)`: far below a frame.
+    /// Halvings in the lit-fraction searches: far below a frame.
     private static let bisectionSteps = 40
 
-    /// How far into the month `startLitFraction` falls. Solved rather than
+    /// How far into the month the hold phase falls. Solved rather than
     /// written down, because the eased angle has no simple inverse.
-    static let startElapsed = elapsed(forWaxingLitFraction: startLitFraction)
+    static let holdElapsed = elapsed(forWaningLitFraction: holdLitFraction)
+
+    /// Full moon, where "Aha" runs to (§10.4).
+    static let fullElapsed = period / 2
+
+    /// Reduce Motion (§10.6): the glyph holds still at the hold phase.
+    static let stillGeometry = geometry(at: holdElapsed)
 
     // MARK: - Over time
-
-    /// The month's time for the loader, `seconds` after it appeared.
-    static func loaderElapsed(sinceAppeared seconds: TimeInterval) -> TimeInterval {
-        startElapsed + seconds
-    }
 
     /// The moment in the waxing half when the moon is `fraction` lit. The lit
     /// fraction only grows there, so a bisection finds it.
     static func elapsed(forWaxingLitFraction fraction: Double) -> TimeInterval {
-        var low = 0.0
-        var high = period / 2
+        bisect(from: 0, to: period / 2) { geometry(at: $0).litFraction < fraction }
+    }
+
+    /// The moment in the waning half when the moon is `fraction` lit. The lit
+    /// fraction only shrinks there.
+    static func elapsed(forWaningLitFraction fraction: Double) -> TimeInterval {
+        bisect(from: period / 2, to: period) { geometry(at: $0).litFraction > fraction }
+    }
+
+    /// The boundary in `low...high` where `isBefore` turns false.
+    private static func bisect(
+        from low: TimeInterval,
+        to high: TimeInterval,
+        isBefore: (TimeInterval) -> Bool
+    ) -> TimeInterval {
+        var low = low
+        var high = high
         for _ in 0..<bisectionSteps {
             let middle = (low + high) / 2
-            if geometry(at: middle).litFraction < fraction {
+            if isBefore(middle) {
                 low = middle
             } else {
                 high = middle
             }
         }
         return (low + high) / 2
+    }
+
+    /// Month time folded into one month, `0..<period`.
+    static func wrapped(_ elapsed: TimeInterval) -> TimeInterval {
+        progress(at: elapsed) * period
     }
 
     /// How far through the month, `0..<1`.

@@ -341,6 +341,36 @@ struct LaunchLoaderTests {
         #expect(viewModel.phaseCycleDidAppear() == "Finding your location")
         #expect(viewModel.phaseCycleDidAppear() == nil)
     }
+
+    // MARK: - Entrance (LOADER.md §10.2)
+
+    @Test("The loader appearing starts the entrance at the hold phase, label up, breathing")
+    func loaderAppears() {
+        let date = Date(timeIntervalSinceReferenceDate: 100)
+        let loader = LocationLoader(now: { date })
+        loader.appear()
+        #expect(loader.appearedAt == date)
+        #expect(loader.moon == .entrance(at: date))
+        #expect(loader.showsLabel)
+        #expect(loader.glow.mode == .breathe)
+    }
+
+    @Test("A slow launch shows the loader with its entrance")
+    func slowLaunchRunsEntrance() async {
+        let harness = Self.makeHarness()
+        harness.location.holdsFixes = true
+        let viewModel = harness.viewModel
+        let launch = Task { await viewModel.start() }
+        await Self.settle { harness.sleeper.pendingCount == 1 }
+        harness.sleeper.fire()
+        await Self.settle { viewModel.launchStage == .phaseCycle }
+        #expect(viewModel.loader.moon.elapsed(at: viewModel.loader.appearedAt) == PhaseCycle.holdElapsed)
+        harness.location.releaseFixes()
+        await Self.settle { harness.sleeper.pendingCount == 1 }
+        harness.sleeper.fire()
+        await launch.value
+    }
+
 }
 
 /// The loader moon's month (LOADER.md §3): forward, 4.8 s, eased at new and
@@ -393,32 +423,36 @@ struct PhaseCycleTests {
         #expect(PhaseCycle.geometry(at: moment) != PhaseCycle.geometry(at: moment + PhaseCycle.period / 3))
     }
 
-    // MARK: - Where the loader's month starts (Tessa, 2026-10-05)
+    // MARK: - The hold phase (LOADER.md §10.2)
 
-    @Test("The loader appears on a waxing crescent, about 25% lit")
-    func loaderStartsAtWaxingCrescent() {
-        let start = PhaseCycle.geometry(at: PhaseCycle.loaderElapsed(sinceAppeared: 0))
-        #expect(abs(start.litFraction - 0.25) < 1e-6)
-        #expect(start.litSide == .right)
-        // Lit 25% is a phase angle of 60°: a crescent, short of first quarter.
-        #expect(abs(PhaseCycle.phaseAngle(at: PhaseCycle.startElapsed) - 60) < 1e-4)
-        #expect(PhaseCycle.startElapsed > 0)
-        #expect(PhaseCycle.startElapsed < PhaseCycle.period / 4)
+    @Test("The hold phase is the onboarding moon: waning gibbous, dark sliver on the right")
+    func holdPhaseIsOnboardingMoon() {
+        let hold = PhaseCycle.geometry(at: PhaseCycle.holdElapsed)
+        #expect(abs(hold.litFraction - OnboardingMoon.geometry.litFraction) < 1e-6)
+        #expect(hold.litSide == OnboardingMoon.geometry.litSide)
+        #expect(hold.litSide == .left)
+        // Just past full, in the waning half.
+        #expect(PhaseCycle.holdElapsed > PhaseCycle.fullElapsed)
+        #expect(PhaseCycle.holdElapsed < PhaseCycle.period * 3 / 4)
     }
 
-    @Test("From the crescent it keeps waxing forward, and still loops every 4.8 s")
-    func loaderRunsOnFromCrescent() {
-        let atStart = PhaseCycle.geometry(at: PhaseCycle.loaderElapsed(sinceAppeared: 0))
-        let soon = PhaseCycle.geometry(at: PhaseCycle.loaderElapsed(sinceAppeared: 0.3))
-        #expect(soon.litFraction > atStart.litFraction)
-        #expect(soon.litSide == .right)
-        let aMonthOn = PhaseCycle.geometry(at: PhaseCycle.loaderElapsed(sinceAppeared: PhaseCycle.period))
-        #expect(abs(aMonthOn.litFraction - atStart.litFraction) < 1e-6)
+    @Test("The loader appears on the hold phase and holds it 840 ms, then runs forward")
+    func entranceHoldsThenRuns() {
+        let appeared = Date(timeIntervalSinceReferenceDate: 0)
+        let motion = MoonMotion.entrance(at: appeared)
+        #expect(motion.elapsed(at: appeared) == PhaseCycle.holdElapsed)
+        #expect(motion.elapsed(at: appeared.addingTimeInterval(0.8)) == PhaseCycle.holdElapsed)
+        let later = motion.elapsed(at: appeared.addingTimeInterval(0.84 + 0.3))
+        #expect(abs(later - (PhaseCycle.holdElapsed + 0.3)) < 1e-9)
+        // Forward from just past full: the lit part shrinks, still on the left.
+        let shape = PhaseCycle.geometry(at: later)
+        #expect(shape.litFraction < PhaseCycle.holdLitFraction)
+        #expect(shape.litSide == .left)
     }
 
-    @Test("Reduce Motion holds the glyph still at full")
-    func reduceMotionHoldsFull() {
-        #expect(PhaseCycle.stillGeometry.litFraction == 1)
+    @Test("Reduce Motion holds the glyph still at the hold phase")
+    func reduceMotionHoldsHoldPhase() {
+        #expect(PhaseCycle.stillGeometry == PhaseCycle.geometry(at: PhaseCycle.holdElapsed))
     }
 
     @Test("The loader's timings are the interim values in LOADER.md §2.1")

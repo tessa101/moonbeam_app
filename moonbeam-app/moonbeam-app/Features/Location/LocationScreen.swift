@@ -50,8 +50,10 @@ struct LocationScreen: View {
             case .waiting:
                 Color.clear
             case .phaseCycle:
-                LaunchPhaseCycle()
-                    .transition(.opacity)
+                // §10.2: the loader brings its own entrance, so it only
+                // fades on the way out.
+                LaunchPhaseCycle(loader: viewModel.loader)
+                    .transition(.asymmetric(insertion: .identity, removal: .opacity))
                     .onAppear(perform: announcePhaseCycle)
             case .ready:
                 // §2.1: no whole-screen fade. The screen arrives at once and

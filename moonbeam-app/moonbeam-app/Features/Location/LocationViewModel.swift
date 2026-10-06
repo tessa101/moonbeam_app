@@ -112,6 +112,9 @@ final class LocationViewModel {
     /// stays the only owner of that state.
     let compass: CompassViewModel
 
+    /// The loader screen's moon, glow and label (LOADER.md §10.2).
+    let loader: LocationLoader
+
     // MARK: - Dependencies
 
     private let locationService: any LocationService
@@ -198,6 +201,7 @@ final class LocationViewModel {
         // block; nothing reads this before then (LOADER.md §9).
         lastSeenAuthState = .notDetermined
         compass = CompassViewModel(headingService: headingService, moonService: moonService, now: now)
+        loader = LocationLoader(now: now)
     }
 
     // MARK: - Derived state
@@ -320,12 +324,19 @@ final class LocationViewModel {
                 // The launch may finish just as the delay ends; cancelled
                 // means it won.
                 guard let self, !Task.isCancelled else { return }
-                launchStage = .phaseCycle
+                showLoader()
                 try await sleep(LaunchStage.minimumPhaseCycleDuration)
             } catch {
                 // Cancelled: nothing more to show.
             }
         }
+    }
+
+    /// The loader comes on screen, with its entrance (§10.2).
+    private func showLoader() {
+        guard launchStage != .phaseCycle else { return }
+        loader.appear()
+        launchStage = .phaseCycle
     }
 
     /// Call when the phase cycle comes on screen. Returns what VoiceOver
