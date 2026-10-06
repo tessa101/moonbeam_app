@@ -47,8 +47,9 @@ final class LocationLoader {
     // MARK: - Timings (§10.4; the handoff's "Search → Aha → city")
 
     /// After a recovery, "Finding your location…" stays up at least this
-    /// long before "Aha".
-    nonisolated static let minimumSearchBeforeAha: TimeInterval = 1.8
+    /// long before "Aha": its own 0.7 s fade-in, so a fast fix never
+    /// flashes it. The handoff's 1.8 s made Aha late (Tessa, 2026-10-06).
+    nonisolated static let minimumSearchBeforeAha: TimeInterval = 0.7
 
     /// "Aha" holds this long before the moon flies into the card.
     nonisolated static let ahaHold: TimeInterval = 2.0
@@ -173,15 +174,14 @@ final class LocationLoader {
         return true
     }
 
-    /// Search → Aha (§10.4), only after a recovery: "Finding your
-    /// location…" stays up at least 1.8 s while the moon runs on, then the
-    /// moon runs forward to full under the label; only at full does the
-    /// label go, the glow flare and the greeting come in. It holds 2 s.
+    /// Search → Aha (§10.4), only after a recovery. Call it as the fix
+    /// lands: the moon runs forward to full at once, under the label; only
+    /// at full (and once the label has been up 0.7 s) does the label go,
+    /// the glow flare and the greeting come in. It holds 2 s.
     ///
-    /// The run-out waits under the label because 1.8 s from the hold phase
-    /// is already past full: the moon has to go round through new to reach
-    /// full again (up to 1.85 s at 2.6×), and the greeting used to be in
-    /// over a dark moon.
+    /// Aha waits for full so it's never in over a dark moon: a fix that
+    /// lands past full goes round through new first (up to 1.85 s at 2.6×),
+    /// a fix while waxing is at full in ≤ 0.34 s (Tessa, 2026-10-06).
     ///
     /// - Returns: false if another step took over meanwhile. True means the
     ///   moon is at full and it's time to fly (`flyAway()`).
@@ -189,12 +189,10 @@ final class LocationLoader {
     func showAha(_ greeting: AhaGreeting) async -> Bool {
         generation += 1
         let step = generation
-        let searched = now().timeIntervalSince(searchStartedAt)
-        guard await wait(Self.minimumSearchBeforeAha - searched, step: step) else { return false }
-
-        let runOutDate = now()
-        moon = moon.stopping(at: PhaseCycle.fullElapsed, from: runOutDate)
-        guard await wait(moon.timeToSettle(from: runOutDate), step: step) else { return false }
+        let fixDate = now()
+        moon = moon.stopping(at: PhaseCycle.fullElapsed, from: fixDate)
+        let labelLeft = Self.minimumSearchBeforeAha - fixDate.timeIntervalSince(searchStartedAt)
+        guard await wait(max(moon.timeToSettle(from: fixDate), labelLeft), step: step) else { return false }
 
         let full = now()
         glow = glow.switching(to: .flare, at: full, elapsed: moon.elapsed(at: full))
