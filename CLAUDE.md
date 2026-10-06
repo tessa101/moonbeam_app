@@ -16,6 +16,15 @@ Log meaningful choices in `docs/DECISIONS.md`. Check `docs/STATUS.md` for curren
 3. **Build before declaring done.** Run the build and tests. If you can't, say so explicitly.
 4. **Docs follow code.** If a change contradicts a doc, update the doc in the same change or flag it.
 5. **Small steps.** Prefer several small, working commits over one big one.
+6. **Report as you go (Tessa, 2026-10-06).** Update `.agent-reports/latest.md` after **every** commit, with what's
+   done, what's next and anything blocked, so progress is visible if a run stops. If a task has more than ~3 parts,
+   do the first parts, report, and stop rather than running for hours. Keep screenshot sets lean unless the prompt
+   asks for the full matrix.
+7. **Heartbeat and no hanging tests (Tessa, 2026-10-06).** Append a timestamped line to
+   `.agent-reports/progress.log` at each step (e.g. `09:12 running tests`, `09:20 tests pass, committing 3/6`).
+   Give async tests a time limit (`.timeLimit(.minutes(1))` on suites that wait on gates or continuations), so a
+   stuck test fails instead of hanging the run. If a build or test run goes past ~10 minutes, stop it, log why, and
+   report rather than waiting.
 
 ## Architecture rules
 
@@ -55,7 +64,7 @@ Log meaningful choices in `docs/DECISIONS.md`. Check `docs/STATUS.md` for curren
 xcodebuild -project moonbeam-app/moonbeam-app.xcodeproj -scheme moonbeam-app \
   -destination 'platform=iOS Simulator,name=iPhone 17' build
 
-# Test (562 tests / 857 cases in the moonbeam-appTests target)
+# Test (610 tests / 911 cases in the moonbeam-appTests target)
 xcodebuild test -project moonbeam-app/moonbeam-app.xcodeproj -scheme moonbeam-app \
   -destination 'platform=iOS Simulator,name=iPhone 17'
 ```

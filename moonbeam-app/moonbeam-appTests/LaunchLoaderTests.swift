@@ -13,7 +13,7 @@ import Testing
 /// The 400 ms and 700 ms waits come from `ManualSleeper`, and the fix from
 /// `FakeLocationService.holdsFixes`, so "the fix lands at 300 ms" is "release
 /// the fix before firing the 400 ms wait".
-@Suite("Launch loader")
+@Suite("Launch loader", .timeLimit(.minutes(1)))
 @MainActor
 struct LaunchLoaderTests {
 
@@ -174,19 +174,18 @@ struct LaunchLoaderTests {
 
     // MARK: - Fallbacks (§1, §2)
 
-    @Test("The 10 s timeout falls back to the last-viewed place", arguments: [true, false])
-    func timeoutFallsBack(hasLastViewed: Bool) async {
-        let harness = Self.makeHarness(
-            lastViewed: hasLastViewed ? Place.marVista : nil,
-            fetchTimeout: Self.testTimeout
-        )
+    /// With no last-viewed place a timeout stops on No fix instead
+    /// (LOADER.md §10.1): `LoaderFlowTests.noFix()`.
+    @Test("The 10 s timeout falls back to the last-viewed place")
+    func timeoutFallsBack() async {
+        let harness = Self.makeHarness(lastViewed: Place.marVista, fetchTimeout: Self.testTimeout)
         harness.location.holdsFixes = false
         harness.location.fixDelay = Self.hangingFixDelay
 
         await harness.viewModel.start()
 
         #expect(harness.viewModel.launchStage == .ready)
-        #expect(harness.viewModel.place == (hasLastViewed ? Place.marVista : nil))
+        #expect(harness.viewModel.place == Place.marVista)
         // LOCATION.md §3: a launch fetch falls back quietly.
         #expect(!harness.viewModel.locationFailed)
         #expect(harness.location.cancelledFixCount == 1)
@@ -257,12 +256,15 @@ struct LaunchLoaderTests {
 
     @Test("After onboarding the screen waits again, for the first fetch")
     func onboardingResetsToWaiting() async {
-        let harness = Self.makeHarness(authorizationState: .denied)
+        // A saved place, so the launch opens it (LOADER.md §10.1); with none
+        // it would stop on a message and wait on the manual sleeper.
+        let harness = Self.makeHarness(authorizationState: .denied, lastViewed: Place.marVista)
         await harness.viewModel.start()
         #expect(harness.viewModel.launchStage == .ready)
 
         harness.viewModel.onboardingDidFinish(.locationAllowed)
         #expect(harness.viewModel.launchStage == .waiting)
+        harness.sleeper.cancelAll()
     }
 
     // MARK: - Foreground during the launch (LOADER.md §9, LOCATION.md 4.8)

@@ -52,7 +52,11 @@ struct LocationScreen: View {
             case .phaseCycle:
                 // §10.2: the loader brings its own entrance, so it only
                 // fades on the way out.
-                LaunchPhaseCycle(loader: viewModel.loader)
+                LaunchPhaseCycle(
+                    loader: viewModel.loader,
+                    onPrimary: { Task { await viewModel.performLoaderAction() } },
+                    onSearch: viewModel.presentSearch
+                )
                     .transition(.asymmetric(insertion: .identity, removal: .opacity))
                     .onAppear(perform: announcePhaseCycle)
             case .ready:
@@ -118,18 +122,11 @@ struct LocationScreen: View {
                 MadlibSentence(viewModel: viewModel)
                     .contentLoadIn(.sentence)
 
-                // Location controls and their status stay together, under
-                // the sentence whose place token they're the alternative to.
-                // The button is the no-place state only (4.11, §11 Q2);
-                // after that it's the search sheet's row.
+                // Location status stays with the card, under the sentence
+                // whose place token it's about. The no-place screen and its
+                // Use my location button are gone (LOADER.md §10): the way
+                // back to your location is the search sheet's row.
                 VStack(alignment: .leading, spacing: Theme.Metrics.sentenceToCard) {
-                    if viewModel.showsUseMyLocationButton {
-                        Button("Use my location") {
-                            Task { await viewModel.useMyLocation() }
-                        }
-                        .buttonStyle(.secondary)
-                    }
-
                     if viewModel.isLocating {
                         ProgressView("Finding your location…")
                     }

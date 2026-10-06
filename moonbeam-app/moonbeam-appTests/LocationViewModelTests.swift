@@ -121,7 +121,6 @@ struct LocationViewModelTests {
 
         #expect(sentence.tokens.map(\.kind) == [.place])
         #expect(sentence.accessibilityLabel == "Where can I find the moon today in a city?")
-        #expect(viewModel.showsUseMyLocationButton)
     }
 
     @Test("With a place: the date token, then the place token")
@@ -169,7 +168,9 @@ struct LocationViewModelTests {
 
     // MARK: - Launch (§3)
 
-    @Test("First launch: empty state, button visible, no permission request")
+    /// LOADER.md §10.1: no "a city" screen any more; the loader stops on
+    /// First ask, and only its button prompts.
+    @Test("No saved place, never asked: the loader stops on First ask, no permission request")
     func firstLaunch() async {
         let location = FakeLocationService()
         let viewModel = Self.makeViewModel(location: location)
@@ -179,8 +180,8 @@ struct LocationViewModelTests {
         #expect(viewModel.place == nil)
         #expect(viewModel.moonTable == nil)
         #expect(Self.placeTokenText(viewModel) == "a city")
-        #expect(viewModel.showsUseMyLocation)
-        #expect(viewModel.showsUseMyLocationButton)
+        #expect(viewModel.launchStage == .phaseCycle)
+        #expect(viewModel.loaderIssue == .firstAsk)
         #expect(!location.didRequestAuthorization)
         #expect(location.currentPlaceCount == 0)
     }
@@ -239,7 +240,7 @@ struct LocationViewModelTests {
         #expect(!viewModel.locationFailed)
     }
 
-    @Test("Authorized but the fix fails with nothing saved: the empty state")
+    @Test("Authorized but the fix fails with nothing saved: the loader stops on No fix")
     func authorizedFetchFailsWithNothingSaved() async {
         let viewModel = Self.makeViewModel(
             location: FakeLocationService(authorizationState: .authorized)
@@ -248,8 +249,7 @@ struct LocationViewModelTests {
         await viewModel.start()
 
         #expect(viewModel.place == nil)
-        #expect(viewModel.showsUseMyLocation)
-        #expect(viewModel.showsUseMyLocationButton)
+        #expect(viewModel.loaderIssue == .noFix)
     }
 
     /// The timeout has to *cancel* the fix, which is what stops location
@@ -280,7 +280,7 @@ struct LocationViewModelTests {
     }
 
     @Test(
-        "Not authorized with a saved place: the saved place, button visible, nothing asked",
+        "Not authorized with a saved place: the saved place, no message, nothing asked",
         arguments: [
             LocationAuthState.notDetermined, .denied, .restricted, .servicesOff,
         ]
@@ -297,8 +297,9 @@ struct LocationViewModelTests {
         #expect(viewModel.place == Self.sydney)
         #expect(Self.placeTokenText(viewModel) == "Sydney, NSW")
         #expect(viewModel.showsUseMyLocation)
-        // 4.11: with a place showing, the way back is the sheet's row.
-        #expect(!viewModel.showsUseMyLocationButton)
+        // LOADER.md §10.1: a saved place opens directly, whatever the issue.
+        #expect(viewModel.launchStage == .ready)
+        #expect(viewModel.loaderIssue == nil)
         #expect(!location.didRequestAuthorization)
         #expect(location.currentPlaceCount == 0)
         #expect(viewModel.locationOffDialog == nil)
@@ -306,9 +307,9 @@ struct LocationViewModelTests {
 
     // MARK: - "Use my location" (§4)
 
-    /// COMPASS.md 4.11: the main-screen button is first-launch only; the
-    /// sheet's row keeps the old rule and still switches to you.
-    @Test("With a searched place: no main-screen button, but the sheet row shows and switches")
+    /// COMPASS.md 4.11: the sheet's row still switches to you. (The
+    /// main-screen button went with the "a city" screen, LOADER.md §10.)
+    @Test("With a searched place: the sheet row shows and switches")
     func mainButtonOnlyOnFirstLaunch() async throws {
         let location = FakeLocationService(
             authorizationState: .authorized,
@@ -318,7 +319,6 @@ struct LocationViewModelTests {
         await viewModel.start()
         viewModel.select(Self.sydney)
 
-        #expect(!viewModel.showsUseMyLocationButton)
         viewModel.presentSearch()
         let sheet = try #require(viewModel.searchSheet)
         #expect(sheet.showsUseMyLocation)
@@ -327,7 +327,6 @@ struct LocationViewModelTests {
         await viewModel.searchDidDismiss()
 
         #expect(viewModel.place == Self.detectedLosAngeles)
-        #expect(!viewModel.showsUseMyLocationButton)
     }
 
     @Test("Not determined: prompts, then fetches when granted")

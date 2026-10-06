@@ -138,6 +138,21 @@ nonisolated enum Theme {
         /// Onboarding screen titles.
         static let onboardingTitle = Font.custom(FontName.youngSerif, size: 30, relativeTo: .title)
 
+        /// The loader's message headline and body (LOADER.md §10.3, the
+        /// handoff's Young Serif 28 / 1.22 and Nunito Sans 17 / 1.45). The
+        /// scale steps them down together where the message doesn't fit
+        /// (§10.5).
+        static let messageHeadlineSize: CGFloat = 28
+        static let messageHeadlineLineHeightMultiple: CGFloat = 1.22
+        static func messageHeadline(scale: CGFloat = 1) -> Font {
+            .custom(FontName.youngSerif, size: messageHeadlineSize * scale, relativeTo: .title)
+        }
+        static let messageBodySize: CGFloat = 17
+        static let messageBodyLineHeightMultiple: CGFloat = 1.45
+        static func messageBody(scale: CGFloat = 1) -> Font {
+            .custom(FontName.nunitoSansRegular, size: messageBodySize * scale, relativeTo: .body)
+        }
+
         /// Moonrise/moonset times.
         static let displaySize: CGFloat = 24
         static let display = Font.custom(FontName.youngSerif, size: displaySize, relativeTo: .title2)

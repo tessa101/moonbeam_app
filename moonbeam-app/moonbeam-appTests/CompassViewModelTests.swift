@@ -14,7 +14,7 @@ import Testing
 /// The heading comes from `FakeHeadingService` (the simulator has no
 /// compass), the moon's position from `FakeMoonService.position`, and the
 /// 30 s wait from `ManualSleeper`, which the test fires by hand.
-@Suite("Compass view model")
+@Suite("Compass view model", .timeLimit(.minutes(1)))
 @MainActor
 struct CompassViewModelTests {
 

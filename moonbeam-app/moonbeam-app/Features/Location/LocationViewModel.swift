@@ -201,7 +201,7 @@ final class LocationViewModel {
         // block; nothing reads this before then (LOADER.md §9).
         lastSeenAuthState = .notDetermined
         compass = CompassViewModel(headingService: headingService, moonService: moonService, now: now)
-        loader = LocationLoader(now: now)
+        loader = LocationLoader(now: now, sleep: sleep)
     }
 
     // MARK: - Derived state
@@ -211,13 +211,6 @@ final class LocationViewModel {
     /// in flight, since tapping it would only restart it.
     var showsUseMyLocation: Bool {
         !isLocating && !(place?.isCurrentLocation ?? false)
-    }
-
-    /// The main-screen "Use my location" button: only on the empty
-    /// first-launch state (COMPASS.md 4.11). Next to the Nearby note it read
-    /// as confusing, so everywhere else the sheet's row is the way back.
-    var showsUseMyLocationButton: Bool {
-        place == nil && showsUseMyLocation
     }
 
     /// The madlib sentence, the screen's header (DESIGN-1.1.md §3.1): "Where
@@ -292,17 +285,25 @@ final class LocationViewModel {
             show(lastViewed, remember: false)
         }
 
+        // §10.1: no saved place and nothing found (permission off, or no
+        // fix): the loader stops on a message instead of opening empty.
+        if place == nil {
+            loader.cancel()
+            await showLoaderMessage(LocationIssue(state) ?? .noFix)
+            return
+        }
+
         if launchStage == .phaseCycle {
             await loader.value
         } else {
             loader.cancel()
         }
-        launchStage = .ready
+        finishLoader()
     }
 
     /// Call before the screen appears, with how onboarding ended (§5).
     /// Allowed and declined need nothing extra: `start()`'s normal launch
-    /// flow finds the city, or leaves the empty "a city" state.
+    /// flow finds the city, or stops the loader on a message (LOADER.md §10).
     ///
     /// The screen goes back to waiting, so `start()`'s fetch after onboarding
     /// gets the launch loader too (LOADER.md §1), and a forced onboarding
@@ -339,6 +340,84 @@ final class LocationViewModel {
         launchStage = .phaseCycle
     }
 
+    /// The real screen, and the loader's waits stop.
+    private func finishLoader() {
+        loader.end()
+        launchStage = .ready
+    }
+
+    // MARK: - Loader messages (LOADER.md §10)
+
+    /// The message the loader is showing, if it's stopped on one.
+    var loaderIssue: LocationIssue? {
+        guard launchStage == .phaseCycle, case .message(let issue) = loader.content else { return nil }
+        return issue
+    }
+
+    /// Shows the loader at once if it isn't up (a known issue needs no
+    /// 400 ms grace: nothing fast is coming), then stops it on `issue`.
+    private func showLoaderMessage(_ issue: LocationIssue) async {
+        showLoader()
+        await loader.showMessage(issue)
+    }
+
+    /// The message's primary button, except Open Settings, which the view
+    /// opens itself; the return is handled in `sceneDidBecomeActive()`.
+    func performLoaderAction() async {
+        guard let issue = loaderIssue else { return }
+        switch issue.primaryAction {
+        case .requestPermission: await askFromLoader()
+        case .tryAgain: await recoverFromLoader()
+        case .search: presentSearch()
+        case .openSettings: break
+        }
+    }
+
+    /// First ask's Use my location: iOS's prompt over the stopped loader,
+    /// message still up. Allow searches again; Don't Allow turns the message
+    /// into "app permission off" (§10.3).
+    private func askFromLoader() async {
+        isRequestingPermission = true
+        let state = await locationService.requestAuthorization()
+        isRequestingPermission = false
+        lastSeenAuthState = state
+        updateCompass()
+        if let issue = LocationIssue(state) {
+            await loader.showMessage(issue)
+        } else {
+            await recoverFromLoader()
+        }
+    }
+
+    /// Back to searching from a message, then the fix: the screen if it
+    /// lands, the right message again if not.
+    private func recoverFromLoader() async {
+        guard await loader.resume() else { return }
+        await locate(userInitiated: true)
+        guard launchStage == .phaseCycle else { return }
+        if place != nil {
+            finishLoader()
+        } else {
+            let state = await locationService.refreshAuthorizationState()
+            await loader.showMessage(LocationIssue(state) ?? .noFix)
+        }
+    }
+
+    /// Back in the foreground on a message: permission granted in Settings
+    /// searches again; a different reason changes the message. No fix
+    /// waits for Try again (§10.3).
+    private func loaderDidBecomeActive(on issue: LocationIssue, state: LocationAuthState) async {
+        lastSeenAuthState = state
+        if state.isAuthorized {
+            // Opened from the search row's Location Off dialog.
+            locationOffDialog = nil
+            guard issue != .noFix else { return }
+            await recoverFromLoader()
+        } else if let current = LocationIssue(state), current != issue {
+            await loader.showMessage(current)
+        }
+    }
+
     /// Call when the phase cycle comes on screen. Returns what VoiceOver
     /// should announce the first time per launch, `nil` after (LOADER.md §4).
     func phaseCycleDidAppear() -> String? {
@@ -353,6 +432,21 @@ final class LocationViewModel {
     /// detected place.
     func useMyLocation() async {
         detectionOnlyAfterSettings = false
+        // The search sheet's row, opened from a loader message: the loader
+        // asks or searches, so a fix opens the screen and a miss shows the
+        // message again (§10.3). Off still gets the Location Off dialog.
+        if loaderIssue != nil {
+            switch await locationService.refreshAuthorizationState() {
+            case .notDetermined:
+                await askFromLoader()
+                return
+            case .authorized:
+                await recoverFromLoader()
+                return
+            case .denied, .restricted, .servicesOff:
+                break
+            }
+        }
         await runLocationFlow(detectionOnly: false)
     }
 
@@ -414,6 +508,10 @@ final class LocationViewModel {
         compass.sceneDidBecomeActive()
 
         guard !isRequestingPermission else { return }
+        if let issue = loaderIssue {
+            await loaderDidBecomeActive(on: issue, state: state)
+            return
+        }
         // The scene turns active while the launch is still loading. The
         // launch's own fetch decides the place then; a retry here would
         // cancel it, and the launch would open with no place (LOADER.md §9).
@@ -501,6 +599,11 @@ final class LocationViewModel {
         show(place, remember: true)
         addToRecents(place)
         isSearchPresented = false
+        // Picked from the loader's "Search for a city": the screen loads
+        // in for it (§10.3).
+        if launchStage != .ready {
+            finishLoader()
+        }
     }
 
     /// Only picked places become recents; a detected place never does
