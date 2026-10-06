@@ -427,7 +427,9 @@ struct PhaseCycleTests {
 
     // MARK: - The hold phase (LOADER.md §10.2)
 
+    /// Main actor: `OnboardingMoon` is a view, so its `geometry` is too.
     @Test("The hold phase is the onboarding moon: waning gibbous, dark sliver on the right")
+    @MainActor
     func holdPhaseIsOnboardingMoon() {
         let hold = PhaseCycle.geometry(at: PhaseCycle.holdElapsed)
         #expect(abs(hold.litFraction - OnboardingMoon.geometry.litFraction) < 1e-6)

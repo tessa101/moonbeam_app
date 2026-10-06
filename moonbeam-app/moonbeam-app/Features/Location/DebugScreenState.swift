@@ -26,11 +26,14 @@ struct DebugScreenState: View {
         /// "Waning Crescent · 29% lit": the widest phase line, moon up.
         case longPhaseName
         /// The launch loader (LOADER.md §3): the fix hangs, so the phase
-        /// cycle runs until the 10 s timeout, then the empty state.
+        /// cycle runs until the 10 s timeout, then No fix (§10.1).
         case loading
         /// A launch whose fix lands at 150 ms (no loader) or 2.5 s (the
         /// phase cycle), then the moon-up screen loading in (LOADER.md §2.1).
         case launchFast, launchSlow
+        /// The loader's messages (LOADER.md §10.3): no saved place, and the
+        /// permission state (or, for No fix, a fix that fails) behind each.
+        case messageFirstAsk, messageDenied, messageServicesOff, messageRestricted, messageNoFix
     }
 
     /// The launch argument, then the kind's name.
@@ -117,8 +120,17 @@ struct DebugScreenState: View {
                 isCurrentLocation: true
             )
             let now = state == .noMoonrise ? Self.time(3, 7, 53) : Self.time(2, 7, 53)
-            let authState: LocationAuthState = state == .locationOff ? .denied : .authorized
-            location = FakeLocationService(authorizationState: authState, placeResult: .success(here))
+            let authState: LocationAuthState = switch state {
+            case .locationOff, .messageDenied: .denied
+            case .messageFirstAsk: .notDetermined
+            case .messageServicesOff: .servicesOff
+            case .messageRestricted: .restricted
+            default: .authorized
+            }
+            let placeResult: Result<Place, any Error> = state == .messageNoFix
+                ? .failure(LocationError.locationUnavailable)
+                : .success(here)
+            location = FakeLocationService(authorizationState: authState, placeResult: placeResult)
             location.isPreciseLocationOff = state == .preciseOff || state == .aha
             if state == .aha {
                 location.preciseOffAfterTemporaryRequest = false
@@ -174,12 +186,17 @@ struct DebugScreenState: View {
         /// The launch kinds wait up to the 10 s launch timeout.
         private static let launchPollLimit = 1_000
 
+        private static let messageKinds: Set<Kind> = [
+            .messageFirstAsk, .messageDenied, .messageServicesOff, .messageRestricted, .messageNoFix,
+        ]
+
         /// Once the screen's own start has shown a place (detection has
         /// run), the place and day can change, and the compass can be fed a
         /// heading.
         func apply(_ state: Kind) async {
-            // The loader is the screen's own launch; nothing to fake on top.
-            guard state != .loading else { return }
+            // The loader and its messages are the screen's own launch;
+            // nothing to fake on top.
+            guard state != .loading, !Self.messageKinds.contains(state) else { return }
             let limit = state == .launchFast || state == .launchSlow ? Self.launchPollLimit : Self.pollLimit
             for _ in 0..<limit where viewModel.moonTable == nil {
                 try? await Task.sleep(for: Self.pollInterval)
@@ -230,4 +247,9 @@ struct DebugScreenState: View {
 #Preview("15 Launch loader") { DebugScreenState(.loading) }
 #Preview("16 Fast launch") { DebugScreenState(.launchFast) }
 #Preview("17 Slow launch") { DebugScreenState(.launchSlow) }
+#Preview("18 Message: First ask") { DebugScreenState(.messageFirstAsk) }
+#Preview("19 Message: App permission off") { DebugScreenState(.messageDenied) }
+#Preview("20 Message: Services off") { DebugScreenState(.messageServicesOff) }
+#Preview("21 Message: Restricted") { DebugScreenState(.messageRestricted) }
+#Preview("22 Message: No fix") { DebugScreenState(.messageNoFix) }
 #endif
