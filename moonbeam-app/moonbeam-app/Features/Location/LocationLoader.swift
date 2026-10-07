@@ -73,6 +73,11 @@ final class LocationLoader {
     nonisolated static let ahaLeaveDelayIntoFlight: TimeInterval = 0.4
     nonisolated static let ahaLeaveDuration: TimeInterval = 0.3
 
+    /// The flight starts this long before the ride ends, so the moon starts
+    /// to shrink and move as it eases into place and is never at rest
+    /// (§11.2.5). A ride shorter than twice this flies from its midpoint.
+    nonisolated static let flightOverlapWithRide: TimeInterval = 0.25
+
     /// For the ride's start speed: the cycle's speed is read over this
     /// much month time. Far below a frame.
     nonisolated static let speedSampleInterval: TimeInterval = 1e-3
@@ -218,9 +223,8 @@ final class LocationLoader {
     /// fix lands. The moon rides on to `realPhase` (the card's glyph) at
     /// once, at the cycle's speed, easing to rest; the label leaves as soon
     /// as the session has had its 0.7 s; "Aha" floats up 1 s before the
-    /// landing; and at the soft landing it's time to fly, with no rest
-    /// (§11.2.4). The flight's curve starts from rest, so the two read as one
-    /// motion.
+    /// landing; and 0.25 s before the landing it's time to fly (§11.2.5), so
+    /// the phase finishes settling as the moon starts to shrink and move.
     ///
     /// - Parameters:
     ///   - realPhase: the phase the card will show; `nil` (no moon table)
@@ -267,9 +271,10 @@ final class LocationLoader {
         leaveLabel()
         guard await wait(ahaStart.timeIntervalSince(labelLeaves), step: step) else { return false }
         content = .aha(greeting)
-        // Straight from the landing. Only a ride shorter than the label's
-        // exit (a fast cycle just short of the target) waits for "Aha".
-        let flight = max(ride.endDate, ahaStart)
+        // Overlapping the landing. Only a ride shorter than the label's exit
+        // (a fast cycle just short of the target) waits for "Aha".
+        let overlap = min(Self.flightOverlapWithRide, ride.duration / 2)
+        let flight = max(ride.endDate.addingTimeInterval(-overlap), ahaStart)
         return await wait(flight.timeIntervalSince(ahaStart), step: step)
     }
 

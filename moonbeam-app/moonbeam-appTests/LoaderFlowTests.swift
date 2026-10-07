@@ -681,7 +681,7 @@ struct LocationLoaderStepTests {
         Double(duration.components.attoseconds) / 1e18 + Double(duration.components.seconds)
     }
 
-    @Test("Recovery (§11.2.3, §11.2.4): ride at the fix, label goes at once, Aha 1 s before landing, flight at the landing")
+    @Test("Recovery (§11.2.3, §11.2.5): ride at the fix, label goes at once, Aha 1 s before landing, flight 0.25 s before it")
     func ahaStep() async throws {
         let clock = Clock()
         let loader = Self.makeLoader(clock)
@@ -708,8 +708,11 @@ struct LocationLoaderStepTests {
         // Aha 1 s before the landing (the ride is ≥ 1.6 s here).
         let expectedAha = ride.endDate.addingTimeInterval(-LocationLoader.ahaLeadBeforeLanding)
         #expect(abs((ahaAt ?? .distantPast).timeIntervalSince(expectedAha)) < 1e-6)
-        // §11.2.4: no rest; it's time to fly the moment the moon lands.
-        #expect(abs(clock.date.timeIntervalSince(ride.endDate)) < 1e-6)
+        // §11.2.5: it's time to fly 0.25 s before the moon lands, so the
+        // phase settles during the flight and the moon reaches the real
+        // phase well before the card (0.85 s).
+        #expect(abs(clock.date.timeIntervalSince(ride.endDate) + LocationLoader.flightOverlapWithRide) < 1e-6)
+        #expect(LocationLoader.flightOverlapWithRide < LocationLoader.flightDuration)
         _ = clock.waits.dropFirst(waitsBefore)
         #expect(loader.content == .aha(greeting))
         #expect(loader.glow.mode == .breathe)
@@ -778,14 +781,58 @@ struct LocationLoaderStepTests {
         #expect(LocationLoader.ahaLeaveDelayIntoFlight + LocationLoader.ahaLeaveDuration < LocationLoader.flightDuration)
     }
 
-    @Test("The flight starts from rest, so the soft landing and the flight read as one motion")
-    func flightStartsFromRest() {
+    @Test("The flight moves from its first frame (§11.2.5)")
+    func flightMovesAtOnce() {
         let began = Date(timeIntervalSinceReferenceDate: 0)
-        let early = AhaFlight.progress(since: began, at: began.addingTimeInterval(0.02))
-        let mid = AhaFlight.progress(since: began, at: began.addingTimeInterval(0.44))
-            - AhaFlight.progress(since: began, at: began.addingTimeInterval(0.42))
-        // The first 20 ms cover far less than 20 ms mid-flight.
-        #expect(early < mid / 5)
+        let first = AhaFlight.progress(since: began, at: began.addingTimeInterval(0.02))
+        // At least half the flight's average speed in its first 20 ms.
+        #expect(first > 0.5 * 0.02 / LocationLoader.flightDuration)
+    }
+
+    @Test("The moon never comes to rest between ride and flight", arguments: [0.4, 1.0, 1.9, 2.9, 3.6])
+    func neverAtRest(after seconds: TimeInterval) async throws {
+        let clock = Clock()
+        let loader = Self.makeLoader(clock)
+        loader.appear()
+        await loader.showMessage(.noFix)
+        await loader.resume()
+        clock.date = clock.date.addingTimeInterval(seconds)
+        #expect(await loader.showAha(AhaGreeting(line: AhaGreeting.lines[0], city: "Irvine, CA"), realPhase: Self.realPhase))
+        let ride = try #require(loader.ride)
+        let flightStart = clock.date
+        #expect(flightStart < ride.endDate)
+        // Over the handover, each 50 ms step either the phase or the flight
+        // moves by a visible amount.
+        let step = 0.05
+        for index in 0..<20 {
+            let t = ride.startDate.addingTimeInterval(max(0, ride.duration - 0.5) + Double(index) * step)
+            let phaseMove = abs(ride.phase(at: t.addingTimeInterval(step)) - ride.phase(at: t))
+            let flightMove = AhaFlight.progress(since: flightStart, at: t.addingTimeInterval(step))
+                - AhaFlight.progress(since: flightStart, at: t)
+            // The handover only: the flight's own ease into the card slows
+            // by design.
+            guard t < flightStart.addingTimeInterval(LocationLoader.flightOverlapWithRide + step) else { break }
+            #expect(phaseMove > 1e-3 || flightMove > 0.02)
+        }
+    }
+
+    @Test("A ride under 0.5 s flies from its midpoint")
+    func shortRideFliesFromMidpoint() async throws {
+        let clock = Clock()
+        let loader = Self.makeLoader(clock)
+        loader.appear()
+        await loader.showMessage(.noFix)
+        await loader.resume()
+        // Past the label's 0.7 s, mid-sweep, with the real phase just ahead:
+        // a fast start that shortens the ride.
+        clock.date = clock.date.addingTimeInterval(0.6)
+        let fixDate = clock.date
+        let here = PhaseCycle.phase(at: loader.moon.elapsed(at: fixDate))
+        let justAhead = PhaseCycle.geometry(forPhase: here + 0.01)
+        #expect(await loader.showAha(AhaGreeting(line: AhaGreeting.lines[0], city: "Irvine, CA"), realPhase: justAhead))
+        let ride = try #require(loader.ride)
+        #expect(ride.duration < 2 * LocationLoader.flightOverlapWithRide)
+        #expect(abs(clock.date.timeIntervalSince(fixDate) - ride.duration / 2) < 1e-6)
     }
 
     @Test("Reduce Motion or no card phase: no ride, Aha holds 2 s")

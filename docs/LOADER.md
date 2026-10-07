@@ -396,6 +396,23 @@ rest, so no curve change. Aha fades from 0.4 s into the flight over 0.3 s (`Loca
 `ahaLeaveDuration`). Both eases meet at zero speed, so the moon barely moves for ~0.3 s around the landing; check on
 the device. Report: `.agent-reports/5.9.3/findings.md`.
 
+#### 11.2.5 Flight overlaps the landing (Tessa, 2026-10-06, after 5.9.3b.3 on the device) — 5.9.3b.4
+**Problem (as the 5.9.3b.3 note predicted):** the ride eases out to zero speed and the flight eases in from zero, so
+the moon sits nearly still for ~0.3 s around the landing. Tessa: as soon as it eases into place, it should start
+to shrink and move to the card.
+- **Overlap:** the flight (scale + move) starts **0.25 s before the phase ride ends** (proposed). The phase finishes
+  settling on today's phase during the flight's first 0.25 s, so the moon is never at rest.
+- **Flight curve starts moving at once:** replace `cubic-bezier(.65, 0, .25, 1)` with an ease-out that has speed at
+  the start, e.g. `cubic-bezier(.3, .3, .25, 1)` (proposed). Duration stays 0.85 s.
+- Aha: unchanged (in 1.0 s before the landing, fades from 0.4 s into the flight over 0.3 s).
+- Short rides (`D` < 0.5 s): the flight starts at the ride's midpoint instead.
+- Tests: flight start = ride end − 0.25 s; the phase reaches the real value before the moon reaches the card glyph;
+  moon speed never drops to ~0 between ride and flight.
+
+**As built (5.9.3b.4, 2026-10-06):** flight at ride end − 0.25 s (`LocationLoader.flightOverlapWithRide`; the ride's
+midpoint under 0.5 s), on `cubic-bezier(.3, .3, .25, 1)` (`AhaFlight.curve`). Aha's rules are unchanged, so it's
+readable ~1.15 s before its fade. Report: `.agent-reports/5.9.3/findings.md`.
+
 ### 11.3 Moon smoothness (5.9.3c)
 
 Adopt the handoff's `MoonLoader.swift` timing and easing.
@@ -449,6 +466,8 @@ sharp). Report: `.agent-reports/5.9.3/findings.md`.
 
 ## Decision log
 
+- **2026-10-06 (Tessa, after 5.9.3b.3):** cut further: the moon starts shrinking and moving to the card as it
+  eases into place, no near-still moment (§11.2.5).
 - **2026-10-06 (Tessa, after 5.9.3b.2):** no pause after the moon lands; soft landing, then straight into the
   scale + flight into the card (§11.2.4).
 - **2026-10-06 (Tessa, after 5.9.3b):** recovery order changes: the moon rides to the real phase as soon as the fix

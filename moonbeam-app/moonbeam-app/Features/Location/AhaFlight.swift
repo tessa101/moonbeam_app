@@ -6,8 +6,8 @@
 import SwiftUI
 
 /// The loader moon's flight into the card's phase slot after "Aha"
-/// (LOADER.md §10.4; the handoff's "Search → Aha → city"): over 0.85 s on
-/// `cubic-bezier(.65, 0, .25, 1)` it moves and shrinks into the slot's real
+/// (LOADER.md §10.4, §11.2.5; the handoff's "Search → Aha → city"): over
+/// 0.85 s on `cubic-bezier(.3, .3, .25, 1)` it moves and shrinks into the slot's real
 /// frame, keeps the real phase it rode to (§11.2.2), and its glow drops to
 /// 0.35.
 ///
@@ -16,9 +16,11 @@ nonisolated enum AhaFlight {
 
     // MARK: - Constants
 
-    /// The handoff's `cubic-bezier(.65, 0, .25, 1)`.
+    /// §11.2.5: an ease-out that moves from the first frame (the handoff's
+    /// `cubic-bezier(.65, 0, .25, 1)` started from rest, and with the ride
+    /// easing to rest too the moon sat nearly still at the landing).
     static let curve = UnitCurve.bezier(
-        startControlPoint: UnitPoint(x: 0.65, y: 0),
+        startControlPoint: UnitPoint(x: 0.3, y: 0.3),
         endControlPoint: UnitPoint(x: 0.25, y: 1)
     )
 
@@ -38,9 +40,10 @@ nonisolated enum AhaFlight {
         return curve.value(at: min(max(fraction, 0), 1))
     }
 
-    /// The moon from `start` (where the ride left it) to `landing` (the
-    /// card's glyph), lit on the landing's side. After a ride the two are
-    /// the same, so nothing changes in flight.
+    /// The moon from `start` (where the ride is at that moment) to
+    /// `landing` (the card's glyph), lit on the landing's side. The ride
+    /// finishes settling 0.25 s into the flight (§11.2.5), after which the
+    /// two are the same.
     static func geometry(
         from start: PhaseGlyphGeometry,
         landingOn landing: PhaseGlyphGeometry,

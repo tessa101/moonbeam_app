@@ -36,6 +36,12 @@
 - **Aha floor:** never sooner than 0.15 s after the label starts leaving (the built overlap), so a short ride
   can't put Aha over the label.
 
+### 2026-10-06 · Flight overlaps the landing (LOADER.md §11.2.5)
+- **Decision (Tessa, after 5.9.3b.3 on the device):** as soon as the moon eases into today's phase it starts to shrink
+  and move to the card. The two eases meeting at zero left it nearly still for ~0.3 s.
+- **Proposed (Cowork):** flight starts 0.25 s before the ride ends; flight curve `cubic-bezier(.3, .3, .25, 1)` so it
+  moves from the first frame.
+
 ### 2026-10-06 · No pause after the moon lands (LOADER.md §11.2.4)
 - **Decision (Tessa, after 5.9.3b.2 on the device):** drop the 0.6 s rest. The moon lands softly on today's phase,
   then scales and flies into the card in one motion. Supersedes the pause in "Recovery: moon first" below.
