@@ -33,25 +33,29 @@ struct LoaderMessage: View {
     /// The flexible gap's least, between the body and the button.
     static let minimumBodyToButton: CGFloat = 24
 
-    @ScaledMetric(relativeTo: .title) private var headlineLeading = Theme.Fonts.messageHeadlineSize
-        * (Theme.Fonts.messageHeadlineLineHeightMultiple - 1)
-    @ScaledMetric(relativeTo: .body) private var bodyLeading = Theme.Fonts.messageBodySize
-        * (Theme.Fonts.messageBodyLineHeightMultiple - 1)
+    /// §11.1.3: the prototype's widths, centred inside the 28 pt sides.
+    /// Not at accessibility sizes, where the copy needs every point.
+    static let headlineMaxWidth: CGFloat = 300
+    static let bodyMaxWidth: CGFloat = 290
+
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     // MARK: - Body
 
     var body: some View {
         VStack(spacing: 0) {
             VStack(spacing: Self.headlineToBody * textScale) {
-                Text(issue.headline)
+                BrokenText(text: issue.headline, lines: issue.headlineLines)
                     .font(Theme.Fonts.messageHeadline(scale: textScale))
                     .foregroundStyle(Theme.Colors.textPrimary)
-                    .lineSpacing(headlineLeading * textScale)
+                    .themeLineHeight(Theme.Fonts.messageHeadlineLineHeightMultiple)
+                    .frame(maxWidth: maxWidth(Self.headlineMaxWidth))
                     .accessibilityAddTraits(.isHeader)
-                Text(issue.body)
+                BrokenText(text: issue.body, lines: issue.bodyLines)
                     .font(Theme.Fonts.messageBody(scale: textScale))
                     .foregroundStyle(Theme.Colors.textBody)
-                    .lineSpacing(bodyLeading * textScale)
+                    .themeLineHeight(Theme.Fonts.messageBodyLineHeightMultiple)
+                    .frame(maxWidth: maxWidth(Self.bodyMaxWidth))
             }
             .multilineTextAlignment(.center)
             .fixedSize(horizontal: false, vertical: true)
@@ -81,6 +85,34 @@ struct LoaderMessage: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: fillsHeight ? .infinity : nil)
+    }
+
+    private func maxWidth(_ width: CGFloat) -> CGFloat {
+        dynamicTypeSize.isAccessibilitySize ? .infinity : width
+    }
+}
+
+// MARK: - Set line breaks
+
+/// The copy on its set lines (§11.1.3) when every line fits the width,
+/// otherwise wrapped naturally (accessibility sizes, small screens, a line
+/// too long for the width). Never truncated. VoiceOver reads the copy
+/// without the breaks.
+private struct BrokenText: View {
+
+    let text: String
+    let lines: [String]?
+
+    var body: some View {
+        ViewThatFits(in: .horizontal) {
+            if let lines {
+                Text(lines.joined(separator: "\n"))
+                    .fixedSize()
+            }
+            Text(text)
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(text)
     }
 }
 

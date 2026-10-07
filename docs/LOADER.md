@@ -271,10 +271,10 @@ Targets from the prototype, as **line height = size × multiple**:
 | "Aha" | Young Serif 25 | ×1.2 → 30 pt |
 | Label | Nunito Sans 16 | ×1.3 → 20.8 pt |
 
-SwiftUI's `lineSpacing` is **extra space on top of the font's own line height**, and both fonts have a tall natural
-line height, which is why it reads loose. Set `lineSpacing = target − font.lineHeight` (it can be negative),
-scaled with Dynamic Type via `@ScaledMetric`. Put it in `Theme.swift` as one helper so the loader, onboarding and
-anything later share it. Check Young Serif descenders aren't clipped on a 2-line headline.
+Use SwiftUI's total line-height modifier (`lineHeight(.multiple(factor:))`) rather than `lineSpacing`, which only
+adds space on top of the font's natural line height and cannot tighten Young Serif. Put it in `Theme.swift` as one
+helper so the loader, onboarding and anything later share it. The multiple follows the Dynamic Type-scaled font.
+Check Young Serif descenders aren't clipped on a 2-line headline.
 
 #### 11.1.3 Text width
 The prototype uses balanced wrapping (`text-wrap: balance`) inside 28 pt side insets. SwiftUI has no balance, so
@@ -493,7 +493,7 @@ sharp). Report: `.agent-reports/5.9.3/findings.md`.
 - **5.9.3a** Line height and text width (§11.1.2, §11.1.3), last and small. No position changes.
 
 ### 11.5 Tests
-- Line-spacing helper returns `target − natural` for each style and scales with Dynamic Type.
+- Line-height helper applies each style's target multiple and follows Dynamic Type.
 - Break table: each message's default-size text matches §11.1.3.
 - `f_real` from (k, waxing) round-trips with the 4b lit fraction at 0, 25, 50, 75, 100% for waxing and waning.
 - Ride travel `T` is always forward: `d ∈ [0,1)` normally, `d + 1` on first run (so ≥ 1); duration clamps at 1.6 / 4.2 s.

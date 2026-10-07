@@ -367,6 +367,7 @@ struct LaunchPhaseCycle: View {
         Text(Self.message)
             .font(Theme.Fonts.body)
             .foregroundStyle(Theme.Colors.textSecondary)
+            .themeLineHeight(Theme.Fonts.loaderLabelLineHeightMultiple)
             .multilineTextAlignment(.center)
             .fixedSize(horizontal: false, vertical: true)
             .opacity(labelIsIn ? 1 : 0)

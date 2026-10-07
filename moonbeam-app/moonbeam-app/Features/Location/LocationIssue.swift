@@ -72,6 +72,29 @@ nonisolated enum LocationIssue: Equatable, Sendable {
         }
     }
 
+    /// The headline's lines at the default size (LOADER.md §11.1.3, from
+    /// the prototype's balanced wrapping). Joined, they're `headline`.
+    var headlineLines: [String] {
+        switch self {
+        case .firstAsk: ["Find the moon", "from where you are"]
+        case .appDenied, .restricted: ["\(AppInfo.name) can’t", "see your location"]
+        case .servicesOff: ["Location", "Services are off"]
+        case .noFix: ["Couldn’t find", "your location"]
+        }
+    }
+
+    /// The body's lines at the default size (§11.1.3); restricted has its
+    /// own copy and no set breaks, so it wraps naturally.
+    var bodyLines: [String]? {
+        switch self {
+        case .firstAsk: ["\(AppInfo.name) uses your location to show", "when and where the moon rises and sets."]
+        case .appDenied: ["Allow location access to see", "where the moon is from here."]
+        case .servicesOff: ["Turn them on to see where", "the moon is from here."]
+        case .noFix: ["Check your signal and try", "again, or search for a city."]
+        case .restricted: nil
+        }
+    }
+
     var primaryAction: Action {
         switch self {
         case .firstAsk: .requestPermission

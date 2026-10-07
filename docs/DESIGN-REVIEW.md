@@ -82,6 +82,11 @@ _Started: 2026-09-26_
 
 ## Motion and feedback (noted 2026-10-01, Tessa)
 - [x] **Tap animation on buttons:** ✅ Built 2026-10-01 (`PressFeedback`; DECISIONS.md "Tap animation", as built). Sentence tokens not done (open). Was: a pressed-state animation (e.g. a slight scale/opacity dip) for the primary, secondary and text-link buttons, the ‹ › day buttons and the sentence tokens. Put it in the shared button styles (`PrimaryButtonStyle`, `SecondaryButtonStyle`, `TextLinkButtonStyle`) so every button picks it up; respect Reduce Motion. **Go (2026-10-01, Tessa), after the DEBUG onboarding trigger, before 5.5.** Proposed: scale 0.96 + opacity ~0.8, quick spring (~0.15 s); Reduce Motion → opacity only (DECISIONS.md 2026-10-01 "Tap animation")
+- [ ] **Review the loader → main screen motion (Tessa, 2026-10-06, OK for now):** built in 5.9.3b.2–b.6 (`87d26be`):
+  recovery order (moon rides first, Aha near the end), flight overlapping the landing, Aha out at the flight start,
+  150 ms sentence → card → compass stagger on every load-in, soft haptic as the moon lands. Re-check timings and the
+  haptic's strength in the design review. Values: LOADER.md §11.2.3–11.2.7; tuning constants in `ContentLoadIn`,
+  `LocationLoader`, `PhaseRide`.
 - [ ] **Polish transitions everywhere (Tessa, 2026-10-02, later):** screen changes, sheet open/close, state swaps (lock, notes, Up now, loader → main screen) should feel soft and consistent. One shared set of durations/curves, Reduce Motion versions. LOADER.md §2.1's values are the interim ones.
 
 ## Brand / product

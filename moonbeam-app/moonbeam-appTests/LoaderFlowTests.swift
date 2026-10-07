@@ -578,6 +578,31 @@ struct LoaderFlowTests {
         #expect(LocationIssue.appDenied.showsSearchLink)
     }
 
+    @Test("Each message has the prototype's default-size line breaks")
+    func messageLineBreaks() {
+        #expect(LocationIssue.firstAsk.headlineLines == ["Find the moon", "from where you are"])
+        #expect(LocationIssue.firstAsk.bodyLines == [
+            "Moon Signal uses your location to show",
+            "when and where the moon rises and sets."
+        ])
+        #expect(LocationIssue.appDenied.headlineLines == ["Moon Signal can’t", "see your location"])
+        #expect(LocationIssue.appDenied.bodyLines == [
+            "Allow location access to see",
+            "where the moon is from here."
+        ])
+        #expect(LocationIssue.servicesOff.headlineLines == ["Location", "Services are off"])
+        #expect(LocationIssue.servicesOff.bodyLines == [
+            "Turn them on to see where",
+            "the moon is from here."
+        ])
+        #expect(LocationIssue.noFix.headlineLines == ["Couldn’t find", "your location"])
+        #expect(LocationIssue.noFix.bodyLines == [
+            "Check your signal and try",
+            "again, or search for a city."
+        ])
+        #expect(LocationIssue.restricted.bodyLines == nil)
+    }
+
     @Test("Authorized has no message")
     func authorizedHasNone() {
         #expect(LocationIssue(.authorized) == nil)

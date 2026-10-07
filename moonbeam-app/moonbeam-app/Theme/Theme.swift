@@ -152,6 +152,9 @@ nonisolated enum Theme {
         }
         static let messageBodySize: CGFloat = 17
         static let messageBodyLineHeightMultiple: CGFloat = 1.45
+        /// "Aha" and "Finding your location…" (LOADER.md §11.1.2).
+        static let ahaLineHeightMultiple: CGFloat = 1.2
+        static let loaderLabelLineHeightMultiple: CGFloat = 1.3
         static func messageBody(scale: CGFloat = 1) -> Font {
             .custom(FontName.nunitoSansRegular, size: messageBodySize * scale, relativeTo: .body)
         }
@@ -262,5 +265,18 @@ nonisolated private extension Color {
             green: Double((hex >> 8) & 0xFF) / channelMax,
             blue: Double(hex & 0xFF) / channelMax
         )
+    }
+}
+
+// MARK: - Line height
+
+extension View {
+    /// Line height as a multiple of the font's size, like CSS
+    /// `line-height: 1.22` (LOADER.md §11.1.2). `lineSpacing` only adds to
+    /// the font's own line height, which for Young Serif (1.41×) is already
+    /// taller than the design, so it can't tighten; this sets the total. It
+    /// follows the font's size, so it scales with Dynamic Type.
+    func themeLineHeight(_ multiple: CGFloat) -> some View {
+        lineHeight(.multiple(factor: multiple))
     }
 }

@@ -30,6 +30,7 @@ struct AhaGreetingView: View {
             Text(greeting.line)
                 .font(Theme.Fonts.ahaLine)
                 .foregroundStyle(Theme.Colors.textPrimary)
+                .themeLineHeight(Theme.Fonts.ahaLineHeightMultiple)
             HStack(spacing: Self.pinToCity) {
                 CityPin()
                     .frame(width: pinWidth, height: pinHeight)
