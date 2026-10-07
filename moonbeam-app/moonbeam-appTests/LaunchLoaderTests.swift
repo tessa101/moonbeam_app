@@ -371,6 +371,8 @@ struct LaunchLoaderTests {
         await Self.settle { harness.sleeper.pendingCount == 1 }
         harness.sleeper.fire()
         await launch.value
+        // After the phase cycle, with no Aha: no landing haptic (§11.2.7).
+        #expect(viewModel.loader.landingCount == 0)
     }
 
 }

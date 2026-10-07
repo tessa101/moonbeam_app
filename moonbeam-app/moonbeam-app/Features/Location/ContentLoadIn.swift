@@ -10,14 +10,14 @@ import SwiftUI
 /// the whole screen fading in like a scrim lifting. The background never
 /// changes.
 ///
-/// Each block fades in and rises 8 pt, 300 ms ease-out, 70 ms after the one
-/// above it. The rise is an offset, not layout, so nothing else moves.
+/// Each block fades in and rises 8 pt, 300 ms ease-out, 150 ms after the
+/// one above it (§11.2.7, Tessa's starting value; was 70 ms): a light
+/// stagger, not a sequence to watch. The rise is an offset, not layout, so nothing else moves.
 /// Reduce Motion keeps the fade and the stagger but drops the rise.
 ///
-/// Under "Aha"'s flying moon (§11.2.6) the blocks are timed around the
-/// flight instead (its start is time zero): the sentence once "Aha" is gone,
-/// the card as the moon reaches its slot, the compass after the landing.
-/// Same fade and rise.
+/// Under "Aha"'s flying moon (§11.2.6, §11.2.7) the same stagger starts
+/// 0.30 s into the flight, once "Aha" is gone: sentence 0.30 s, card 0.45 s,
+/// compass 0.60 s. Same fade and rise.
 struct ContentLoadIn: ViewModifier {
 
     /// The screen's blocks, in load-in order.
@@ -30,7 +30,8 @@ struct ContentLoadIn: ViewModifier {
     // MARK: - Timings (§2.1, proposed values)
 
     static let duration: TimeInterval = 0.3
-    static let stagger: TimeInterval = 0.07
+    /// The one number to tune on the device (§11.2.7).
+    static let stagger: TimeInterval = 0.15
     static let rise: CGFloat = 8
 
     /// How long after the screen arrives a block starts loading in.
@@ -43,17 +44,16 @@ struct ContentLoadIn: ViewModifier {
         reduceMotion ? 0 : rise
     }
 
-    // MARK: - After "Aha" (§11.2.6, proposed values)
+    // MARK: - After "Aha" (§11.2.6, §11.2.7, proposed values)
+
+    /// The sentence starts this long into the flight, after "Aha" has gone
+    /// (0.25 s).
+    static let afterAhaStart: TimeInterval = 0.30
 
     /// How long after the flight starts a block starts loading in: the
-    /// sentence after "Aha" has gone (0.25 s), the card so it's in as the
-    /// moon lands in its slot (0.85 s), the compass after the landing.
+    /// usual stagger, from `afterAhaStart`.
     static func afterAhaDelay(for block: Block) -> TimeInterval {
-        switch block {
-        case .sentence: 0.30
-        case .card: 0.45
-        case .compass: 1.0
-        }
+        afterAhaStart + delay(for: block)
     }
 
     /// How a block comes in: after "Aha", or the usual load-in.

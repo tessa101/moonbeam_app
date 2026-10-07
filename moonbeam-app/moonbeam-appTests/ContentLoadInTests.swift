@@ -20,11 +20,12 @@ struct ContentLoadInTests {
         #expect(ContentLoadIn.Block.allCases == [.sentence, .card, .compass])
     }
 
-    @Test("Staggered 70 ms, the sentence first with no wait")
+    @Test("Staggered 150 ms (§11.2.7), the sentence first with no wait")
     func stagger() {
+        #expect(ContentLoadIn.stagger == 0.15)
         #expect(ContentLoadIn.delay(for: .sentence) == 0)
-        #expect(abs(ContentLoadIn.delay(for: .card) - 0.07) < Self.tolerance)
-        #expect(abs(ContentLoadIn.delay(for: .compass) - 0.14) < Self.tolerance)
+        #expect(abs(ContentLoadIn.delay(for: .card) - 0.15) < Self.tolerance)
+        #expect(abs(ContentLoadIn.delay(for: .compass) - 0.30) < Self.tolerance)
     }
 
     @Test("Each block: 300 ms, rising 8 pt")
@@ -40,9 +41,9 @@ struct ContentLoadInTests {
         #expect(ContentLoadIn.delay(for: .compass) > ContentLoadIn.delay(for: .sentence))
     }
 
-    @Test("The whole load-in is over within half a second")
+    @Test("The whole load-in is over in 0.6 s")
     func total() {
         let last = ContentLoadIn.delay(for: .compass) + ContentLoadIn.duration
-        #expect(last < 0.5)
+        #expect(abs(last - 0.6) < Self.tolerance)
     }
 }

@@ -435,6 +435,32 @@ flight; Aha faded from 0.4 s), so the text sat over the compass.
 §2.1's fade and 8 pt rise (the old single 0.6 s fade is gone). §2.1's own load-in and Reduce Motion are unchanged.
 Report: `.agent-reports/5.9.3/findings.md`.
 
+#### 11.2.7 Main screen stagger 150 ms everywhere; haptic as the moon lands (Tessa, 2026-10-06, after 5.9.3b.5) — 5.9.3b.6
+**Stagger:** every main-screen load-in uses the same per-block motion (the sentence's: opacity 0 → 1 with the 8 pt
+rise, 300 ms ease-out) and a **150 ms stagger**: **sentence → card (+150 ms) → compass (+300 ms)**. Tessa's guess at
+the number; it should read as a light stagger, not a sequence to watch.
+- Applies to all three load-ins: fast launch (< 400 ms), after the phase cycle (§2.1, was 70 ms), and after Aha
+  (§11.2.6, was 0.30 / 0.45 / 1.0 s → now **0.30 / 0.45 / 0.60 s** from the flight start). The compass now comes in
+  just before the moon lands (0.85 s); Aha is gone by 0.25 s, so nothing overlaps.
+- The bottom bar / pinned bar come in with the compass.
+- Keep the stagger in one constant (`ContentLoadIn`) so it's easy to tune on the device.
+- Reduce Motion: same order and stagger, opacity only.
+
+**Haptic when the moon locks into the card (new):** one light tap at the moment the flying moon lands in the
+card's phase slot (the card's glyph takes over).
+- `.sensoryFeedback(.impact(flexibility: .soft, intensity: 0.6), trigger:)` (proposed): softer than the compass
+  lock's `.impact(weight: .heavy)`, so the two feel different. Honors the System Haptics setting, as the compass does.
+- Only on the recovery → Aha → flight path (the only time the moon flies). Once per landing, never on a launch
+  without Aha.
+- Reduce Motion (no flight): play it as the cross-fade to the main screen ends.
+- Tests: landing increments the haptic trigger once; no trigger on a fast launch or after the phase cycle; stagger
+  start times 0 / 150 / 300 ms, after Aha 0.30 / 0.45 / 0.60 s.
+
+**As built (5.9.3b.6, 2026-10-06):** `ContentLoadIn.stagger` 0.15 s; after Aha `afterAhaStart` 0.30 s + the same
+stagger (0.30 / 0.45 / 0.60 s). Haptic: `LocationLoader.landingCount` (bumped in `didLand()` only after a real
+flight) drives `.sensoryFeedback(.impact(flexibility: .soft, intensity: 0.6))` on `LocationScreen`. Reduce Motion
+taps at the end of the 0.2 s loader cross-fade. Report: `.agent-reports/5.9.3/findings.md`.
+
 ### 11.3 Moon smoothness (5.9.3c)
 
 Adopt the handoff's `MoonLoader.swift` timing and easing.
@@ -488,6 +514,8 @@ sharp). Report: `.agent-reports/5.9.3/findings.md`.
 
 ## Decision log
 
+- **2026-10-06 (Tessa, after 5.9.3b.5):** main screen blocks load in with a 150 ms stagger everywhere (sentence →
+  card → compass); a light haptic when the moon lands in the card (§11.2.7).
 - **2026-10-06 (Tessa, after 5.9.3b.4):** Aha was over the incoming compass. Aha leaves as the flight starts; after a
   recovery the main screen loads in by block around the flight, compass last after the landing (§11.2.6).
 - **2026-10-06 (Tessa, after 5.9.3b.3):** cut further: the moon starts shrinking and moving to the card as it

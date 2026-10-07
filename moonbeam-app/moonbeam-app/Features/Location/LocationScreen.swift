@@ -41,6 +41,9 @@ struct LocationScreen: View {
 
     /// LOADER.md §2.1, Reduce Motion included (opacity only): the phase
     /// cycle fades in, and fades out faster as the content loads in.
+    /// §11.2.7 (proposed): a light tap as the moon lands in the card.
+    private static let landingHapticIntensity = 0.6
+
     private static func launchStageAnimation(to stage: LaunchStage) -> Animation {
         .easeOut(duration: stage == .ready ? LaunchStage.phaseCycleFadeOutDuration : LaunchStage.fadeDuration)
     }
@@ -87,15 +90,18 @@ struct LocationScreen: View {
             }
         }
         .animation(Self.launchStageAnimation(to: viewModel.launchStage), value: viewModel.launchStage)
-        // §10.4: the moon has landed (or, with Reduce Motion, never flew)
-        // and the card's own glyph takes over.
+        // §10.4: the moon has landed (or, with Reduce Motion, the
+        // cross-fade to the screen has ended) and the card's own glyph takes
+        // over, with a light tap (§11.2.7).
         .task(id: viewModel.loader.flightStartedAt) {
             guard viewModel.loader.flightStartedAt != nil else { return }
-            if !reduceMotion {
-                try? await Task.sleep(for: .seconds(LocationLoader.flightDuration))
-            }
+            let wait = reduceMotion ? LaunchStage.phaseCycleFadeOutDuration : LocationLoader.flightDuration
+            try? await Task.sleep(for: .seconds(wait))
             viewModel.loader.didLand()
         }
+        // Softer than the compass lock's heavy tap, so the two feel
+        // different; follows the System Haptics setting.
+        .sensoryFeedback(.impact(flexibility: .soft, intensity: Self.landingHapticIntensity), trigger: viewModel.loader.landingCount)
         .onChange(of: viewModel.launchStage) { old, new in
             // §4: focus leaves the vanished loader text for the screen's
             // first element, the sentence header.

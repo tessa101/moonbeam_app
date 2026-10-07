@@ -123,6 +123,10 @@ final class LocationLoader {
     /// under it meanwhile.
     private(set) var flightStartedAt: Date?
 
+    /// Bumped once each time the moon lands in the card after "Aha": the
+    /// view's haptic trigger (§11.2.7). Never on a launch without "Aha".
+    private(set) var landingCount = 0
+
     // MARK: - Dependencies
 
     @ObservationIgnored private let now: () -> Date
@@ -300,9 +304,12 @@ final class LocationLoader {
         flightStartedAt = now()
     }
 
-    /// The flying moon has settled in the card.
+    /// The flying moon has settled in the card (with Reduce Motion, the
+    /// cross-fade to the screen has ended): one haptic.
     func didLand() {
+        guard flightStartedAt != nil else { return }
         flightStartedAt = nil
+        landingCount += 1
     }
 
     /// The loader is going: any step still waiting stops.

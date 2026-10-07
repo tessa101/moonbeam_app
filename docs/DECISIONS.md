@@ -36,6 +36,14 @@
 - **Aha floor:** never sooner than 0.15 s after the label starts leaving (the built overlap), so a short ride
   can't put Aha over the label.
 
+### 2026-10-06 · 150 ms load-in stagger; haptic when the moon lands (LOADER.md §11.2.7)
+- **Decision (Tessa, after 5.9.3b.5 on the device):** the card and compass load in like the sentence (fade + light
+  rise), **150 ms apart**: sentence → card → compass. A light stagger, not distracting; 150 ms is her starting
+  guess. Applies to every main-screen load-in (fast launch, after the phase cycle, after Aha).
+- **New:** a haptic when the moon locks into the card after Aha.
+- **Proposed (Cowork):** soft impact at 0.6 intensity, lighter than the compass lock's heavy tap; after Aha the blocks
+  start at 0.30 / 0.45 / 0.60 s from the flight start (compass was 1.0 s).
+
 ### 2026-10-06 · Aha out earlier; main screen loads in around the flight (LOADER.md §11.2.6)
 - **Decision (Tessa, after 5.9.3b.4 on the device):** "Aha" leaves earlier, so it no longer overlaps the compass coming
   in; delay the compass and sequence the main screen's load-in after a recovery.

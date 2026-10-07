@@ -516,6 +516,8 @@ struct LoaderFlowTests {
         #expect(harness.viewModel.loader.content == .searching)
         #expect(harness.viewModel.loader.flightStartedAt == nil)
         #expect(!harness.sleeper.durations.contains(.seconds(LocationLoader.minimumSearchBeforeAha)))
+        // No flight, so no landing haptic (§11.2.7).
+        #expect(harness.viewModel.loader.landingCount == 0)
         // The loader was skipped: the first ride's lap is still to come.
         #expect(!harness.onboardingStore.hasSeenFirstFindPass)
     }
@@ -781,14 +783,30 @@ struct LocationLoaderStepTests {
         #expect(LocationLoader.ahaLeaveDuration < ContentLoadIn.afterAhaDelay(for: .sentence))
     }
 
-    @Test("§11.2.6: after Aha the screen loads in by block around the flight, compass after the landing")
+    @Test("§11.2.7: after Aha the screen loads in at 0.30 / 0.45 / 0.60 s, the same 150 ms stagger")
     func screenAroundFlight() {
-        #expect(ContentLoadIn.afterAhaDelay(for: .sentence) == 0.30)
-        #expect(ContentLoadIn.afterAhaDelay(for: .card) == 0.45)
-        #expect(ContentLoadIn.afterAhaDelay(for: .compass) == 1.0)
-        // The card is in (0.45 + 0.3 s) as the moon lands in its slot.
+        #expect(abs(ContentLoadIn.afterAhaDelay(for: .sentence) - 0.30) < 1e-9)
+        #expect(abs(ContentLoadIn.afterAhaDelay(for: .card) - 0.45) < 1e-9)
+        #expect(abs(ContentLoadIn.afterAhaDelay(for: .compass) - 0.60) < 1e-9)
+        // The card is in (0.45 + 0.3 s) as the moon lands in its slot; the
+        // compass starts just before the landing.
         #expect(ContentLoadIn.afterAhaDelay(for: .card) + ContentLoadIn.duration <= LocationLoader.flightDuration)
-        #expect(ContentLoadIn.afterAhaDelay(for: .compass) > LocationLoader.flightDuration)
+        #expect(ContentLoadIn.afterAhaDelay(for: .compass) < LocationLoader.flightDuration)
+    }
+
+    @Test("§11.2.7: one haptic per landing, none without a flight")
+    func landingHaptic() {
+        let loader = LocationLoader(now: { Date(timeIntervalSinceReferenceDate: 0) }, sleep: { _ in })
+        loader.appear()
+        // No flight: nothing to land, no tap.
+        loader.didLand()
+        #expect(loader.landingCount == 0)
+        loader.flyAway()
+        loader.didLand()
+        #expect(loader.landingCount == 1)
+        // A second report of the same landing doesn't tap again.
+        loader.didLand()
+        #expect(loader.landingCount == 1)
     }
 
     @Test("The flight moves from its first frame (§11.2.5)")
