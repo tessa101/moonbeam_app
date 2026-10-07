@@ -37,7 +37,22 @@ final class OnboardingStoreTests {
         #expect(UserDefaultsOnboardingStore(defaults: defaults).isOnboardingCompleted)
     }
 
+    @Test("The first-find pass starts unseen and survives a relaunch (LOADER.md §11.2.2)")
+    func firstFindPassSurvivesRelaunch() {
+        #expect(!UserDefaultsOnboardingStore(defaults: defaults).hasSeenFirstFindPass)
+        UserDefaultsOnboardingStore(defaults: defaults).hasSeenFirstFindPass = true
+        #expect(UserDefaultsOnboardingStore(defaults: defaults).hasSeenFirstFindPass)
+    }
+
     #if DEBUG
+    @Test("The DEBUG reset clears the first-find pass too")
+    func debugResetClearsFirstFindPass() {
+        let store = UserDefaultsOnboardingStore(defaults: defaults)
+        store.hasSeenFirstFindPass = true
+        store.resetIfRequested(by: ["moonbeam-app", UserDefaultsOnboardingStore.resetLaunchArgument])
+        #expect(!store.hasSeenFirstFindPass)
+    }
+
     @Test("The DEBUG launch argument clears the flag; other arguments don't")
     func debugReset() {
         let store = UserDefaultsOnboardingStore(defaults: defaults)

@@ -135,7 +135,19 @@ nonisolated enum PhaseCycle {
     /// real moon's does, `(1 − cos φ) / 2`, so the shape is always a true
     /// phase.
     static func geometry(at elapsed: TimeInterval) -> PhaseGlyphGeometry {
-        let angle = phaseAngle(at: elapsed)
+        geometry(forPhase: phase(at: elapsed))
+    }
+
+    /// The phase at that moment, `0..<1` (0 new, 0.5 full): where the "Aha"
+    /// ride starts from (`PhaseRide`).
+    static func phase(at elapsed: TimeInterval) -> Double {
+        phaseAngle(at: elapsed) / (2 * fullMoonPhaseAngle)
+    }
+
+    /// The glyph for a phase `0..<1`, the 4b shape: lit fraction
+    /// `(1 − cos 2πf) / 2`, lit on the right before full.
+    static func geometry(forPhase phase: Double) -> PhaseGlyphGeometry {
+        let angle = 2 * fullMoonPhaseAngle * phase
         let illumination = (1 - cos(angle * .pi / fullMoonPhaseAngle)) / 2
         return PhaseGlyphGeometry(illumination: illumination, phaseAngle: angle)
     }

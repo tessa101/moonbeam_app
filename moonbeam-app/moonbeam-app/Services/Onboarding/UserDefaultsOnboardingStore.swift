@@ -11,6 +11,7 @@ final class UserDefaultsOnboardingStore: OnboardingStore {
     // MARK: - Constants
 
     private static let completedKey = "onboardingCompleted"
+    private static let firstFindPassKey = "hasSeenFirstFindPass"
 
     // MARK: - State
 
@@ -30,6 +31,12 @@ final class UserDefaultsOnboardingStore: OnboardingStore {
         set { defaults.set(newValue, forKey: Self.completedKey) }
     }
 
+    /// Absent reads as `false`: a new install's first ride gets the lap.
+    var hasSeenFirstFindPass: Bool {
+        get { defaults.bool(forKey: Self.firstFindPassKey) }
+        set { defaults.set(newValue, forKey: Self.firstFindPassKey) }
+    }
+
     // MARK: - DEBUG reset (DESIGN-1.1.md §5)
 
     #if DEBUG
@@ -38,10 +45,11 @@ final class UserDefaultsOnboardingStore: OnboardingStore {
     /// location permission not determined.
     static let resetLaunchArgument = "-resetOnboarding"
 
-    /// Clears the flag if `arguments` carries `resetLaunchArgument`.
+    /// Clears the flags if `arguments` carries `resetLaunchArgument`.
     func resetIfRequested(by arguments: [String]) {
         guard arguments.contains(Self.resetLaunchArgument) else { return }
         isOnboardingCompleted = false
+        hasSeenFirstFindPass = false
     }
     #endif
 }

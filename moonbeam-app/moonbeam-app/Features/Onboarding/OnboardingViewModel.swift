@@ -258,6 +258,8 @@ final class OnboardingViewModel {
     /// build.
     func forceShow(startingAt page: Step = .landing) {
         isForced = true
+        // The next "Aha" is a first one again (LOADER.md §11.2.2).
+        onboardingStore.hasSeenFirstFindPass = false
         isRequestingPermission = false
         isAwaitingSettingsFromUpsell = false
         step = page

@@ -59,27 +59,39 @@ struct LoaderFlowTests {
         let location: FakeLocationService
         let store: InMemoryPlaceStore
         let sleeper: RecordingSleeper
+        let onboardingStore: InMemoryOnboardingStore
     }
 
     private static func makeHarness(
         _ state: LocationAuthState,
         lastViewed: Place? = nil,
-        placeResult: Result<Place, any Error> = .success(detected)
+        placeResult: Result<Place, any Error> = .success(detected),
+        hasSeenFirstFindPass: Bool = false,
+        reducesMotion: Bool = false
     ) -> Harness {
         let location = FakeLocationService(authorizationState: state, placeResult: placeResult)
         let store = InMemoryPlaceStore(lastViewed: lastViewed)
         let sleeper = RecordingSleeper()
+        let onboardingStore = InMemoryOnboardingStore(hasSeenFirstFindPass: hasSeenFirstFindPass)
         let viewModel = LocationViewModel(
             locationService: location,
             placeSearch: FakePlaceSearchService(),
             placeStore: store,
             moonService: AstronomyEngineMoonService(),
             headingService: FakeHeadingService(),
+            onboardingStore: onboardingStore,
+            reducesMotion: { reducesMotion },
             now: { reference },
             sleep: { [sleeper] duration in await sleeper.sleep(duration) },
             loaderNow: { reference }
         )
-        return Harness(viewModel: viewModel, location: location, store: store, sleeper: sleeper)
+        return Harness(
+            viewModel: viewModel,
+            location: location,
+            store: store,
+            sleeper: sleeper,
+            onboardingStore: onboardingStore
+        )
     }
 
     private static func settle(until condition: () -> Bool) async {
@@ -407,7 +419,7 @@ struct LoaderFlowTests {
     // MARK: - "Aha" (§10.4)
 
     @Test("A fix after a message: \"Aha\" with the city, then the moon flies as the screen comes up")
-    func ahaAfterRecovery() async {
+    func ahaAfterRecovery() async throws {
         let harness = Self.makeHarness(.authorized, placeResult: .failure(LocationError.locationUnavailable))
         await harness.viewModel.start()
         harness.location.placeResult = .success(Self.detected)
@@ -416,14 +428,19 @@ struct LoaderFlowTests {
 
         let loader = harness.viewModel.loader
         #expect(harness.sleeper.durations.contains(.seconds(LocationLoader.minimumSearchBeforeAha)))
-        #expect(harness.sleeper.durations.contains(.seconds(2)))
         guard case .aha(let greeting) = loader.content else {
             Issue.record("expected Aha, got \(loader.content)")
             return
         }
         #expect(AhaGreeting.lines.contains(greeting.line))
         #expect(greeting.city == "Irvine, CA")
-        #expect(loader.glow.mode == .flare)
+        // §11.2.2: the glow follows the ride's lit fraction; the moon rode
+        // to the card's phase.
+        #expect(loader.glow.mode == .breathe)
+        let ride = try #require(loader.ride)
+        let card = try #require(harness.viewModel.moonTable?.glyph)
+        #expect(abs(ride.geometry(at: ride.endDate).litFraction - card.litFraction) < 1e-9)
+        #expect(ride.geometry(at: ride.endDate).litSide == card.litSide || card.litFraction > 0.999)
         #expect(!loader.showsLabel)
         #expect(loader.flightStartedAt == Self.reference)
         #expect(harness.viewModel.launchStage == .ready)
@@ -443,6 +460,54 @@ struct LoaderFlowTests {
         }
     }
 
+    @Test("The first ride after install has the extra lap, and only then is it seen")
+    func firstRideHasExtraLap() async throws {
+        let harness = Self.makeHarness(.authorized, placeResult: .failure(LocationError.locationUnavailable))
+        await harness.viewModel.start()
+        #expect(!harness.onboardingStore.hasSeenFirstFindPass)
+        harness.location.placeResult = .success(Self.detected)
+
+        await harness.viewModel.performLoaderAction()
+
+        let ride = try #require(harness.viewModel.loader.ride)
+        #expect(ride.laps >= 1)
+        #expect(harness.onboardingStore.hasSeenFirstFindPass)
+    }
+
+    @Test("Later rides go straight to the real phase, under a lap")
+    func laterRideNoExtraLap() async throws {
+        let harness = Self.makeHarness(
+            .authorized,
+            placeResult: .failure(LocationError.locationUnavailable),
+            hasSeenFirstFindPass: true
+        )
+        await harness.viewModel.start()
+        harness.location.placeResult = .success(Self.detected)
+
+        await harness.viewModel.performLoaderAction()
+
+        let ride = try #require(harness.viewModel.loader.ride)
+        #expect(ride.laps < 1)
+    }
+
+    @Test("Reduce Motion: no ride, no lap used up, Aha holds 2 s")
+    func reduceMotionNoRide() async {
+        let harness = Self.makeHarness(
+            .authorized,
+            placeResult: .failure(LocationError.locationUnavailable),
+            reducesMotion: true
+        )
+        await harness.viewModel.start()
+        harness.location.placeResult = .success(Self.detected)
+
+        await harness.viewModel.performLoaderAction()
+
+        #expect(harness.viewModel.loader.ride == nil)
+        #expect(harness.sleeper.durations.contains(.seconds(LocationLoader.ahaHold)))
+        #expect(!harness.onboardingStore.hasSeenFirstFindPass)
+        #expect(harness.viewModel.loader.flightStartedAt != nil)
+    }
+
     @Test("An ordinary launch with a fix: no \"Aha\", the content loads in")
     func noAhaOnOrdinaryLaunch() async {
         let harness = Self.makeHarness(.authorized)
@@ -451,6 +516,8 @@ struct LoaderFlowTests {
         #expect(harness.viewModel.loader.content == .searching)
         #expect(harness.viewModel.loader.flightStartedAt == nil)
         #expect(!harness.sleeper.durations.contains(.seconds(LocationLoader.minimumSearchBeforeAha)))
+        // The loader was skipped: the first ride's lap is still to come.
+        #expect(!harness.onboardingStore.hasSeenFirstFindPass)
     }
 
     @Test("Never the same line twice in a row")
@@ -470,7 +537,7 @@ struct LoaderFlowTests {
         #expect(greeting.accessibilityLabel == "Aha, there you are! Rancho Santa Margarita, CA")
     }
 
-    @Test("The flight runs from the loader moon at full to the card's slot and phase")
+    @Test("The flight runs from where the ride left the moon to the card's slot and phase")
     func flightEnds() {
         let start = CGRect(x: 126, y: 300, width: 140, height: 140)
         let slot = CGRect(x: 32, y: 120, width: 44, height: 44)
@@ -481,8 +548,11 @@ struct LoaderFlowTests {
         #expect(AhaFlight.progress(since: began, at: began.addingTimeInterval(LocationLoader.flightDuration)) == 1)
         #expect(AhaFlight.frame(from: start, to: slot, progress: 0) == start)
         #expect(AhaFlight.frame(from: start, to: slot, progress: 1) == slot)
-        #expect(AhaFlight.geometry(landingOn: landing, progress: 0).litFraction == 1)
-        #expect(AhaFlight.geometry(landingOn: landing, progress: 1) == landing)
+        let full = PhaseGlyphGeometry(illumination: 1, phaseAngle: 180)
+        #expect(AhaFlight.geometry(from: full, landingOn: landing, progress: 0).litFraction == 1)
+        #expect(AhaFlight.geometry(from: full, landingOn: landing, progress: 1) == landing)
+        // After a ride it's already there: nothing changes in flight.
+        #expect(AhaFlight.geometry(from: landing, landingOn: landing, progress: 0.4) == landing)
     }
 
     // MARK: - Copy and actions
@@ -598,37 +668,54 @@ struct LocationLoaderStepTests {
         #expect(loader.glow.mode == .breathe)
         #expect(loader.showsLabel)
         #expect(loader.searchStartedAt == resumeStart.addingTimeInterval(0.2))
+        // §11.2.1: the session started at the tap, not at the label's return.
+        #expect(loader.sessionStartedAt == resumeStart)
         let after = clock.date.addingTimeInterval(1)
         #expect(loader.moon.elapsed(at: after) != loader.moon.elapsed(at: clock.date))
     }
 
-    @Test("Aha: the run to full starts at the fix (past full: round through new), then the flare and a 2 s hold")
-    func ahaStep() async {
+    /// A waning gibbous, as the card might show.
+    private static let realPhase = PhaseGlyphGeometry(illumination: 0.7, phaseAngle: 230)
+
+    private static func seconds(_ duration: Duration) -> TimeInterval {
+        Double(duration.components.attoseconds) / 1e18 + Double(duration.components.seconds)
+    }
+
+    @Test("Aha (§11.2): a fix past the session's 0.7 s takes the label off at once, then the ride, the rest, the flight")
+    func ahaStep() async throws {
         let clock = Clock()
         let loader = Self.makeLoader(clock)
         loader.appear()
         await loader.showMessage(.appDenied)
         await loader.resume()
-        // The fix lands 1.5 s after the label came back: the moon is past full.
-        let fixAfter = 1.5
-        clock.date = clock.date.addingTimeInterval(fixAfter)
+        clock.date = clock.date.addingTimeInterval(1.5)
+        let fixDate = clock.date
         let waitsBefore = clock.waits.count
+        var labelLeftAt: Date?
+        clock.onWait = { [clock] in
+            if labelLeftAt == nil, !loader.showsLabel { labelLeftAt = clock.date }
+        }
 
         let greeting = AhaGreeting(line: AhaGreeting.lines[1], city: "Irvine, CA")
-        #expect(await loader.showAha(greeting))
+        #expect(await loader.showAha(greeting, realPhase: Self.realPhase))
 
-        let waits = clock.waits.dropFirst(waitsBefore).map {
-            Double($0.components.attoseconds) / 1e18 + Double($0.components.seconds)
-        }
-        let pastFull = PhaseCycle.holdElapsed + fixAfter - PhaseCycle.fullElapsed
-        let runOut = MoonMotion.runOutDuration(distance: PhaseCycle.period - pastFull)
-        #expect(waits.count == 2)
-        #expect(abs((waits.first ?? 0) - runOut) < 1e-6)
-        #expect(abs((waits.last ?? 0) - LocationLoader.ahaHold) < 1e-6)
+        // No wait for the moon: the label leaves at the fix, 0 ms later.
+        let waits = clock.waits.dropFirst(waitsBefore).map(Self.seconds)
+        #expect(waits.count == 1)
+        #expect(labelLeftAt == fixDate)
+        let ride = try #require(loader.ride)
+        #expect(ride.startDate == fixDate.addingTimeInterval(0.15 + 0.35))
+        let expected = 0.5 + ride.duration + PhaseRide.restBeat
+        #expect(abs((waits.first ?? 0) - expected) < 1e-6)
         #expect(loader.content == .aha(greeting))
-        #expect(loader.glow.mode == .flare)
+        #expect(loader.glow.mode == .breathe)
         #expect(!loader.showsLabel)
-        #expect(abs(loader.moon.elapsed(at: clock.date) - PhaseCycle.fullElapsed) < 1e-6)
+        // Started where the running moon was, ended on the real phase.
+        let startPhase = PhaseCycle.phase(at: loader.moon.elapsed(at: ride.startDate))
+        #expect(abs(ride.fromPhase - startPhase) < 1e-9)
+        let landed = ride.geometry(at: ride.endDate)
+        #expect(abs(landed.litFraction - Self.realPhase.litFraction) < 1e-9)
+        #expect(landed.litSide == Self.realPhase.litSide)
 
         loader.flyAway()
         #expect(loader.flightStartedAt == clock.date)
@@ -636,55 +723,58 @@ struct LocationLoaderStepTests {
         #expect(loader.flightStartedAt == nil)
     }
 
-    @Test("A fix right away: full in about 0.5 s, but the label still gets its 0.7 s before Aha")
+    @Test("A fix right away: the label still gets 0.7 s, counted from the session's start")
     func ahaFastFix() async {
         let clock = Clock()
         let loader = Self.makeLoader(clock)
         loader.appear()
         await loader.showMessage(.noFix)
+        let tap = clock.date
         await loader.resume()
         let waitsBefore = clock.waits.count
 
         let greeting = AhaGreeting(line: AhaGreeting.lines[2], city: "Irvine, CA")
-        #expect(await loader.showAha(greeting))
+        #expect(await loader.showAha(greeting, realPhase: Self.realPhase))
 
-        let waits = clock.waits.dropFirst(waitsBefore).map {
-            Double($0.components.attoseconds) / 1e18 + Double($0.components.seconds)
-        }
-        // From the hold phase, full is (full − hold) / 2.6 + 0.2 s ≈ 0.51 s away.
-        let toFull = MoonMotion.runOutDuration(distance: PhaseCycle.fullElapsed - PhaseCycle.holdElapsed)
-        #expect(toFull < LocationLoader.minimumSearchBeforeAha)
+        let waits = clock.waits.dropFirst(waitsBefore).map(Self.seconds)
         #expect(waits.count == 2)
-        #expect(abs((waits.first ?? 0) - LocationLoader.minimumSearchBeforeAha) < 1e-6)
+        // resume() took 0.2 s of the 0.7 s already.
+        #expect(abs((waits.first ?? 0) - (LocationLoader.minimumSearchBeforeAha - 0.2)) < 1e-6)
+        #expect(abs((loader.ride?.startDate.timeIntervalSince(tap) ?? 0) - (0.7 + 0.5)) < 1e-6)
         #expect(loader.content == .aha(greeting))
-        #expect(abs(loader.moon.elapsed(at: clock.date) - PhaseCycle.fullElapsed) < 1e-6)
     }
 
-    @Test("Aha never comes in over a moon short of full: label and breathing glow through the run-out")
-    func ahaWaitsForFull() async {
+    @Test("The moon never pauses before the ride: it runs on at the normal speed")
+    func moonRunsUntilRide() async throws {
         let clock = Clock()
         let loader = Self.makeLoader(clock)
         loader.appear()
         await loader.showMessage(.noFix)
         await loader.resume()
+        clock.date = clock.date.addingTimeInterval(2)
+        let fixDate = clock.date
+        let before = loader.moon.elapsed(at: fixDate)
+        #expect(await loader.showAha(AhaGreeting(line: AhaGreeting.lines[0], city: "Irvine, CA"), realPhase: Self.realPhase))
+        let ride = try #require(loader.ride)
+        let atRide = loader.moon.elapsed(at: ride.startDate)
+        #expect(abs(PhaseCycle.wrapped(atRide - before) - 0.5) < 1e-6)
+    }
 
-        // A fix past full, so the run-out is long and goes through new.
-        clock.date = clock.date.addingTimeInterval(1.5)
-        let greeting = AhaGreeting(line: AhaGreeting.lines[0], city: "Irvine, CA")
-        let waitsBefore = clock.waits.count
-        var checkedRunOut = false
-        clock.onWait = { [clock] in
-            // Aha's first wait is the run-out: still searching there.
-            guard clock.waits.count == waitsBefore + 1 else { return }
-            checkedRunOut = true
-            #expect(loader.content == .searching)
-            #expect(loader.showsLabel)
-            #expect(loader.glow.mode == .breathe)
+    @Test("Reduce Motion or no card phase: no ride, Aha holds 2 s")
+    func ahaWithoutRide() async {
+        for (phase, reduces) in [(Self.realPhase, true), (nil, false)] as [(PhaseGlyphGeometry?, Bool)] {
+            let clock = Clock()
+            let loader = Self.makeLoader(clock)
+            loader.appear()
+            await loader.showMessage(.noFix)
+            await loader.resume()
+            clock.date = clock.date.addingTimeInterval(1)
+            let waitsBefore = clock.waits.count
+            let greeting = AhaGreeting(line: AhaGreeting.lines[0], city: "Irvine, CA")
+            #expect(await loader.showAha(greeting, realPhase: phase, extraLap: true, reducesMotion: reduces))
+            #expect(loader.ride == nil)
+            #expect(clock.waits.dropFirst(waitsBefore).map(Self.seconds) == [LocationLoader.ahaHold])
         }
-        #expect(await loader.showAha(greeting))
-        #expect(checkedRunOut)
-        #expect(loader.content == .aha(greeting))
-        #expect(abs(loader.moon.elapsed(at: clock.date) - PhaseCycle.fullElapsed) < 1e-6)
     }
 
     @Test("Already on a message, a new one swaps in place, no wait")

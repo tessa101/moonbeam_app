@@ -37,6 +37,8 @@ struct LaunchPhaseCycle: View {
     @State private var moonHasRisen = false
     @State private var labelIsIn = false
     @State private var labelHasRisen = false
+    /// The label's exit for "Aha" drifts up (§11.2.1).
+    @State private var labelHasDrifted = false
 
     /// Natural message heights at the two §10.5 scales. Measuring the real
     /// text (including the current Dynamic Type size) keeps the fit decision
@@ -82,8 +84,11 @@ struct LaunchPhaseCycle: View {
     private static let moonRiseDuration: TimeInterval = 1.2
     private static let labelFadeDuration: TimeInterval = 0.7
     private static let labelRiseDuration: TimeInterval = 0.9
-    /// "Search → message": the label fades out over 0.3 s.
+    /// "Search → message": the label fades out over 0.3 s, in place.
     private static let labelOutDuration: TimeInterval = 0.3
+    /// "Search → Aha" (§11.2.1): 0.35 s ease-in-out, drifting up 6 pt.
+    private static let labelOutForAhaDuration: TimeInterval = 0.35
+    private static let labelOutForAhaDrift: CGFloat = 6
     /// Reduce Motion (§10.6): every step cross-fades over 0.3 s.
     private static let reduceMotionFade: TimeInterval = 0.3
 
@@ -144,8 +149,14 @@ struct LaunchPhaseCycle: View {
     // MARK: - Moon
 
     private func moon(size: CGFloat) -> some View {
-        TimelineView(.animation(paused: reduceMotion)) { context in
-            moon(at: context.date, size: size)
+        Group {
+            if reduceMotion {
+                stillMoon(size: size)
+            } else {
+                TimelineView(.animation) { context in
+                    moon(at: context.date, size: size)
+                }
+            }
         }
         .frame(width: size, height: size)
         .onGeometryChange(for: CGRect.self) { proxy in
@@ -158,12 +169,45 @@ struct LaunchPhaseCycle: View {
         .accessibilityHidden(true)
     }
 
-    /// Reduce Motion: the glyph holds at the hold phase and the glow only
-    /// fades, with no swell (§10.6).
+    /// Reduce Motion (§10.6, §11.2.2): the glyph holds at the hold phase
+    /// and the glow only fades, with no swell; at "Aha" it cross-fades to
+    /// the real phase, with no ride.
+    private func stillMoon(size: CGFloat) -> some View {
+        let date = Date()
+        let showsRealPhase = loader.content.isAha && landingGlyph != nil
+        return ZStack {
+            glyph(PhaseCycle.stillGeometry, at: date, size: size)
+                .opacity(showsRealPhase ? 0 : 1)
+            if let landingGlyph {
+                glyph(landingGlyph, at: date, size: size)
+                    .opacity(showsRealPhase ? 1 : 0)
+            }
+        }
+        .animation(.easeOut(duration: Self.reduceMotionFade), value: showsRealPhase)
+    }
+
+    /// The still glyph with its glow, at the glow's look for `date`.
+    private func glyph(_ geometry: PhaseGlyphGeometry, at date: Date, size: CGFloat) -> some View {
+        let look = loader.glow.look(at: date, litFraction: geometry.litFraction)
+        return PhaseGlyph(
+            geometry: geometry,
+            discColor: Theme.Colors.moonEarthshine,
+            glowCSSBlur: Self.glyphGlowCSSBlur,
+            glowOpacity: PhaseCycle.tightGlowOpacityAtFull * geometry.litFraction
+        )
+        .background {
+            glow(size: size).opacity(look.opacity)
+        }
+    }
+
+    /// The moon at `date`: the month, or after "Aha" the ride to the real
+    /// phase (§11.2.2), then the flight into the card.
     private func moon(at date: Date, size: CGFloat) -> some View {
-        let elapsed = loader.moon.elapsed(at: date)
-        var look = loader.glow.look(at: date, elapsed: elapsed)
-        var geometry = reduceMotion ? PhaseCycle.stillGeometry : PhaseCycle.geometry(at: elapsed)
+        var geometry = PhaseCycle.geometry(at: loader.moon.elapsed(at: date))
+        if let ride = loader.ride, date >= ride.startDate {
+            geometry = ride.geometry(at: date)
+        }
+        var look = loader.glow.look(at: date, litFraction: geometry.litFraction)
         var glowBlur = Self.glyphGlowCSSBlur
         // §11.3: the tight glow follows the lit fraction.
         var glyphGlow = PhaseCycle.tightGlowOpacityAtFull * geometry.litFraction
@@ -171,9 +215,9 @@ struct LaunchPhaseCycle: View {
         var scale: CGFloat = 1
         var offset: CGSize = .zero
 
-        // §10.4: flying into the card, from full to the day's phase.
+        // §10.4: flying into the card, already at the day's phase.
         if let flight = flight(at: date) {
-            geometry = AhaFlight.geometry(landingOn: flight.glyph, progress: flight.progress)
+            geometry = AhaFlight.geometry(from: geometry, landingOn: flight.glyph, progress: flight.progress)
             look.opacity = AhaFlight.interpolate(look.opacity, AhaFlight.landingGlowOpacity, flight.progress)
             // Drawn before the shrink, so it lands as the card's glow.
             let landingBlur = PhaseGlyph.cardGlowCSSBlur * moonFrame.width / flight.landingWidth
@@ -190,7 +234,7 @@ struct LaunchPhaseCycle: View {
                 // Behind the glyph and outside layout, so it never moves the text.
                 glow(size: size)
                     .opacity(look.opacity)
-                    .scaleEffect(reduceMotion ? 1 : look.scale)
+                    .scaleEffect(look.scale)
             }
             .scaleEffect(scale)
             .offset(offset)
@@ -326,8 +370,14 @@ struct LaunchPhaseCycle: View {
             .multilineTextAlignment(.center)
             .fixedSize(horizontal: false, vertical: true)
             .opacity(labelIsIn ? 1 : 0)
-            .offset(y: labelHasRisen || reduceMotion ? 0 : Self.entranceRise)
+            .offset(y: labelOffset)
             .accessibilityHidden(!loader.showsLabel)
+    }
+
+    private var labelOffset: CGFloat {
+        if reduceMotion { return 0 }
+        if labelHasDrifted { return -Self.labelOutForAhaDrift }
+        return labelHasRisen ? 0 : Self.entranceRise
     }
 
     // MARK: - Actions
@@ -355,13 +405,26 @@ struct LaunchPhaseCycle: View {
         showLabel(loader.showsLabel, delay: LocationLoader.labelEntranceDelay)
     }
 
-    /// In: the entrance's fade and rise. Out: a 0.3 s fade, in place.
+    /// In: the entrance's fade and rise. Out: a 0.3 s fade in place, or for
+    /// "Aha" a 0.35 s fade drifting up 6 pt (§11.2.1).
+    ///
+    /// The rise is reset on the way back in, while the label is invisible.
+    /// Resetting it on the way out (as 5.9.2 did) dropped the label 8 pt
+    /// the moment it started to fade.
     private func showLabel(_ shows: Bool, delay: TimeInterval = 0) {
         guard shows else {
-            withAnimation(.easeOut(duration: Self.labelOutDuration)) { labelIsIn = false }
-            labelHasRisen = false
+            if loader.content.isAha && !reduceMotion {
+                withAnimation(.easeInOut(duration: Self.labelOutForAhaDuration)) {
+                    labelIsIn = false
+                    labelHasDrifted = true
+                }
+            } else {
+                withAnimation(.easeOut(duration: Self.labelOutDuration)) { labelIsIn = false }
+            }
             return
         }
+        labelHasRisen = false
+        labelHasDrifted = false
         if reduceMotion {
             withAnimation(.easeOut(duration: Self.reduceMotionFade).delay(delay)) { labelIsIn = true }
             return
@@ -388,7 +451,7 @@ enum LoaderMotion {
 
 // MARK: - Aha in and out
 
-/// "Search → Aha" (§10.4): "Aha" fades in over 0.6 s after 0.5 s and rises
+/// "Search → Aha" (§10.4, §11.2.1): "Aha" fades in over 0.6 s after 0.15 s, over the label's exit, and rises
 /// 10 pt over 0.8 s; when the moon flies it fades out fast, 0.22 s, drifting
 /// up 3 pt. Reduce Motion: 0.3 s cross-fades, no rise or drift.
 private struct AhaGreetingIn<Content: View>: View {
@@ -401,7 +464,7 @@ private struct AhaGreetingIn<Content: View>: View {
     @State private var hasRisen = false
 
     private static var rise: CGFloat { 10 }
-    private static var delay: TimeInterval { 0.5 }
+    private static var delay: TimeInterval { LocationLoader.ahaFadeInDelay }
     private static var fadeDuration: TimeInterval { 0.6 }
     private static var riseDuration: TimeInterval { 0.8 }
     private static var leaveDrift: CGFloat { 3 }

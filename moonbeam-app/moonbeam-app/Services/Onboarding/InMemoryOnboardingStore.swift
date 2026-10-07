@@ -10,8 +10,10 @@ import Foundation
 final class InMemoryOnboardingStore: OnboardingStore {
 
     var isOnboardingCompleted: Bool
+    var hasSeenFirstFindPass: Bool
 
-    init(isOnboardingCompleted: Bool = false) {
+    init(isOnboardingCompleted: Bool = false, hasSeenFirstFindPass: Bool = false) {
         self.isOnboardingCompleted = isOnboardingCompleted
+        self.hasSeenFirstFindPass = hasSeenFirstFindPass
     }
 }

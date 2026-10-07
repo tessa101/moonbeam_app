@@ -5,6 +5,7 @@
 
 import Foundation
 import Observation
+import os
 
 /// The loader screen's moon, glow, label and message (LOADER.md §10): what
 /// `LaunchPhaseCycle` draws, and the timing between its steps.
@@ -27,9 +28,14 @@ final class LocationLoader {
         case searching
         /// Stopped, with a message (§10.3).
         case message(LocationIssue)
-        /// Found after a recovery (§10.4): the moon at full, the line and
-        /// city under it.
+        /// Found after a recovery (§10.4, §11.2): the line and city, while
+        /// the moon rides forward to the real phase.
         case aha(AhaGreeting)
+
+        var isAha: Bool {
+            if case .aha = self { return true }
+            return false
+        }
     }
 
     // MARK: - Timings (§10.2, §10.3; the handoff's "Entrance" and "Search → message")
@@ -46,12 +52,23 @@ final class LocationLoader {
 
     // MARK: - Timings (§10.4; the handoff's "Search → Aha → city")
 
-    /// After a recovery, "Finding your location…" stays up at least this
-    /// long before "Aha": its own 0.7 s fade-in, so a fast fix never
-    /// flashes it. The handoff's 1.8 s made Aha late (Tessa, 2026-10-06).
+    /// After a recovery, searching shows at least this long before "Aha",
+    /// so a fast fix never flashes the label. Counted from the start of the
+    /// search session (the Try again or return from Settings), not from the
+    /// label's return 0.2 s later (§11.2.1). The handoff's 1.8 s made Aha
+    /// late (Tessa, 2026-10-06).
     nonisolated static let minimumSearchBeforeAha: TimeInterval = 0.7
 
-    /// "Aha" holds this long before the moon flies into the card.
+    /// "Aha" starts fading in this long after the label starts leaving, so
+    /// the two overlap (§11.2.1; was 0.5 s).
+    nonisolated static let ahaFadeInDelay: TimeInterval = 0.15
+
+    /// The ride to the real phase starts this long after "Aha" starts
+    /// showing, so the eye has landed on it (§11.2.2).
+    nonisolated static let rideDelayAfterAha: TimeInterval = 0.35
+
+    /// Reduce Motion, with no ride: "Aha" holds this long before the
+    /// screen.
     nonisolated static let ahaHold: TimeInterval = 2.0
 
     /// The fly into the card's phase slot.
@@ -74,8 +91,17 @@ final class LocationLoader {
     private(set) var appearedAt: Date = .distantPast
 
     /// When searching last started: the entrance, or a return from a
-    /// message.
+    /// message once the label is back.
     private(set) var searchStartedAt: Date = .distantPast
+
+    /// When the search session started: the entrance, or the moment a
+    /// return from a message began (Try again, back from Settings). Aha's
+    /// label minimum counts from here (§11.2.1).
+    private(set) var sessionStartedAt: Date = .distantPast
+
+    /// After "Aha", the moon's run forward to the real phase (§11.2.2);
+    /// `nil` before, and with Reduce Motion.
+    private(set) var ride: PhaseRide?
 
     /// When the moon started flying into the card after "Aha" (§10.4);
     /// `nil` once it has landed, or if it never flew. The screen is up
@@ -107,6 +133,8 @@ final class LocationLoader {
         let date = now()
         appearedAt = date
         searchStartedAt = date
+        sessionStartedAt = date
+        ride = nil
         content = .searching
         moon = .entrance(at: date)
         glow = .breathing
@@ -163,6 +191,8 @@ final class LocationLoader {
         generation += 1
         let step = generation
         let date = now()
+        sessionStartedAt = date
+        ride = nil
         content = .searching
         glow = glow.switching(to: .breathe, at: date, elapsed: moon.elapsed(at: date))
         guard await wait(Self.resumeLabelDelay, step: step) else { return false }
@@ -174,31 +204,50 @@ final class LocationLoader {
         return true
     }
 
-    /// Search → Aha (§10.4), only after a recovery. Call it as the fix
-    /// lands: the moon runs forward to full at once, under the label; only
-    /// at full (and once the label has been up 0.7 s) does the label go,
-    /// the glow flare and the greeting come in. It holds 2 s.
+    /// Search → Aha (§10.4, §11.2), only after a recovery. Call it as the
+    /// fix lands. The label leaves as soon as the session has had its 0.7 s,
+    /// with no wait for the moon, and "Aha" comes in over its exit. The moon
+    /// keeps running, then rides forward to `realPhase` (the card's glyph)
+    /// and rests there 0.4 s before it flies.
     ///
-    /// Aha waits for full so it's never in over a dark moon: a fix that
-    /// lands past full goes round through new first (up to 1.85 s at 2.6×),
-    /// a fix while waxing is at full in ≤ 0.34 s (Tessa, 2026-10-06).
-    ///
-    /// - Returns: false if another step took over meanwhile. True means the
-    ///   moon is at full and it's time to fly (`flyAway()`).
+    /// - Parameters:
+    ///   - realPhase: the phase the card will show; `nil` (no moon table)
+    ///     means no ride, and "Aha" just holds.
+    ///   - extraLap: the first ride after install goes a lap further.
+    ///   - reducesMotion: no ride; "Aha" holds and the view cross-fades
+    ///     the moon to the real phase.
+    /// - Returns: false if another step took over meanwhile. True means
+    ///   it's time to fly (`flyAway()`).
     @discardableResult
-    func showAha(_ greeting: AhaGreeting) async -> Bool {
+    func showAha(
+        _ greeting: AhaGreeting,
+        realPhase: PhaseGlyphGeometry?,
+        extraLap: Bool = false,
+        reducesMotion: Bool = false
+    ) async -> Bool {
         generation += 1
         let step = generation
-        let fixDate = now()
-        moon = moon.stopping(at: PhaseCycle.fullElapsed, from: fixDate)
-        let labelLeft = Self.minimumSearchBeforeAha - fixDate.timeIntervalSince(searchStartedAt)
-        guard await wait(max(moon.timeToSettle(from: fixDate), labelLeft), step: step) else { return false }
+        let labelLeft = Self.minimumSearchBeforeAha - now().timeIntervalSince(sessionStartedAt)
+        guard await wait(labelLeft, step: step) else { return false }
 
-        let full = now()
-        glow = glow.switching(to: .flare, at: full, elapsed: moon.elapsed(at: full))
+        let ahaDate = now()
+        LaunchSignposts.signposter.emitEvent("Aha label leaving")
         showsLabel = false
         content = .aha(greeting)
-        return await wait(Self.ahaHold, step: step)
+        guard let realPhase, !reducesMotion else {
+            return await wait(Self.ahaHold, step: step)
+        }
+
+        let rideStart = ahaDate.addingTimeInterval(Self.ahaFadeInDelay + Self.rideDelayAfterAha)
+        let ride = PhaseRide(
+            from: PhaseCycle.phase(at: moon.elapsed(at: rideStart)),
+            to: PhaseRide.phase(of: realPhase),
+            extraLap: extraLap,
+            startingAt: rideStart
+        )
+        self.ride = ride
+        let rest = ride.endDate.addingTimeInterval(PhaseRide.restBeat)
+        return await wait(rest.timeIntervalSince(ahaDate), step: step)
     }
 
     /// The moon leaves for the card's phase slot (§10.4). The caller brings

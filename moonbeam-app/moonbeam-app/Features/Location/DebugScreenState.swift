@@ -195,6 +195,10 @@ struct DebugScreenState: View {
 
         /// How long `recoveryAha` sits on No fix before Try again.
         private static let recoveryMessageHold = Duration.seconds(1.5)
+        /// How long `recoveryAha`'s fix takes after Try again: past the
+        /// label's 0.7 s, like a real fix, so the label leaves at the fix
+        /// (LOADER.md §11.2.1).
+        private static let recoveryFixDelay = Duration.seconds(1)
 
         private static let messageKinds: Set<Kind> = [
             .messageFirstAsk, .messageDenied, .messageServicesOff, .messageRestricted, .messageNoFix,
@@ -236,6 +240,7 @@ struct DebugScreenState: View {
             }
             try? await Task.sleep(for: Self.recoveryMessageHold)
             location.placeResult = .success(here)
+            location.fixDelay = Self.recoveryFixDelay
             await viewModel.performLoaderAction()
         }
 

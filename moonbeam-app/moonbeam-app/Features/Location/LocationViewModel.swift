@@ -120,6 +120,10 @@ final class LocationViewModel {
     private let locationService: any LocationService
     private let placeSearch: any PlaceSearchService
     @ObservationIgnored private let placeStore: any PlaceStore
+    /// First-run state: the first "Aha" ride's extra lap (LOADER.md §11.2.2).
+    @ObservationIgnored private let onboardingStore: any OnboardingStore
+    /// Reduce Motion: "Aha" without the ride (§11.2.2). Read when it's needed.
+    @ObservationIgnored private let reducesMotion: () -> Bool
     private let moonService: any MoonService
     private let fetchTimeout: Duration
     private let deviceTimeZone: TimeZone
@@ -182,6 +186,10 @@ final class LocationViewModel {
     ///     selection resolves against (DATE.md §3).
     ///   - sleep: the launch loader's waits (LOADER.md §2), so tests can
     ///     decide when 400 ms and 700 ms have passed.
+    ///   - onboardingStore: first-run state, for the first "Aha" ride's
+    ///     extra lap.
+    ///   - reducesMotion: the Reduce Motion setting; the app passes
+    ///     `UIAccessibility`'s.
     ///   - loaderNow: the loader's own clock. Its moon is drawn against the
     ///     display's real time, so it stays real when `now` is a fixed
     ///     "today" (DEBUG screen states); tests pin both.
@@ -191,6 +199,8 @@ final class LocationViewModel {
         placeStore: any PlaceStore,
         moonService: any MoonService,
         headingService: any HeadingService,
+        onboardingStore: any OnboardingStore = InMemoryOnboardingStore(),
+        reducesMotion: @escaping () -> Bool = { false },
         fetchTimeout: Duration = LocationViewModel.defaultFetchTimeout,
         deviceTimeZone: TimeZone = .current,
         now: @escaping () -> Date = Date.init,
@@ -200,6 +210,8 @@ final class LocationViewModel {
         self.locationService = locationService
         self.placeSearch = placeSearch
         self.placeStore = placeStore
+        self.onboardingStore = onboardingStore
+        self.reducesMotion = reducesMotion
         self.moonService = moonService
         self.fetchTimeout = fetchTimeout
         self.deviceTimeZone = deviceTimeZone
@@ -420,6 +432,7 @@ final class LocationViewModel {
     private func recoverFromLoader() async {
         guard await loader.resume() else { return }
         await locate(userInitiated: true)
+        LaunchSignposts.signposter.emitEvent("Recovery fix received")
         guard launchStage == .phaseCycle else { return }
         if let place {
             await finishWithAha(for: place)
@@ -429,14 +442,26 @@ final class LocationViewModel {
         }
     }
 
-    /// LOADER.md §10.4: a fix after a message (or the iOS prompt) gets
-    /// "Aha" before the screen; then the moon flies into the card as the
-    /// screen comes up under it. A pick meanwhile ends the loader, and
-    /// with it the wait.
+    /// LOADER.md §10.4, §11.2: a fix after a message (or the iOS prompt)
+    /// gets "Aha" before the screen while the moon rides to the card's
+    /// phase; then it flies into the card as the screen comes up under it.
+    /// A pick meanwhile ends the loader, and with it the wait.
+    ///
+    /// The first ride after install goes a lap further; it counts as seen
+    /// only once it has run to the end.
     private func finishWithAha(for place: Place) async {
         let line = AhaGreeting.line(after: lastAhaLine)
         lastAhaLine = line
-        guard await loader.showAha(AhaGreeting(line: line, city: place.nameWithRegion)) else { return }
+        let realPhase = moonTable?.glyph
+        let rides = realPhase != nil && !reducesMotion()
+        let shown = await loader.showAha(
+            AhaGreeting(line: line, city: place.nameWithRegion),
+            realPhase: realPhase,
+            extraLap: !onboardingStore.hasSeenFirstFindPass,
+            reducesMotion: !rides
+        )
+        guard shown else { return }
+        if rides { onboardingStore.hasSeenFirstFindPass = true }
         guard launchStage == .phaseCycle else { return }
         loader.flyAway()
         finishLoader()

@@ -15,6 +15,25 @@
 - **Considered:** an S-curve (smoothstep) stop. Rejected, because it would also ease the start of the run-out, where
   §11.3 only asks for the end.
 
+### 2026-10-06 · Build 5.9.3b: label exit and the phase ride as built (LOADER.md §11.2)
+- **The ride starts 0.35 s after Aha starts showing** (its 0.15 s delay), so 0.5 s after the label leaves. Until
+  then the moon runs on at the normal speed: it never pauses.
+- **Glow breathes with k through Aha** rather than the one-off flare, per §11.2.2 "glow follows lit fraction".
+  The flare mode is left in the code, unused, until Tessa's check.
+- **First-find flag on `OnboardingStore`**, not a new store: it's first-run state, and Show onboarding /
+  `-resetOnboarding` already reset that store. Set only once a ride completes.
+- **Label exit split:** Aha gets the 0.35 s drift-up exit; the message exit stays 0.3 s in place. Both no longer
+  snap 8 pt (the rise is reset on re-entry).
+- **DEBUG `recoveryAha`'s fix takes 1 s** after Try again, so it exercises a fix after the label's minimum.
+- **Considered:** starting the ride's ease from the running speed (no slow start). Not done, because §11.2.2 names
+  the handoff curve. Left for the device check.
+
+### 2026-10-06 · After 5.9.3c: 4b only, no edge blur, onboarding moon earthshine
+- **Decisions (Tessa):** only 4b in the app, no `MoonStyle` switch; 4c / 4d stay in `design/1.5-loader-polish/` as
+  reference. Onboarding's moon gets the earthshine dark side to match the loader.
+- **Edge blur:** left out for now (agent's 5.9.3c call: the card glyph is sharp, so a blurred loader moon would change
+  sharpness on landing). Revisit at the device check. LOADER.md §11.6.
+
 ### 2026-10-06 · Loader polish, Step 5.9.3 (LOADER.md §11)
 - **Decisions (Tessa, device check + answers):**
   - **Moon and text positions unchanged.** Only line height and text width change (5.9.3a), plus the animation.

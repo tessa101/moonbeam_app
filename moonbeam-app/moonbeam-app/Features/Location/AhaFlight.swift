@@ -8,7 +8,7 @@ import SwiftUI
 /// The loader moon's flight into the card's phase slot after "Aha"
 /// (LOADER.md §10.4; the handoff's "Search → Aha → city"): over 0.85 s on
 /// `cubic-bezier(.65, 0, .25, 1)` it moves and shrinks into the slot's real
-/// frame, settles from full onto the day's real phase, and its glow drops to
+/// frame, keeps the real phase it rode to (§11.2.2), and its glow drops to
 /// 0.35.
 ///
 /// `nonisolated`: pure functions of time, testable without a view.
@@ -25,9 +25,6 @@ nonisolated enum AhaFlight {
     /// The glow's opacity on landing.
     static let landingGlowOpacity = 0.35
 
-    /// Full moon, where "Aha" leaves from.
-    private static let fullLitFraction = 1.0
-
     /// Phase angles for a lit side: any waxing or waning angle will do, as
     /// `PhaseGlyphGeometry` only keeps the side.
     private static let waxingPhaseAngle = 90.0
@@ -41,11 +38,16 @@ nonisolated enum AhaFlight {
         return curve.value(at: min(max(fraction, 0), 1))
     }
 
-    /// The moon from full to `landing` (the card's glyph), lit on the
-    /// landing's side all the way: at full the side doesn't show.
-    static func geometry(landingOn landing: PhaseGlyphGeometry, progress: Double) -> PhaseGlyphGeometry {
+    /// The moon from `start` (where the ride left it) to `landing` (the
+    /// card's glyph), lit on the landing's side. After a ride the two are
+    /// the same, so nothing changes in flight.
+    static func geometry(
+        from start: PhaseGlyphGeometry,
+        landingOn landing: PhaseGlyphGeometry,
+        progress: Double
+    ) -> PhaseGlyphGeometry {
         PhaseGlyphGeometry(
-            illumination: interpolate(fullLitFraction, landing.litFraction, progress),
+            illumination: interpolate(start.litFraction, landing.litFraction, progress),
             phaseAngle: landing.litSide == .right ? waxingPhaseAngle : waningPhaseAngle
         )
     }

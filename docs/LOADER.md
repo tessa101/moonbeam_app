@@ -347,12 +347,21 @@ the real phase. Later launches go straight there (`T = d`). Persist a flag
 **Skips:** a fix within 400 ms never shows the loader, so no ride (unchanged). Reduce Motion: the moon is drawn
 at the real phase straight away, crossfades only, no ride, no extra lap.
 
+**As built (5.9.3b, 2026-10-06):** the stall was the label waiting for the moon's run to full (up to 2.05 s), plus
+the 0.7 s counting from the label's return and an 8 pt snap at the start of its exit. Now the label leaves at the fix
+(2.7–3.0 ms measured), counted from `sessionStartedAt`. Aha at +0.15 s; the moon keeps running and rides
+(`PhaseRide`) from +0.5 s, rests 0.4 s, flies with the phase unchanged. The glow breathes with k through it all (the
+Aha flare is no longer used). The first ride's lap uses `OnboardingStore.hasSeenFirstFindPass`, only on a recovery
+(an onboarding Allow has no Aha). Reduce Motion: 2 s hold, 0.3 s cross-fade to the real phase. Report:
+`.agent-reports/5.9.3/findings.md`.
+
 ### 11.3 Moon smoothness (5.9.3c)
 
 Adopt the handoff's `MoonLoader.swift` timing and easing.
 - **Style: 4b `.terminator` (decided, §11.6).** True phases, and its lit fraction is the same geometry as the
   card's `PhaseGlyph`, so the moon lands on the card with no visual swap. 4c and 4d are flat (eclipse-like): nice,
-  but the card glyph would pop when it takes over. Keep `MoonStyle` a one-line switch.
+  but the card glyph would pop when it takes over. **Only 4b in the app, no `MoonStyle` switch** (Tessa, §11.6);
+  4c / 4d stay in `design/1.5-loader-polish/MoonLoader.swift` as reference.
 - Cycle 4.8 s: 2.2 s sweep new→full, 0.4 s hold at full, 2.2 s sweep full→new; each sweep eased in-out.
   Dark side `#2A2127` (earthshine), never a hole in the background.
 - Halo and tight glow driven by the lit fraction `k` (no separate clock): halo opacity 0.12 + 0.88k, scale
@@ -389,12 +398,18 @@ sharp). Report: `.agent-reports/5.9.3/findings.md`.
 
 ### 11.6 Decided (Tessa, 2026-10-06)
 0. **Moon and text positions unchanged** (§11.1.1). Animation first (§11.2, §11.3); line height and width after (§11.1.2, §11.1.3).
-1. **Moon style: 4b terminator.** 4c and 4d stay in the handoff as reference; `MoonStyle` stays a one-line switch.
+1. **Moon style: 4b terminator, only.** No `MoonStyle` switch in the app (as built in 5.9.3c). 4c and 4d stay in
+   `design/1.5-loader-polish/MoonLoader.swift` as reference for later.
 2. Moon up 50% / 80 pt: dropped.
 3. **First install: at least one full pass, about 1.5 laps** (`T = d + 1`, §11.2.2). Later launches: straight to the real phase.
+4. **No blur on the moon's light/dark edge for now** (the handoff's 0.8 pt): the edge stays sharp like the card's
+   glyph, so the landing doesn't change sharpness. Revisit at the device check if the edge looks harsh.
+5. **Onboarding moon matches the loader:** earthshine dark side (`Theme.Colors.moonEarthshine`), not `bg`.
 
 ## Decision log
 
+- **2026-10-06 (Tessa, after 5.9.3c):** 4b only, no style switch (4c / 4d kept as reference); no edge blur for
+  now; onboarding moon gets the earthshine dark side to match the loader.
 - **2026-10-06 (Tessa, answers):** 4b; moon doesn't move, animation only; first-install moon passes at least once, ~1.5 laps.
 - **2026-10-06 (Tessa, device check):** line height tighter to the design; narrower text (balanced
   breaks); label exit smoother after permission; after "Aha" the moon moves to the real phase, forward only, with

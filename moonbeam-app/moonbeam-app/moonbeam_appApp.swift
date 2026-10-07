@@ -44,7 +44,9 @@ struct moonbeam_appApp: App {
             placeSearch: MapKitPlaceSearchService(),
             placeStore: placeStore,
             moonService: AstronomyEngineMoonService(),
-            headingService: CoreLocationHeadingService()
+            headingService: CoreLocationHeadingService(),
+            onboardingStore: onboardingStore,
+            reducesMotion: { UIAccessibility.isReduceMotionEnabled }
         )
         _locationViewModel = State(initialValue: location)
         let onboarding = OnboardingViewModel(

@@ -77,16 +77,21 @@ nonisolated struct LoaderGlow: Equatable {
 
     /// The look at `date`, with the moon at month time `elapsed`.
     func look(at date: Date, elapsed: TimeInterval) -> Look {
+        look(at: date, litFraction: PhaseCycle.glowLevel(at: elapsed))
+    }
+
+    /// The look at `date`, with the moon `litFraction` lit: for the "Aha"
+    /// ride, which isn't on the month's clock (§11.2.2).
+    func look(at date: Date, litFraction: Double) -> Look {
         let seconds = max(0, date.timeIntervalSince(since))
-        let target = Self.look(of: mode, seconds: seconds, elapsed: elapsed)
+        let target = Self.look(of: mode, seconds: seconds, litFraction: litFraction)
         guard let from, seconds < Self.blendDuration else { return target }
         return Self.mix(from, target, seconds / Self.blendDuration)
     }
 
-    private static func look(of mode: Mode, seconds: TimeInterval, elapsed: TimeInterval) -> Look {
+    private static func look(of mode: Mode, seconds: TimeInterval, litFraction level: Double) -> Look {
         switch mode {
         case .breathe:
-            let level = PhaseCycle.glowLevel(at: elapsed)
             return Look(
                 opacity: interpolate(PhaseCycle.glowOpacityRange, level),
                 scale: interpolate(PhaseCycle.glowScaleRange, level)

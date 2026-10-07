@@ -32,6 +32,7 @@ struct OnboardingDebugTriggerTests {
         var isOnboardingCompleted: Bool {
             didSet { writeCount += 1 }
         }
+        var hasSeenFirstFindPass = true
 
         init(isOnboardingCompleted: Bool) {
             self.isOnboardingCompleted = isOnboardingCompleted
@@ -79,6 +80,8 @@ struct OnboardingDebugTriggerTests {
         #expect(harness.viewModel.isPresented)
         #expect(harness.viewModel.step == .landing)
         #expect(harness.store.writeCount == 0)
+        // Show onboarding makes the next "Aha" a first one (LOADER.md §11.2.2).
+        #expect(!harness.store.hasSeenFirstFindPass)
     }
 
     @Test("Without -forceOnboarding nothing changes")

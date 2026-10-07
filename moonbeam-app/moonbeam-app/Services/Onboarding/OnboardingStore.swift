@@ -13,4 +13,9 @@ import Foundation
 /// places, and `PlaceStore`'s keys are shared with search and recents.
 protocol OnboardingStore: AnyObject {
     var isOnboardingCompleted: Bool { get set }
+
+    /// The first "Aha" ride after install has run, with its extra lap
+    /// (LOADER.md §11.2.2). First-run state like onboarding, so it lives
+    /// here, and the DEBUG reset and Show onboarding clear it too.
+    var hasSeenFirstFindPass: Bool { get set }
 }
