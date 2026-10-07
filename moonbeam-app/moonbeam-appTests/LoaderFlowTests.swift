@@ -774,11 +774,21 @@ struct LocationLoaderStepTests {
         #expect(abs(ride.fromPhase - PhaseCycle.phase(at: loader.moon.elapsed(at: fixDate))) < 1e-9)
     }
 
-    @Test("Aha stays into the flight: fades from 0.4 s in, over 0.3 s, done before the 0.85 s landing")
-    func ahaFadesDuringFlight() {
-        #expect(LocationLoader.ahaLeaveDelayIntoFlight == 0.4)
-        #expect(LocationLoader.ahaLeaveDuration == 0.3)
-        #expect(LocationLoader.ahaLeaveDelayIntoFlight + LocationLoader.ahaLeaveDuration < LocationLoader.flightDuration)
+    @Test("§11.2.6: Aha leaves at the flight start and is gone before the sentence comes in")
+    func ahaOutBeforeScreen() {
+        #expect(LocationLoader.ahaLeaveDuration == 0.25)
+        #expect(LocationLoader.ahaLeaveDrift == 6)
+        #expect(LocationLoader.ahaLeaveDuration < ContentLoadIn.afterAhaDelay(for: .sentence))
+    }
+
+    @Test("§11.2.6: after Aha the screen loads in by block around the flight, compass after the landing")
+    func screenAroundFlight() {
+        #expect(ContentLoadIn.afterAhaDelay(for: .sentence) == 0.30)
+        #expect(ContentLoadIn.afterAhaDelay(for: .card) == 0.45)
+        #expect(ContentLoadIn.afterAhaDelay(for: .compass) == 1.0)
+        // The card is in (0.45 + 0.3 s) as the moon lands in its slot.
+        #expect(ContentLoadIn.afterAhaDelay(for: .card) + ContentLoadIn.duration <= LocationLoader.flightDuration)
+        #expect(ContentLoadIn.afterAhaDelay(for: .compass) > LocationLoader.flightDuration)
     }
 
     @Test("The flight moves from its first frame (§11.2.5)")

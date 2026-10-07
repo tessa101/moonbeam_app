@@ -67,11 +67,11 @@ final class LocationLoader {
     /// it's fully in about 0.4 s before the landing.
     nonisolated static let ahaLeadBeforeLanding: TimeInterval = 1.0
 
-    /// "Aha" stays up into the flight and starts fading this far into it,
-    /// over `ahaLeaveDuration`, as the city screen comes in (§11.2.4). The
-    /// fade is over before the 0.85 s flight lands.
-    nonisolated static let ahaLeaveDelayIntoFlight: TimeInterval = 0.4
-    nonisolated static let ahaLeaveDuration: TimeInterval = 0.3
+    /// "Aha" leaves as the flight starts, fading over this long and
+    /// drifting up, so it's gone before the main screen's first block comes
+    /// in (§11.2.6; was a fade from 0.4 s into the flight).
+    nonisolated static let ahaLeaveDuration: TimeInterval = 0.25
+    nonisolated static let ahaLeaveDrift: CGFloat = 6
 
     /// The flight starts this long before the ride ends, so the moon starts
     /// to shrink and move as it eases into place and is never at rest

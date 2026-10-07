@@ -36,6 +36,14 @@
 - **Aha floor:** never sooner than 0.15 s after the label starts leaving (the built overlap), so a short ride
   can't put Aha over the label.
 
+### 2026-10-06 · Aha out earlier; main screen loads in around the flight (LOADER.md §11.2.6)
+- **Decision (Tessa, after 5.9.3b.4 on the device):** "Aha" leaves earlier, so it no longer overlaps the compass coming
+  in; delay the compass and sequence the main screen's load-in after a recovery.
+- **Now vs later:** this recovery path is fixed now, as part of 5.9.3. Fast-launch / phase-cycle load-ins (§2.1)
+  and the app-wide transition polish stay later (DESIGN-REVIEW.md "Motion and feedback").
+- **Proposed (Cowork):** Aha fades at the flight start (0.25 s); sentence 0.30 s, card 0.45 s, compass 1.0 s after
+  the flight starts, each with §2.1's 8 pt rise.
+
 ### 2026-10-06 · Flight overlaps the landing (LOADER.md §11.2.5)
 - **Decision (Tessa, after 5.9.3b.3 on the device):** as soon as the moon eases into today's phase it starts to shrink
   and move to the card. The two eases meeting at zero left it nearly still for ~0.3 s.

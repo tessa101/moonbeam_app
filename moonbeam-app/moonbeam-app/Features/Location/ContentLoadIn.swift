@@ -14,8 +14,10 @@ import SwiftUI
 /// above it. The rise is an offset, not layout, so nothing else moves.
 /// Reduce Motion keeps the fade and the stagger but drops the rise.
 ///
-/// Under "Aha"'s flying moon (§10.4) the screen fades in instead: every
-/// block together, 0.6 s after 0.25 s, no rise, so the moon is what moves.
+/// Under "Aha"'s flying moon (§11.2.6) the blocks are timed around the
+/// flight instead (its start is time zero): the sentence once "Aha" is gone,
+/// the card as the moon reaches its slot, the compass after the landing.
+/// Same fade and rise.
 struct ContentLoadIn: ViewModifier {
 
     /// The screen's blocks, in load-in order.
@@ -41,16 +43,22 @@ struct ContentLoadIn: ViewModifier {
         reduceMotion ? 0 : rise
     }
 
-    // MARK: - After "Aha" (§10.4, the handoff's "city screen fades in")
+    // MARK: - After "Aha" (§11.2.6, proposed values)
 
-    static let afterAhaDuration: TimeInterval = 0.6
-    static let afterAhaDelay: TimeInterval = 0.25
+    /// How long after the flight starts a block starts loading in: the
+    /// sentence after "Aha" has gone (0.25 s), the card so it's in as the
+    /// moon lands in its slot (0.85 s), the compass after the landing.
+    static func afterAhaDelay(for block: Block) -> TimeInterval {
+        switch block {
+        case .sentence: 0.30
+        case .card: 0.45
+        case .compass: 1.0
+        }
+    }
 
     /// How a block comes in: after "Aha", or the usual load-in.
     static func animation(for block: Block, afterAha: Bool) -> Animation {
-        afterAha
-            ? .easeOut(duration: afterAhaDuration).delay(afterAhaDelay)
-            : .easeOut(duration: duration).delay(delay(for: block))
+        .easeOut(duration: duration).delay(afterAha ? afterAhaDelay(for: block) : delay(for: block))
     }
 
     // MARK: - Modifier
@@ -64,7 +72,7 @@ struct ContentLoadIn: ViewModifier {
     func body(content: Content) -> some View {
         content
             .opacity(isIn ? 1 : 0)
-            .offset(y: isIn ? 0 : Self.startOffset(reduceMotion: reduceMotion || afterAha))
+            .offset(y: isIn ? 0 : Self.startOffset(reduceMotion: reduceMotion))
             .onAppear {
                 withAnimation(Self.animation(for: block, afterAha: afterAha)) {
                     isIn = true

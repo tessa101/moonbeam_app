@@ -413,6 +413,28 @@ to shrink and move to the card.
 midpoint under 0.5 s), on `cubic-bezier(.3, .3, .25, 1)` (`AhaFlight.curve`). Aha's rules are unchanged, so it's
 readable ~1.15 s before its fade. Report: `.agent-reports/5.9.3/findings.md`.
 
+#### 11.2.6 Aha out earlier; main screen loads in around the flight (Tessa, 2026-10-06, after 5.9.3b.4) — 5.9.3b.5
+**Problem:** "Aha" was still fading while the compass came in (the screen fades in as one block from 0.25 s into the
+flight; Aha faded from 0.4 s), so the text sat over the compass.
+- **Aha leaves as the flight starts:** fade 0.25 s, drifting up 6 pt, starting at flight start (replaces §11.2.4's
+  "fades from 0.4 s into the flight"). Gone before anything else appears. Aha still comes in 1.0 s before landing.
+- **Main screen loads in by block, not as one fade**, using §2.1's load-in (opacity + 8 pt rise, 300 ms ease-out),
+  sequenced around the flight (flight start = 0) (proposed):
+  - **Sentence:** 0.30 s (after Aha is gone)
+  - **Moon card:** 0.45 s, so it's in as the moon lands in its phase slot (0.85 s); the card's glyph takes over at
+    the landing as now
+  - **Compass** (and the bottom bar / pinned bar): **1.0 s**, after the moon has landed
+- Nothing on the main screen appears while Aha is still visible.
+- Reduce Motion: as built (no flight), same order, opacity only.
+- Scope: the recovery → Aha path only. The fast-launch and phase-cycle load-ins (§2.1) stay as they are; the app-wide
+  transition pass is still later (DESIGN-REVIEW.md "Motion and feedback").
+- Tests: Aha fully out before the sentence starts; block start times as above; compass starts after the landing.
+
+**As built (5.9.3b.5, 2026-10-06):** Aha leaves at flight start (`LocationLoader.ahaLeaveDuration` 0.25 s,
+`ahaLeaveDrift` 6 pt). After Aha the blocks load in at `ContentLoadIn.afterAhaDelay(for:)`: 0.30 / 0.45 / 1.0 s, with
+§2.1's fade and 8 pt rise (the old single 0.6 s fade is gone). §2.1's own load-in and Reduce Motion are unchanged.
+Report: `.agent-reports/5.9.3/findings.md`.
+
 ### 11.3 Moon smoothness (5.9.3c)
 
 Adopt the handoff's `MoonLoader.swift` timing and easing.
@@ -466,6 +488,8 @@ sharp). Report: `.agent-reports/5.9.3/findings.md`.
 
 ## Decision log
 
+- **2026-10-06 (Tessa, after 5.9.3b.4):** Aha was over the incoming compass. Aha leaves as the flight starts; after a
+  recovery the main screen loads in by block around the flight, compass last after the landing (§11.2.6).
 - **2026-10-06 (Tessa, after 5.9.3b.3):** cut further: the moon starts shrinking and moving to the card as it
   eases into place, no near-still moment (§11.2.5).
 - **2026-10-06 (Tessa, after 5.9.3b.2):** no pause after the moon lands; soft landing, then straight into the

@@ -56,8 +56,8 @@ struct LocationScreen: View {
             case .ready:
                 // §2.1: no whole-screen fade. The screen arrives at once and
                 // its blocks load in (`ContentLoadIn`). Under "Aha"'s flying
-                // moon it fades in instead, and the card's glyph waits for
-                // the moon (§10.4).
+                // moon they're timed around the flight, and the card's glyph
+                // waits for the moon (§10.4, §11.2.6).
                 ScrollViewReader { scrollProxy in
                     scrollView(scrollProxy)
                 }
