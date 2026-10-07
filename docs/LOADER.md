@@ -379,6 +379,23 @@ that speed, end slope 0); Aha at landing − 1.0 s, never sooner than 0.15 s aft
 overshooting, so a fast cycle just short of the target **shortens the ride** (`D = 3T / speed`) rather than dipping.
 Report: `.agent-reports/5.9.3/findings.md`.
 
+#### 11.2.4 No pause after the landing (Tessa, 2026-10-06, after 5.9.3b.2) — 5.9.3b.3
+Replaces §11.2.3 step 4 and the 0.6 s rest (`PhaseRide.restBeat`).
+- The moon still **lands softly** on the real phase (the ride's ease-out, unchanged), then **goes straight into the
+  flight**: scale + fly into the card's phase slot (0.85 s, as built), with no hold at rest.
+- The flight should start from the landing's near-zero speed and ease in, so landing → flight reads as one motion,
+  not a stop and a restart.
+- **"Aha" stays through the flight** (proposed): without the pause it would only be readable ~0.4 s. It now fades
+  during the flight's second half (starts 0.4 s into the flight, 0.3 s, up 3 pt) as the city screen fades in.
+  "Aha" still starts 1.0 s before the landing.
+- Tests: no rest between ride end and flight start; Aha fade starts 0.4 s into the flight.
+
+**As built (5.9.3b.3, 2026-10-06):** `PhaseRide.restBeat` removed; the flight starts at the landing (only a ride
+shorter than the label's exit waits for Aha). The flight's existing `cubic-bezier(.65, 0, .25, 1)` already starts from
+rest, so no curve change. Aha fades from 0.4 s into the flight over 0.3 s (`LocationLoader.ahaLeaveDelayIntoFlight`,
+`ahaLeaveDuration`). Both eases meet at zero speed, so the moon barely moves for ~0.3 s around the landing; check on
+the device. Report: `.agent-reports/5.9.3/findings.md`.
+
 ### 11.3 Moon smoothness (5.9.3c)
 
 Adopt the handoff's `MoonLoader.swift` timing and easing.
@@ -432,6 +449,8 @@ sharp). Report: `.agent-reports/5.9.3/findings.md`.
 
 ## Decision log
 
+- **2026-10-06 (Tessa, after 5.9.3b.2):** no pause after the moon lands; soft landing, then straight into the
+  scale + flight into the card (§11.2.4).
 - **2026-10-06 (Tessa, after 5.9.3b):** recovery order changes: the moon rides to the real phase as soon as the fix
   lands, "Aha" floats up near the end of the ride, soft landing, brief pause, then the flight (§11.2.3).
 - **2026-10-06 (Tessa, after 5.9.3c):** 4b only, no style switch (4c / 4d kept as reference); no edge blur for

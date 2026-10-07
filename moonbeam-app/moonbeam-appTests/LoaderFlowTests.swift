@@ -681,7 +681,7 @@ struct LocationLoaderStepTests {
         Double(duration.components.attoseconds) / 1e18 + Double(duration.components.seconds)
     }
 
-    @Test("Recovery (§11.2.3): the ride starts at the fix, the label goes at once, Aha 1 s before landing, 0.6 s rest")
+    @Test("Recovery (§11.2.3, §11.2.4): ride at the fix, label goes at once, Aha 1 s before landing, flight at the landing")
     func ahaStep() async throws {
         let clock = Clock()
         let loader = Self.makeLoader(clock)
@@ -708,9 +708,8 @@ struct LocationLoaderStepTests {
         // Aha 1 s before the landing (the ride is ≥ 1.6 s here).
         let expectedAha = ride.endDate.addingTimeInterval(-LocationLoader.ahaLeadBeforeLanding)
         #expect(abs((ahaAt ?? .distantPast).timeIntervalSince(expectedAha)) < 1e-6)
-        // Then the 0.6 s rest, and it's time to fly.
-        #expect(PhaseRide.restBeat == 0.6)
-        #expect(abs(clock.date.timeIntervalSince(ride.endDate) - 0.6) < 1e-6)
+        // §11.2.4: no rest; it's time to fly the moment the moon lands.
+        #expect(abs(clock.date.timeIntervalSince(ride.endDate)) < 1e-6)
         _ = clock.waits.dropFirst(waitsBefore)
         #expect(loader.content == .aha(greeting))
         #expect(loader.glow.mode == .breathe)
@@ -770,6 +769,23 @@ struct LocationLoaderStepTests {
         #expect(abs(rideSpeed - cycleSpeed) < 0.02)
         // And the same place.
         #expect(abs(ride.fromPhase - PhaseCycle.phase(at: loader.moon.elapsed(at: fixDate))) < 1e-9)
+    }
+
+    @Test("Aha stays into the flight: fades from 0.4 s in, over 0.3 s, done before the 0.85 s landing")
+    func ahaFadesDuringFlight() {
+        #expect(LocationLoader.ahaLeaveDelayIntoFlight == 0.4)
+        #expect(LocationLoader.ahaLeaveDuration == 0.3)
+        #expect(LocationLoader.ahaLeaveDelayIntoFlight + LocationLoader.ahaLeaveDuration < LocationLoader.flightDuration)
+    }
+
+    @Test("The flight starts from rest, so the soft landing and the flight read as one motion")
+    func flightStartsFromRest() {
+        let began = Date(timeIntervalSinceReferenceDate: 0)
+        let early = AhaFlight.progress(since: began, at: began.addingTimeInterval(0.02))
+        let mid = AhaFlight.progress(since: began, at: began.addingTimeInterval(0.44))
+            - AhaFlight.progress(since: began, at: began.addingTimeInterval(0.42))
+        // The first 20 ms cover far less than 20 ms mid-flight.
+        #expect(early < mid / 5)
     }
 
     @Test("Reduce Motion or no card phase: no ride, Aha holds 2 s")

@@ -453,7 +453,7 @@ enum LoaderMotion {
 // MARK: - Aha in and out
 
 /// "Search → Aha" (§10.4, §11.2.3): "Aha" fades in over 0.6 s from when the loader shows it, near the end of the ride, and rises
-/// 10 pt over 0.8 s; when the moon flies it fades out fast, 0.22 s, drifting
+/// 10 pt over 0.8 s; when the moon flies it stays 0.4 s, then fades over 0.3 s (§11.2.4), drifting
 /// up 3 pt. Reduce Motion: 0.3 s cross-fades, no rise or drift.
 private struct AhaGreetingIn<Content: View>: View {
 
@@ -470,7 +470,9 @@ private struct AhaGreetingIn<Content: View>: View {
     private static var fadeDuration: TimeInterval { 0.6 }
     private static var riseDuration: TimeInterval { 0.8 }
     private static var leaveDrift: CGFloat { 3 }
-    private static var leaveDuration: TimeInterval { 0.22 }
+    /// §11.2.4: "Aha" stays into the flight, then fades over its second half.
+    private static var leaveDelay: TimeInterval { LocationLoader.ahaLeaveDelayIntoFlight }
+    private static var leaveDuration: TimeInterval { LocationLoader.ahaLeaveDuration }
     private static var reduceMotionFade: TimeInterval { 0.3 }
 
     var body: some View {
@@ -485,7 +487,13 @@ private struct AhaGreetingIn<Content: View>: View {
                 withAnimation(.easeOut(duration: Self.fadeDuration).delay(Self.delay)) { isIn = true }
                 withAnimation(LoaderMotion.rise(duration: Self.riseDuration).delay(Self.delay)) { hasRisen = true }
             }
-            .animation(.easeOut(duration: reduceMotion ? Self.reduceMotionFade : Self.leaveDuration), value: leaving)
+            .animation(leaveAnimation, value: leaving)
+    }
+
+    private var leaveAnimation: Animation {
+        reduceMotion
+            ? .easeOut(duration: Self.reduceMotionFade)
+            : .easeOut(duration: Self.leaveDuration).delay(Self.leaveDelay)
     }
 
     private var yOffset: CGFloat {

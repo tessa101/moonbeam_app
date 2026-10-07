@@ -36,6 +36,11 @@
 - **Aha floor:** never sooner than 0.15 s after the label starts leaving (the built overlap), so a short ride
   can't put Aha over the label.
 
+### 2026-10-06 · No pause after the moon lands (LOADER.md §11.2.4)
+- **Decision (Tessa, after 5.9.3b.2 on the device):** drop the 0.6 s rest. The moon lands softly on today's phase,
+  then scales and flies into the card in one motion. Supersedes the pause in "Recovery: moon first" below.
+- **Proposed (Cowork):** "Aha" stays up through the flight and fades in its second half, so it's still readable.
+
 ### 2026-10-06 · Recovery: moon first, "Aha" near the end (LOADER.md §11.2.3)
 - **Decision (Tessa, after 5.9.3b):** after a recovery (e.g. allowing location in Settings and coming back) the moon
   is already moving; when the fix lands it rides on to today's real phase, "Aha, there you are!" floats up toward the

@@ -67,6 +67,12 @@ final class LocationLoader {
     /// it's fully in about 0.4 s before the landing.
     nonisolated static let ahaLeadBeforeLanding: TimeInterval = 1.0
 
+    /// "Aha" stays up into the flight and starts fading this far into it,
+    /// over `ahaLeaveDuration`, as the city screen comes in (§11.2.4). The
+    /// fade is over before the 0.85 s flight lands.
+    nonisolated static let ahaLeaveDelayIntoFlight: TimeInterval = 0.4
+    nonisolated static let ahaLeaveDuration: TimeInterval = 0.3
+
     /// For the ride's start speed: the cycle's speed is read over this
     /// much month time. Far below a frame.
     nonisolated static let speedSampleInterval: TimeInterval = 1e-3
@@ -212,7 +218,9 @@ final class LocationLoader {
     /// fix lands. The moon rides on to `realPhase` (the card's glyph) at
     /// once, at the cycle's speed, easing to rest; the label leaves as soon
     /// as the session has had its 0.7 s; "Aha" floats up 1 s before the
-    /// landing; the moon rests 0.6 s, then it's time to fly.
+    /// landing; and at the soft landing it's time to fly, with no rest
+    /// (§11.2.4). The flight's curve starts from rest, so the two read as one
+    /// motion.
     ///
     /// - Parameters:
     ///   - realPhase: the phase the card will show; `nil` (no moon table)
@@ -259,7 +267,9 @@ final class LocationLoader {
         leaveLabel()
         guard await wait(ahaStart.timeIntervalSince(labelLeaves), step: step) else { return false }
         content = .aha(greeting)
-        let flight = max(ride.endDate.addingTimeInterval(PhaseRide.restBeat), ahaStart)
+        // Straight from the landing. Only a ride shorter than the label's
+        // exit (a fast cycle just short of the target) waits for "Aha".
+        let flight = max(ride.endDate, ahaStart)
         return await wait(flight.timeIntervalSince(ahaStart), step: step)
     }
 

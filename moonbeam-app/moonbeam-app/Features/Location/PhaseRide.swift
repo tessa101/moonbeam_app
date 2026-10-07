@@ -30,10 +30,6 @@ nonisolated struct PhaseRide: Equatable {
     static let durationPerLap: TimeInterval = 2.0
     static let durationRange: ClosedRange<TimeInterval> = 1.6...4.2
 
-    /// The moon rests this long at the real phase before it flies
-    /// (§11.2.3; was 0.4 s).
-    static let restBeat: TimeInterval = 0.6
-
     /// A cubic ease-out with start slope above this (in units of the average
     /// speed) would pass the target and come back.
     static let maximumStartSlope = 3.0
