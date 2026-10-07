@@ -355,6 +355,30 @@ Aha flare is no longer used). The first ride's lap uses `OnboardingStore.hasSeen
 (an onboarding Allow has no Aha). Reduce Motion: 2 s hold, 0.3 s cross-fade to the real phase. Report:
 `.agent-reports/5.9.3/findings.md`.
 
+#### 11.2.3 Recovery order: moon first, "Aha" near the end (Tessa, 2026-10-06, after 5.9.3b) — 5.9.3b.2
+Replaces §11.2.2 steps 1–2 and the ride's start time. Applies to every recovery (return from Settings, Try again,
+Allow at First ask, the search sheet's Use my location from a message). Values marked (proposed) are Cowork's.
+1. **Back in the app, the moon is already moving.** The cycle runs with "Finding your location…" as now.
+2. **Fix lands → the ride starts at once**, continuing from the cycle **at its current speed** (no ease-in, so no
+   hitch where the cycle hands over), and **eases out** to a soft stop on today's real phase. Duration and laps as
+   §11.2.2 (`D = clamp(0.9 + 2.0·T, 1.6, 4.2)` s, first-install `+1` lap). The label leaves as built (at the fix).
+3. **"Aha" floats up toward the end of the ride**: starts **1.0 s before the moon lands** (proposed; at the ride's
+   start if `D` < 1.0 s), same 0.6 s fade + 10 pt rise, so it's fully in ~0.4 s before the landing.
+4. **Soft landing, then a brief pause: 0.6 s** at rest on the real phase (proposed; was 0.4 s), so "Aha" + city has
+   ~1.6 s on screen before it goes.
+5. Then as built: "Aha" fades (0.22 s, up 3 pt), the moon shrinks and flies into the card's phase slot (0.85 s), the
+   screen fades in.
+- Reduce Motion: unchanged (§11.2.2).
+- The extra first-install lap stays recovery-only (an onboarding Allow has no Aha).
+- Tests: ride starts at the fix with the cycle's velocity (no speed dip at the handover); Aha starts at `D − 1.0 s`
+  (or 0); rest 0.6 s before the flight; label exit unchanged.
+
+**As built (5.9.3b.2, 2026-10-06):** the ride starts at the fix at the cycle's speed (a cubic ease-out, start slope =
+that speed, end slope 0); Aha at landing − 1.0 s, never sooner than 0.15 s after the label starts leaving; rest
+0.6 s (`PhaseRide.restBeat`). One addition: a cubic can start at most 3× the ride's average speed without
+overshooting, so a fast cycle just short of the target **shortens the ride** (`D = 3T / speed`) rather than dipping.
+Report: `.agent-reports/5.9.3/findings.md`.
+
 ### 11.3 Moon smoothness (5.9.3c)
 
 Adopt the handoff's `MoonLoader.swift` timing and easing.
@@ -408,6 +432,8 @@ sharp). Report: `.agent-reports/5.9.3/findings.md`.
 
 ## Decision log
 
+- **2026-10-06 (Tessa, after 5.9.3b):** recovery order changes: the moon rides to the real phase as soon as the fix
+  lands, "Aha" floats up near the end of the ride, soft landing, brief pause, then the flight (§11.2.3).
 - **2026-10-06 (Tessa, after 5.9.3c):** 4b only, no style switch (4c / 4d kept as reference); no edge blur for
   now; onboarding moon gets the earthshine dark side to match the loader.
 - **2026-10-06 (Tessa, answers):** 4b; moon doesn't move, animation only; first-install moon passes at least once, ~1.5 laps.

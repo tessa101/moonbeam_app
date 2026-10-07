@@ -5,14 +5,20 @@
 
 import Foundation
 
-/// After "Aha", the loader moon runs forward to today's real phase and stops
-/// there (LOADER.md §11.2.2), so it flies into the card already showing what
-/// the card shows.
+/// After a recovery's fix, the loader moon runs on to today's real phase and
+/// stops there (LOADER.md §11.2.2, §11.2.3), so it flies into the card already
+/// showing what the card shows.
 ///
 /// Worked in the loader's phase space, `0..<1` (0 new, 0.5 full), not its
 /// month time: the ride has its own length and easing, and only ever goes
 /// forward (new → lit on the right → full → lit on the left). The first ride
 /// after install adds a whole lap, so it sweeps every phase at least once.
+///
+/// It takes over from the running cycle at the cycle's own speed (no ease-in,
+/// so no dip at the handover) and eases out to rest: a cubic with that start
+/// speed and zero end speed. A start speed too fast to brake within the
+/// ride without overshooting (more than 3× the ride's average) shortens the
+/// ride instead, so the speed still carries on and it never runs backwards.
 ///
 /// `nonisolated`: a plain value, testable without a view.
 nonisolated struct PhaseRide: Equatable {
@@ -24,8 +30,13 @@ nonisolated struct PhaseRide: Equatable {
     static let durationPerLap: TimeInterval = 2.0
     static let durationRange: ClosedRange<TimeInterval> = 1.6...4.2
 
-    /// The moon rests this long at the real phase before it flies.
-    static let restBeat: TimeInterval = 0.4
+    /// The moon rests this long at the real phase before it flies
+    /// (§11.2.3; was 0.4 s).
+    static let restBeat: TimeInterval = 0.6
+
+    /// A cubic ease-out with start slope above this (in units of the average
+    /// speed) would pass the target and come back.
+    static let maximumStartSlope = 3.0
 
     // MARK: - State
 
@@ -34,22 +45,39 @@ nonisolated struct PhaseRide: Equatable {
     let fromPhase: Double
     /// Total travel, in laps: `0..<1`, or `1..<2` with the extra lap.
     let laps: Double
+    let duration: TimeInterval
+    /// The ease's start slope: start speed over average speed, `0...3`.
+    let startSlope: Double
 
     /// - Parameters:
     ///   - fromPhase: where the moon is at `startDate`.
     ///   - target: the real phase, `0..<1`.
     ///   - extraLap: the first ride after install (`hasSeenFirstFindPass`).
-    init(from fromPhase: Double, to target: Double, extraLap: Bool, startingAt startDate: Date) {
+    ///   - startSpeed: the cycle's speed at `startDate`, phases per second.
+    init(
+        from fromPhase: Double,
+        to target: Double,
+        extraLap: Bool,
+        startSpeed: Double = 0,
+        startingAt startDate: Date
+    ) {
         self.startDate = startDate
         self.fromPhase = Self.wrapped(fromPhase)
-        laps = Self.wrapped(target - fromPhase) + (extraLap ? 1 : 0)
+        let laps = Self.wrapped(target - fromPhase) + (extraLap ? 1 : 0)
+        self.laps = laps
+        let speed = max(startSpeed, 0)
+        let planned = Self.duration(laps: laps)
+        guard laps > 0, speed > 0 else {
+            duration = planned
+            startSlope = 0
+            return
+        }
+        // Too fast to brake in time: a shorter ride at the same start speed.
+        duration = min(planned, Self.maximumStartSlope * laps / speed)
+        startSlope = speed * duration / laps
     }
 
     // MARK: - Timing
-
-    var duration: TimeInterval {
-        Self.duration(laps: laps)
-    }
 
     var endDate: Date {
         startDate.addingTimeInterval(duration)
@@ -62,10 +90,20 @@ nonisolated struct PhaseRide: Equatable {
     // MARK: - Reading it
 
     /// The phase at `date`: at the start before it, at the target after, and
-    /// between them on the handoff's in-out ease (`PhaseCycle.ease`).
+    /// between them on the ease-out.
     func phase(at date: Date) -> Double {
         let fraction = min(max(date.timeIntervalSince(startDate) / duration, 0), 1)
-        return Self.wrapped(fromPhase + laps * PhaseCycle.ease(fraction))
+        return Self.wrapped(fromPhase + laps * Self.easeOut(fraction, startSlope: startSlope))
+    }
+
+    /// The cubic from 0 to 1 with slope `startSlope` at 0 and 0 at 1:
+    /// `(c − 2)u³ + (3 − 2c)u² + cu`. Its slope is `(1 − u)(c + (6 − 3c)u)`,
+    /// never negative for `c` in `0...3`, so it never runs backwards. `c = 0`
+    /// is a smoothstep (from rest); `c = 3` is the fastest start that doesn't
+    /// overshoot.
+    static func easeOut(_ fraction: Double, startSlope c: Double) -> Double {
+        let u = fraction
+        return (c - 2) * u * u * u + (3 - 2 * c) * u * u + c * u
     }
 
     func geometry(at date: Date) -> PhaseGlyphGeometry {

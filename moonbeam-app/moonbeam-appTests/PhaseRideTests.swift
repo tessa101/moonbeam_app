@@ -61,7 +61,47 @@ struct PhaseRideTests {
         #expect(PhaseRide.duration(laps: 1.9) == 4.2)
     }
 
-    @Test("Eased in and out, and never runs backwards")
+    @Test("Takes over at the given speed and eases out to rest")
+    func startsAtSpeed() {
+        let speed = 0.3
+        let ride = PhaseRide(from: 0.2, to: 0.9, extraLap: false, startSpeed: speed, startingAt: Self.t0)
+        #expect(ride.duration == PhaseRide.duration(laps: 0.7))
+        let frame = 1e-4
+        let start = (ride.phase(at: Self.t0.addingTimeInterval(frame)) - ride.phase(at: Self.t0)) / frame
+        #expect(abs(start - speed) < 1e-3)
+        let end = ride.endDate
+        let last = (ride.phase(at: end) - ride.phase(at: end.addingTimeInterval(-frame))) / frame
+        #expect(last < 1e-3)
+    }
+
+    @Test("Too fast to brake within the ride: a shorter ride at the same speed, never overshooting")
+    func fastStartShortens() {
+        // 0.05 laps ahead at 0.42 phases/s: braking in 1.6 s would overshoot.
+        let ride = PhaseRide(from: 0.3, to: 0.35, extraLap: false, startSpeed: 0.42, startingAt: Self.t0)
+        #expect(ride.duration < PhaseRide.durationRange.lowerBound)
+        #expect(abs(ride.startSlope - PhaseRide.maximumStartSlope) < Self.tolerance)
+        var previous = ride.fromPhase
+        for index in 1...200 {
+            let now = ride.phase(at: Self.t0.addingTimeInterval(ride.duration * Double(index) / 200))
+            #expect(now >= previous - Self.tolerance)
+            #expect(now <= 0.35 + Self.tolerance)
+            previous = now
+        }
+        #expect(abs(previous - 0.35) < 1e-9)
+    }
+
+    @Test("The ease-out never runs backwards for start slopes 0…3", arguments: [0.0, 0.5, 1.5, 2.5, 3.0])
+    func easeOutMonotonic(slope: Double) {
+        var previous = 0.0
+        for index in 1...100 {
+            let value = PhaseRide.easeOut(Double(index) / 100, startSlope: slope)
+            #expect(value >= previous - Self.tolerance)
+            previous = value
+        }
+        #expect(abs(previous - 1) < Self.tolerance)
+    }
+
+    @Test("From rest it eases in and out, and never runs backwards")
     func easedForward() {
         let ride = PhaseRide(from: 0.3, to: 0.2, extraLap: true, startingAt: Self.t0)
         var travelled = 0.0

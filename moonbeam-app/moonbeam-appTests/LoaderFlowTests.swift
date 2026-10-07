@@ -681,7 +681,7 @@ struct LocationLoaderStepTests {
         Double(duration.components.attoseconds) / 1e18 + Double(duration.components.seconds)
     }
 
-    @Test("Aha (§11.2): a fix past the session's 0.7 s takes the label off at once, then the ride, the rest, the flight")
+    @Test("Recovery (§11.2.3): the ride starts at the fix, the label goes at once, Aha 1 s before landing, 0.6 s rest")
     func ahaStep() async throws {
         let clock = Clock()
         let loader = Self.makeLoader(clock)
@@ -692,27 +692,29 @@ struct LocationLoaderStepTests {
         let fixDate = clock.date
         let waitsBefore = clock.waits.count
         var labelLeftAt: Date?
+        var ahaAt: Date?
         clock.onWait = { [clock] in
             if labelLeftAt == nil, !loader.showsLabel { labelLeftAt = clock.date }
+            if ahaAt == nil, loader.content.isAha { ahaAt = clock.date }
         }
 
         let greeting = AhaGreeting(line: AhaGreeting.lines[1], city: "Irvine, CA")
         #expect(await loader.showAha(greeting, realPhase: Self.realPhase))
 
-        // No wait for the moon: the label leaves at the fix, 0 ms later.
-        let waits = clock.waits.dropFirst(waitsBefore).map(Self.seconds)
-        #expect(waits.count == 1)
-        #expect(labelLeftAt == fixDate)
         let ride = try #require(loader.ride)
-        #expect(ride.startDate == fixDate.addingTimeInterval(0.15 + 0.35))
-        let expected = 0.5 + ride.duration + PhaseRide.restBeat
-        #expect(abs((waits.first ?? 0) - expected) < 1e-6)
+        #expect(ride.startDate == fixDate)
+        // The label leaves at the fix, with no wait.
+        #expect(labelLeftAt == fixDate)
+        // Aha 1 s before the landing (the ride is ≥ 1.6 s here).
+        let expectedAha = ride.endDate.addingTimeInterval(-LocationLoader.ahaLeadBeforeLanding)
+        #expect(abs((ahaAt ?? .distantPast).timeIntervalSince(expectedAha)) < 1e-6)
+        // Then the 0.6 s rest, and it's time to fly.
+        #expect(PhaseRide.restBeat == 0.6)
+        #expect(abs(clock.date.timeIntervalSince(ride.endDate) - 0.6) < 1e-6)
+        _ = clock.waits.dropFirst(waitsBefore)
         #expect(loader.content == .aha(greeting))
         #expect(loader.glow.mode == .breathe)
         #expect(!loader.showsLabel)
-        // Started where the running moon was, ended on the real phase.
-        let startPhase = PhaseCycle.phase(at: loader.moon.elapsed(at: ride.startDate))
-        #expect(abs(ride.fromPhase - startPhase) < 1e-9)
         let landed = ride.geometry(at: ride.endDate)
         #expect(abs(landed.litFraction - Self.realPhase.litFraction) < 1e-9)
         #expect(landed.litSide == Self.realPhase.litSide)
@@ -723,41 +725,51 @@ struct LocationLoaderStepTests {
         #expect(loader.flightStartedAt == nil)
     }
 
-    @Test("A fix right away: the label still gets 0.7 s, counted from the session's start")
-    func ahaFastFix() async {
+    @Test("A fix right away: the ride starts at once, the label still gets 0.7 s from the session's start")
+    func ahaFastFix() async throws {
         let clock = Clock()
         let loader = Self.makeLoader(clock)
         loader.appear()
         await loader.showMessage(.noFix)
         let tap = clock.date
         await loader.resume()
+        let fixDate = clock.date
         let waitsBefore = clock.waits.count
 
         let greeting = AhaGreeting(line: AhaGreeting.lines[2], city: "Irvine, CA")
         #expect(await loader.showAha(greeting, realPhase: Self.realPhase))
 
+        let ride = try #require(loader.ride)
+        #expect(ride.startDate == fixDate)
         let waits = clock.waits.dropFirst(waitsBefore).map(Self.seconds)
-        #expect(waits.count == 2)
         // resume() took 0.2 s of the 0.7 s already.
         #expect(abs((waits.first ?? 0) - (LocationLoader.minimumSearchBeforeAha - 0.2)) < 1e-6)
-        #expect(abs((loader.ride?.startDate.timeIntervalSince(tap) ?? 0) - (0.7 + 0.5)) < 1e-6)
+        #expect(abs(fixDate.timeIntervalSince(tap) - 0.2) < 1e-6)
         #expect(loader.content == .aha(greeting))
     }
 
-    @Test("The moon never pauses before the ride: it runs on at the normal speed")
-    func moonRunsUntilRide() async throws {
+    @Test("No dip at the handover: the ride starts at the cycle's speed", arguments: [0.4, 1.0, 1.9, 2.9, 3.6])
+    func rideKeepsCycleSpeed(after seconds: TimeInterval) async throws {
         let clock = Clock()
         let loader = Self.makeLoader(clock)
         loader.appear()
         await loader.showMessage(.noFix)
         await loader.resume()
-        clock.date = clock.date.addingTimeInterval(2)
+        clock.date = clock.date.addingTimeInterval(seconds)
         let fixDate = clock.date
-        let before = loader.moon.elapsed(at: fixDate)
+        let frame = 1.0 / 240
+        func step(_ phase: (Date) -> Double) -> Double {
+            let delta = phase(fixDate.addingTimeInterval(frame)) - phase(fixDate)
+            return (delta < 0 ? delta + 1 : delta) / frame
+        }
+        let cycleSpeed = step { PhaseCycle.phase(at: loader.moon.elapsed(at: $0)) }
         #expect(await loader.showAha(AhaGreeting(line: AhaGreeting.lines[0], city: "Irvine, CA"), realPhase: Self.realPhase))
         let ride = try #require(loader.ride)
-        let atRide = loader.moon.elapsed(at: ride.startDate)
-        #expect(abs(PhaseCycle.wrapped(atRide - before) - 0.5) < 1e-6)
+        let rideSpeed = step { ride.phase(at: $0) }
+        // Same speed within a frame's worth of change.
+        #expect(abs(rideSpeed - cycleSpeed) < 0.02)
+        // And the same place.
+        #expect(abs(ride.fromPhase - PhaseCycle.phase(at: loader.moon.elapsed(at: fixDate))) < 1e-9)
     }
 
     @Test("Reduce Motion or no card phase: no ride, Aha holds 2 s")

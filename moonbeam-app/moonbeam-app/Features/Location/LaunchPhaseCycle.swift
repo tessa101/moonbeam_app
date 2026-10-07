@@ -413,7 +413,8 @@ struct LaunchPhaseCycle: View {
     /// the moment it started to fade.
     private func showLabel(_ shows: Bool, delay: TimeInterval = 0) {
         guard shows else {
-            if loader.content.isAha && !reduceMotion {
+            // A ride means the label is leaving for "Aha" (§11.2.3).
+            if loader.ride != nil && !reduceMotion {
                 withAnimation(.easeInOut(duration: Self.labelOutForAhaDuration)) {
                     labelIsIn = false
                     labelHasDrifted = true
@@ -451,7 +452,7 @@ enum LoaderMotion {
 
 // MARK: - Aha in and out
 
-/// "Search → Aha" (§10.4, §11.2.1): "Aha" fades in over 0.6 s after 0.15 s, over the label's exit, and rises
+/// "Search → Aha" (§10.4, §11.2.3): "Aha" fades in over 0.6 s from when the loader shows it, near the end of the ride, and rises
 /// 10 pt over 0.8 s; when the moon flies it fades out fast, 0.22 s, drifting
 /// up 3 pt. Reduce Motion: 0.3 s cross-fades, no rise or drift.
 private struct AhaGreetingIn<Content: View>: View {
@@ -464,7 +465,8 @@ private struct AhaGreetingIn<Content: View>: View {
     @State private var hasRisen = false
 
     private static var rise: CGFloat { 10 }
-    private static var delay: TimeInterval { LocationLoader.ahaFadeInDelay }
+    /// The loader times its arrival (§11.2.3), so it starts at once.
+    private static var delay: TimeInterval { 0 }
     private static var fadeDuration: TimeInterval { 0.6 }
     private static var riseDuration: TimeInterval { 0.8 }
     private static var leaveDrift: CGFloat { 3 }

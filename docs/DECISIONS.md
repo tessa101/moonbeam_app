@@ -28,6 +28,23 @@
 - **Considered:** starting the ride's ease from the running speed (no slow start). Not done, because §11.2.2 names
   the handoff curve. Left for the device check.
 
+### 2026-10-06 · Build 5.9.3b.2: recovery ride as built (LOADER.md §11.2.3)
+- **Ease:** a cubic from the cycle's speed to rest (`(c − 2)u³ + (3 − 2c)u² + cu`, `c` = start speed over the
+  average). Matches speed at the handover and never runs backwards for `c ≤ 3`.
+- **Fast start, short distance (c > 3):** shorten the ride to `3T / speed` so the speed carries on, rather than keep
+  `D` with a dip or add a lap. Open for Tessa.
+- **Aha floor:** never sooner than 0.15 s after the label starts leaving (the built overlap), so a short ride
+  can't put Aha over the label.
+
+### 2026-10-06 · Recovery: moon first, "Aha" near the end (LOADER.md §11.2.3)
+- **Decision (Tessa, after 5.9.3b):** after a recovery (e.g. allowing location in Settings and coming back) the moon
+  is already moving; when the fix lands it rides on to today's real phase, "Aha, there you are!" floats up toward the
+  end, the moon comes to a soft stop, a brief pause, then it shrinks into the card. Was: Aha first, then the ride.
+- **Why:** removes the awkward pause between Aha and the moon moving; the ride now continues the cycle's motion
+  (also fixes the possible hitch the agent flagged).
+- **Proposed values (Cowork):** Aha starts 1.0 s before the landing; pause 0.6 s (was 0.4 s). Extra first-install lap
+  stays recovery-only.
+
 ### 2026-10-06 · After 5.9.3c: 4b only, no edge blur, onboarding moon earthshine
 - **Decisions (Tessa):** only 4b in the app, no `MoonStyle` switch; 4c / 4d stay in `design/1.5-loader-polish/` as
   reference. Onboarding's moon gets the earthshine dark side to match the loader.
