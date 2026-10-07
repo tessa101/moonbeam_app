@@ -404,7 +404,7 @@ sharp). Report: `.agent-reports/5.9.3/findings.md`.
 3. **First install: at least one full pass, about 1.5 laps** (`T = d + 1`, §11.2.2). Later launches: straight to the real phase.
 4. **No blur on the moon's light/dark edge for now** (the handoff's 0.8 pt): the edge stays sharp like the card's
    glyph, so the landing doesn't change sharpness. Revisit at the device check if the edge looks harsh.
-5. **Onboarding moon matches the loader:** earthshine dark side (`Theme.Colors.moonEarthshine`), not `bg`.
+5. **Onboarding moon matches the loader:** earthshine dark side (`Theme.Colors.moonEarthshine`), not `bg`. Built 2026-10-06.
 
 ## Decision log
 

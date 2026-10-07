@@ -6,8 +6,9 @@
 import SwiftUI
 
 /// The moon at the top of each onboarding screen (DESIGN-1.1.md §5): the
-/// card's `PhaseGlyph` on the screen's `bg`, with its glow scaled to its
-/// size, plus the landing's big soft halo. Decorative.
+/// card's `PhaseGlyph` with the loader's earthshine dark side (LOADER.md
+/// §11.6), so it hands over to the loader with no change, its glow scaled to
+/// its size, plus the landing's big soft halo. Decorative.
 struct OnboardingMoon: View {
 
     let size: CGFloat
@@ -38,7 +39,7 @@ struct OnboardingMoon: View {
     var body: some View {
         PhaseGlyph(
             geometry: Self.geometry,
-            discColor: Theme.Colors.bg,
+            discColor: Theme.Colors.moonEarthshine,
             glowCSSBlur: size * Self.glowBlurPerPoint
         )
         .frame(width: size, height: size)
