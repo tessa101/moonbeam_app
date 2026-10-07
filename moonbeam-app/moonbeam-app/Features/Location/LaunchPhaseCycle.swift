@@ -66,7 +66,8 @@ struct LaunchPhaseCycle: View {
     /// screen's edge; never closer than this to the home indicator.
     private static let messageBottomInset: CGFloat = 40
     private static let minimumAboveHomeIndicator: CGFloat = 8
-    /// The mock's disc glow, CSS `0 0 40px`.
+    /// The disc's tight glow: CSS `0 0 40px`, a 20 pt shadow radius
+    /// (§11.3).
     private static let glyphGlowCSSBlur: CGFloat = 40
     /// The breathing glow, CSS `inset: -0.6 × size`: 2.2 moons across.
     private static let glowDiameterPerMoon: CGFloat = 2.2
@@ -164,6 +165,9 @@ struct LaunchPhaseCycle: View {
         var look = loader.glow.look(at: date, elapsed: elapsed)
         var geometry = reduceMotion ? PhaseCycle.stillGeometry : PhaseCycle.geometry(at: elapsed)
         var glowBlur = Self.glyphGlowCSSBlur
+        // §11.3: the tight glow follows the lit fraction.
+        var glyphGlow = PhaseCycle.tightGlowOpacityAtFull * geometry.litFraction
+        var discColor = Theme.Colors.moonEarthshine
         var scale: CGFloat = 1
         var offset: CGSize = .zero
 
@@ -174,11 +178,14 @@ struct LaunchPhaseCycle: View {
             // Drawn before the shrink, so it lands as the card's glow.
             let landingBlur = PhaseGlyph.cardGlowCSSBlur * moonFrame.width / flight.landingWidth
             glowBlur += (landingBlur - glowBlur) * flight.progress
+            glyphGlow = AhaFlight.interpolate(glyphGlow, PhaseGlyph.cardGlowOpacity, flight.progress)
+            // Lands on the card's own disc colour, so the card glyph takes over with no swap.
+            discColor = discColor.mix(with: Theme.Colors.surface, by: flight.progress)
             scale = flight.frame.width / moonFrame.width
             offset = CGSize(width: flight.frame.midX - moonFrame.midX, height: flight.frame.midY - moonFrame.midY)
         }
 
-        return PhaseGlyph(geometry: geometry, discColor: Theme.Colors.bg, glowCSSBlur: glowBlur)
+        return PhaseGlyph(geometry: geometry, discColor: discColor, glowCSSBlur: glowBlur, glowOpacity: glyphGlow)
             .background {
                 // Behind the glyph and outside layout, so it never moves the text.
                 glow(size: size)

@@ -5,6 +5,31 @@
 
 ---
 
+### 2026-10-06 · Build 5.9.3c: moon smoothness as built (LOADER.md §11.3)
+- **Eased stop:** a constant 2.6× run, then speed falling linearly to zero over the last 0.4 s (all slowdown when the
+  stop is nearer than that). Arrives with no jolt and adds 0.2 s to every run-out.
+- **4b is `PhaseGlyph`:** same terminator geometry as the handoff's path, so it's reused rather than redrawn. No
+  `MoonStyle` type yet, because 4c/4d aren't drawn in the app (open for Tessa).
+- **Earthshine disc** blends to the card's `surface` during the flight, and the tight glow to the card's 30%, so the
+  card glyph takes over with no swap. The handoff's 0.8 pt lit-layer blur was left out for the same reason.
+- **Considered:** an S-curve (smoothstep) stop. Rejected, because it would also ease the start of the run-out, where
+  §11.3 only asks for the end.
+
+### 2026-10-06 · Loader polish, Step 5.9.3 (LOADER.md §11)
+- **Decisions (Tessa, device check + answers):**
+  - **Moon and text positions unchanged.** Only line height and text width change (5.9.3a), plus the animation.
+  - **Moon style 4b terminator**, timing and easing from the handoff's `MoonLoader.swift`
+    (`design/1.5-loader-polish/`); an eased stop into the hold phase (5.9.3c).
+  - **Label exit:** no pause after the fix; Aha overlaps the exit (0.15 s delay).
+  - **After Aha the moon runs forward to today's real phase** (never backwards), eased, 1.6–4.2 s, then flies into
+    the card. Replaces "moon runs to full" before Aha (§10.4, call C). **First find after install: one extra lap**
+    (`hasSeenFirstFindPass`) (5.9.3b).
+  - Line height to the prototype's multiples via one `Theme` helper; max widths 300 / 290 pt with fixed breaks at
+    the default size (5.9.3a).
+- **Order:** 5.9.3c → 5.9.3b → 5.9.3a, one commit each, small runs.
+- **Considered:** 4c sliding shadow and 4d light wash (flat, the card glyph would pop); moving the moon up 50% / 80 pt
+  (dropped).
+
 ### 2026-10-06 · Forget saved place (DEBUG / TestFlight, temporary)
 - **Decision (Tessa):** a "Forget saved place" button beside Show onboarding, in the same builds (`BuildChannel.
   showsOnboardingButton`), **removed with it before the 1.0 App Store build**. Clears the last-viewed place and

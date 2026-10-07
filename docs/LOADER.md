@@ -242,8 +242,164 @@ Per the handoff: moon still at the hold phase, no rise / pulse / fly, every step
 - Re-check status on authorization changes and when the scene becomes active.
 - Hidden on every loader / message screen: pinned bar, DEBUG readout, Show onboarding, "a city".
 
+## 11. Step 5.9.3: Loader polish (text, transitions, moon easing)
+
+> Source: Tessa's device check 2026-10-06 + handoff zip
+> `moon_loader_anim_polish.zip`. Only `MoonLoader.swift` is in the repo (`design/1.5-loader-polish/`); the
+> prototype `Moon Loader Polish.dc.html` and its README weren't in the export. Its timing constants are all in the Swift.
+> Target look for the message screens: Tessa's four prototype screenshots (line breaks in §11.1.3).
+> Behavior doesn't change unless this doc says so. Owner: Tessa · _Drafted 2026-10-06_
+
+Items marked **(proposed)** are Cowork defaults. Tessa's answers are in §11.6.
+
+---
+
+### 11.1 Line height and text width only (5.9.3a, built last)
+
+#### 11.1.1 Moon and text placement: unchanged
+**Cancelled (Tessa, 2026-10-06):** the moon and the label, message, "Aha" and button positions stay exactly as built.
+Nothing moves. Only line height and text width (below) change, and the animation (§11.2, §11.3).
+Earlier drafts of this section (moon up 50%, then 80 pt) are dropped.
+
+#### 11.1.2 Line height
+Targets from the prototype, as **line height = size × multiple**:
+
+| Text | Font / size | Line height |
+|---|---|---|
+| Headline | Young Serif 28 | ×1.22 → 34.2 pt |
+| Body | Nunito Sans 17 | ×1.45 → 24.7 pt |
+| "Aha" | Young Serif 25 | ×1.2 → 30 pt |
+| Label | Nunito Sans 16 | ×1.3 → 20.8 pt |
+
+SwiftUI's `lineSpacing` is **extra space on top of the font's own line height**, and both fonts have a tall natural
+line height, which is why it reads loose. Set `lineSpacing = target − font.lineHeight` (it can be negative),
+scaled with Dynamic Type via `@ScaledMetric`. Put it in `Theme.swift` as one helper so the loader, onboarding and
+anything later share it. Check Young Serif descenders aren't clipped on a 2-line headline.
+
+#### 11.1.3 Text width
+The prototype uses balanced wrapping (`text-wrap: balance`) inside 28 pt side insets. SwiftUI has no balance, so
+the lines run edge to edge. Fix:
+- **Max widths:** headline **300 pt**, body **290 pt**, centred, inside the 28 pt insets.
+- **Match these breaks at the default size** (from the screenshots). The copy is fixed, so a manual `\n` per message
+  is fine. Fall back to natural wrapping at AX sizes and when the line wouldn't fit; never truncate.
+
+| Message | Headline | Body |
+|---|---|---|
+| First ask | Find the moon / from where you are | Moon Signal uses your location to show / when and where the moon rises and sets. |
+| App permission off | Moon Signal can't / see your location | Allow location access to see / where the moon is from here. |
+| Services off | Location / Services are off | Turn them on to see where / the moon is from here. |
+| No fix | Couldn't find / your location | Check your signal and try / again, or search for a city. |
+
+- Restricted keeps the App-permission-off copy, Search only (as built).
+- VoiceOver reads the headline and body as one sentence each, without the breaks.
+
+### 11.2 Transitions (5.9.3b)
+
+#### 11.2.1 "Finding your location…" exits smoothly after permission
+**Symptom:** after Allow, the label sits there, then moves out.
+
+> **Cowork note (2026-10-06), reconciling with what's built:** this was drafted against the handoff's 1.8 s search
+> minimum, which `c98757e` (call C) already removed. As built, the label waits for **its own 0.7 s** and for **the
+> moon's run to full** (up to ~1.85 s) before it leaves, which is the likely pause. Apply the fix to those: count the
+> 0.7 s from the start of the search session, and since §11.2.2 drops the run to full before Aha, the label starts
+> leaving as soon as the fix lands. Read "1.8 s" below as "the label's minimum".
+**Likely cause (confirm in code and report it):** the 1.8 s minimum-on-screen rule starts when the label
+*appears*. After a permission return the label only came back 0.2 s ago, so a fix that lands right away has to
+wait out the rest of the 1.8 s with nothing happening, then fades.
+**Fix:**
+- Start the 1.8 s minimum from **the start of the search session** (first moon appearance, or Try again / return
+  from Settings), not from the label's appearance. After a permission return the label may already be satisfied.
+- Exit: fade 0.35 s ease-in-out, drifting up 6 pt, continuous, no hold step after the fix is in.
+- **"Aha" overlaps the exit:** delay 0.15 s (was 0.5 s), fades in 0.6 s, rises 10 pt as before.
+- The moon never pauses during any of this.
+- Report the cause and the measured gap between "fix received" and "label starts leaving" (target < 50 ms once the
+  minimum is satisfied).
+
+#### 11.2.2 The moon finds the real phase after "Aha"
+**Symptom:** at "Aha" the moon is a full moon, doesn't move, then flies into the card, where the real phase
+appears. It also seems to run the wrong way.
+
+New sequence (replaces "the moon advances to full" in §10 and the handoff README):
+1. "Aha" appears (§11.2.1 timing). The moon is at its current loader phase.
+2. **The moon runs forward to today's real phase and stops there.** It's the same phase and lit fraction the card
+   will show (same selected day, place and midnight sampling, so it lands without a swap).
+3. Beat of 0.4 s with the moon at rest.
+4. "Aha" fades (0.22 s, up 3 pt). The moon flies and shrinks into the card's phase slot (0.85 s, same curve).
+   The city screen fades in as before.
+
+**Direction (the bug):** the phase only ever goes **forward in time**: new → waxing, lit from the **right**
+→ full → waning, lit from the **left** (northern-hemisphere orientation, matching `PhaseGlyph`). Never reverse and
+never jump. Distance forward `d = (f_real − f_now) mod 1`, in the loader's phase space (0 new, 0.5 full).
+- From the real phase: `f_real = acos(1 − 2k) / 2π` when waxing; `1 − that` when waning. (k = lit fraction, as
+  drawn by the 4b terminator.)
+
+**Time (the "not enough time" bug):** duration `D = clamp(0.9 + 2.0·T, 1.6, 4.2)` s, where `T` is the total travel in
+laps (`d` normally, `d + 1` on the first run), **ease in-out** per the
+handoff curve (`q − 0.85·sin(2πq)/2π`). Starts 0.35 s after "Aha" is visible so the eye has landed on it.
+Glow follows lit fraction as now (flares near full, then settles to the real k).
+
+**First time or fresh install: at least one full pass (Tessa 2026-10-06).** On the first completed find after
+install, travel `T = d + 1` laps, so the moon always sweeps through every phase at least once and lands somewhere
+between 1 and 2 laps (about 1.5 on average, never a tidy lap count, so it doesn't feel mechanical). It still ends on
+the real phase. Later launches go straight there (`T = d`). Persist a flag
+(`hasSeenFirstFindPass`, `UserDefaults`); the DEBUG "Show onboarding" reset clears it.
+
+**Skips:** a fix within 400 ms never shows the loader, so no ride (unchanged). Reduce Motion: the moon is drawn
+at the real phase straight away, crossfades only, no ride, no extra lap.
+
+### 11.3 Moon smoothness (5.9.3c)
+
+Adopt the handoff's `MoonLoader.swift` timing and easing.
+- **Style: 4b `.terminator` (decided, §11.6).** True phases, and its lit fraction is the same geometry as the
+  card's `PhaseGlyph`, so the moon lands on the card with no visual swap. 4c and 4d are flat (eclipse-like): nice,
+  but the card glyph would pop when it takes over. Keep `MoonStyle` a one-line switch.
+- Cycle 4.8 s: 2.2 s sweep new→full, 0.4 s hold at full, 2.2 s sweep full→new; each sweep eased in-out.
+  Dark side `#2A2127` (earthshine), never a hole in the background.
+- Halo and tight glow driven by the lit fraction `k` (no separate clock): halo opacity 0.12 + 0.88k, scale
+  0.94 + 0.1k; tight glow 20 pt at 0.35k.
+- **Stop (more easing, proposed):** the handoff runs at 2.6× then freezes abruptly at k = 0.85. Make the last
+  ~0.4 s of that run decelerate (ease-out) into the hold phase, then start the halo pulse. Moon "comes in and out"
+  with easing at both ends.
+- Entrance: moon fades 0.9 s ease-out and rises 8 pt over 1.2 s (`cubic-bezier(0.16,1,0.3,1)`); label at 320 ms;
+  cycle starts at 840 ms. Same as the handoff.
+- Size stays as built (140 pt), not the handoff's 132.
+
+**As built (5.9.3c, 2026-10-06):** `PhaseCycle` has the handoff's 2.2 / 0.4 / 2.2 s month and sine ease;
+`PhaseGlyph` already draws the 4b terminator, so no new drawing. Dark side `Theme.Colors.moonEarthshine`, blended to
+the card's `surface` during the flight. Halo and tight glow follow k. The stop is a 2.6× run, then a linear slowdown
+to rest over the last 0.4 s (`MoonMotion.stopEaseDuration`), which adds 0.2 s (longest run-out 2.05 s, was 1.85 s).
+Not adopted: a `MoonStyle` type (only 4b is drawn) and the handoff's 0.8 pt blur on the lit layer (the card glyph is
+sharp). Report: `.agent-reports/5.9.3/findings.md`.
+
+### 11.4 Build order (one commit each, small runs)
+- **5.9.3c** Moon smoothness: adopt `MoonLoader.swift` timing, 4b, eased stop (§11.3). Before b, because b relies on
+  the real-phase geometry.
+- **5.9.3b** Transitions: label exit, Aha overlap, phase ride, first-run lap (§11.2).
+- **5.9.3a** Line height and text width (§11.1.2, §11.1.3), last and small. No position changes.
+
+### 11.5 Tests
+- Line-spacing helper returns `target − natural` for each style and scales with Dynamic Type.
+- Break table: each message's default-size text matches §11.1.3.
+- `f_real` from (k, waxing) round-trips with the 4b lit fraction at 0, 25, 50, 75, 100% for waxing and waning.
+- Ride travel `T` is always forward: `d ∈ [0,1)` normally, `d + 1` on first run (so ≥ 1); duration clamps at 1.6 / 4.2 s.
+- 1.8 s minimum counts from session start; a fix arriving after the minimum starts the exit with no added delay
+  (fake clock).
+- First-run flag set after the first ride, not set when the loader was skipped; DEBUG reset clears it.
+- Reduce Motion: no ride, moon at the real phase, crossfades.
+
+### 11.6 Decided (Tessa, 2026-10-06)
+0. **Moon and text positions unchanged** (§11.1.1). Animation first (§11.2, §11.3); line height and width after (§11.1.2, §11.1.3).
+1. **Moon style: 4b terminator.** 4c and 4d stay in the handoff as reference; `MoonStyle` stays a one-line switch.
+2. Moon up 50% / 80 pt: dropped.
+3. **First install: at least one full pass, about 1.5 laps** (`T = d + 1`, §11.2.2). Later launches: straight to the real phase.
+
 ## Decision log
 
+- **2026-10-06 (Tessa, answers):** 4b; moon doesn't move, animation only; first-install moon passes at least once, ~1.5 laps.
+- **2026-10-06 (Tessa, device check):** line height tighter to the design; narrower text (balanced
+  breaks); label exit smoother after permission; after "Aha" the moon moves to the real phase, forward only, with
+  enough time and easing, with one extra pass on first install; moon smoother with more easing. Handoff
+  `moon_loader_anim_polish.zip` supplies the moon timing.
 - **2026-10-05 (Tessa):** Location flow from her handoff (`design/1.4-location-flow/`), amended in §10: saved place
   wins; onboarding stays for new installs; restricted has no Settings button; offline = No fix; scale down on small
   screens / large text; real moon direction; "Aha" only after a recovery, with rotating lines; built sizes win, the

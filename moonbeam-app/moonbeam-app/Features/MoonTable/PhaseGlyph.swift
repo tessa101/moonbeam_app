@@ -20,15 +20,18 @@ struct PhaseGlyph: View {
     /// glyphs pass their own.
     var glowCSSBlur: CGFloat = Self.cardGlowCSSBlur
 
-    /// §3.2: glow `accent` 30%. SwiftUI's shadow radius is about half a CSS
-    /// blur.
-    private static let glowOpacity = 0.3
+    /// §3.2: glow `accent` 30%. The loader moon passes its own, which
+    /// follows the lit fraction (LOADER.md §11.3).
+    var glowOpacity: Double = Self.cardGlowOpacity
+
+    /// SwiftUI's shadow radius is about half a CSS blur.
+    static let cardGlowOpacity = 0.3
     static let cardGlowCSSBlur: CGFloat = 18
 
     var body: some View {
         Circle()
             .fill(discColor)
-            .shadow(color: Theme.Colors.accent.opacity(Self.glowOpacity), radius: glowCSSBlur / 2)
+            .shadow(color: Theme.Colors.accent.opacity(glowOpacity), radius: glowCSSBlur / 2)
             .overlay {
                 LitShape(geometry: geometry)
                     .fill(Theme.Colors.moonLit)

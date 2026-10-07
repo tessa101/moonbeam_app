@@ -12,7 +12,8 @@ import Foundation
 ///
 /// One leg of motion: from `anchorElapsed` at `anchorDate`, moving forward at
 /// `rate` months-per-month (1 the normal 4.8 s month, 2.6 the run-out), and,
-/// with a `target`, stopping there. It never runs backwards and never stops
+/// with a `target`, stopping there. The stop is eased (§11.3): over the last
+/// 0.4 s the run-out slows steadily to rest rather than freezing at speed. It never runs backwards and never stops
 /// mid-cycle: a target is always reached going forward, a full month round
 /// if need be. Before `anchorDate` it holds still, which is how the entrance
 /// waits 840 ms at the hold phase before the cycle starts.
@@ -25,6 +26,10 @@ nonisolated struct MoonMotion: Equatable {
     /// §10.2: the run-out to the hold phase (or to full, for "Aha") goes at
     /// 2.6× the normal speed.
     static let runOutRate = 2.6
+
+    /// §11.3: the run-out's last stretch decelerates to rest over this long
+    /// (shorter when the whole run-out is too short to fit it).
+    static let stopEaseDuration: TimeInterval = 0.4
 
     /// The entrance (§10.2): the moon waits at the hold phase, then the
     /// cycle starts 840 ms after it appeared.
@@ -64,7 +69,7 @@ nonisolated struct MoonMotion: Equatable {
     }
 
     /// Runs forward at 2.6× from wherever it is at `date` until it reaches
-    /// `target`, then freezes there (§10.2 "Stopping").
+    /// `target`, easing to rest there (§10.2 "Stopping", §11.3).
     func stopping(at target: TimeInterval, from date: Date) -> MoonMotion {
         MoonMotion(
             anchorElapsed: elapsed(at: date),
@@ -79,18 +84,18 @@ nonisolated struct MoonMotion: Equatable {
     /// Month time at `date`, `0..<period`.
     func elapsed(at date: Date) -> TimeInterval {
         let start = PhaseCycle.wrapped(anchorElapsed)
-        let travelled = rate * max(0, date.timeIntervalSince(anchorDate))
+        let seconds = max(0, date.timeIntervalSince(anchorDate))
         guard let distance = distanceToTarget else {
-            return PhaseCycle.wrapped(start + travelled)
+            return PhaseCycle.wrapped(start + rate * seconds)
         }
-        return PhaseCycle.wrapped(start + min(travelled, distance))
+        return PhaseCycle.wrapped(start + Self.travelled(distance: distance, rate: rate, after: seconds))
     }
 
     /// When it reaches its target and freezes; `nil` if it runs on, or holds
     /// still with no target.
     var settleDate: Date? {
         guard let distance = distanceToTarget, rate > 0 else { return nil }
-        return anchorDate.addingTimeInterval(distance / rate)
+        return anchorDate.addingTimeInterval(Self.runOutDuration(distance: distance, rate: rate))
     }
 
     /// Still waiting to move at `date`: the entrance's 840 ms before the
@@ -103,6 +108,36 @@ nonisolated struct MoonMotion: Equatable {
     func timeToSettle(from date: Date) -> TimeInterval {
         guard let settleDate else { return 0 }
         return max(0, settleDate.timeIntervalSince(date))
+    }
+
+    // MARK: - The eased stop
+
+    /// How long a stop `distance` ahead takes at `rate`: at speed, then a
+    /// steady slowdown to rest, which covers half the ground it would at
+    /// speed, so it adds half the slowdown's length.
+    static func runOutDuration(distance: TimeInterval, rate: Double = runOutRate) -> TimeInterval {
+        guard distance > 0, rate > 0 else { return 0 }
+        let slowdown = slowdownDuration(distance: distance, rate: rate)
+        return distance / rate + slowdown / 2
+    }
+
+    /// The slowdown's length: `stopEaseDuration`, or less when the stop is
+    /// so near that the whole distance is the slowdown.
+    private static func slowdownDuration(distance: TimeInterval, rate: Double) -> TimeInterval {
+        min(stopEaseDuration, 2 * distance / rate)
+    }
+
+    /// Month time covered `seconds` into a stop `distance` ahead: constant
+    /// speed, then speed falling linearly to zero (a quadratic ease-out), so
+    /// the moon arrives with no jolt.
+    private static func travelled(distance: TimeInterval, rate: Double, after seconds: TimeInterval) -> TimeInterval {
+        guard rate > 0, distance > 0 else { return 0 }
+        let slowdown = slowdownDuration(distance: distance, rate: rate)
+        let atSpeed = runOutDuration(distance: distance, rate: rate) - slowdown
+        if seconds <= atSpeed { return rate * seconds }
+        let into = seconds - atSpeed
+        guard into < slowdown else { return distance }
+        return rate * atSpeed + rate * (into - into * into / (2 * slowdown))
     }
 
     /// Forward month time from the anchor to the target, `0..<period`.

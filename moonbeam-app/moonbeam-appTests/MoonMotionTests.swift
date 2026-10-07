@@ -28,7 +28,7 @@ struct MoonMotionTests {
         #expect(motion.settleDate == nil)
     }
 
-    @Test("Stopping runs forward at 2.6× to the hold phase, then freezes there")
+    @Test("Stopping runs forward at 2.6× to the hold phase, eases, then freezes there")
     func stopsAtHold() throws {
         let running = MoonMotion.held(at: 1, since: Self.t0).running(from: Self.t0)
         let stopping = running.stopping(at: PhaseCycle.holdElapsed, from: Self.at(1))
@@ -36,7 +36,8 @@ struct MoonMotionTests {
         // it goes round.
         let distance = PhaseCycle.wrapped(PhaseCycle.holdElapsed - 2)
         let settle = try #require(stopping.settleDate)
-        #expect(abs(settle.timeIntervalSince(Self.at(1)) - distance / MoonMotion.runOutRate) < Self.tolerance)
+        let expected = distance / MoonMotion.runOutRate + MoonMotion.stopEaseDuration / 2
+        #expect(abs(settle.timeIntervalSince(Self.at(1)) - expected) < Self.tolerance)
         #expect(abs(stopping.elapsed(at: Self.at(1.1)) - (2 + 0.1 * MoonMotion.runOutRate)) < Self.tolerance)
         #expect(abs(stopping.elapsed(at: settle) - PhaseCycle.holdElapsed) < Self.tolerance)
         #expect(abs(stopping.elapsed(at: settle.addingTimeInterval(5)) - PhaseCycle.holdElapsed) < Self.tolerance)
@@ -46,7 +47,7 @@ struct MoonMotionTests {
     func neverRunsBackwards() {
         let justPast = PhaseCycle.holdElapsed + 0.1
         let stopping = MoonMotion.held(at: justPast, since: Self.t0).stopping(at: PhaseCycle.holdElapsed, from: Self.t0)
-        let expected = (PhaseCycle.period - 0.1) / MoonMotion.runOutRate
+        let expected = MoonMotion.runOutDuration(distance: PhaseCycle.period - 0.1)
         #expect(abs(stopping.timeToSettle(from: Self.t0) - expected) < Self.tolerance)
         // Halfway it's moved on, not back.
         let halfway = stopping.elapsed(at: Self.at(expected / 2))
@@ -80,9 +81,38 @@ struct MoonMotionTests {
             .stopping(at: PhaseCycle.fullElapsed, from: Self.t0)
         let settle = motion.timeToSettle(from: Self.t0)
         #expect(PhaseCycle.geometry(at: motion.elapsed(at: Self.at(settle))).litFraction > 0.999_999)
-        // From the waxing hold phase, full is just ahead: well under a
-        // quarter of the run-out's month (§10.2).
-        #expect(settle < PhaseCycle.period / MoonMotion.runOutRate / 4)
+        // From the waxing hold phase, full is just ahead: less than a
+        // quarter month's run-out (§10.2).
+        #expect(settle < MoonMotion.runOutDuration(distance: PhaseCycle.period / 4))
+    }
+
+    @Test("The stop eases (§11.3): full speed, then slowing steadily to rest over the last 0.4 s")
+    func stopEases() {
+        #expect(MoonMotion.stopEaseDuration == 0.4)
+        let stopping = MoonMotion.held(at: 0.3, since: Self.t0).stopping(at: PhaseCycle.holdElapsed, from: Self.t0)
+        let settle = stopping.timeToSettle(from: Self.t0)
+        let frame = 1.0 / 120
+        func speed(at seconds: TimeInterval) -> Double {
+            (stopping.elapsed(at: Self.at(seconds + frame)) - stopping.elapsed(at: Self.at(seconds))) / frame
+        }
+        // At speed before the slowdown, slower through it, about at rest at the end.
+        #expect(abs(speed(at: settle - 0.6) - MoonMotion.runOutRate) < 1e-6)
+        let speeds = stride(from: settle - 0.4, to: settle - frame, by: 0.05).map(speed)
+        #expect(zip(speeds, speeds.dropFirst()).allSatisfy { $0 > $1 })
+        #expect(speed(at: settle - frame) < MoonMotion.runOutRate * 0.05)
+        #expect(abs(stopping.elapsed(at: Self.at(settle)) - PhaseCycle.holdElapsed) < 1e-9)
+    }
+
+    @Test("A stop nearer than the slowdown eases over all of it, from 2.6×")
+    func shortStopEases() {
+        let distance = 0.2
+        let stopping = MoonMotion.held(at: PhaseCycle.holdElapsed - distance, since: Self.t0)
+            .stopping(at: PhaseCycle.holdElapsed, from: Self.t0)
+        // All slowdown: 2·d / 2.6 long, ending on the target.
+        let settle = stopping.timeToSettle(from: Self.t0)
+        #expect(abs(settle - 2 * distance / MoonMotion.runOutRate) < Self.tolerance)
+        #expect(abs(stopping.elapsed(at: Self.at(settle)) - PhaseCycle.holdElapsed) < 1e-9)
+        #expect(abs(stopping.elapsed(at: Self.at(settle / 2)) - (PhaseCycle.holdElapsed - distance / 4)) < 1e-9)
     }
 
     @Test("Run-out speed and cycle start are the handoff's")
@@ -100,7 +130,7 @@ struct MoonMotionTests {
         let full = glow.look(at: Self.t0, elapsed: PhaseCycle.fullElapsed)
         let new = glow.look(at: Self.t0, elapsed: 0)
         #expect(abs(full.opacity - 1) < Self.tolerance)
-        #expect(abs(new.opacity - 0.45) < Self.tolerance)
+        #expect(abs(new.opacity - 0.12) < Self.tolerance)
     }
 
     @Test("The pulse loops every 1.8 s between its ranges")

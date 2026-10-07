@@ -398,9 +398,10 @@ struct PhaseCycleTests {
 
     @Test("Runs forward: lit on the right while waxing, on the left while waning")
     func runsForward() {
-        let quarter = PhaseCycle.period / 4
-        let waxing = PhaseCycle.geometry(at: quarter)
-        let waning = PhaseCycle.geometry(at: 3 * quarter)
+        // Halfway through each sweep.
+        let halfSweep = PhaseCycle.sweepDuration / 2
+        let waxing = PhaseCycle.geometry(at: halfSweep)
+        let waning = PhaseCycle.geometry(at: PhaseCycle.period - halfSweep)
         #expect(waxing.litSide == .right)
         #expect(waning.litSide == .left)
         // The curve is symmetric, so the quarters are half lit.
@@ -415,6 +416,42 @@ struct PhaseCycleTests {
         let midWaxing = PhaseCycle.phaseAngle(at: PhaseCycle.period / 4 + step)
             - PhaseCycle.phaseAngle(at: PhaseCycle.period / 4)
         #expect(nearNew < midWaxing)
+    }
+
+    @Test("The handoff's month (§11.3): 2.2 s to full, 0.4 s at full, 2.2 s back to new")
+    func sweepHoldSweep() {
+        #expect(PhaseCycle.sweepDuration == 2.2)
+        #expect(PhaseCycle.fullHoldDuration == 0.4)
+        #expect(abs(2 * PhaseCycle.sweepDuration + PhaseCycle.fullHoldDuration - PhaseCycle.period) < Self.tolerance)
+        #expect(PhaseCycle.fullElapsed == PhaseCycle.sweepDuration)
+        for moment in stride(from: 2.2, through: 2.6, by: 0.1) {
+            #expect(abs(PhaseCycle.geometry(at: moment).litFraction - 1) < Self.tolerance)
+        }
+        #expect(PhaseCycle.geometry(at: 2.7).litFraction < 1)
+        #expect(PhaseCycle.geometry(at: 2.7).litSide == .left)
+    }
+
+    @Test("Each sweep eases with the handoff's q − 0.85·sin(2πq)/2π")
+    func handoffEasing() {
+        #expect(PhaseCycle.easeAmount == 0.85)
+        for q in [0.1, 0.25, 0.5, 0.8] {
+            let expected = q - 0.85 * sin(2 * .pi * q) / (2 * .pi)
+            #expect(abs(PhaseCycle.ease(q) - expected) < Self.tolerance)
+            #expect(abs(PhaseCycle.phaseAngle(at: q * PhaseCycle.sweepDuration) - 180 * expected) < 1e-6)
+        }
+    }
+
+    @Test("The glow follows the lit fraction: halo 0.12 + 0.88k, scale 0.94 + 0.1k, tight glow 0.35k")
+    func glowFollowsLitFraction() {
+        let date = Date(timeIntervalSinceReferenceDate: 0)
+        for moment in [0.3, 1.1, PhaseCycle.holdElapsed, 2.4, 3.9] {
+            let k = PhaseCycle.geometry(at: moment).litFraction
+            #expect(abs(PhaseCycle.glowLevel(at: moment) - k) < Self.tolerance)
+            let look = LoaderGlow.breathing.look(at: date, elapsed: moment)
+            #expect(abs(look.opacity - (0.12 + 0.88 * k)) < Self.tolerance)
+            #expect(abs(look.scale - (0.94 + 0.1 * k)) < Self.tolerance)
+        }
+        #expect(PhaseCycle.tightGlowOpacityAtFull == 0.35)
     }
 
     @Test("Repeats every 4.8 s and never settles")

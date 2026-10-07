@@ -568,7 +568,7 @@ struct LocationLoaderStepTests {
         #expect(loader.content == .message(.appDenied))
     }
 
-    @Test("A running moon runs out at 2.6× to the hold phase before the message")
+    @Test("A running moon runs out at 2.6× (easing at the end) to the hold phase before the message")
     func runsOutBeforeMessage() async {
         let clock = Clock()
         let loader = Self.makeLoader(clock)
@@ -577,7 +577,7 @@ struct LocationLoaderStepTests {
         clock.date = clock.date.addingTimeInterval(2)
         await loader.showMessage(.noFix)
         let distance = PhaseCycle.period - 1.16
-        let expected = distance / MoonMotion.runOutRate
+        let expected = MoonMotion.runOutDuration(distance: distance)
         let runOut = clock.waits.last.map { Double($0.components.attoseconds) / 1e18 + Double($0.components.seconds) }
         #expect(abs((runOut ?? 0) - expected) < 1e-6)
         #expect(abs(loader.moon.elapsed(at: clock.date) - PhaseCycle.holdElapsed) < 1e-6)
@@ -621,7 +621,7 @@ struct LocationLoaderStepTests {
             Double($0.components.attoseconds) / 1e18 + Double($0.components.seconds)
         }
         let pastFull = PhaseCycle.holdElapsed + fixAfter - PhaseCycle.fullElapsed
-        let runOut = (PhaseCycle.period - pastFull) / MoonMotion.runOutRate
+        let runOut = MoonMotion.runOutDuration(distance: PhaseCycle.period - pastFull)
         #expect(waits.count == 2)
         #expect(abs((waits.first ?? 0) - runOut) < 1e-6)
         #expect(abs((waits.last ?? 0) - LocationLoader.ahaHold) < 1e-6)
@@ -636,7 +636,7 @@ struct LocationLoaderStepTests {
         #expect(loader.flightStartedAt == nil)
     }
 
-    @Test("A fix right away: full in 0.34 s, but the label still gets its 0.7 s before Aha")
+    @Test("A fix right away: full in about 0.5 s, but the label still gets its 0.7 s before Aha")
     func ahaFastFix() async {
         let clock = Clock()
         let loader = Self.makeLoader(clock)
@@ -651,8 +651,9 @@ struct LocationLoaderStepTests {
         let waits = clock.waits.dropFirst(waitsBefore).map {
             Double($0.components.attoseconds) / 1e18 + Double($0.components.seconds)
         }
-        // From the hold phase, full is (full − hold) / 2.6 ≈ 0.34 s away.
-        #expect((PhaseCycle.fullElapsed - PhaseCycle.holdElapsed) / MoonMotion.runOutRate < LocationLoader.minimumSearchBeforeAha)
+        // From the hold phase, full is (full − hold) / 2.6 + 0.2 s ≈ 0.51 s away.
+        let toFull = MoonMotion.runOutDuration(distance: PhaseCycle.fullElapsed - PhaseCycle.holdElapsed)
+        #expect(toFull < LocationLoader.minimumSearchBeforeAha)
         #expect(waits.count == 2)
         #expect(abs((waits.first ?? 0) - LocationLoader.minimumSearchBeforeAha) < 1e-6)
         #expect(loader.content == .aha(greeting))

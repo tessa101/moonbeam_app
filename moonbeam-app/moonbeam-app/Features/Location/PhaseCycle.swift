@@ -5,13 +5,17 @@
 
 import SwiftUI
 
-/// The launch loader's moon over time (LOADER.md §3): a full lunar month
-/// every 4.8 s, as in the design's 1a mock, with a glow that breathes on
-/// the same loop and is brightest at full.
+/// The launch loader's moon over time (LOADER.md §3, §11.3): a full lunar
+/// month every 4.8 s, with a glow that follows how much of the moon is lit.
+///
+/// Timing and easing are the 5.9.3 handoff's (`design/1.5-loader-polish/
+/// MoonLoader.swift`): a 2.2 s sweep new → full, 0.4 s at full, a 2.2 s
+/// sweep full → new, each eased in and out so the moon lingers at new and
+/// full. The shape is its 4b terminator, which is `PhaseGlyph`'s geometry, so
+/// the loader moon lands on the card with no swap.
 ///
 /// Runs forward, as the real month does (Tessa, 2026-10-03): new, lit on the
-/// right, full, lit on the left, new. The mock's recording plays it in
-/// reverse; only its timing and glow are followed.
+/// right, full, lit on the left, new.
 ///
 /// `nonisolated`: pure functions of elapsed time, testable without a view.
 nonisolated enum PhaseCycle {
@@ -21,19 +25,22 @@ nonisolated enum PhaseCycle {
     /// One month, in seconds.
     static let period: TimeInterval = 4.8
 
-    /// The mock eases each half month (new → full, full → new) with CSS
-    /// `cubic-bezier(.45, 0, .55, 1)`, so the moon lingers at new and full.
-    static let phaseCurve = UnitCurve.bezier(
-        startControlPoint: UnitPoint(x: 0.45, y: 0),
-        endControlPoint: UnitPoint(x: 0.55, y: 1)
-    )
+    /// Each half month's sweep (new → full, full → new), and the pause at
+    /// full between them: 2.2 + 0.4 + 2.2 = 4.8 s.
+    static let sweepDuration: TimeInterval = 2.2
+    static let fullHoldDuration: TimeInterval = 0.4
 
-    /// The glow's CSS `ease-in-out`, dim at new and brightest at full.
-    static let glowCurve = UnitCurve.easeInOut
+    /// The handoff's sweep easing, `q − a·sin(2πq)/2π`: 0 is linear, 1 comes
+    /// to a full stop at each end.
+    static let easeAmount = 0.85
 
-    /// The mock's `ms-breathe`: opacity .45 → 1, scale .92 → 1.06.
-    static let glowOpacityRange: ClosedRange<Double> = 0.45...1
-    static let glowScaleRange: ClosedRange<Double> = 0.92...1.06
+    /// The halo follows the lit fraction `k` (§11.3): opacity 0.12 + 0.88k,
+    /// scale 0.94 + 0.1k. Faint at new, full strength at full.
+    static let glowOpacityRange: ClosedRange<Double> = 0.12...1
+    static let glowScaleRange: ClosedRange<Double> = 0.94...1.04
+
+    /// The tight glow around the disc (§11.3): accent at 0.35k.
+    static let tightGlowOpacityAtFull = 0.35
 
     /// Phase angles: 0° new, 180° full (`MoonDay.phaseAngle`).
     private static let fullMoonPhaseAngle = 180.0
@@ -54,8 +61,9 @@ nonisolated enum PhaseCycle {
     /// written down, because the eased angle has no simple inverse.
     static let holdElapsed = elapsed(forWaxingLitFraction: holdLitFraction)
 
-    /// Full moon, where "Aha" runs to (§10.4).
-    static let fullElapsed = period / 2
+    /// Full moon, where "Aha" runs to (§10.4): the start of the pause at
+    /// full, the first moment it's fully lit.
+    static let fullElapsed = sweepDuration
 
     /// Reduce Motion (§10.6): the glyph holds still at the hold phase.
     static let stillGeometry = geometry(at: holdElapsed)
@@ -65,13 +73,13 @@ nonisolated enum PhaseCycle {
     /// The moment in the waxing half when the moon is `fraction` lit. The lit
     /// fraction only grows there, so a bisection finds it.
     static func elapsed(forWaxingLitFraction fraction: Double) -> TimeInterval {
-        bisect(from: 0, to: period / 2) { geometry(at: $0).litFraction < fraction }
+        bisect(from: 0, to: sweepDuration) { geometry(at: $0).litFraction < fraction }
     }
 
     /// The moment in the waning half when the moon is `fraction` lit. The lit
     /// fraction only shrinks there.
     static func elapsed(forWaningLitFraction fraction: Double) -> TimeInterval {
-        bisect(from: period / 2, to: period) { geometry(at: $0).litFraction > fraction }
+        bisect(from: sweepDuration + fullHoldDuration, to: period) { geometry(at: $0).litFraction > fraction }
     }
 
     /// The boundary in `low...high` where `isBefore` turns false.
@@ -104,10 +112,23 @@ nonisolated enum PhaseCycle {
         return fraction < 0 ? fraction + 1 : fraction
     }
 
-    /// The phase angle, `0..<360`, eased within each half month.
+    /// The phase angle, `0..<360`: an eased sweep to full, the pause, then an
+    /// eased sweep back to new.
     static func phaseAngle(at elapsed: TimeInterval) -> Double {
-        let (half, within) = halfMonth(at: elapsed)
-        return fullMoonPhaseAngle * (Double(half) + phaseCurve.value(at: within))
+        let time = wrapped(elapsed)
+        if time < sweepDuration {
+            return fullMoonPhaseAngle * ease(time / sweepDuration)
+        }
+        if time < sweepDuration + fullHoldDuration {
+            return fullMoonPhaseAngle
+        }
+        let within = (time - sweepDuration - fullHoldDuration) / sweepDuration
+        return fullMoonPhaseAngle * (1 + ease(within))
+    }
+
+    /// The handoff's sweep easing, `0...1` onto `0...1`.
+    static func ease(_ fraction: Double) -> Double {
+        fraction - easeAmount * sin(2 * .pi * fraction) / (2 * .pi)
     }
 
     /// The glyph at that moment. The lit fraction follows the angle as the
@@ -119,17 +140,9 @@ nonisolated enum PhaseCycle {
         return PhaseGlyphGeometry(illumination: illumination, phaseAngle: angle)
     }
 
-    /// The glow's strength, `0...1`: 0 at new, 1 at full.
+    /// The glow's strength, `0...1`: the lit fraction, so it's dim at new,
+    /// brightest at full, and never runs on a clock of its own (§11.3).
     static func glowLevel(at elapsed: TimeInterval) -> Double {
-        let (half, within) = halfMonth(at: elapsed)
-        let rising = glowCurve.value(at: within)
-        return half == 0 ? rising : 1 - rising
-    }
-
-    /// Which half of the month (0 waxing, 1 waning) and how far through it.
-    private static func halfMonth(at elapsed: TimeInterval) -> (half: Int, within: Double) {
-        let doubled = progress(at: elapsed) * 2
-        let half = doubled < 1 ? 0 : 1
-        return (half, doubled - Double(half))
+        geometry(at: elapsed).litFraction
     }
 }

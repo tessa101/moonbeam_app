@@ -48,6 +48,9 @@ nonisolated enum Theme {
         static let onAccent = Color(hex: 0x1B1519)
         /// Phase glyph and dial dots.
         static let moonLit = Color(hex: 0xF2E6CF)
+        /// The loader moon's unlit side (LOADER.md §11.3): earthshine, so the
+        /// dark part reads as moon, never a hole in the background.
+        static let moonEarthshine = Color(hex: 0x2A2127)
         /// Dial face, a radial gradient from top to bottom.
         static let dialTop = Color(hex: 0x30252C)
         static let dialBottom = Color(hex: 0x221A1F)
