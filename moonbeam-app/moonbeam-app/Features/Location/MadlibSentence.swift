@@ -101,12 +101,15 @@ struct MadlibSentence: View {
         // 5.10a.7: the city line is gone the moment detection starts, not
         // faded out behind the closing search sheet.
         .transaction(value: sentence.placeIsPending) { [isPending = sentence.placeIsPending] transaction in
-            if isPending { transaction.disablesAnimations = true }
+            if isPending {
+                transaction.animation = nil
+                transaction.disablesAnimations = true
+            }
         }
         .lineHeight(.multiple(factor: Theme.Fonts.sentenceLineHeightMultiple))
         .contentTransition(.opacity)
         .animation(
-            Self.placeTokenFade,
+            sentence.placeIsPending ? nil : Self.placeTokenFade,
             value: sentence.tokens.first { $0.kind == .place }?.text
         )
         // 5.10a.4: the line goes the moment detection starts (the 0.15 s

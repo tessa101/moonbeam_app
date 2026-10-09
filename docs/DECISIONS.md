@@ -1384,3 +1384,6 @@ The screen, the view model and the Location Off dialog are still to come.
 
 ## 2026-10-09: My location starts clean, 5.10a.7 (Tessa)
 - Video 4: the old city's card and city lingered after the search drawer closed, then a blank gap before the skeleton. Now the old card and city line go in the same frame as the replacement starts, and the skeleton shows in that frame (no 400 ms threshold; 350 ms minimum stays). Spec: LOADER.md §12.2–12.3, §12.9.
+
+## 2026-10-09: Hard cut when My location starts, 5.10a.8 (Tessa)
+- Video 5: the first My location attempt still showed a blip of the old card (fading under the skeleton) and the city line fading. The ambient fades are now off while a replacement is pending; the swap is a hard cut. Spec: LOADER.md §12.3.

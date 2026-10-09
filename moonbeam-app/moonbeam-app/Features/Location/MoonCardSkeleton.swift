@@ -72,10 +72,17 @@ struct PlaceCardRegion: View {
         // animates as `.identity` would leave the old card on screen for
         // the whole animation. Innermost, so it wins over the two below.
         .transaction(value: isReplacing) { transaction in
-            if isReplacing { transaction.disablesAnimations = true }
+            if isReplacing {
+                transaction.animation = nil
+                transaction.disablesAnimations = true
+            }
         }
-        .animation(reduceMotion ? nil : Self.replacementAnimation, value: viewModel.cardPlaceholder)
-        .animation(reduceMotion ? nil : Self.replacementAnimation, value: viewModel.moonTable != nil)
+        // 5.10a.8 (video 5): `disablesAnimations` alone lost to these two,
+        // and the old card faded out over the skeleton fading in. While a
+        // replacement is pending they don't animate at all; they animate
+        // again when the place lands (`isReplacing` is false by then).
+        .animation(reduceMotion || isReplacing ? nil : Self.replacementAnimation, value: viewModel.cardPlaceholder)
+        .animation(reduceMotion || isReplacing ? nil : Self.replacementAnimation, value: viewModel.moonTable != nil)
         .accessibilityElement(children: .contain)
         // §12.3: VoiceOver focus moves from the skeleton to the card when it
         // lands.

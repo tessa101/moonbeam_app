@@ -581,6 +581,10 @@ sharp). Report: `.agent-reports/5.9.3/findings.md`.
   replacement starts (the old card used to linger ~0.5 s: a `.identity` removal keeps a view on screen for the whole
   animation, here the sheet's dismissal). The skeleton shows in that same frame, with no 400 ms wait and no empty
   slot, and holds at least 350 ms. Supersedes §12.2 step 4's "over 400 ms" and the threshold in §12.9.
+- **5.10a.8 (Tessa, 2026-10-09, video 5):** the 5.10a.7 instant removal didn't take on device: the old card still faded
+  out (~0.25 s) over the skeleton fading in, and the city line faded too. Cause: `disablesAnimations` lost to the
+  ambient `.animation(value:)` fades. Now those fades are switched off while a replacement is pending and the
+  transaction's animation is cleared, so the swap is a hard cut in one frame; the landing still animates.
 - **Sentence during My location (5.10a.3):** the city line ("in 📍 City, ST?") is hidden, not a stand-in like "your
   location", and fades in (0.5 s ease-out, opacity only) when the city is known. It keeps its slot, so nothing
   moves; VoiceOver reads the sentence without the place until then. Supersedes §12.2 step 2's "your location".

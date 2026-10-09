@@ -90,6 +90,11 @@ struct PlaceChangeLayoutTests {
         let emptyStrip = CGRect(x: restingSentence.minX, y: restingBelow.maxY + 8,
                                 width: restingSentence.width, height: restingSentence.height)
         #expect(Self.inkPixels(in: emptyStrip, of: window) < Self.minimumInkPixels)
+        // Control for the 5.10a.8 check below: the real card's text is ink.
+        // The finding skeleton has none (dark blocks, a 10% highlight), so
+        // ink in the slot while it shows can only be the old card's.
+        let restingCard = try #require(probe.cardFrame)
+        #expect(Self.inkPixels(in: restingCard, of: window) >= Self.minimumInkPixels)
 
         location.fixDelay = Self.fixDelay
         let start = ContinuousClock.now
@@ -98,6 +103,7 @@ struct PlaceChangeLayoutTests {
         var skeletonShown: ContinuousClock.Instant?
         var skeletonGone: ContinuousClock.Instant?
         var firstSkeletonSample: Int?
+        var checkedFirstDrawnFrame = false
         for sample in 0..<Self.sampleCount {
             let sentence = try #require(probe.sentenceFrame, "sentence absent at sample \(sample)")
             #expect(
@@ -113,6 +119,23 @@ struct PlaceChangeLayoutTests {
                 skeletonShown = .now
                 firstSkeletonSample = sample
             }
+            // 5.10a.8: the old card, city line and skeleton swap in one
+            // frame, so from the first frame drawn after the replacement
+            // begins there's no old-card text fading out over the skeleton.
+            // The sample where the state first reads `.finding` can come
+            // before SwiftUI has drawn it (the screen still shows the old
+            // card), so checks start one sample later: the next drawn frame.
+            // The fade this guards against lasted ~0.5 s, ~30 samples.
+            let framesIntoReplacement = sample - (firstSkeletonSample ?? sample)
+            if showsSkeleton, framesIntoReplacement >= 1 {
+                let card = try #require(probe.cardFrame)
+                let ink = Self.inkPixels(in: card, of: window)
+                #expect(
+                    ink < Self.minimumInkPixels,
+                    "old card ink (\(ink) px) over the skeleton at sample \(sample), \(framesIntoReplacement) after it began"
+                )
+                if framesIntoReplacement == 1 { checkedFirstDrawnFrame = true }
+            }
             if !showsSkeleton, skeletonShown != nil, skeletonGone == nil { skeletonGone = .now }
             try await Task.sleep(for: Self.sampleInterval)
         }
@@ -124,6 +147,7 @@ struct PlaceChangeLayoutTests {
         }
 
         #expect(viewModel.place == Self.detectedIrvine)
+        #expect(checkedFirstDrawnFrame, "the first drawn frame of the replacement was never checked for old-card ink")
         let shown = try #require(skeletonShown, "the skeleton never showed for a 700 ms fix")
         let gone = try #require(skeletonGone)
         // 5.10a.7: no 400 ms wait. The skeleton is in by the first sample
@@ -207,10 +231,11 @@ struct PlaceChangeLayoutTests {
     }
 }
 
-/// The sentence's and the marker's frames in the window.
+/// The sentence's, the card slot's and the marker's frames in the window.
 @MainActor
 private final class PlaceChangeProbe {
     var sentenceFrame: CGRect?
+    var cardFrame: CGRect?
     var belowFrame: CGRect?
 }
 
@@ -227,6 +252,7 @@ private struct PlaceChangeHarness: View {
                 .contentLoadIn(.sentence)
                 .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { probe.sentenceFrame = $0 }
             PlaceCardRegion(viewModel: viewModel)
+                .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { probe.cardFrame = $0 }
                 .padding(.top, Theme.Metrics.sentenceToCard)
                 .contentLoadIn(.card, generation: viewModel.cardLoadInGeneration)
             Color.clear

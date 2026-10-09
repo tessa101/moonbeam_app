@@ -1,3 +1,21 @@
+# Build 5.10a.8: one-frame swap when a replacement begins
+
+Updated October 9, 2026.
+
+- **Done:** built and tested the uncommitted 5.10a.8 changes. While a replacement is pending, the ambient fades are off and the transaction's animation is cleared, so the old card, city line and skeleton swap in one frame. The landing still animates.
+- **New check:** `PlaceChangeLayoutTests` samples the card slot for old-card ink on every frame the skeleton shows, from the first drawn frame.
+  - Proven: without 5.10a.8 it fails (2188 → 348 px over samples 1–4); with 5.10a.8 it passes.
+- **Runs:** `PlaceSkeletonTests` 11/11; `PlaceChangeLayoutTests` 1/1; full suite **990/990**.
+- **Flags:**
+  - Stale threshold comments; literal 0.3 in `placeRevealFade`.
+  - The DECISIONS.md entries sit at the bottom of the file.
+  - No way into search after a failed My location.
+  - The city line's hide isn't pixel-checked.
+- **Next:** Tessa's device check.
+- Findings: `.agent-reports/5.10a.8/findings.md`.
+
+---
+
 # Builds 5.10a.6 + 5.10a.7: cross-fade city line, instant old card, immediate skeleton
 
 Updated October 9, 2026.
