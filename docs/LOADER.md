@@ -606,6 +606,13 @@ sharp). Report: `.agent-reports/5.9.3/findings.md`.
   `.contentLoadIn(.card, generation: cardLoadInGeneration)`, and `show()` always bumps that generation (8 pt rise, 0.4 s,
   0.1 s delay, whole card as one unit); the `.placeholder` layer (skeleton / failure) sits over it, outside that load-in,
   and fades out in 0.2 s with no delay as the card arrives.
+- **5.10a.14 (Tessa, 2026-10-09, video 10): the whole card rises, ViewThatFits content included.** Frame-by-frame
+  tracking of the landing: card frame, glyph, ‹ ›, date line and hairline moved up with the offset; the phase line and the
+  whole rise/set area stayed put. The static parts are exactly the ViewThatFits content (`phaseLine`, `riseSetArea`). This
+  is why 5.10a.9-13 (every variant of an offset/fade on the card) never moved them, and why nothing about timing helped.
+  `ContentLoadIn` now applies `.geometryGroup()` before its opacity and offset, so all children move with the block. If a
+  recording still shows static rows: the next step is to take the rise off the offset (e.g. `.transformEffect`) or to replace
+  the card's ViewThatFits with a layout that doesn't snap, not to retune timing.
 - **Sentence during My location (5.10a.3):** the city line ("in 📍 City, ST?") is hidden, not a stand-in like "your
   location", and fades in (0.5 s ease-out, opacity only) when the city is known. It keeps its slot, so nothing
   moves; VoiceOver reads the sentence without the place until then. Supersedes §12.2 step 2's "your location".

@@ -123,6 +123,15 @@ struct ContentLoadIn: ViewModifier {
 
     func body(content: Content) -> some View {
         content
+            // 5.10a.14 (Tessa, 2026-10-09, video 10): measured frame by frame,
+            // the card's frame, glyph, ‹ ›, date line and hairline rose with
+            // the offset, but the phase line and the whole rise/set area
+            // (both built in ViewThatFits) stayed where they end up. The
+            // offset's animation reached only the children outside
+            // ViewThatFits. `.geometryGroup()` resolves the block's geometry
+            // first, so every child, ViewThatFits ones included, moves with
+            // it as one unit.
+            .geometryGroup()
             .opacity(isIn ? 1 : 0)
             .offset(y: isIn ? 0 : Self.startOffset(reduceMotion: reduceMotion))
             .task(id: Trigger(generation: generation, isActive: isActive)) {

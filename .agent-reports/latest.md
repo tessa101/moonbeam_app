@@ -1,3 +1,18 @@
+# Build 5.10a.14: the whole block rises as one unit
+
+Updated October 9, 2026.
+
+- **Done:** built and tested the uncommitted `.geometryGroup()` line in `ContentLoadIn`. The phase line and the rise/set area (inside `ViewThatFits`) should now rise with the rest of the card.
+- **Runs:** each suite on its own with 1-minute limits: `ContentLoadInTests` 7/7, `PlaceSkeletonTests` 11/11, `PlaceChangeLayoutTests` 1/1. Full suite **991/991**. No stale processes; no stalls.
+- **Flags:**
+  - The modifier applies to every load-in block (sentence, compass, bottom bar), not just the card.
+  - No test samples the inner children's positions.
+  - Older items still open.
+- **Next:** Tessa's device check.
+- Findings: `.agent-reports/5.10a.14/findings.md`.
+
+---
+
 # Build 5.10a.13: two-layer card slot, ordinary card replay
 
 Updated October 9, 2026.
