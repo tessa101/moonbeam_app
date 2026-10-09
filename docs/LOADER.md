@@ -1,4 +1,4 @@
-# Step 5.9 Spec: Launch loader
+# Step 5.9 Spec: Launch loader (and the main screen load-in, §12)
 
 > Source: Claude Design `design/1.1/Moon Signal Loader.dc.html`, concept **1a Phase cycle** ("First run · no saved
 > place" frame). Replaces the stock `ProgressView` "Finding your location…" launch state (DESIGN-REVIEW.md, Location
@@ -512,8 +512,90 @@ sharp). Report: `.agent-reports/5.9.3/findings.md`.
    glyph, so the landing doesn't change sharpness. Revisit at the device check if the edge looks harsh.
 5. **Onboarding moon matches the loader:** earthshine dark side (`Theme.Colors.moonEarthshine`), not `bg`. Built 2026-10-06.
 
+## 12. Step 5.10a: One load-in for the main screen; place change transition (Tessa, 2026-10-08)
+
+**Problem (device videos, build 8, "Use my location" from the search sheet):**
+1. As the sheet closes, the **old place shows again** in full (New York's card and its "too far" note), then
+   "Finding your location…" appears above the card and **pushes it down**.
+2. The new place **swaps in one frame**: sentence, card and compass together, no load-in. `ContentLoadIn` only runs
+   `onAppear`, so it plays once per launch and never again.
+3. The **compass letters fly through the centre**: the dial first shows north-up (no heading yet), then each letter
+   animates its `.position` in a straight line to its new spot, so N/E/S/W cross in the middle.
+
+### 12.1 One load-in, replayed whenever the screen's content is replaced
+`ContentLoadIn` stays the one load-in (sentence → card +150 ms → compass +300 ms, fade + 8 pt rise, 300 ms ease-out,
+§11.2.7). It becomes **replayable**: keyed to a **content generation** on the view model instead of `onAppear`.
+- `LocationViewModel.loadInGeneration` (proposed name) bumps when the main screen's content is replaced. The modifier
+  watches it: on a bump it snaps its block out (`isIn = false`, no animation) and loads in again with the usual
+  delays. Launch keeps working as now (the first generation).
+- After "Aha" keeps its own start (`afterAhaStart`); every other replay uses the plain delays.
+- **Rule: replay when *where* changes, not *when*.**
+
+| Event | Load-in |
+|---|---|
+| Launch: fast, after the phase cycle, after Aha | Yes (as built) |
+| Place change: search pick, recent, Use my location, Forget saved place → new place | **Yes, full** |
+| Back from the background, same place | No |
+| Back from the background, detected place changed | Yes |
+| Date change (arrows, calendar), midnight rollover | No: the card's values change in place (proposed, Tessa to confirm) |
+| Same place re-detected / refreshed | No |
+
+- Reduce Motion: same order and stagger, opacity only (as now).
+- Every future main-screen entry uses this; no second load-in.
+
+### 12.2 Place change sequence
+1. **Old place out as soon as the change starts** (pick made, or the sheet closes on Use my location): sentence
+   place token, card and compass fade out, 150 ms. The old place's card, compass and notes never show again.
+2. **Sentence city token switches straight away** to the new name (a pick), or to "your location" until the fix
+   lands (Use my location). The rest of the sentence doesn't move.
+3. **Ready under 400 ms** (a picked city: it's all computed on the phone): no placeholder, straight to the §12.1
+   load-in.
+4. **Over 400 ms** (GPS): **placeholder A**, the card skeleton (§12.3), until the fix lands; then the skeleton
+   cross-fades into the real card (200 ms) and the compass loads in at its usual +300 ms. The sentence doesn't
+   replay if it's already showing the new place.
+5. Fix fails: the skeleton's line reads "Couldn't find your location. Try again, or search for a city." (current
+   copy), in the card's place; the old place does not come back.
+
+### 12.3 Placeholder A: card skeleton
+- Same size and position as the real card (two-column layout), so nothing moves when the real card replaces it.
+- Phase slot: the moon outline in `moonEarthshine`, breathing slowly (opacity 0.4 ↔ 0.7, 1.6 s ease-in-out);
+  Reduce Motion: still, at 0.55.
+- Time and direction rows: quiet rounded bars in the card's muted tone, no shimmer.
+- "Finding your location…" sits **inside** the skeleton (where the date line goes), replacing the stock
+  `ProgressView` above the card. No layout shift.
+- No compass and no bottom bar until the real card is in.
+- VoiceOver: the skeleton reads "Finding your location"; focus moves to the card when it lands.
+
+### 12.4 Compass entrance
+- **Wait for the first heading** before the compass block loads in, so the dial never appears north-up first. If no
+  heading arrives within 0.5 s, load in with the no-heading look (as now) and turn when it arrives.
+- **Rotate the dial as one piece** by the shortest path (unwrap the angle, never animate across 0/360). Letters,
+  numbers and targets ride the rotation; their `.position` is never animated independently.
+- **Settle (Tessa):** the dial loads in ~10° off true and eases into the real heading over 0.5 s
+  (`.spring(duration: 0.5, bounce: 0)` or ease-out, proposed). Direction of the offset: against the last heading
+  change, so it reads as "finding" north.
+- Reduce Motion: fade in, already aligned; no settle.
+
+### 12.5 Tests
+- `loadInGeneration` bumps on each place change, not on a date change, a same-place refresh or a foreground return.
+- A place change hides the old card before the new one shows (no frame with the old place after the change starts).
+- Under 400 ms: no skeleton. Over 400 ms (fake clock): skeleton, then card, then compass at +300 ms.
+- No vertical movement of the card between skeleton and real card (same frame).
+- Dial rotation takes the shortest path across 0/360 (350° → 10° turns 20°, not 340°); letter positions are
+  derived from the rotation, not animated.
+- Compass waits for the first heading, up to 0.5 s.
+
+### 12.6 Build order (one commit each)
+- **5.10a.1** Replayable `ContentLoadIn` + `loadInGeneration`; old place out on change; sentence token switches
+  straight away (§12.1, §12.2 1–3).
+- **5.10a.2** Card skeleton (§12.3, §12.2 4–5).
+- **5.10a.3** Compass entrance: wait for heading, rotate as one piece, settle (§12.4).
+
 ## Decision log
 
+- **2026-10-08 (Tessa, device videos of a place change):** the old place mustn't show after a change; placeholder A
+  (card skeleton) only when the new place takes over 400 ms; one load-in, replayed whenever the place changes; the
+  compass turns as one piece and settles ~10° into true heading (§12).
 - **2026-10-06 (Tessa, after 5.9.3b.5):** main screen blocks load in with a 150 ms stagger everywhere (sentence →
   card → compass); a light haptic when the moon lands in the card (§11.2.7).
 - **2026-10-06 (Tessa, after 5.9.3b.4):** Aha was over the incoming compass. Aha leaves as the flight starts; after a

@@ -5,6 +5,18 @@
 
 ---
 
+### 2026-10-08 · One main-screen load-in, replayed on a place change; card skeleton; compass turns as one piece (LOADER.md §12)
+- **Decision (Tessa, after device videos of build 8):** `ContentLoadIn` is the only main-screen entrance and replays
+  whenever *where* changes (launch, any place change, a foreground return to a different detected place), keyed to a
+  content generation rather than `onAppear`. Date changes and same-place refreshes don't replay (proposed).
+- **Place change:** the old place goes as soon as the change starts and never shows again; the city token switches
+  at once. Under 400 ms straight to the load-in; over 400 ms (GPS) **placeholder A**, a card skeleton at the real
+  card's size with "Finding your location…" inside it (no layout shift).
+- **Compass:** waits for the first heading (up to 0.5 s), rotates as one piece by the shortest path (letters were
+  animating their positions through the centre), and settles ~10° into true heading over 0.5 s.
+- **Considered:** B, a small phase-cycle moon in the card's place (heavier than the wait deserves); C, sentence only
+  (looks frozen on a slow fix).
+
 ### 2026-10-06 · Build 5.9.3c: moon smoothness as built (LOADER.md §11.3)
 - **Eased stop:** a constant 2.6× run, then speed falling linearly to zero over the last 0.4 s (all slowdown when the
   stop is nearer than that). Arrives with no jolt and adds 0.2 s to every run-out.
