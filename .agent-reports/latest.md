@@ -1,3 +1,21 @@
+# Build 5.10a.3: hidden city line + shimmer skeleton
+
+Updated October 9, 2026.
+
+- **Done:** built and tested the uncommitted 5.10a.3 changes.
+  - The city line is hidden during My location and fades in at 0.5 s.
+  - The skeleton has shimmering blocks and no "Finding" text, and fades into the card at 0.5 s.
+- Compiled first time. One test error fixed (test only): `pendingPlace()` omitted the zone a pending place always has. Full suite **989/989 pass**.
+- **Flags for Tessa:**
+  - After a failure the hidden city line leaves no way into search.
+  - The 0.5 s reveal may run at the 0.15 s token fade.
+  - The DECISIONS.md entry sits at the bottom of the file.
+  - "5.10a.3" was the compass entrance's number.
+- **Next:** Tessa's device check and answers to the flags; then the compass entrance, under a new number.
+- Findings: `.agent-reports/5.10a.3/findings.md`.
+
+---
+
 # Build 5.10a.2b: sentence stays, slot held, skeleton minimum
 
 Updated October 9, 2026.

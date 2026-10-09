@@ -1366,3 +1366,9 @@ The screen, the view model and the Location Off dialog are still to come.
 
 ### 2026-09-23 · SwiftUI + MVVM-lite + protocol services
 - **Why:** Simple, testable, and easy for Claude to follow consistently.
+
+## 2026-10-09: My location loading, 5.10a.3 (Tessa)
+- The sentence's city line stays hidden while My location detects (no "your location" stand-in), and fades in once
+  the city is known. The card skeleton drops its "Finding your location…" text for shimmering blocks (moon, header
+  lines, ‹ ›, time rows) so the real card fades in cleanly. Failure still says "Couldn't find your location…".
+  Searched places and launch are unchanged. Spec: LOADER.md §12.3.

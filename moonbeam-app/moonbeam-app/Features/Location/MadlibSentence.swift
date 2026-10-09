@@ -49,6 +49,12 @@ struct MadlibSentence: View {
     /// keeps it.
     static let placeTokenFade = Animation.easeOut(duration: 0.15)
 
+    /// 5.10a.3 (Tessa, 2026-10-09): while My location is detecting, the
+    /// place line is hidden, not a stand-in like "your location"; it fades
+    /// in once the city is known. Opacity only, so Reduce Motion keeps it.
+    static let placeRevealFade = Animation.easeOut(duration: 0.5)
+    private static let placeLineIndex = 2
+
     private static let dateHint = "Opens the calendar"
     private static let placeHint = "Opens search"
 
@@ -74,6 +80,8 @@ struct MadlibSentence: View {
             ForEach(sentence.lines.indices, id: \.self) { index in
                 let text = Self.text(for: sentence.lines[index])
                 SentenceLine(text: text, scale: scale)
+                    .opacity(index == Self.placeLineIndex && sentence.placeIsPending ? 0 : 1)
+                    .allowsHitTesting(!(index == Self.placeLineIndex && sentence.placeIsPending))
                     .background(alignment: .leading) {
                         // Measures the line at full size on one line. It
                         // doesn't depend on `scale`, so there's no loop.
@@ -93,6 +101,7 @@ struct MadlibSentence: View {
             Self.placeTokenFade,
             value: sentence.tokens.first { $0.kind == .place }?.text
         )
+        .animation(Self.placeRevealFade, value: sentence.placeIsPending)
         .foregroundStyle(Theme.Colors.textPrimary)
         .tint(Theme.Colors.accent)
         .frame(maxWidth: .infinity, alignment: .leading)

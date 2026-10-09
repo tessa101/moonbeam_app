@@ -209,7 +209,7 @@ struct PlaceSkeletonTests {
         await Self.waitUntil { location.heldFixCount > 0 }
 
         #expect(Self.dateTokenText(viewModel) == selectedDate)
-        #expect(Self.placeTokenText(viewModel) == "your location")
+        #expect(viewModel.madlibSentence(allowsBreaksInsideTokens: true).placeIsPending)
 
         location.releaseFixes()
         await locate.value
@@ -217,7 +217,7 @@ struct PlaceSkeletonTests {
         #expect(Self.placeTokenText(viewModel) == "Los Angeles, CA")
     }
 
-    @Test("§12.9 the date is kept after a failure too, while the token reads your location")
+    @Test("§12.9 the date is kept after a failure too, while the place line is hidden")
     func failedReplacementKeepsSelectedDate() async {
         let location = FakeLocationService(authorizationState: .authorized)
         let viewModel = await Self.makeReadyViewModel(location: location, placeChangeSleep: Self.thresholdPending)
@@ -228,7 +228,7 @@ struct PlaceSkeletonTests {
 
         #expect(viewModel.cardPlaceholder == .failed)
         #expect(Self.dateTokenText(viewModel) == selectedDate)
-        #expect(Self.placeTokenText(viewModel) == "your location")
+        #expect(viewModel.madlibSentence(allowsBreaksInsideTokens: true).placeIsPending)
     }
 
     @Test("§12.9 once shown, the skeleton stays its 350 ms minimum before the card")

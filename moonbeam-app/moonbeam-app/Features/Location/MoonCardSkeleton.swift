@@ -15,7 +15,7 @@ struct PlaceCardRegion: View {
     let viewModel: LocationViewModel
 
     /// §12.2 step 4: the skeleton cross-fades into the real card.
-    private static let replacementAnimation = Animation.easeOut(duration: 0.2)
+    private static let replacementAnimation = Animation.easeOut(duration: 0.5)
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @AccessibilityFocusState private var isCardFocused: Bool
@@ -62,43 +62,42 @@ struct PlaceCardRegion: View {
     }
 }
 
-/// §12.3 placeholder A: the card's shape with a breathing moon outline and
-/// quiet bars, so nothing moves when the real card replaces it.
+/// §12.3 placeholder A (5.10a.3): the card's shape drawn as quiet blocks
+/// where the moon, the two header lines, ‹ › and the rise/set cells go, with
+/// a shimmer sweeping across them. No text while finding, so the real card's
+/// text never ghosts through the cross-fade. A failure keeps the blocks still
+/// and says so in the header's place.
 private struct MoonCardSkeleton: View {
 
     let viewModel: LocationViewModel
     let layoutTable: MoonTableViewModel
     let placeholder: LocationViewModel.CardPlaceholder
 
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-
     // MARK: - Constants
 
-    /// §12.3: opacity 0.4 ↔ 0.7 over 1.6 s; still at 0.55 with Reduce Motion.
-    private static let breath = Animation.easeInOut(duration: 1.6).repeatForever(autoreverses: true)
-    private static let breathLow = 0.4
-    private static let breathHigh = 0.7
-    private static let stillOpacity = 0.55
-
     private static let moonSize: CGFloat = 44
-    private static let moonStrokeWidth: CGFloat = 3
+    private static let stepButtonSize: CGFloat = 32
+    private static let stepButtonSpacing: CGFloat = 8
     private static let headerSpacing: CGFloat = 12
-    private static let headerLineSpacing: CGFloat = 6
+    private static let headerLineSpacing: CGFloat = 8
     private static let cellSpacing: CGFloat = 6
     private static let cellBarSpacing: CGFloat = 8
     private static let cellPaddingVertical: CGFloat = 8
     private static let cellPaddingHorizontal: CGFloat = 10
 
-    private static let barHeight: CGFloat = 10
-    private static let phaseBarWidth: CGFloat = 104
+    private static let dateBarWidth: CGFloat = 96
+    private static let dateBarHeight: CGFloat = 10
+    private static let phaseBarWidth: CGFloat = 160
+    private static let phaseBarHeight: CGFloat = 14
     private static let labelBarWidth: CGFloat = 58
-    private static let timeBarWidth: CGFloat = 76
+    private static let labelBarHeight: CGFloat = 10
+    private static let timeBarWidth: CGFloat = 92
+    private static let timeBarHeight: CGFloat = 22
     private static let directionBarWidth: CGFloat = 48
+    private static let directionBarHeight: CGFloat = 10
 
-    static let findingText = "Finding your location…"
     static let failedText = "Couldn't find your location. Try again, or search for a city."
-
-    @State private var moonOpacity = breathLow
+    private static let findingAccessibilityText = "Finding your location"
 
     // MARK: - Body
 
@@ -110,45 +109,25 @@ private struct MoonCardSkeleton: View {
                 skeleton
             }
             .accessibilityElement(children: .ignore)
-            .accessibilityLabel(accessibilityText)
+            .accessibilityLabel(placeholder == .failed ? Self.failedText : Self.findingAccessibilityText)
     }
 
-    private var line: String {
-        placeholder == .failed ? Self.failedText : Self.findingText
-    }
-
-    /// "Finding your location", without the ellipsis VoiceOver would read.
-    private var accessibilityText: String {
-        placeholder == .failed ? Self.failedText : "Finding your location"
-    }
+    private var isFinding: Bool { placeholder == .finding }
 
     private var skeleton: some View {
+        // The blocks shimmer; the card's frame and divider are the rough
+        // outline of the real card.
         VStack(alignment: .leading, spacing: Theme.Metrics.cardSpacing) {
-            HStack(spacing: Self.headerSpacing) {
-                moonOutline
-
-                // §12.3: the line sits where the date line goes.
-                VStack(alignment: .leading, spacing: Self.headerLineSpacing) {
-                    Text(line)
-                        .font(Theme.Fonts.label)
-                        .foregroundStyle(Theme.Colors.textSecondary)
-                        .fixedSize(horizontal: false, vertical: true)
-                    if placeholder == .finding {
-                        skeletonBar(width: Self.phaseBarWidth)
-                    }
-                }
-                Spacer(minLength: 0)
-            }
-
+            header
             Rectangle()
                 .fill(Theme.Colors.stroke)
                 .frame(height: Theme.Metrics.hairline)
-
             HStack(spacing: Self.cellSpacing) {
                 skeletonCell
                 skeletonCell
             }
         }
+        .shimmering(isActive: isFinding)
         .padding(.vertical, Theme.Metrics.cardPaddingVertical)
         .padding(.horizontal, Theme.Metrics.cardPaddingHorizontal)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
@@ -160,39 +139,98 @@ private struct MoonCardSkeleton: View {
 
     // MARK: - Pieces
 
-    /// Breathes only while a fix is pending; a failure holds it still.
-    private var moonOutline: some View {
-        Circle()
-            .stroke(Theme.Colors.moonEarthshine, lineWidth: Self.moonStrokeWidth)
-            .frame(width: Self.moonSize, height: Self.moonSize)
-            .opacity(reduceMotion || placeholder == .failed ? Self.stillOpacity : moonOpacity)
-            .onAppear {
-                guard !reduceMotion else { return }
-                withAnimation(Self.breath) {
-                    moonOpacity = Self.breathHigh
+    private var header: some View {
+        HStack(spacing: Self.headerSpacing) {
+            Circle()
+                .fill(Theme.Colors.surfaceRaised)
+                .frame(width: Self.moonSize, height: Self.moonSize)
+
+            if isFinding {
+                VStack(alignment: .leading, spacing: Self.headerLineSpacing) {
+                    skeletonBar(width: Self.dateBarWidth, height: Self.dateBarHeight)
+                    skeletonBar(width: Self.phaseBarWidth, height: Self.phaseBarHeight)
                 }
+            } else {
+                Text(Self.failedText)
+                    .font(Theme.Fonts.label)
+                    .foregroundStyle(Theme.Colors.textSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
             }
+            Spacer(minLength: 0)
+
+            HStack(spacing: Self.stepButtonSpacing) {
+                Circle().fill(Theme.Colors.surfaceRaised)
+                    .frame(width: Self.stepButtonSize, height: Self.stepButtonSize)
+                Circle().fill(Theme.Colors.surfaceRaised)
+                    .frame(width: Self.stepButtonSize, height: Self.stepButtonSize)
+            }
+        }
     }
 
     private var skeletonCell: some View {
         VStack(alignment: .leading, spacing: Self.cellBarSpacing) {
-            skeletonBar(width: Self.labelBarWidth)
-            skeletonBar(width: Self.timeBarWidth)
-            skeletonBar(width: Self.directionBarWidth)
+            skeletonBar(width: Self.labelBarWidth, height: Self.labelBarHeight)
+            skeletonBar(width: Self.timeBarWidth, height: Self.timeBarHeight)
+            skeletonBar(width: Self.directionBarWidth, height: Self.directionBarHeight)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.vertical, Self.cellPaddingVertical)
         .padding(.horizontal, Self.cellPaddingHorizontal)
     }
 
-    private func skeletonBar(width: CGFloat) -> some View {
+    private func skeletonBar(width: CGFloat, height: CGFloat) -> some View {
         Capsule()
             .fill(Theme.Colors.surfaceRaised)
-            .frame(width: width, height: Self.barHeight)
+            .frame(width: width, height: height)
     }
 
     private var cardShape: RoundedRectangle {
         RoundedRectangle(cornerRadius: Theme.Metrics.cardCornerRadius)
+    }
+}
+
+// MARK: - Shimmer
+
+/// A soft highlight sweeping left to right across a view's opaque parts
+/// (the skeleton's blocks), never beyond them. Reduce Motion: still blocks.
+private struct Shimmer: ViewModifier {
+
+    let isActive: Bool
+
+    private static let sweep = Animation.linear(duration: 1.4).repeatForever(autoreverses: false)
+    /// The highlight's width, as a share of the view's.
+    private static let bandShare: CGFloat = 0.6
+    private static let highlightOpacity = 0.10
+
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var phase: CGFloat = -Shimmer.bandShare
+
+    func body(content: Content) -> some View {
+        content
+            .overlay {
+                if isActive, !reduceMotion {
+                    GeometryReader { proxy in
+                        LinearGradient(
+                            colors: [.clear, Theme.Colors.textPrimary.opacity(Self.highlightOpacity), .clear],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                        .frame(width: proxy.size.width * Self.bandShare)
+                        .offset(x: phase * proxy.size.width)
+                    }
+                    .mask(content)
+                    .allowsHitTesting(false)
+                    .onAppear {
+                        withAnimation(Self.sweep) { phase = 1 }
+                    }
+                }
+            }
+    }
+}
+
+private extension View {
+    func shimmering(isActive: Bool) -> some View {
+        modifier(Shimmer(isActive: isActive))
     }
 }
 

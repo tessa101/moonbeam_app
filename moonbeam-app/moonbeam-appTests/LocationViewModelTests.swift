@@ -377,7 +377,7 @@ struct LocationViewModelTests {
 
         #expect(viewModel.place == nil)
         #expect(viewModel.moonTable == nil)
-        #expect(Self.placeTokenText(viewModel) == "your location")
+        #expect(viewModel.madlibSentence(allowsBreaksInsideTokens: true).placeIsPending)
         #expect(viewModel.loadInGeneration == oldGeneration + 1)
 
         let locate = Task { await viewModel.searchDidDismiss() }

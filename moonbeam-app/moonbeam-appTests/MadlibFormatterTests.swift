@@ -150,6 +150,21 @@ nonisolated struct MadlibFormatterTests {
         #expect(sentence.accessibilityLabel == "Where can I find the moon today in a city?")
     }
 
+    @Test("5.10a.3 a pending place is flagged hidden and VoiceOver skips it")
+    func pendingPlace() {
+        // As the view model calls it: a pending place keeps the replaced
+        // place's zone, so the date stays a token (LOADER.md §12.9).
+        let sentence = formatter.sentence(
+            place: nil, placePending: true, dateTimeZone: .gmt,
+            day: Date(), dayOffset: 0, today: Date(), allowsBreaksInsideTokens: false
+        )
+
+        #expect(sentence.placeIsPending)
+        #expect(sentence.lines.count == 3)
+        #expect(sentence.tokens.map(\.kind) == [.date])
+        #expect(sentence.accessibilityLabel == "Where can I find the moon today")
+    }
+
     @Test("No place with a stand-in: its name in the place token, the date still plain")
     func standIn() {
         let sentence = formatter.sentence(

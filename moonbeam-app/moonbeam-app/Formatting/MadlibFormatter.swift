@@ -62,11 +62,16 @@ nonisolated struct MadlibFormatter {
         /// The sentence read as one line, with ordinary spaces and no icons,
         /// for the header element VoiceOver reads before the two buttons.
         let accessibilityLabel: String
+        /// LOADER.md §12.9: the place is still being detected. The place
+        /// line is laid out (so nothing moves when the city lands) but the
+        /// view keeps it invisible, then fades it in. VoiceOver skips it.
+        var placeIsPending = false
 
         /// The tokens in reading order, for VoiceOver's buttons.
         var tokens: [Token] {
             lines.joined().compactMap { part in
-                if case let .token(token) = part { token } else { nil }
+                guard case let .token(token) = part else { return nil }
+                return placeIsPending && token.kind == .place ? nil : token
             }
         }
     }
@@ -118,6 +123,9 @@ nonisolated struct MadlibFormatter {
     ///     last-viewed place while the launch fix runs, so the sentence
     ///     isn't "a city" for a moment (LOCATION.md §3). The date stays
     ///     plain words.
+    ///   - placePending: the place is being detected (My location). The
+    ///     place line is laid out but flagged hidden, and VoiceOver skips
+    ///     it, until a place arrives (LOADER.md §12.9).
     ///   - dateTimeZone: with no place, the zone the date token is read in,
     ///     so a pending place change keeps the selected date (LOADER.md
     ///     §12.9). `nil`: plain "today" words, as before any place.
@@ -131,7 +139,7 @@ nonisolated struct MadlibFormatter {
     func sentence(
         place: Place?,
         standIn: Place? = nil,
-        standInText: String? = nil,
+        placePending: Bool = false,
         dateTimeZone: TimeZone? = nil,
         day: Date,
         dayOffset: Int,
@@ -151,7 +159,8 @@ nonisolated struct MadlibFormatter {
             dateLine = [.words(Self.dateLead + " " + Self.today)]
         }
 
-        let place = placeToken(place ?? standIn, standInText: standInText)
+        // Pending: the token's text only sizes the hidden line, never shown.
+        let place = placeToken(placePending ? nil : (place ?? standIn))
         let placeLine: [Part] = [
             .words(Self.placeLead + " "),
             .token(place.withSpaces(space)),
@@ -164,8 +173,11 @@ nonisolated struct MadlibFormatter {
 
         return Sentence(
             lines: [[.words(Self.lead)], dateLine, placeLine],
-            accessibilityLabel: [Self.lead, Self.dateLead, dateWords, Self.placeLead, place.text + Self.end]
-                .joined(separator: " ")
+            accessibilityLabel: (placePending
+                ? [Self.lead, Self.dateLead, dateWords]
+                : [Self.lead, Self.dateLead, dateWords, Self.placeLead, place.text + Self.end])
+                .joined(separator: " "),
+            placeIsPending: placePending
         )
     }
 
@@ -189,15 +201,7 @@ nonisolated struct MadlibFormatter {
         )
     }
 
-    private func placeToken(_ place: Place?, standInText: String? = nil) -> Token {
-        if let standInText {
-            return Token(
-                kind: .place,
-                symbol: Self.placeSymbol,
-                text: standInText,
-                accessibilityLabel: AttributedString(Self.placeLabelPrefix + standInText)
-            )
-        }
+    private func placeToken(_ place: Place?) -> Token {
         guard let place else {
             return Token(
                 kind: .place,

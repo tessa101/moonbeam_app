@@ -116,7 +116,6 @@ final class LocationViewModel {
     /// During an explicit switch back to GPS, the old place is removed at
     /// once and the sentence names the pending destination.
     private(set) var isReplacingPlace = false
-    private(set) var replacementPlaceToken: String?
 
     /// LOADER.md §12.2–12.3: the replacement has taken past the threshold
     /// (or ended without a place), so the card's slot holds the skeleton.
@@ -302,7 +301,7 @@ final class LocationViewModel {
             return madlibFormatter.sentence(
                 place: nil,
                 standIn: standIn,
-                standInText: replacementPlaceToken,
+                placePending: isReplacingPlace,
                 dateTimeZone: zone,
                 day: zone.map { daySelection.startOfDay(in: $0, now: now()) } ?? now(),
                 dayOffset: zone.map { daySelection.dayOffset(in: $0, now: now()) } ?? 0,
@@ -1075,7 +1074,6 @@ final class LocationViewModel {
         let skeletonHeldSlot = showsPlaceSkeleton
         self.place = place
         isReplacingPlace = false
-        replacementPlaceToken = nil
         replacedTimeZone = nil
         showsPlaceSkeleton = false
         skeletonLayoutTable = nil
@@ -1100,7 +1098,6 @@ final class LocationViewModel {
     private func beginReplacingPlace() {
         guard !isReplacingPlace else { return }
         isReplacingPlace = true
-        replacementPlaceToken = "your location"
         skeletonLayoutTable = moonTable ?? skeletonLayoutTable
         replacedTimeZone = place?.timeZone ?? replacedTimeZone
         showsPlaceSkeleton = false

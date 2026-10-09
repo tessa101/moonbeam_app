@@ -560,9 +560,14 @@ sharp). Report: `.agent-reports/5.9.3/findings.md`.
 - Same size and position as the real card (two-column layout), so nothing moves when the real card replaces it.
 - Phase slot: the moon outline in `moonEarthshine`, breathing slowly (opacity 0.4 ↔ 0.7, 1.6 s ease-in-out);
   Reduce Motion: still, at 0.55.
-- Time and direction rows: quiet rounded bars in the card's muted tone, no shimmer.
-- "Finding your location…" sits **inside** the skeleton (where the date line goes), replacing the stock
-  `ProgressView` above the card. No layout shift.
+- **5.10a.3 (Tessa, 2026-10-09):** no text while finding. Quiet blocks where the moon (filled disc), the date and
+  phase lines, ‹ › and the time/direction rows go, inside the card's outline and divider, with a soft highlight
+  sweeping left to right (1.4 s linear, repeating) over the blocks only. Reduce Motion: still blocks. A failure keeps
+  the blocks still and shows the failure line in the header's place. The skeleton and real card cross-fade (0.5 s, slowed from 200 ms by Tessa 2026-10-09) with no
+  text on either side of the swap to ghost through.
+- **Sentence during My location (5.10a.3):** the city line ("in 📍 City, ST?") is hidden, not a stand-in like "your
+  location", and fades in (0.5 s ease-out, opacity only) when the city is known. It keeps its slot, so nothing
+  moves; VoiceOver reads the sentence without the place until then. Supersedes §12.2 step 2's "your location".
 - No compass and no bottom bar until the real card is in.
 - VoiceOver: the skeleton reads "Finding your location"; focus moves to the card when it lands.
 
