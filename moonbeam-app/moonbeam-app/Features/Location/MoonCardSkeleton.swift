@@ -289,15 +289,18 @@ private struct LocationFailureCard: View {
 private struct RisingIn<Content: View>: View {
     let rises: Bool
     @ViewBuilder let content: Content
-    @State private var isIn = false
+    @State private var isVisible = false
+    @State private var isRisen = false
 
     var body: some View {
         content
-            .opacity(rises && !isIn ? 0 : 1)
-            .offset(y: rises && !isIn ? ContentLoadIn.cardLandingRise : 0)
+            .opacity(rises && !isVisible ? 0 : 1)
+            .offset(y: rises && !isRisen ? ContentLoadIn.cardLandingRise : 0)
             .onAppear {
                 guard rises else { return }
-                withAnimation(ContentLoadIn.cardLandingAnimation) { isIn = true }
+                // Separate curves (5.10a.12): quick fade, slower rise.
+                withAnimation(ContentLoadIn.cardFadeAnimation) { isVisible = true }
+                withAnimation(ContentLoadIn.cardRiseAnimation) { isRisen = true }
             }
     }
 }

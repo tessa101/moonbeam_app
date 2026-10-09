@@ -106,6 +106,16 @@ struct ContentLoadIn: ViewModifier {
     static let skeletonExitDuration: TimeInterval = 0.1
     static let skeletonExitAnimation = Animation.easeOut(duration: skeletonExitDuration)
 
+    /// 5.10a.12 (Tessa, 2026-10-09, video 8): fade and rise run on separate
+    /// curves. With one shared ease-out about 70% of the rise was done while
+    /// the card was still faint, so it looked to fade in place. The fade is
+    /// quick and the rise slower and gentler, finishing after the card is
+    /// opaque, so the whole card is seen travelling.
+    static let cardFadeDuration: TimeInterval = 0.25
+    static let cardRiseDuration: TimeInterval = 0.55
+    static let cardFadeAnimation = Animation.easeOut(duration: cardFadeDuration).delay(replayCardDelay)
+    static let cardRiseAnimation = Animation.easeInOut(duration: cardRiseDuration).delay(replayCardDelay)
+
     // MARK: - Modifier
 
     /// What re-runs the load-in: a new generation, or the block being let in.

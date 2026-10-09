@@ -60,6 +60,10 @@ struct ContentLoadInTests {
         #expect(ContentLoadIn.skeletonExitDuration <= ContentLoadIn.replayCardDelay)
         // Both start on the card's replay delay (+0.1 s).
         #expect(ContentLoadIn.replayCardDelay == 0.1)
+        // 5.10a.12: the card is opaque before its rise ends, so the rise is seen.
+        #expect(ContentLoadIn.cardFadeDuration == 0.25)
+        #expect(ContentLoadIn.cardRiseDuration == 0.55)
+        #expect(ContentLoadIn.cardFadeDuration < ContentLoadIn.cardRiseDuration)
     }
 
     @Test("5.10a.6 place-change landing: city line, then card, then compass, a little slower than launch")

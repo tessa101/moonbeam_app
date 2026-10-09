@@ -1,3 +1,18 @@
+# Build 5.10a.12: separate fade and rise curves
+
+Updated October 9, 2026.
+
+- **Done:** built and tested the uncommitted 5.10a.12 change. The card's fade (0.25 s ease-out) and its 24 pt rise (0.55 s ease-in-out) now run separately, both after +0.1 s, so the card is opaque while it's still travelling.
+- **Runs:** each suite on its own with 1-minute limits: `ContentLoadInTests` 7/7, `PlaceSkeletonTests` 11/11, `PlaceChangeLayoutTests` 1/1. Full suite **991/991**. No stale processes; no stalls.
+- **Flags:**
+  - `cardLandingAnimation` is now only the ambient fallback.
+  - The test name still says 16 pt.
+  - Older items still open.
+- **Next:** Tessa's device check.
+- Findings: `.agent-reports/5.10a.12/findings.md`.
+
+---
+
 # Build 5.10a.11: skeleton out first, bigger card rise
 
 Updated October 9, 2026.

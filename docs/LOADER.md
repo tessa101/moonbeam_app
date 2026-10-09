@@ -596,6 +596,9 @@ sharp). Report: `.agent-reports/5.9.3/findings.md`.
   identical frame sat still beneath it (exit 0.1 s delay + 0.25 s) and the card's own frame is near-invisible on the page, so
   only the date line and arrows read as moving. The skeleton now fades out in 0.1 s with no delay, finished before the card
   starts (0.1 s delay); the rise is 24 pt.
+- **5.10a.12 (Tessa, 2026-10-09, video 8): the rise is seen on every row.** Measured: all rows moved together, but ~70% of
+  the 24 pt rise was done while the card was still faint (one shared ease-out for fade and rise). Fade is now 0.25 s ease-out,
+  rise 0.55 s ease-in-out, both after the 0.1 s delay, so the card is opaque with most of its rise still to go.
 - **Sentence during My location (5.10a.3):** the city line ("in 📍 City, ST?") is hidden, not a stand-in like "your
   location", and fades in (0.5 s ease-out, opacity only) when the city is known. It keeps its slot, so nothing
   moves; VoiceOver reads the sentence without the place until then. Supersedes §12.2 step 2's "your location".

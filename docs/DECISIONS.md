@@ -1396,3 +1396,6 @@ Video 6 showed only the date line and arrows moving: the `.offset` transition di
 
 ## 2026-10-09: Skeleton clears before the card rises, 5.10a.11 (Tessa)
 Video 7 (on 5.10a.10) measured the whole card rising 16 pt, but the skeleton's same-size frame stayed beneath it for 0.35 s, and the card's frame is nearly invisible on the page, so only high-contrast items (date line, arrows) appeared to move. Skeleton exit is now 0.1 s with no delay (gone when the card starts); rise 16 -> 24 pt.
+
+## 2026-10-09: Separate fade and rise curves, 5.10a.12 (Tessa)
+Video 8 (5.10a.11): every row moved equally, but fade and rise shared one ease-out, so most of the rise happened while the card was nearly transparent and only high-contrast items (date line, arrows) looked like they moved. Fade 0.25 s ease-out, rise 0.55 s ease-in-out (both delayed 0.1 s).
