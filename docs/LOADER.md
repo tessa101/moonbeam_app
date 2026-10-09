@@ -589,6 +589,9 @@ sharp). Report: `.agent-reports/5.9.3/findings.md`.
   the card and hid its 8 pt rise. Now the real card is above the skeleton and rises 16 pt (0.45 s ease-out, +0.1 s)
   while the skeleton fades out quicker (0.25 s). `ContentLoadIn.cardLanding*`, `skeletonExit*`. Reduce Motion:
   instant swap. The compass and the fast path (no skeleton) keep the 8 pt rise.
+- **5.10a.10 (Tessa, 2026-10-09, video 6): the whole card rises as one unit.** The transition offset moved only the date
+  line and arrows; the rest faded in place. The card is now wrapped in `RisingIn`, an explicit state-driven fade plus
+  `cardLandingRise` offset on the whole `MoonCard`, used only when a skeleton held the slot. The skeleton exit is unchanged.
 - **Sentence during My location (5.10a.3):** the city line ("in 📍 City, ST?") is hidden, not a stand-in like "your
   location", and fades in (0.5 s ease-out, opacity only) when the city is known. It keeps its slot, so nothing
   moves; VoiceOver reads the sentence without the place until then. Supersedes §12.2 step 2's "your location".

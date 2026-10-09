@@ -1,3 +1,20 @@
+# Build 5.10a.10: card rises as one unit
+
+Updated October 9, 2026.
+
+- **Done:** built and tested the uncommitted 5.10a.10 change. The real card rises in as one unit (`RisingIn`: state-driven fade + 16 pt rise, 0.45 s, +0.1 s) instead of a transition that moved only the date line and arrows.
+- **Runs:** each suite on its own with 1-minute limits: `ContentLoadInTests` 7/7, `PlaceSkeletonTests` 11/11, `PlaceChangeLayoutTests` 1/1. Full suite **991/991**.
+- **Hang:** no stale processes; nothing stalled. Xcode's destination had to be switched back to iPhone 17.
+- **Flags:**
+  - `landsOverSkeleton` never resets (a card after a failure placeholder will rise).
+  - Indentation of `.zIndex(2)`.
+  - The rise is untested.
+  - Older items still open.
+- **Next:** Tessa's device check.
+- Findings: `.agent-reports/5.10a.10/findings.md`.
+
+---
+
 # Build 5.10a.9: card rises above the skeleton
 
 Updated October 9, 2026.

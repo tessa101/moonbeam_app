@@ -18,14 +18,9 @@ struct PlaceCardRegion: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @AccessibilityFocusState private var isCardFocused: Bool
 
-    /// Fade plus a rise (an offset: nothing else moves). Reduce Motion
-    /// keeps its instant swap.
-    private var cardLanding: AnyTransition {
-        guard !reduceMotion else { return .identity }
-        return AnyTransition.opacity
-            .combined(with: .offset(y: ContentLoadIn.cardLandingRise))
-            .animation(ContentLoadIn.cardLandingAnimation)
-    }
+    /// True once a skeleton has held the slot: the card then rises in over it.
+    /// (Launch and other first appearances keep their own load-in.)
+    @State private var landsOverSkeleton = false
 
     /// The skeleton leaves quicker than the card arrives.
     private var skeletonExit: AnyTransition {
@@ -53,12 +48,15 @@ struct PlaceCardRegion: View {
                         .transition(.opacity)
                 }
             } else if let moonTable = viewModel.moonTable {
-                MoonCard(viewModel: viewModel, table: moonTable)
-                    .accessibilityFocused($isCardFocused)
-                    // The whole card moves in, like the compass does (Tessa,
-                    // 2026-10-09); the replaced place's card is gone at once.
-                    .transition(.asymmetric(insertion: cardLanding, removal: .identity))
-                    // Above the skeleton, so its frame is seen moving.
+                // 5.10a.10: the whole card fades and rises as one unit, driven
+                // by explicit state (a transition offset moved only the date
+                // line and arrows; video 6).
+                RisingIn(rises: landsOverSkeleton && !reduceMotion) {
+                    MoonCard(viewModel: viewModel, table: moonTable)
+                        .accessibilityFocused($isCardFocused)
+                }
+                .transition(.identity)
+                // Above the skeleton, so its frame is seen moving.
                     .zIndex(2)
             } else if let layoutTable = viewModel.skeletonLayoutTable {
                 // §12.9: from the first frame the old card leaves until the
@@ -90,6 +88,7 @@ struct PlaceCardRegion: View {
         // §12.3: VoiceOver focus moves from the skeleton to the card when it
         // lands.
         .onChange(of: viewModel.cardPlaceholder) { previous, current in
+            if current != nil { landsOverSkeleton = true }
             if previous != nil, current == nil, viewModel.moonTable != nil {
                 isCardFocused = true
             }
@@ -282,5 +281,23 @@ private struct LocationFailureCard: View {
                 Theme.Colors.surface,
                 in: RoundedRectangle(cornerRadius: Theme.Metrics.cardCornerRadius)
             )
+    }
+}
+
+
+/// Fades in and rises `ContentLoadIn.cardLandingRise` as one unit on appear.
+private struct RisingIn<Content: View>: View {
+    let rises: Bool
+    @ViewBuilder let content: Content
+    @State private var isIn = false
+
+    var body: some View {
+        content
+            .opacity(rises && !isIn ? 0 : 1)
+            .offset(y: rises && !isIn ? ContentLoadIn.cardLandingRise : 0)
+            .onAppear {
+                guard rises else { return }
+                withAnimation(ContentLoadIn.cardLandingAnimation) { isIn = true }
+            }
     }
 }

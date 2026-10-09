@@ -1390,3 +1390,6 @@ The screen, the view model and the Location Off dialog are still to come.
 
 ## 2026-10-09: Card moves up as content fills, 5.10a.9 (Tessa)
 - The card looked already in place when the content filled: the skeleton's frame covered its rise. The card now sits above the skeleton, rises 16 pt over 0.45 s, and the skeleton exits in 0.25 s. Spec: LOADER.md §12.3.
+
+## 2026-10-09: Card rises as one unit, 5.10a.10 (Tessa)
+Video 6 showed only the date line and arrows moving: the `.offset` transition did not move the card as a unit. Replaced it with `RisingIn` (explicit `@State` + `withAnimation`, opacity and 16 pt offset on the whole `MoonCard`), applied only after a skeleton held the slot; Reduce Motion unchanged (instant).
