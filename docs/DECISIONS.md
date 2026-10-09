@@ -1393,3 +1393,6 @@ The screen, the view model and the Location Off dialog are still to come.
 
 ## 2026-10-09: Card rises as one unit, 5.10a.10 (Tessa)
 Video 6 showed only the date line and arrows moving: the `.offset` transition did not move the card as a unit. Replaced it with `RisingIn` (explicit `@State` + `withAnimation`, opacity and 16 pt offset on the whole `MoonCard`), applied only after a skeleton held the slot; Reduce Motion unchanged (instant).
+
+## 2026-10-09: Skeleton clears before the card rises, 5.10a.11 (Tessa)
+Video 7 (on 5.10a.10) measured the whole card rising 16 pt, but the skeleton's same-size frame stayed beneath it for 0.35 s, and the card's frame is nearly invisible on the page, so only high-contrast items (date line, arrows) appeared to move. Skeleton exit is now 0.1 s with no delay (gone when the card starts); rise 16 -> 24 pt.

@@ -101,10 +101,10 @@ struct ContentLoadIn: ViewModifier {
     /// its content fills. It sits above the skeleton, whose frame used to
     /// hide the card's own rise (8 pt under an opaque frame), so the rise is
     /// larger and the skeleton leaves faster.
-    static let cardLandingRise: CGFloat = 16
+    static let cardLandingRise: CGFloat = 24
     static let cardLandingDuration: TimeInterval = 0.45
-    static let skeletonExitDuration: TimeInterval = 0.25
-    static let skeletonExitAnimation = Animation.easeOut(duration: skeletonExitDuration).delay(replayCardDelay)
+    static let skeletonExitDuration: TimeInterval = 0.1
+    static let skeletonExitAnimation = Animation.easeOut(duration: skeletonExitDuration)
 
     // MARK: - Modifier
 

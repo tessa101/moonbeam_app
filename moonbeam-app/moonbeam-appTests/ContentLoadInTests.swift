@@ -49,12 +49,15 @@ struct ContentLoadInTests {
 
     @Test("5.10a.9 card landing over the skeleton: a visible 16 pt rise, the skeleton leaving faster")
     func cardLandingOverSkeleton() {
-        #expect(ContentLoadIn.cardLandingRise == 16)
+        #expect(ContentLoadIn.cardLandingRise == 24)
         #expect(ContentLoadIn.cardLandingRise > ContentLoadIn.rise)
         #expect(ContentLoadIn.cardLandingDuration == 0.45)
-        #expect(ContentLoadIn.skeletonExitDuration == 0.25)
+        #expect(ContentLoadIn.skeletonExitDuration == 0.1)
         // The skeleton is gone before the card has finished arriving.
         #expect(ContentLoadIn.skeletonExitDuration < ContentLoadIn.cardLandingDuration)
+        // The skeleton is gone before the card starts to move, so its frame
+        // can't hide the card's own frame moving.
+        #expect(ContentLoadIn.skeletonExitDuration <= ContentLoadIn.replayCardDelay)
         // Both start on the card's replay delay (+0.1 s).
         #expect(ContentLoadIn.replayCardDelay == 0.1)
     }

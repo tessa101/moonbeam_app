@@ -1,3 +1,18 @@
+# Build 5.10a.11: skeleton out first, bigger card rise
+
+Updated October 9, 2026.
+
+- **Done:** built and tested the uncommitted 5.10a.11 constants. The skeleton exits in 0.1 s with no delay, so it's gone before the card moves; the card rises 24 pt (0.45 s, +0.1 s).
+- **Runs:** each suite on its own with 1-minute limits: `ContentLoadInTests` 7/7, `PlaceSkeletonTests` 11/11, `PlaceChangeLayoutTests` 1/1. Full suite **991/991**. No stale processes; no stalls.
+- **Flags:**
+  - The `cardLandingOverSkeleton()` name still says 16 pt.
+  - Its comment says both start on the delay.
+  - Older items still open.
+- **Next:** Tessa's device check.
+- Findings: `.agent-reports/5.10a.11/findings.md`.
+
+---
+
 # Build 5.10a.10: card rises as one unit
 
 Updated October 9, 2026.
