@@ -44,6 +44,11 @@ struct MadlibSentence: View {
     /// Points kept free on the widest line when choosing the shared scale.
     private static let fitTolerance: CGFloat = 2
 
+    /// LOADER.md §12.9: the city token cross-fades in place on a place
+    /// change, like a date change (§12.1). Opacity only, so Reduce Motion
+    /// keeps it.
+    static let placeTokenFade = Animation.easeOut(duration: 0.15)
+
     private static let dateHint = "Opens the calendar"
     private static let placeHint = "Opens search"
 
@@ -83,6 +88,11 @@ struct MadlibSentence: View {
             }
         }
         .lineHeight(.multiple(factor: Theme.Fonts.sentenceLineHeightMultiple))
+        .contentTransition(.opacity)
+        .animation(
+            Self.placeTokenFade,
+            value: sentence.tokens.first { $0.kind == .place }?.text
+        )
         .foregroundStyle(Theme.Colors.textPrimary)
         .tint(Theme.Colors.accent)
         .frame(maxWidth: .infinity, alignment: .leading)

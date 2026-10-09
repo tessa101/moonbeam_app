@@ -1,3 +1,20 @@
+# Build 5.10a.2b: sentence stays, slot held, skeleton minimum
+
+Updated October 9, 2026.
+
+- **Done:**
+  - The sentence never leaves on a place change and keeps the selected date. Only the city token cross-fades: "your location", then the city.
+  - The load-in replays for the card and compass only.
+  - The card slot is held from the first frame.
+  - The skeleton stays at least 350 ms once shown, then cross-fades into the card.
+- **Tests:** 5 new in `PlaceSkeletonTests`, plus `PlaceChangeLayoutTests`, which samples every 16 ms through a 700 ms fix. Full suite **988/988 pass**.
+- **Hang:** no stuck processes were found. The new suite didn't hang under time limits; its pixel check was broken (16-bit capture) and is fixed.
+- **Not done:** no simulator recording or extracted frames this run; the 16 ms sampling test is the frame evidence.
+- **Next:** Tessa's device check, then 5.10a.3 (compass entrance).
+- Findings: `.agent-reports/5.10a/5.10a.2b-findings.md`.
+
+---
+
 # Build 5.10a.2: card skeleton during Use my location
 
 Updated October 9, 2026. Continued from Codex's uncommitted work.

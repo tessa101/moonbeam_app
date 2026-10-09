@@ -534,7 +534,7 @@ sharp). Report: `.agent-reports/5.9.3/findings.md`.
 | Event | Load-in |
 |---|---|
 | Launch: fast, after the phase cycle, after Aha | Yes (as built) |
-| Place change: search pick, recent, Use my location, Forget saved place → new place | **Yes, full** |
+| Place change: search pick, recent, Use my location, Forget saved place → new place | **Yes: card + compass.** The sentence stays and only the city token cross-fades (§12.9) |
 | Back from the background, same place | No |
 | Back from the background, detected place changed | Yes |
 | Date change (arrows, calendar), midnight rollover | No load-in. The card's values **cross-fade quickly in place** (opacity only, ~150 ms ease-out, no rise or movement). Tessa, 2026-10-08 |
@@ -598,6 +598,7 @@ sharp). Report: `.agent-reports/5.9.3/findings.md`.
 - **5.10a.1** Replayable `ContentLoadIn` + `loadInGeneration`; old place out on change; sentence token switches
   straight away (§12.1, §12.2 1–3).
 - **5.10a.2** Card skeleton (§12.3, §12.2 4–5).
+- **5.10a.2b** Device-check fixes: sentence stays, only the city cross-fades; hold the card slot; skeleton minimum (§12.9).
 - **5.10a.3** Compass entrance: wait for heading, rotate as one piece, settle (§12.4); readout fade + Now pulse (§12.4.1).
 
 ### 12.7 As built — 5.10a.1
@@ -617,6 +618,59 @@ sharp). Report: `.agent-reports/5.9.3/findings.md`.
 - Cross-fade 200 ms ease-out (none with Reduce Motion). VoiceOver focus moves to the card when it lands.
 - Compass and its bottom bar stay hidden until the real card is in (`isReplacingPlace`).
 - Tests: `PlaceSkeletonTests` (6). Findings: `.agent-reports/5.10a/5.10a.2-findings.md`.
+
+### 12.9 Device check after 5.10a.2 (Tessa, 2026-10-09) — build as 5.10a.2b
+Source: device video `5.10a.2_bug.MP4` (build `e967f46`, Use my location with Fri Oct 16 selected), analysed frame by
+frame. Timeline and frames: `design/bugs/place-change-2.md`, `design/bugs/place-change-2-frames.jpg`.
+**What the video shows:**
+1. The pending sentence reads "the moon **today** in your location" (the selected date is dropped), then Oct 16 comes
+   back. It looks like a stale placeholder.
+2. That sentence then **fades out with everything else** (one fully blank frame) and **loads in again**, a second
+   entrance. §12.2 step 4 said the sentence doesn't replay.
+3. With the old card gone and no skeleton yet, the content below moves up ~100 pt, then back down (the slot isn't held).
+4. The skeleton shows for only ~0.2 s (the fix landed ~0.7 s after the tap) and reads as a flash.
+
+**Decision (Tessa): the sentence stays, keeps the date, only the city changes.**
+- **The sentence never leaves.** On a place change it isn't faded out and doesn't replay its load-in. The date token
+  keeps the selected date at all times ("on Fri, Oct 16", "today", …). Only the **city token** changes: "your
+  location" while a fix is pending, then the city's name; it **cross-fades in place** (opacity only, ~150 ms ease-out,
+  like a date change, §12.1). No frame without the sentence. Reduce Motion: same fade (a fade isn't motion).
+  A picked city's token switches at once (as 5.10a.1).
+- **Replay covers the card, the compass and the bottom blocks only.** `ContentLoadIn` still loads the sentence in on
+  launch (the first generation) and after Aha; a place change replays only the blocks below it (card → +150 ms
+  compass).
+- **Hold the card slot from the first frame the old card leaves.** An invisible slot with the replaced card's frame
+  stays until the skeleton or the real card is there, so nothing below it (compass area, notes, bottom bar, the DEBUG
+  buttons) moves.
+- **Skeleton minimum (proposed, tune on device): once shown, it stays at least 350 ms**, so a fix that lands soon
+  after 400 ms doesn't flash it. If the fix lands before 400 ms there's no skeleton (§12.2 step 3). The cost: a fix
+  between 400 and 750 ms waits for the minimum.
+- Failure keeps its copy inside the skeleton (§12.8); the sentence then reads "your location" until the user picks or
+  retries.
+- **Tests:** the sentence view is never absent or at opacity 0 across a place change, and its date token equals the
+  selected date in the pending state; sentence load-in doesn't replay on a place change (only on the first
+  generation); card slot height identical from old-card-out to skeleton to real card; skeleton visible ≥ 350 ms when
+  shown; under 400 ms no skeleton.
+- Amends §12.1's table (the place-change row loads in the card and compass, not the sentence) and §12.2 steps 1–2
+  (the sentence's place token isn't faded out; it cross-fades to the new text).
+
+### 12.10 As built — 5.10a.2b
+- **Sentence:** `.contentLoadIn(.sentence)` with no generation; `ContentLoadIn.replaysOnPlaceChange(.sentence)` is
+  false, so it loads in once per screen arrival (launch, after Aha). The city token cross-fades with
+  `MadlibSentence.placeTokenFade` (opacity content transition, 150 ms ease-out, also under Reduce Motion).
+- **Date while pending:** `MadlibFormatter.sentence(dateTimeZone:)` reads the selection in the replaced place's zone,
+  so the token keeps "on Fri, Oct 16" through the wait and after a failure.
+- **Replay:** card at 0, compass +150 ms (`ContentLoadIn.replayDelay`). The card has its own
+  `cardLoadInGeneration`. It doesn't bump when a skeleton held the slot, so the skeleton cross-fades into the card
+  with no blank frame. The compass block (and the DEBUG buttons and bottom bar) is held out (`isActive: false`) while
+  a replacement is pending.
+- **Slot:** `PlaceCardRegion` shows the replaced card `hidden()` from the first frame, until the skeleton or card.
+- **Minimum:** `placeSkeletonMinimum` 350 ms. The skeleton task keeps running through it, and a fix that lands
+  meanwhile waits on it.
+- Tests: `PlaceSkeletonTests` (+5) and `PlaceChangeLayoutTests`. The layout test samples the real sentence, slot and
+  load-in modifiers every 16 ms through a 700 ms fix. It checks: sentence ink present (with an empty-strip
+  control), date unchanged, content below unmoved, skeleton ≥ 350 ms. Findings:
+  `.agent-reports/5.10a/5.10a.2b-findings.md`.
 
 ## Decision log
 

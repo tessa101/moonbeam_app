@@ -48,6 +48,10 @@ final class LocationViewModel {
     /// LOADER.md §12.2: a replacement ready sooner shows no placeholder.
     static let placeSkeletonThreshold = Duration.milliseconds(400)
 
+    /// LOADER.md §12.9 (proposed, tune on device): once shown, the skeleton
+    /// stays this long, so a fix just past the threshold doesn't flash it.
+    static let placeSkeletonMinimum = Duration.milliseconds(350)
+
     static let searchPlaceholder = "Search for a city"
 
     /// The compass's key in Info.plist's
@@ -103,6 +107,12 @@ final class LocationViewModel {
     /// never for a date or same-place refresh (LOADER.md §12.1).
     private(set) var loadInGeneration = 0
 
+    /// The card block's own replay (LOADER.md §12.9). Bumps with a place
+    /// change unless a skeleton is holding the slot when the place lands:
+    /// then the skeleton cross-fades into the card instead, with no blank
+    /// frame between them.
+    private(set) var cardLoadInGeneration = 0
+
     /// During an explicit switch back to GPS, the old place is removed at
     /// once and the sentence names the pending destination.
     private(set) var isReplacingPlace = false
@@ -115,6 +125,10 @@ final class LocationViewModel {
     /// The card being replaced, kept only as an invisible size template so
     /// the skeleton matches the real card's frame (§12.3).
     private(set) var skeletonLayoutTable: MoonTableViewModel?
+
+    /// The replaced place's zone, so the pending sentence keeps reading the
+    /// selected date ("on Fri, Oct 16") rather than "today" (§12.9).
+    private var replacedTimeZone: TimeZone?
 
     /// What fills the card's slot while a replacement has no place yet.
     enum CardPlaceholder: Equatable {
@@ -282,12 +296,16 @@ final class LocationViewModel {
     func madlibSentence(allowsBreaksInsideTokens: Bool) -> MadlibFormatter.Sentence {
         let standIn = isLocating ? lastViewed : nil
         guard let place else {
+            // A pending replacement keeps the selected date in the zone it
+            // was read in (§12.9); only the city token changes.
+            let zone = isReplacingPlace ? replacedTimeZone : nil
             return madlibFormatter.sentence(
                 place: nil,
                 standIn: standIn,
                 standInText: replacementPlaceToken,
-                day: now(),
-                dayOffset: 0,
+                dateTimeZone: zone,
+                day: zone.map { daySelection.startOfDay(in: $0, now: now()) } ?? now(),
+                dayOffset: zone.map { daySelection.dayOffset(in: $0, now: now()) } ?? 0,
                 today: now(),
                 allowsBreaksInsideTokens: allowsBreaksInsideTokens
             )
@@ -997,6 +1015,12 @@ final class LocationViewModel {
                 isLocating = false
                 return
             }
+            // §12.9: a skeleton that has just appeared stays its minimum
+            // before the card replaces it.
+            if isReplacingPlace, showsPlaceSkeleton, let placeSkeletonTask {
+                await placeSkeletonTask.value
+                guard !Task.isCancelled else { return }
+            }
             // Launch detection isn't a pick, so it doesn't replace the saved
             // place.
             show(detected, remember: userInitiated)
@@ -1048,9 +1072,11 @@ final class LocationViewModel {
         let changesWhere = isReplacingPlace || self.place.map { !$0.isSameCity(as: place) } == true
         // The selection carries over: following today resolves to the new
         // city's today, a picked day stays the same calendar day (DATE.md §3).
+        let skeletonHeldSlot = showsPlaceSkeleton
         self.place = place
         isReplacingPlace = false
         replacementPlaceToken = nil
+        replacedTimeZone = nil
         showsPlaceSkeleton = false
         skeletonLayoutTable = nil
         placeSkeletonTask?.cancel()
@@ -1060,6 +1086,9 @@ final class LocationViewModel {
 
         if launchStage == .ready, changesWhere {
             loadInGeneration += 1
+            if !skeletonHeldSlot {
+                cardLoadInGeneration += 1
+            }
         }
 
         if remember {
@@ -1073,6 +1102,7 @@ final class LocationViewModel {
         isReplacingPlace = true
         replacementPlaceToken = "your location"
         skeletonLayoutTable = moonTable ?? skeletonLayoutTable
+        replacedTimeZone = place?.timeZone ?? replacedTimeZone
         showsPlaceSkeleton = false
         place = nil
         moonTable = nil
@@ -1089,6 +1119,9 @@ final class LocationViewModel {
                 try await placeChangeSleep(Self.placeSkeletonThreshold)
                 guard let self, self.isReplacingPlace, !self.locationFailed else { return }
                 self.showsPlaceSkeleton = true
+                // The task stays running through the minimum; a fix that
+                // lands meanwhile waits on it (`performLocate`).
+                try await placeChangeSleep(Self.placeSkeletonMinimum)
             } catch {
                 // A fast result cancels the threshold; no placeholder flashes.
             }

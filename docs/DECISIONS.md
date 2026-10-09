@@ -5,6 +5,22 @@
 
 ---
 
+### 2026-10-09 · Place change: the sentence stays and only the city cross-fades; hold the slot; skeleton minimum (LOADER.md §12.9)
+- **Finding (Tessa's video of 5.10a.2, frame by frame):** the pending sentence says "today" instead of the selected
+  date, fades out to a blank frame and loads in again; the content below jumps ~100 pt while the card slot is empty;
+  the skeleton flashes for ~0.2 s.
+- **Decision (Tessa):** the sentence stays through a place change and keeps its date; only the city token changes
+  ("your location" → the city) with a quick in-place cross-fade. A place change replays the load-in for the card and
+  compass only. The card slot is held from the first frame, and the skeleton stays at least ~350 ms once shown
+  (proposed). Build as 5.10a.2b, before the compass entrance (5.10a.3).
+- **Considered:** a dimmed "…" in the city slot (reads as loading rather than an answer); hiding the sentence until the
+  place lands (a bare screen for the wait).
+- Evidence: `design/bugs/place-change-2.md`, `design/bugs/place-change-2-frames.jpg`.
+- **As built (5.10a.2b):** when a skeleton holds the slot at landing, the card block doesn't replay; the skeleton
+  cross-fades into the card instead (a replay would blank it for a frame). The compass block is held out for the
+  whole replacement, not collapsed under a visible block. A replay starts at the card (card 0, compass +150 ms).
+  LOADER.md §12.10.
+
 ### 2026-10-09 · ‹ › tap response: stronger press + soft haptic, arrows only (COMPASS-1.1.md §9.20)
 - **Decision (Tessa):** the day arrows get a clearly visible press (scale 0.88, lighter fill, held ≥ 90 ms so a quick
   tap still shows it) **and** a soft haptic on each step. Build as 5.10c, after 5.10b was confirmed on device.

@@ -153,7 +153,9 @@ struct LocationScreen: View {
                 // DESIGN-1.1.md §3.1: the sentence is the header; its tokens
                 // open the calendar and the search sheet.
                 MadlibSentence(viewModel: viewModel)
-                    .contentLoadIn(.sentence, generation: viewModel.loadInGeneration)
+                    // LOADER.md §12.9: loads in with the screen only; a
+                    // place change cross-fades its city token in place.
+                    .contentLoadIn(.sentence)
 
                 // Location status stays with the card, under the sentence
                 // whose place token it's about. The no-place screen and its
@@ -163,7 +165,7 @@ struct LocationScreen: View {
                     PlaceCardRegion(viewModel: viewModel)
                 }
                 .padding(.top, Theme.Metrics.sentenceToCard)
-                .contentLoadIn(.card, generation: viewModel.loadInGeneration)
+                .contentLoadIn(.card, generation: viewModel.cardLoadInGeneration)
 
                 // A stack that's always there, so the load-in runs once when
                 // the screen arrives, not again when the compass comes later.
@@ -189,7 +191,13 @@ struct LocationScreen: View {
                         .padding(.top)
                     }
                 }
-                .contentLoadIn(.compass, generation: viewModel.loadInGeneration)
+                // Held out while a replacement is pending, so nothing in it
+                // (the DEBUG buttons included) shows under an empty slot.
+                .contentLoadIn(
+                    .compass,
+                    generation: viewModel.loadInGeneration,
+                    isActive: !viewModel.isReplacingPlace
+                )
             }
             .padding(.horizontal, Theme.Metrics.screenMargin)
             .padding(.top, Theme.Metrics.contentTopSpacing)
@@ -232,7 +240,11 @@ struct LocationScreen: View {
                     .transition(.move(edge: .bottom).combined(with: .opacity))
                 }
             }
-            .contentLoadIn(.compass, generation: viewModel.loadInGeneration)
+            .contentLoadIn(
+                .compass,
+                generation: viewModel.loadInGeneration,
+                isActive: !viewModel.isReplacingPlace
+            )
         }
         .animation(reduceMotion ? nil : Self.bottomBarAnimation, value: viewModel.compass.bottomNote)
         // 4.15: content mustn't slide under the clock unreadably. The

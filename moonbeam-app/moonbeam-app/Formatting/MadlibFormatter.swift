@@ -118,8 +118,11 @@ nonisolated struct MadlibFormatter {
     ///     last-viewed place while the launch fix runs, so the sentence
     ///     isn't "a city" for a moment (LOCATION.md §3). The date stays
     ///     plain words.
-    ///   - day: the selected day's start in the place's zone; ignored with
-    ///     no place.
+    ///   - dateTimeZone: with no place, the zone the date token is read in,
+    ///     so a pending place change keeps the selected date (LOADER.md
+    ///     §12.9). `nil`: plain "today" words, as before any place.
+    ///   - day: the selected day's start in the place's zone (or
+    ///     `dateTimeZone`); ignored with neither.
     ///   - dayOffset: days from the place's today (0 = today).
     ///   - today: any moment in the place's today, such as now.
     ///   - allowsBreaksInsideTokens: true wherever the sentence doesn't
@@ -129,6 +132,7 @@ nonisolated struct MadlibFormatter {
         place: Place?,
         standIn: Place? = nil,
         standInText: String? = nil,
+        dateTimeZone: TimeZone? = nil,
         day: Date,
         dayOffset: Int,
         today: Date,
@@ -138,8 +142,8 @@ nonisolated struct MadlibFormatter {
 
         let dateLine: [Part]
         let dateWords: String
-        if let place {
-            let date = dateToken(place: place, day: day, dayOffset: dayOffset, today: today)
+        if let zone = place?.timeZone ?? dateTimeZone {
+            let date = dateToken(timeZone: zone, day: day, dayOffset: dayOffset, today: today)
             dateWords = date.text
             dateLine = [.words(Self.dateLead + " "), .token(date.withSpaces(space))]
         } else {
@@ -167,15 +171,15 @@ nonisolated struct MadlibFormatter {
 
     // MARK: - Tokens
 
-    private func dateToken(place: Place, day: Date, dayOffset: Int, today: Date) -> Token {
+    private func dateToken(timeZone: TimeZone, day: Date, dayOffset: Int, today: Date) -> Token {
         let text: String
         let spoken: String
         if dayOffset == 0 {
             text = Self.today
             spoken = Self.today
         } else {
-            text = Self.datePrefix + dayLabels.label(for: day, today: today, timeZone: place.timeZone)
-            spoken = dayLabels.spokenLabel(for: day, today: today, timeZone: place.timeZone)
+            text = Self.datePrefix + dayLabels.label(for: day, today: today, timeZone: timeZone)
+            spoken = dayLabels.spokenLabel(for: day, today: today, timeZone: timeZone)
         }
         return Token(
             kind: .date,

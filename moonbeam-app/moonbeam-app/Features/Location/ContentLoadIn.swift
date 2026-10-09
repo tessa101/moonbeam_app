@@ -61,30 +61,66 @@ struct ContentLoadIn: ViewModifier {
         .easeOut(duration: duration).delay(afterAha ? afterAhaDelay(for: block) : delay(for: block))
     }
 
+    // MARK: - Place change replay (LOADER.md §12.9)
+
+    /// The sentence stays through a place change (only its city token
+    /// cross-fades), so it loads in once per screen arrival; the blocks
+    /// below it replay.
+    static func replaysOnPlaceChange(_ block: Block) -> Bool {
+        block != .sentence
+    }
+
+    /// A replay starts at the card: card at once, compass one stagger later.
+    static func replayDelay(for block: Block) -> TimeInterval {
+        max(0, delay(for: block) - stagger)
+    }
+
+    static func replayAnimation(for block: Block) -> Animation {
+        .easeOut(duration: duration).delay(replayDelay(for: block))
+    }
+
     // MARK: - Modifier
+
+    /// What re-runs the load-in: a new generation, or the block being let in.
+    private struct Trigger: Equatable {
+        let generation: Int
+        let isActive: Bool
+    }
 
     let block: Block
     let generation: Int
+    /// While false the block stays out (opacity 0) and loads in when it
+    /// turns true, e.g. the compass until a replacement's place lands.
+    let isActive: Bool
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.contentArrivesAfterAha) private var afterAha
     @State private var isIn = false
+    /// The first load-in uses the launch stagger (or "Aha"'s); later ones
+    /// are place-change replays.
+    @State private var hasLoadedIn = false
 
     func body(content: Content) -> some View {
         content
             .opacity(isIn ? 1 : 0)
             .offset(y: isIn ? 0 : Self.startOffset(reduceMotion: reduceMotion))
-            .task(id: generation) {
-                // A place replacement reuses the one launch animation. Snap
-                // this block out without animating, then let its normal
-                // stagger bring the new generation in.
+            .task(id: Trigger(generation: generation, isActive: isActive)) {
+                let isReplay = hasLoadedIn
+                if isReplay, !Self.replaysOnPlaceChange(block) { return }
+                // Snap out without animating, then let the stagger bring the
+                // new generation in.
                 var transaction = Transaction()
                 transaction.disablesAnimations = true
                 withTransaction(transaction) {
                     isIn = false
                 }
+                guard isActive else { return }
+                hasLoadedIn = true
                 await Task.yield()
-                withAnimation(Self.animation(for: block, afterAha: afterAha)) {
+                let animation = isReplay
+                    ? Self.replayAnimation(for: block)
+                    : Self.animation(for: block, afterAha: afterAha)
+                withAnimation(animation) {
                     isIn = true
                 }
             }
@@ -92,11 +128,13 @@ struct ContentLoadIn: ViewModifier {
 }
 
 extension View {
-    /// Loads this block in when the main screen arrives (LOADER.md §2.1).
+    /// Loads this block in when the main screen arrives (LOADER.md §2.1),
+    /// and again for each new `generation` unless it's the sentence (§12.9).
     func contentLoadIn(
         _ block: ContentLoadIn.Block,
-        generation: Int = 0
+        generation: Int = 0,
+        isActive: Bool = true
     ) -> some View {
-        modifier(ContentLoadIn(block: block, generation: generation))
+        modifier(ContentLoadIn(block: block, generation: generation, isActive: isActive))
     }
 }

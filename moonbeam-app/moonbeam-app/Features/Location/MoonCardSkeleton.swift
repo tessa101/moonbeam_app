@@ -5,8 +5,9 @@
 
 import SwiftUI
 
-/// LOADER.md §12.2–12.3: the card's slot on the main screen. Holds the real
-/// card, or the skeleton during a slow explicit location replacement. The
+/// LOADER.md §12.2–12.3, §12.9: the card's slot on the main screen. Holds the
+/// real card, the skeleton during a slow explicit location replacement, or
+/// before the skeleton an empty slot of the same size. The
 /// prior card is used only as an invisible size template; none of its
 /// content or accessibility survives.
 struct PlaceCardRegion: View {
@@ -39,6 +40,13 @@ struct PlaceCardRegion: View {
                 MoonCard(viewModel: viewModel, table: moonTable)
                     .accessibilityFocused($isCardFocused)
                     .transition(.opacity)
+            } else if let layoutTable = viewModel.skeletonLayoutTable {
+                // §12.9: from the first frame the old card leaves until the
+                // skeleton or the new card is in, an invisible slot with the
+                // replaced card's frame, so nothing below moves.
+                MoonCard(viewModel: viewModel, table: layoutTable)
+                    .hidden()
+                    .accessibilityHidden(true)
             }
         }
         .animation(reduceMotion ? nil : Self.replacementAnimation, value: viewModel.cardPlaceholder)

@@ -76,10 +76,19 @@ struct PlaceSkeletonTests {
         return viewModel
     }
 
+    /// Stops on cancellation, so the suite's time limit can end it.
     private static func waitUntil(_ condition: () -> Bool) async {
-        while !condition() {
+        while !condition(), !Task.isCancelled {
             await Task.yield()
         }
+    }
+
+    private static func dateTokenText(_ viewModel: LocationViewModel) -> String? {
+        viewModel.madlibSentence(allowsBreaksInsideTokens: true).tokens.first { $0.kind == .date }?.text
+    }
+
+    private static func placeTokenText(_ viewModel: LocationViewModel) -> String? {
+        viewModel.madlibSentence(allowsBreaksInsideTokens: true).tokens.first { $0.kind == .place }?.text
     }
 
     // MARK: - Tests
@@ -181,6 +190,114 @@ struct PlaceSkeletonTests {
         #expect(viewModel.place == Self.detectedLosAngeles)
     }
 
+    // MARK: - §12.9
+
+    @Test("§12.9 the pending sentence keeps the selected date; only the city token changes")
+    func pendingSentenceKeepsSelectedDate() async {
+        let location = FakeLocationService(
+            authorizationState: .authorized,
+            placeResult: .success(Self.detectedLosAngeles)
+        )
+        let viewModel = await Self.makeReadyViewModel(location: location, placeChangeSleep: Self.thresholdPending)
+        // A week on from the reference day (Wed, Sep 23).
+        viewModel.select(day: DateComponents(year: 2026, month: 9, day: 30))
+        let selectedDate = Self.dateTokenText(viewModel)
+        #expect(selectedDate != "today")
+        location.holdsFixes = true
+
+        let locate = Task { await viewModel.useMyLocation() }
+        await Self.waitUntil { location.heldFixCount > 0 }
+
+        #expect(Self.dateTokenText(viewModel) == selectedDate)
+        #expect(Self.placeTokenText(viewModel) == "your location")
+
+        location.releaseFixes()
+        await locate.value
+        #expect(Self.dateTokenText(viewModel) == selectedDate)
+        #expect(Self.placeTokenText(viewModel) == "Los Angeles, CA")
+    }
+
+    @Test("§12.9 the date is kept after a failure too, while the token reads your location")
+    func failedReplacementKeepsSelectedDate() async {
+        let location = FakeLocationService(authorizationState: .authorized)
+        let viewModel = await Self.makeReadyViewModel(location: location, placeChangeSleep: Self.thresholdPending)
+        viewModel.select(day: DateComponents(year: 2026, month: 9, day: 30))
+        let selectedDate = Self.dateTokenText(viewModel)
+
+        await viewModel.useMyLocation()
+
+        #expect(viewModel.cardPlaceholder == .failed)
+        #expect(Self.dateTokenText(viewModel) == selectedDate)
+        #expect(Self.placeTokenText(viewModel) == "your location")
+    }
+
+    @Test("§12.9 once shown, the skeleton stays its 350 ms minimum before the card")
+    func skeletonHoldsItsMinimum() async {
+        let location = FakeLocationService(
+            authorizationState: .authorized,
+            placeResult: .success(Self.detectedLosAngeles)
+        )
+        let minimum = SleepGate(gated: LocationViewModel.placeSkeletonMinimum)
+        let viewModel = await Self.makeReadyViewModel(location: location, placeChangeSleep: minimum.sleep)
+        location.holdsFixes = true
+
+        let locate = Task { await viewModel.useMyLocation() }
+        await Self.waitUntil { location.heldFixCount > 0 && viewModel.cardPlaceholder == .finding }
+        await Self.waitUntil { minimum.waiterCount > 0 }
+
+        // The fix lands inside the minimum: the skeleton stays.
+        location.releaseFixes()
+        for _ in 0..<50 { await Task.yield() }
+        #expect(viewModel.cardPlaceholder == .finding)
+        #expect(viewModel.place == nil)
+
+        minimum.open()
+        await locate.value
+        #expect(viewModel.cardPlaceholder == nil)
+        #expect(viewModel.place == Self.detectedLosAngeles)
+        #expect(LocationViewModel.placeSkeletonMinimum == .milliseconds(350))
+    }
+
+    @Test("§12.9 the card replays when it lands in an empty slot, not when a skeleton held it")
+    func cardReplayOnlyWithoutSkeleton() async {
+        let location = FakeLocationService(
+            authorizationState: .authorized,
+            placeResult: .success(Self.detectedLosAngeles)
+        )
+        let fast = await Self.makeReadyViewModel(location: location, placeChangeSleep: Self.thresholdPending)
+        let fastCard = fast.cardLoadInGeneration
+        await fast.useMyLocation()
+        #expect(fast.cardLoadInGeneration == fastCard + 1)
+
+        let slowLocation = FakeLocationService(
+            authorizationState: .authorized,
+            placeResult: .success(Self.detectedLosAngeles)
+        )
+        let slow = await Self.makeReadyViewModel(location: slowLocation, placeChangeSleep: Self.thresholdPassed)
+        let slowCard = slow.cardLoadInGeneration
+        slowLocation.holdsFixes = true
+        let locate = Task { await slow.useMyLocation() }
+        await Self.waitUntil { slowLocation.heldFixCount > 0 && slow.cardPlaceholder == .finding }
+        slowLocation.releaseFixes()
+        await locate.value
+        // The skeleton cross-fades into the card; the card block doesn't
+        // blank and load in again.
+        #expect(slow.cardLoadInGeneration == slowCard)
+
+        // A pick replays the card as before.
+        slow.select(Self.sydney)
+        #expect(slow.cardLoadInGeneration == slowCard + 1)
+    }
+
+    @Test("§12.9 a place change replays the card and compass, never the sentence")
+    func replayPolicy() {
+        #expect(!ContentLoadIn.replaysOnPlaceChange(.sentence))
+        #expect(ContentLoadIn.replaysOnPlaceChange(.card))
+        #expect(ContentLoadIn.replaysOnPlaceChange(.compass))
+        #expect(ContentLoadIn.replayDelay(for: .card) == 0)
+        #expect(ContentLoadIn.replayDelay(for: .compass) == ContentLoadIn.stagger)
+    }
+
     @Test("Picking a city while the skeleton shows replaces it with the city's card")
     func pickDuringSkeletonClearsIt() async {
         let location = FakeLocationService(
@@ -201,5 +318,46 @@ struct PlaceSkeletonTests {
         await locate.value
         #expect(viewModel.place == Self.sydney)
         #expect(viewModel.cardPlaceholder == nil)
+    }
+}
+
+/// An injected sleep that returns at once, except for one duration, which
+/// waits until the test opens the gate.
+@MainActor
+final class SleepGate {
+
+    private let gated: Duration
+    private var waiters: [CheckedContinuation<Void, Never>] = []
+    private var isOpen = false
+
+    var waiterCount: Int { waiters.count }
+
+    init(gated: Duration) {
+        self.gated = gated
+    }
+
+    nonisolated var sleep: @Sendable (Duration) async throws -> Void {
+        { [self] duration in
+            try await self.wait(duration)
+        }
+    }
+
+    /// Cancellation opens the gate (the view model cancels its skeleton
+    /// task, and a time limit cancels the test), so nothing waits forever.
+    private func wait(_ duration: Duration) async throws {
+        guard duration == gated, !isOpen else { return }
+        await withTaskCancellationHandler {
+            await withCheckedContinuation { waiters.append($0) }
+        } onCancel: {
+            Task { @MainActor in self.open() }
+        }
+        try Task.checkCancellation()
+    }
+
+    func open() {
+        isOpen = true
+        let resumed = waiters
+        waiters.removeAll()
+        resumed.forEach { $0.resume() }
     }
 }
