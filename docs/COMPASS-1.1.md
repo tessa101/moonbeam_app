@@ -397,6 +397,7 @@ The mocks' sentence token ("now" / "tonight") is not adopted: **keep "today"**.
      on the iPhone 17 and SE 3 at the default size; ‹ › frames, card height and readout y identical every day, with
      animations on. Add it as a UI/layout test so it can't come back. Report the cause.
    - Also confirm the no-rise day's card no longer grows (~20 pt in 5.4.7); item 1 should fix that.
+   - **Update 2026-10-09:** still floats after the 5.10 fix, and only on certain dates; see §9.19.
 
 ### 9.17 As built (5.4.8) — report `.agent-reports/5.4.8/5.4.8-after-midnight.md`
 - **"After midnight" / "Not today": 13 pt Young Serif** (`Theme.Fonts.missingEvent`, scales with `.title2`), **below
@@ -423,6 +424,45 @@ The mocks' sentence token ("now" / "tonight") is not adopted: **keep "today"**.
   (Nearby). It shows at xxxLarge on the SE 3 always, and on the iPhone 17 with a note; at AX1 and up on both.
 - **AX:** "readout + Compass ↓" doesn't fit at AX1 for most readouts, so the button drops to **"↓"** (same label for
   VoiceOver) and the readout may shrink to 0.5×; never an ellipsis. What breaks is 5.5's (see the report).
+
+### 9.19 Day arrows still float after 5.10 (Tessa, 2026-10-09) — build as 5.10b
+Source: device video `arrow_bug_2.mov` (T2 iPhone, build 5.10 `cb98c6e`), analysed frame by frame at 60 fps by Cowork.
+Frames and the per-event table: `design/bugs/arrows-float-2-frames.jpg`, `design/bugs/arrows-float-2.md`.
+- **5.10's fix did not remove it.** Scoping `PressFeedback`'s spring to scale / opacity (§9.16 item 2) stays, but it
+  was not the whole cause. The 61-day layout test passes because it renders **settled** cards; the bug is a ~0.4 s
+  transient after the tap.
+- **What happens:** in the first frame of the date change the tapped button is ~40 pt above its place (above the
+  card's top edge), then eases back over 0.37–0.40 s. The other button, the card height, the readout and the dial
+  don't move. Either arrow, either direction.
+- **It depends on the date you land on, not on the tap.** 13 floats in the video, and all 13 landed on **Mon Oct 19**
+  (4×), **Mon Oct 26** (4×), **Wed Oct 28** (2×) or **Wed Nov 11** (3×). Every arrival on those four dates floated;
+  the other ~60 date changes (Oct 7 – Nov 14, Irvine, today = Thu Oct 8) never did. The 2026-10-03 video shows the
+  same dates (› Oct 25 → 26, ‹ to Oct 19). So the §9.16 "same for every tap" theory (the pressed state releasing in
+  the same update) can't be the whole story: something in those days' data changes what the header / arrows lay out,
+  or the identity of the button.
+- **Not label width** (float and non-float dates overlap). What the four dates share is **not known** from the
+  video. Their card data (rise / set / phase) is in `arrows-float-2.md`.
+- **5.10b, in this order (don't fix first):**
+  1. **Reproduce:** step onto Oct 19, Oct 26, Oct 28 and Nov 11 and their neighbors (animations on, iPhone 17 and
+     SE 3, default size).
+  2. **Diff:** dump the day model the card and header read for each float date vs its neighbors; report what differs.
+  3. **Trace:** what in the header / arrows depends on that data (view identity: `.id`, conditional branches,
+     `ViewThatFits`; implicit `.animation`; transitions; `PressFeedback`).
+  4. **Fix the cause** (not by switching animation off for the card) and report it.
+  5. **Test:** the existing settled-layout test can't see this. Add one that **samples the ‹ › frames during the
+     0.5 s after the tap** (UI test, ~16 ms samples, or rendered frames across the transition) for **both arrows
+     onto all four dates**, plus a spread of other dates. Frames must equal their resting frames in every sample.
+- **Also (Tessa, parked, after the fix):** the ‹ › need a slight tap response. Do it with `PressFeedback` once the
+  float is fixed, so the two don't mask each other (DESIGN-REVIEW.md "Date control").
+
+### 9.20 As built (5.10b) — report `.agent-reports/5.10b/findings.md`
+- **Cause:** the madlib's date-dependent shared font scale fed fractional font metrics into `SentenceLine`. Its
+  promised fixed full-size line slot used `minHeight`, so some scales grew the sentence's layout height during the
+  tap transaction and moved the entire card below it. There was no arrow identity or date-model branch.
+- **Fix:** the line slot now has an exact full-size height. Card animation stays on; 5.10's scoped press animation
+  stays.
+- **Regression:** both arrow frames are sampled every ~16 ms for ~0.5 s after animated steps onto all four reported
+  dates from both directions, plus three spread dates. Post-fix device coordinates are invariant. 973 cases pass.
 
 ## Decision log
 
@@ -451,3 +491,6 @@ The mocks' sentence token ("now" / "tonight") is not adopted: **keep "today"**.
 - **2026-10-03 (Tessa, device after 5.4.7):** "After midnight" in a smaller font (no shared 80% scale, no wrap); the
   tapped ‹ › floats above the card when stepping days (video), written up in §9.16 item 2 but **parked** for later.
   §9.16 item 1 builds as 5.4.8.
+- **2026-10-09 (Tessa, device video of build 5.10):** the day arrows still float, on some dates only (Oct 19, Oct 26,
+  Oct 28, Nov 11). 5.10b reproduces first, then fixes the cause and adds a frame-sampling test. Slight tap response on
+  ‹ › parked until after. §9.19.

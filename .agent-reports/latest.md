@@ -1,3 +1,15 @@
+# Build 5.10b: day-arrow transient fixed
+
+Updated October 9, 2026.
+
+- Reproduced the four date-dependent cases before changing code and traced the movement to `MadlibSentence`: its documented fixed line slot used `minHeight`, so fractional font metrics could make the sentence's layout height date-dependent during the tap transaction.
+- Changed the slot to an exact height; card animation and the 5.10 press-feedback scoping remain enabled.
+- Added a regression that samples both arrow frames every 16 ms for ~0.5 seconds, entering all four reported dates from both directions plus three spread dates.
+- Post-fix device inspection: identical arrow/card coordinates on Oct 18 → 19, Oct 26, Oct 28, and Nov 10 → 11. Full suite: **973/973 pass**.
+- Findings and screenshots: `.agent-reports/5.10b/`.
+
+---
+
 # Build 5.10: day arrows + landing-haptic audit
 
 Updated October 8, 2026.

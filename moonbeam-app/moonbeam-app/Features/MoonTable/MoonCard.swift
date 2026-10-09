@@ -5,6 +5,20 @@
 
 import SwiftUI
 
+enum DayStepDirection: Hashable {
+    case previous
+    case next
+}
+
+@MainActor
+final class DayStepLayoutProbe {
+    private(set) var frames: [DayStepDirection: CGRect] = [:]
+
+    func record(_ frame: CGRect, for direction: DayStepDirection) {
+        frames[direction] = frame
+    }
+}
+
 /// The moon card (DESIGN-1.1.md §3.2, COMPASS-1.1.md §9.2, §9.14): a header
 /// row (phase glyph, the selected day over the phase, ‹ ›), then moonrise and
 /// moonset, with Up now between them while the moon is up today. A compass
@@ -17,6 +31,9 @@ struct MoonCard: View {
 
     let viewModel: LocationViewModel
     let table: MoonTableViewModel
+    /// Frame recorder used by the §9.19 animation regression. `nil` in the
+    /// app, so production rendering has no observation state.
+    var dayStepLayoutProbe: DayStepLayoutProbe? = nil
 
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @Environment(\.hidesCardPhaseGlyph) private var hidesPhaseGlyph
@@ -165,10 +182,10 @@ struct MoonCard: View {
 
     private var stepButtons: some View {
         HStack(spacing: Self.stepButtonSpacing) {
-            stepButton("Previous day", systemImage: "chevron.left", enabled: viewModel.canGoBack) {
+            stepButton(.previous, title: "Previous day", systemImage: "chevron.left", enabled: viewModel.canGoBack) {
                 viewModel.previousDay()
             }
-            stepButton("Next day", systemImage: "chevron.right", enabled: viewModel.canGoForward) {
+            stepButton(.next, title: "Next day", systemImage: "chevron.right", enabled: viewModel.canGoForward) {
                 viewModel.nextDay()
             }
         }
@@ -236,7 +253,8 @@ struct MoonCard: View {
     }
 
     private func stepButton(
-        _ title: String,
+        _ direction: DayStepDirection,
+        title: String,
         systemImage: String,
         enabled: Bool,
         action: @escaping () -> Void
@@ -250,6 +268,11 @@ struct MoonCard: View {
         }
         .buttonStyle(DayStepButtonStyle())
         .disabled(!enabled)
+        .onGeometryChange(for: CGRect.self) { proxy in
+            proxy.frame(in: .global)
+        } action: { frame in
+            dayStepLayoutProbe?.record(frame, for: direction)
+        }
     }
 
     /// DATE.md §5: changing the day with ‹ or › announces the new date. The

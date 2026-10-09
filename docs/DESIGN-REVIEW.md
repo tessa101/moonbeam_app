@@ -42,7 +42,8 @@ _Started: 2026-09-26_
 - [ ] Compass direction format ("105° ESE"): degrees, letters, or both?
 
 ## Date control and calendar sheet (Step 3, built plain; DATE.md §9)
-- [x] **Bug, parked (Tessa, 2026-10-03): the tapped ‹ / › floats out of the card.** On some day steps the tapped arrow jumps ~40 pt up, above the card's top edge, then slides back over ~0.3–0.5 s; the other arrow and the card stay put (› Oct 25 → 26, ‹ to Oct 19; seen on the 5.4.6c build). Frames: `design/bugs/arrows-float-frames.png`. Full write-up, suspects and the day-stepping test: COMPASS-1.1.md §9.16 item 2. **Fixed in 5.10 (2026-10-08):** the press spring was leaking into the date-change layout transaction; it is now scoped to scale/opacity, with the 61-day rendered layout test from the spec.
+- [x] **Bug (Tessa, 2026-10-03): the tapped ‹ / › floats out of the card.** On some day steps the tapped arrow jumps ~40 pt up, above the card's top edge, then slides back over ~0.3–0.5 s; the other arrow and the card stay put (› Oct 25 → 26, ‹ to Oct 19; seen on the 5.4.6c build). Frames: `design/bugs/arrows-float-frames.png`. Full write-up, suspects and the day-stepping test: COMPASS-1.1.md §9.16 item 2. **Fixed in 5.10 (2026-10-08):** the press spring was scoped to scale/opacity, but the transient remained on four dates. **Fixed in 5.10b:** the madlib line's variable `minHeight` slot is exact; transition frame-sampling test added (COMPASS-1.1.md §9.19–9.20; report `.agent-reports/5.10b/`).
+- [ ] **Arrow tap response (Tessa, 2026-10-09):** ‹ / › need a slight pressed response. After 5.10b, in `PressFeedback`.
 - [ ] **Copy that assumes "tonight"** when another date is picked: the screen prompt "Where are you watching the moon tonight?" and the midnight note (e.g. "Oct 3 · at midnight")
 - [ ] Getting back to today takes two taps (open calendar → Today). Revisit with the relative-day chips idea.
 - [ ] **Arrow styling and hit areas; the field's chevron**
@@ -53,7 +54,7 @@ _Started: 2026-09-26_
 - [ ] **Relative-day chips always visible** (Today, Tomorrow, …), with the selected one highlighted, instead of a Today chip that only appears off today (Tessa, 2026-09-26)
 
 ## Build 8 testing notes (Tessa, 2026-10-07/08) → where each went
-- [ ] **Day arrows float** when stepping days → 5.10 (Date control item above)
+- [x] **Day arrows float** when stepping days → fixed in 5.10b (exact madlib line slot + transition frame-sampling test; Date control item above)
 - [ ] **Landing haptic missing** when the moon locks into the card → 5.10 check (built only on the recovery flight, LOADER.md §11.2.7)
 - [ ] **Place change looks broken** (old city flashes back, "Finding your location…" pushes the card, everything swaps in one frame, compass letters fly through the centre; videos 2026-10-08) → 5.10a, LOADER.md §12: one replayable load-in, card skeleton (placeholder A), compass rotates as one piece with a ~10° settle
 - [ ] **Degree readout** closer to the tick; fades out as the lock target takes over → 5.10a.3 (LOADER.md §12.4.1)

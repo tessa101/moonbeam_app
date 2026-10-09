@@ -191,8 +191,8 @@ private struct SentenceLine: View {
     @ScaledMetric(relativeTo: .title)
     private var fullSize = Theme.Fonts.sentenceSize
 
-    /// A full-size line's height, so a shrunk line keeps its slot and the
-    /// card below doesn't move (§3.1a).
+    /// A full-size line's fixed slot, so fractional font metrics at different
+    /// shared scales can't move the card below (§3.1a, §9.19).
     private var fullLineHeight: CGFloat {
         fullSize * Theme.Fonts.sentenceLineHeightMultiple
     }
@@ -201,7 +201,7 @@ private struct SentenceLine: View {
         text
             .font(Theme.Fonts.sentence(fixedSize: fullSize * scale))
             .fixedSize(horizontal: false, vertical: true)
-            .frame(minHeight: fullLineHeight)
+            .frame(height: fullLineHeight)
     }
 }
 

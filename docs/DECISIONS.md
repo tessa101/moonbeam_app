@@ -5,6 +5,23 @@
 
 ---
 
+### 2026-10-09 · Day arrows still float after 5.10: it depends on the date; 5.10b reproduces first (COMPASS-1.1.md §9.19)
+- **Finding (Tessa's device video of 5.10, analysed frame by frame):** the tapped ‹ / › still jumps ~40 pt above the
+  card for ~0.4 s. All 13 floats landed on Mon Oct 19, Mon Oct 26, Wed Oct 28 or Wed Nov 11; every arrival on those
+  dates floated, none of the other ~60 did, either arrow, either direction. The 2026-10-03 video had the same dates.
+- **Decision (Tessa):** reopen Roadmap item 2. **5.10b = reproduce → diff those days' data against neighbors → find
+  the cause → fix → a test that samples frames during the 0.5 s after the tap.** The 5.10 change (press spring scoped
+  to scale / opacity) stays; it was not the whole cause. The settled-layout test passed because the bug is a
+  transient.
+- **Tap response (Tessa):** ‹ › should get a slight pressed response. Later, after the float is fixed, in
+  `PressFeedback` (DESIGN-REVIEW.md "Date control").
+- **Considered:** another guess-and-fix prompt (rejected: the first fix missed because the cause was a guess);
+  switching animation off on the card (rejected in §9.16).
+- Evidence: `design/bugs/arrows-float-2.md`, `design/bugs/arrows-float-2-frames.jpg`.
+- **As built (5.10b):** the date-dependent madlib scale exposed `SentenceLine`'s `minHeight` as a variable slot;
+  fractional font metrics changed the height above the card during the tap transaction. The slot is now exact, and
+  the regression samples both arrow frames every ~16 ms for ~0.5 s. Report: `.agent-reports/5.10b/findings.md`.
+
 ### 2026-10-08 · Version naming: 0.x until launch; build number counts; design rounds are "D"
 - **Decision (Tessa):** the app's version (`MARKETING_VERSION`) goes from **1.0 to 0.1 at build 9**: TestFlight shows
   **0.1 (9)**. The build number (`CURRENT_PROJECT_VERSION`) keeps counting up and never resets.
