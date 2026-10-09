@@ -70,14 +70,32 @@ struct ContentLoadIn: ViewModifier {
         block != .sentence
     }
 
-    /// A replay starts at the card: card at once, compass one stagger later.
+    /// 5.10a.4 (Tessa, 2026-10-09): a place change lands gently, in order:
+    /// the city line (its own reveal, `MadlibSentence.placeRevealFade`),
+    /// then the card, then the compass, each a slow fade with the usual
+    /// 8 pt rise. Slower than the launch load-in on purpose.
+    static let replayDuration: TimeInterval = 0.7
+    /// The card starts this long after the city line begins to show.
+    static let replayCardDelay: TimeInterval = 0.25
+    /// The compass starts this long after the city line begins to show.
+    static let replayCompassDelay: TimeInterval = 0.6
+
+    /// A replay starts at the card, after the city line has begun.
     static func replayDelay(for block: Block) -> TimeInterval {
-        max(0, delay(for: block) - stagger)
+        switch block {
+        case .sentence: 0
+        case .card: replayCardDelay
+        case .compass: replayCompassDelay
+        }
     }
 
     static func replayAnimation(for block: Block) -> Animation {
-        .easeOut(duration: duration).delay(replayDelay(for: block))
+        .easeOut(duration: replayDuration).delay(replayDelay(for: block))
     }
+
+    /// The card landing over its skeleton (§12.3): same timing as the card's
+    /// own replay, so both paths feel alike.
+    static let cardLandingAnimation = Animation.easeOut(duration: replayDuration).delay(replayCardDelay)
 
     // MARK: - Modifier
 

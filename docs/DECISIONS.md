@@ -1372,3 +1372,6 @@ The screen, the view model and the Location Off dialog are still to come.
   the city is known. The card skeleton drops its "Finding your location…" text for shimmering blocks (moon, header
   lines, ‹ ›, time rows) so the real card fades in cleanly. Failure still says "Couldn't find your location…".
   Searched places and launch are unchanged. Spec: LOADER.md §12.3.
+
+## 2026-10-09: Slower place-change landing, 5.10a.4 (Tessa)
+- Device video still felt jarring. Place changes now land in order and slower: city line (0.8 s, rises 8 pt), card (+0.25 s), compass (+0.6 s), 0.7 s each. Launch load-in untouched. Spec: LOADER.md §12.3.

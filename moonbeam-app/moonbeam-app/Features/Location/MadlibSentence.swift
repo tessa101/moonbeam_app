@@ -25,6 +25,7 @@ struct MadlibSentence: View {
     let viewModel: LocationViewModel
 
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     /// Each line's one-line width at full size, by line index, and the width
     /// the lines get: the inputs to the shared scale.
@@ -52,7 +53,7 @@ struct MadlibSentence: View {
     /// 5.10a.3 (Tessa, 2026-10-09): while My location is detecting, the
     /// place line is hidden, not a stand-in like "your location"; it fades
     /// in once the city is known. Opacity only, so Reduce Motion keeps it.
-    static let placeRevealFade = Animation.easeOut(duration: 0.5)
+    static let placeRevealFade = Animation.easeOut(duration: ContentLoadIn.replayDuration + 0.1)
     private static let placeLineIndex = 2
 
     private static let dateHint = "Opens the calendar"
@@ -81,6 +82,10 @@ struct MadlibSentence: View {
                 let text = Self.text(for: sentence.lines[index])
                 SentenceLine(text: text, scale: scale)
                     .opacity(index == Self.placeLineIndex && sentence.placeIsPending ? 0 : 1)
+                    // The city line also rises into place (an offset, so
+                    // nothing moves); Reduce Motion: fade only.
+                    .offset(y: index == Self.placeLineIndex && sentence.placeIsPending && !reduceMotion
+                        ? ContentLoadIn.rise : 0)
                     .allowsHitTesting(!(index == Self.placeLineIndex && sentence.placeIsPending))
                     .background(alignment: .leading) {
                         // Measures the line at full size on one line. It

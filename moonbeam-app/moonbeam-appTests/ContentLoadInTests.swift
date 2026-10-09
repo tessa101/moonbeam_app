@@ -9,7 +9,7 @@ import Testing
 
 /// The main screen loading in after launch (LOADER.md §2.1): sentence, card,
 /// compass, top to bottom, each fading in with an 8 pt rise.
-@Suite("Content load-in")
+@Suite("Content load-in", .timeLimit(.minutes(1)))
 @MainActor
 struct ContentLoadInTests {
 
@@ -45,5 +45,18 @@ struct ContentLoadInTests {
     func total() {
         let last = ContentLoadIn.delay(for: .compass) + ContentLoadIn.duration
         #expect(abs(last - 0.6) < Self.tolerance)
+    }
+
+    @Test("5.10a.4 place-change landing: city line, then card, then compass, slower than launch")
+    func placeChangeLanding() {
+        #expect(ContentLoadIn.replayDuration == 0.7)
+        #expect(ContentLoadIn.replayDelay(for: .card) == ContentLoadIn.replayCardDelay)
+        #expect(ContentLoadIn.replayDelay(for: .compass) == ContentLoadIn.replayCompassDelay)
+        #expect(ContentLoadIn.replayCardDelay == 0.25)
+        #expect(ContentLoadIn.replayCompassDelay == 0.6)
+        // The city line (delay 0) leads, then the card, then the compass.
+        #expect(0 < ContentLoadIn.replayCardDelay)
+        #expect(ContentLoadIn.replayCardDelay < ContentLoadIn.replayCompassDelay)
+        #expect(ContentLoadIn.replayDuration > ContentLoadIn.duration)
     }
 }

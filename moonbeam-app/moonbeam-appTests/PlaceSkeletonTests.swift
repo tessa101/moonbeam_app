@@ -294,8 +294,9 @@ struct PlaceSkeletonTests {
         #expect(!ContentLoadIn.replaysOnPlaceChange(.sentence))
         #expect(ContentLoadIn.replaysOnPlaceChange(.card))
         #expect(ContentLoadIn.replaysOnPlaceChange(.compass))
-        #expect(ContentLoadIn.replayDelay(for: .card) == 0)
-        #expect(ContentLoadIn.replayDelay(for: .compass) == ContentLoadIn.stagger)
+        #expect(ContentLoadIn.replayDelay(for: .card) == ContentLoadIn.replayCardDelay)
+        #expect(ContentLoadIn.replayDelay(for: .compass) == ContentLoadIn.replayCompassDelay)
+        #expect(ContentLoadIn.replayCardDelay < ContentLoadIn.replayCompassDelay)
     }
 
     @Test("Picking a city while the skeleton shows replaces it with the city's card")

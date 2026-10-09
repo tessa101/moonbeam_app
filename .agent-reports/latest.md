@@ -1,3 +1,21 @@
+# Build 5.10a.4: slower, ordered place-change landing
+
+Updated October 9, 2026.
+
+- **Done:** built and tested the uncommitted 5.10a.4 changes: city line (0.8 s, 8 pt rise), then the card (+0.25 s, 0.7 s), then the compass (+0.6 s, 0.7 s). Launch is unchanged.
+- **Build:** compiled first time; no code or test fixes needed.
+- **Tests:** `ContentLoadInTests` got a time limit and a test pinning the new `replay*` constants. The three suites pass 18/18; full suite **990/990**.
+- **Stall:** the earlier stop was the interrupted test call; no stuck processes were found.
+- **Flags:**
+  - The 0.8 s reveal may run at 0.15 s.
+  - `placeRevealFade` has a stale comment and an unnamed + 0.1.
+  - The DECISIONS.md entry sits at the bottom of the file.
+  - No way into search after a failed My location (from 5.10a.3).
+- **Next:** Tessa's device check.
+- Findings: `.agent-reports/5.10a.4/findings.md`.
+
+---
+
 # Build 5.10a.3: hidden city line + shimmer skeleton
 
 Updated October 9, 2026.

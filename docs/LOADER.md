@@ -565,6 +565,9 @@ sharp). Report: `.agent-reports/5.9.3/findings.md`.
   sweeping left to right (1.4 s linear, repeating) over the blocks only. Reduce Motion: still blocks. A failure keeps
   the blocks still and shows the failure line in the header's place. The skeleton and real card cross-fade (0.5 s, slowed from 200 ms by Tessa 2026-10-09) with no
   text on either side of the swap to ghost through.
+- **5.10a.4 (Tessa, 2026-10-09): slower, ordered landing.** City line first (0.8 s fade, 8 pt rise), then the card
+  at +0.25 s, then the compass at +0.6 s, each 0.7 s ease-out with the 8 pt rise (`ContentLoadIn.replay*`). The
+  skeleton leaves on the card's clock. Reduce Motion: no rise, card swap instant as before. Launch load-in unchanged.
 - **Sentence during My location (5.10a.3):** the city line ("in 📍 City, ST?") is hidden, not a stand-in like "your
   location", and fades in (0.5 s ease-out, opacity only) when the city is known. It keeps its slot, so nothing
   moves; VoiceOver reads the sentence without the place until then. Supersedes §12.2 step 2's "your location".

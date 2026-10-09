@@ -20,6 +20,17 @@ struct PlaceCardRegion: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @AccessibilityFocusState private var isCardFocused: Bool
 
+    /// Fade plus the usual 8 pt rise (an offset: nothing else moves).
+    private var riseTransition: AnyTransition {
+        .opacity.combined(with: .offset(y: ContentLoadIn.rise))
+    }
+
+    /// 5.10a.4: the card lands after the city line has begun, slowly.
+    /// Reduce Motion keeps its existing instant swap.
+    private func landingTransition(_ transition: AnyTransition) -> AnyTransition {
+        reduceMotion ? .identity : transition.animation(ContentLoadIn.cardLandingAnimation)
+    }
+
     var body: some View {
         ZStack {
             if let placeholder = viewModel.cardPlaceholder {
@@ -29,7 +40,8 @@ struct PlaceCardRegion: View {
                         layoutTable: layoutTable,
                         placeholder: placeholder
                     )
-                    .transition(.opacity)
+                    // Appears at once; leaves slowly, in step with the card.
+                    .transition(.asymmetric(insertion: .opacity, removal: landingTransition(.opacity)))
                 } else if placeholder == .failed {
                     // No card to size against (nothing was showing): the
                     // message on its own.
@@ -39,7 +51,7 @@ struct PlaceCardRegion: View {
             } else if let moonTable = viewModel.moonTable {
                 MoonCard(viewModel: viewModel, table: moonTable)
                     .accessibilityFocused($isCardFocused)
-                    .transition(.opacity)
+                    .transition(landingTransition(riseTransition))
             } else if let layoutTable = viewModel.skeletonLayoutTable {
                 // §12.9: from the first frame the old card leaves until the
                 // skeleton or the new card is in, an invisible slot with the
