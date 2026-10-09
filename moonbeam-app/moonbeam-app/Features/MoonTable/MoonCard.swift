@@ -10,12 +10,33 @@ enum DayStepDirection: Hashable {
     case next
 }
 
+@Observable
 @MainActor
 final class DayStepLayoutProbe {
+    struct PressedLookEvent {
+        let isPressed: Bool
+        let instant: ContinuousClock.Instant
+    }
+
+    @ObservationIgnored
     private(set) var frames: [DayStepDirection: CGRect] = [:]
+    @ObservationIgnored
+    private(set) var pressedLookEvents: [DayStepDirection: [PressedLookEvent]] = [:]
+    var pressedDirection: DayStepDirection?
 
     func record(_ frame: CGRect, for direction: DayStepDirection) {
         frames[direction] = frame
+    }
+
+    func recordPressedLook(_ isPressed: Bool, for direction: DayStepDirection) {
+        guard pressedLookEvents[direction]?.last?.isPressed != isPressed else { return }
+        pressedLookEvents[direction, default: []].append(
+            PressedLookEvent(isPressed: isPressed, instant: ContinuousClock.now)
+        )
+    }
+
+    func resetPressedLookEvents(for direction: DayStepDirection) {
+        pressedLookEvents[direction] = []
     }
 }
 
@@ -34,6 +55,7 @@ struct MoonCard: View {
     /// Frame recorder used by the §9.19 animation regression. `nil` in the
     /// app, so production rendering has no observation state.
     var dayStepLayoutProbe: DayStepLayoutProbe? = nil
+    @State private var dayStepHapticCount = 0
 
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @Environment(\.hidesCardPhaseGlyph) private var hidesPhaseGlyph
@@ -189,6 +211,10 @@ struct MoonCard: View {
                 viewModel.nextDay()
             }
         }
+        .sensoryFeedback(
+            .impact(flexibility: .soft, intensity: Self.dayStepHapticIntensity),
+            trigger: dayStepHapticCount
+        )
     }
 
     /// For VoiceOver it's adjustable: swipe up or down moves a day, and the
@@ -260,19 +286,36 @@ struct MoonCard: View {
         action: @escaping () -> Void
     ) -> some View {
         Button {
-            action()
+            Self.performDayStep(enabled: enabled, hapticCount: &dayStepHapticCount, action: action)
             announceDate()
         } label: {
             Label(title, systemImage: systemImage)
                 .labelStyle(.iconOnly)
         }
-        .buttonStyle(DayStepButtonStyle())
+        .buttonStyle(
+            DayStepButtonStyle(
+                direction: direction,
+                layoutProbe: dayStepLayoutProbe
+            )
+        )
         .disabled(!enabled)
         .onGeometryChange(for: CGRect.self) { proxy in
             proxy.frame(in: .global)
         } action: { frame in
             dayStepLayoutProbe?.record(frame, for: direction)
         }
+    }
+
+    static let dayStepHapticIntensity = 0.5
+
+    static func performDayStep(
+        enabled: Bool,
+        hapticCount: inout Int,
+        action: () -> Void
+    ) {
+        guard enabled else { return }
+        action()
+        hapticCount += 1
     }
 
     /// DATE.md §5: changing the day with ‹ or › announces the new date. The
@@ -764,19 +807,65 @@ private struct CellStyle: ViewModifier {
 
 /// §2: a 32 pt raised circle with a faint top highlight and a soft shadow,
 /// centred in a 44 pt hit area.
-private struct DayStepButtonStyle: ButtonStyle {
+struct DayStepButtonStyle: ButtonStyle {
 
     @Environment(\.isEnabled) private var isEnabled
+    let direction: DayStepDirection?
+    let layoutProbe: DayStepLayoutProbe?
 
-    private static let highlightOpacity = 0.06
-    private static let highlightHeight: CGFloat = 1
-    private static let shadowOpacity = 0.25
+    static let highlightOpacity = 0.06
+    static let highlightHeight: CGFloat = 1
+    static let shadowOpacity = 0.25
     /// CSS `0 2px 6px`: SwiftUI's radius is about half a CSS blur.
-    private static let shadowRadius: CGFloat = 3
-    private static let shadowOffsetY: CGFloat = 2
-    private static let disabledOpacity = 0.35
+    static let shadowRadius: CGFloat = 3
+    static let shadowOffsetY: CGFloat = 2
+    static let disabledOpacity = 0.35
+    static let pressedScale: CGFloat = 0.88
+    static let pressedFillOpacity = 0.10
+    static let minimumPressedDuration = Duration.milliseconds(90)
+    static let releaseAnimation = Animation.spring(duration: 0.15)
+
+    init(
+        direction: DayStepDirection? = nil,
+        layoutProbe: DayStepLayoutProbe? = nil
+    ) {
+        self.direction = direction
+        self.layoutProbe = layoutProbe
+    }
 
     func makeBody(configuration: Configuration) -> some View {
+        DayStepPressedBody(
+            configuration: configuration,
+            isEnabled: isEnabled,
+            direction: direction,
+            layoutProbe: layoutProbe
+        )
+    }
+}
+
+private struct DayStepPressedBody: View {
+
+    let configuration: ButtonStyleConfiguration
+    let isEnabled: Bool
+    let direction: DayStepDirection?
+    let layoutProbe: DayStepLayoutProbe?
+
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var showsPressedLook = false
+    @State private var pressIsDown = false
+    @State private var minimumHoldElapsed = false
+    @State private var pressCycle = 0
+
+    private var isPressedByTest: Bool {
+        guard let direction, let layoutProbe else { return false }
+        return layoutProbe.pressedDirection == direction
+    }
+
+    private var isPressed: Bool {
+        isEnabled && (configuration.isPressed || isPressedByTest)
+    }
+
+    var body: some View {
         let circle = Circle()
         let inner = circle.inset(by: Theme.Metrics.hairline)
 
@@ -787,27 +876,70 @@ private struct DayStepButtonStyle: ButtonStyle {
             .background {
                 circle
                     .fill(Theme.Colors.surfaceRaised)
+                    .overlay {
+                        circle.fill(
+                            Color.white.opacity(
+                                showsPressedLook ? DayStepButtonStyle.pressedFillOpacity : 0
+                            )
+                        )
+                        .animation(
+                            DayStepButtonStyle.releaseAnimation,
+                            value: showsPressedLook
+                        )
+                    }
                     .shadow(
-                        color: .black.opacity(Self.shadowOpacity),
-                        radius: Self.shadowRadius,
-                        y: Self.shadowOffsetY
+                        color: .black.opacity(DayStepButtonStyle.shadowOpacity),
+                        radius: DayStepButtonStyle.shadowRadius,
+                        y: DayStepButtonStyle.shadowOffsetY
                     )
             }
             .overlay {
                 // CSS `inset 0 1px 0`: a 1 pt crescent along the inner top edge.
                 inner
-                    .subtracting(inner.offset(y: Self.highlightHeight))
-                    .fill(.white.opacity(Self.highlightOpacity))
+                    .subtracting(inner.offset(y: DayStepButtonStyle.highlightHeight))
+                    .fill(.white.opacity(DayStepButtonStyle.highlightOpacity))
             }
             .overlay {
                 circle.strokeBorder(Theme.Colors.strokeRaised, lineWidth: Theme.Metrics.hairline)
             }
-            .opacity(isEnabled ? 1 : Self.disabledOpacity)
-            // The circle, not its 44 pt target, shrinks and dims
-            // (DECISIONS.md "Tap animation").
-            .pressFeedback(isPressed: configuration.isPressed)
+            .opacity(isEnabled ? 1 : DayStepButtonStyle.disabledOpacity)
+            .animation(DayStepButtonStyle.releaseAnimation) { content in
+                content.scaleEffect(
+                    showsPressedLook && !reduceMotion ? DayStepButtonStyle.pressedScale : 1
+                )
+            }
             .frame(width: Theme.Metrics.minimumHitTarget, height: Theme.Metrics.minimumHitTarget)
             .contentShape(Rectangle())
+            .onChange(of: isPressed, initial: true) { _, pressed in
+                updatePressedLook(pressed)
+            }
+            .onChange(of: showsPressedLook, initial: true) { _, pressed in
+                guard let direction else { return }
+                layoutProbe?.recordPressedLook(pressed, for: direction)
+            }
+    }
+
+    private func updatePressedLook(_ pressed: Bool) {
+        pressIsDown = pressed
+        guard pressed else {
+            if minimumHoldElapsed {
+                showsPressedLook = false
+            }
+            return
+        }
+
+        pressCycle += 1
+        let cycle = pressCycle
+        minimumHoldElapsed = false
+        showsPressedLook = true
+        Task { @MainActor in
+            try? await Task.sleep(for: DayStepButtonStyle.minimumPressedDuration)
+            guard cycle == pressCycle else { return }
+            minimumHoldElapsed = true
+            if !pressIsDown {
+                showsPressedLook = false
+            }
+        }
     }
 }
 

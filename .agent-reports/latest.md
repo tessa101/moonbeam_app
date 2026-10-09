@@ -1,3 +1,15 @@
+# Build 5.10c: stronger day-arrow response
+
+Updated October 9, 2026.
+
+- ‹ › only: pressed scale **0.88**, `surfaceRaised` + **10% white**, visible for at least **90 ms**, then a **0.15 s spring** release.
+- One **soft 0.5** impact per enabled arrow step; none for disabled arrows, Today, or calendar selection. Shared button feedback is unchanged.
+- The extended regression drives press + quick release and samples both arrow frames every 16 ms for ~0.5 s across all four §9.19 dates, both directions, plus spread dates.
+- Simulator held/quick presses each stepped exactly once, with invariant 44 pt arrow frames and card layout. Full suite: **974/974 pass**.
+- Findings and screenshots: `.agent-reports/5.10c/`.
+
+---
+
 # Build 5.10b: day-arrow transient fixed
 
 Updated October 9, 2026.

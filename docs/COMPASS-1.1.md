@@ -464,6 +464,27 @@ Frames and the per-event table: `design/bugs/arrows-float-2-frames.jpg`, `design
 - **Regression:** both arrow frames are sampled every ~16 ms for ~0.5 s after animated steps onto all four reported
   dates from both directions, plus three spread dates. Post-fix device coordinates are invariant. 973 cases pass.
 
+### 9.20 ‹ › tap response (Tessa, 2026-10-09) — build as 5.10c
+The arrows already use `PressFeedback` (scale 0.96, opacity 0.8, 0.15 s spring), but on a 32 pt circle that is ~1 pt and
+a quick tap releases before the spring is seen. Tessa chose **a stronger press plus a soft haptic**, ‹ › only.
+- **Look (proposed, tune on device):** while pressed the 32 pt circle scales to **0.88** and its fill lightens
+  (`surfaceRaised` plus a white ~10% overlay), springing back (~0.15 s). **Held at least ~90 ms:** a tap that ends sooner
+  still shows the full pressed look for 90 ms, then releases. Reduce Motion: no scale, the fill change stays.
+- **Haptic:** one soft tick per day step, on the tap's action (not on press-down, not when the date changes any other
+  way, such as the calendar sheet or Today). `.sensoryFeedback(.impact(flexibility: .soft, intensity: 0.5), …)`.
+  Quieter than the landing cue (soft, 0.6, LOADER.md §11.2.7) and clearly unlike the compass lock tap (heavy, COMPASS.md
+  §4.5). A disabled arrow (no previous / next day) gives no haptic and no press look.
+- **Scope:** `DayStepButtonStyle` only. The shared styles keep the 5.10 `PressFeedback`. The hit area stays 44 pt; only
+  the circle scales.
+- **Rule from §9.19 still holds:** pressing, releasing and stepping never move the ‹ › frames, card height, readout or
+  dial. Keep `.animation(_:body:)` scoped to scale / opacity / fill. Extend `DayStepAnimationTests` so its 16 ms
+  samples cover a press and release on the four §9.19 dates (frames, not the visual scale, must equal rest).
+- **Test:** a quick tap shows the pressed look for ≥ 90 ms; one haptic trigger per step; none on a disabled arrow or a
+  calendar date change.
+- **As built (5.10c):** 0.88 scale, 10% white fill overlay, 90 ms minimum, 0.15 s spring release, soft 0.5 impact.
+  The extended regression drives press/release and samples both arrow frames across every §9.19 date and direction;
+  full suite 974/974. Report: `.agent-reports/5.10c/findings.md`.
+
 ## Decision log
 
 - **2026-10-02 (Tessa):** Compass 1.1 reviewed. Keep the Up now row, lock highlight, needle, ticks, crosshair,
@@ -494,3 +515,5 @@ Frames and the per-event table: `design/bugs/arrows-float-2-frames.jpg`, `design
 - **2026-10-09 (Tessa, device video of build 5.10):** the day arrows still float, on some dates only (Oct 19, Oct 26,
   Oct 28, Nov 11). 5.10b reproduces first, then fixes the cause and adds a frame-sampling test. Slight tap response on
   ‹ › parked until after. §9.19.
+- **2026-10-09 (Tessa, after 5.10b confirmed on device):** ‹ › get a stronger press (0.88, lighter fill, held ≥ 90 ms)
+  and a soft haptic per step; build as 5.10c. §9.20.

@@ -70,6 +70,33 @@ struct DayStepAnimationTests {
         }
     }
 
+    @Test("Arrow feedback values and haptic trigger match §9.20")
+    func arrowFeedbackValuesAndHapticTrigger() {
+        #expect(DayStepButtonStyle.pressedScale == 0.88)
+        #expect(DayStepButtonStyle.pressedFillOpacity == 0.10)
+        #expect(DayStepButtonStyle.minimumPressedDuration == .milliseconds(90))
+        #expect(MoonCard.dayStepHapticIntensity == 0.5)
+
+        var hapticCount = 0
+        var stepCount = 0
+        MoonCard.performDayStep(enabled: true, hapticCount: &hapticCount) {
+            stepCount += 1
+        }
+        #expect(hapticCount == 1)
+        #expect(stepCount == 1)
+
+        MoonCard.performDayStep(enabled: false, hapticCount: &hapticCount) {
+            stepCount += 1
+        }
+        #expect(hapticCount == 1)
+        #expect(stepCount == 1)
+
+        // Calendar/Today selection does not use performDayStep.
+        let viewModel = Self.makeViewModel()
+        viewModel.select(day: DateComponents(year: 2026, month: 10, day: 20))
+        #expect(hapticCount == 1)
+    }
+
     private static func sampleArrival(
         on target: Target,
         using direction: DayStepDirection,
@@ -85,12 +112,17 @@ struct DayStepAnimationTests {
         }
         try await settle()
 
-        withAnimation(PressFeedback.animation) {
+        probe.resetPressedLookEvents(for: direction)
+        probe.pressedDirection = direction
+        try await Task.sleep(for: .milliseconds(20))
+
+        withAnimation(DayStepButtonStyle.releaseAnimation) {
             switch direction {
             case .previous: viewModel.previousDay()
             case .next: viewModel.nextDay()
             }
         }
+        probe.pressedDirection = nil
 
         for sample in 0..<sampleCount {
             let frames = try requireBothFrames(probe)
@@ -104,6 +136,20 @@ struct DayStepAnimationTests {
             }
             try await Task.sleep(for: sampleInterval)
         }
+
+        let events = probe.pressedLookEvents[direction] ?? []
+        let pressedEvent = events.first(where: \.isPressed)
+        #expect(pressedEvent != nil)
+        guard let pressed = pressedEvent else { return }
+        let releasedEvent = events.first {
+            !$0.isPressed && $0.instant > pressed.instant
+        }
+        #expect(releasedEvent != nil)
+        guard let released = releasedEvent else { return }
+        #expect(
+            pressed.instant.duration(to: released.instant) >= DayStepButtonStyle.minimumPressedDuration,
+            "Quick tap on \(direction) held for less than 90 ms entering \(target)"
+        )
     }
 
     private static func matches(_ lhs: CGRect, _ rhs: CGRect) -> Bool {

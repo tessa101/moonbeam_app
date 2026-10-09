@@ -5,6 +5,18 @@
 
 ---
 
+### 2026-10-09 · ‹ › tap response: stronger press + soft haptic, arrows only (COMPASS-1.1.md §9.20)
+- **Decision (Tessa):** the day arrows get a clearly visible press (scale 0.88, lighter fill, held ≥ 90 ms so a quick
+  tap still shows it) **and** a soft haptic on each step. Build as 5.10c, after 5.10b was confirmed on device.
+- **Why:** the shared `PressFeedback` (0.96 / 0.8) is ~1 pt on a 32 pt circle and gone before the eye sees it on a
+  quick tap.
+- **Boundaries:** `DayStepButtonStyle` only; shared styles unchanged. Haptic only from the arrow's own tap, quieter
+  than the landing cue and unlike the compass lock tap. Nothing may move the arrows' frames (§9.19).
+- **Considered:** stronger press only (no haptic); highlight ring with no scaling (no layout motion at all); changing
+  `PressFeedback` for every button (a bigger change than asked).
+- **As built (5.10c):** 0.88 scale, 10% white overlay, 90 ms minimum, 0.15 s spring release, and soft 0.5 impact.
+  Extended frame sampling covers press/release without moving either 44 pt frame. Report: `.agent-reports/5.10c/`.
+
 ### 2026-10-09 · Day arrows still float after 5.10: it depends on the date; 5.10b reproduces first (COMPASS-1.1.md §9.19)
 - **Finding (Tessa's device video of 5.10, analysed frame by frame):** the tapped ‹ / › still jumps ~40 pt above the
   card for ~0.4 s. All 13 floats landed on Mon Oct 19, Mon Oct 26, Wed Oct 28 or Wed Nov 11; every arrival on those
