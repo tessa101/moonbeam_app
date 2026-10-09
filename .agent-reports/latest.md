@@ -1,3 +1,24 @@
+# Build 5.10a.5: place change polish
+
+Updated October 9, 2026.
+
+- **Done:** built and tested the uncommitted 5.10a.5 changes.
+  - The replaced card vanishes at once.
+  - The city line hides at once and reveals once, with no text cross-fade.
+  - The card's frame stays and only its content fades and rises into the skeleton.
+- **Build:** compiled first time; no code or test fixes needed.
+- **Tests:** each suite ran separately with 1-minute limits: `ContentLoadInTests` 6/6, `PlaceSkeletonTests` 11/11, `PlaceChangeLayoutTests` 1/1, no hang. Full suite **990/990**.
+- **Hang:** no stuck processes were found.
+- **Flags:**
+  - No test covers the new view behaviour.
+  - A stale "5.10a.4" comment in `AhaFlight.swift`.
+  - The DECISIONS.md entry sits at the bottom of the file.
+  - No way into search after a failed My location.
+- **Next:** Tessa's device check.
+- Findings: `.agent-reports/5.10a.5/findings.md`.
+
+---
+
 # Build 5.10a.4: slower, ordered place-change landing
 
 Updated October 9, 2026.

@@ -20,10 +20,9 @@ struct PlaceCardRegion: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @AccessibilityFocusState private var isCardFocused: Bool
 
-    /// Fade plus the usual 8 pt rise (an offset: nothing else moves).
-    private var riseTransition: AnyTransition {
-        .opacity.combined(with: .offset(y: ContentLoadIn.rise))
-    }
+    /// True from when a skeleton shows until the next replacement starts,
+    /// so a card that lands over one rises its content in.
+    @State private var landsOverSkeleton = false
 
     /// 5.10a.4: the card lands after the city line has begun, slowly.
     /// Reduce Motion keeps its existing instant swap.
@@ -40,8 +39,10 @@ struct PlaceCardRegion: View {
                         layoutTable: layoutTable,
                         placeholder: placeholder
                     )
-                    // Appears at once; leaves slowly, in step with the card.
+                    // Appears at once; leaves slowly, over the card's own
+                    // frame, while the content rises in beneath it.
                     .transition(.asymmetric(insertion: .opacity, removal: landingTransition(.opacity)))
+                    .zIndex(1)
                 } else if placeholder == .failed {
                     // No card to size against (nothing was showing): the
                     // message on its own.
@@ -50,8 +51,12 @@ struct PlaceCardRegion: View {
                 }
             } else if let moonTable = viewModel.moonTable {
                 MoonCard(viewModel: viewModel, table: moonTable)
+                    .environment(\.risesCardContent, landsOverSkeleton)
                     .accessibilityFocused($isCardFocused)
-                    .transition(landingTransition(riseTransition))
+                    // Neither way fades the frame: the replaced place's card
+                    // is gone the moment the change starts (Tessa,
+                    // 2026-10-09), and the new one's frame is the skeleton's.
+                    .transition(.identity)
             } else if let layoutTable = viewModel.skeletonLayoutTable {
                 // §12.9: from the first frame the old card leaves until the
                 // skeleton or the new card is in, an invisible slot with the
@@ -66,7 +71,11 @@ struct PlaceCardRegion: View {
         .accessibilityElement(children: .contain)
         // §12.3: VoiceOver focus moves from the skeleton to the card when it
         // lands.
+        .onChange(of: viewModel.isReplacingPlace) { _, isReplacing in
+            if isReplacing { landsOverSkeleton = false }
+        }
         .onChange(of: viewModel.cardPlaceholder) { previous, current in
+            if current != nil { landsOverSkeleton = true }
             if previous != nil, current == nil, viewModel.moonTable != nil {
                 isCardFocused = true
             }

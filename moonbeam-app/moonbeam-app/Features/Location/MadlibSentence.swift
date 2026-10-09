@@ -31,6 +31,9 @@ struct MadlibSentence: View {
     /// the lines get: the inputs to the shared scale.
     @State private var naturalWidths: [Int: CGFloat] = [:]
     @State private var availableWidth: CGFloat = 0
+    /// False from the start of detection until the city line has been let
+    /// back in (a beat after the city is known).
+    @State private var placeRevealed = true
 
     // MARK: - Constants
 
@@ -81,12 +84,12 @@ struct MadlibSentence: View {
             ForEach(sentence.lines.indices, id: \.self) { index in
                 let text = Self.text(for: sentence.lines[index])
                 SentenceLine(text: text, scale: scale)
-                    .opacity(index == Self.placeLineIndex && sentence.placeIsPending ? 0 : 1)
+                    .opacity(hidesLine(index, pending: sentence.placeIsPending) ? 0 : 1)
                     // The city line also rises into place (an offset, so
                     // nothing moves); Reduce Motion: fade only.
-                    .offset(y: index == Self.placeLineIndex && sentence.placeIsPending && !reduceMotion
+                    .offset(y: hidesLine(index, pending: sentence.placeIsPending) && !reduceMotion
                         ? ContentLoadIn.rise : 0)
-                    .allowsHitTesting(!(index == Self.placeLineIndex && sentence.placeIsPending))
+                    .allowsHitTesting(!hidesLine(index, pending: sentence.placeIsPending))
                     .background(alignment: .leading) {
                         // Measures the line at full size on one line. It
                         // doesn't depend on `scale`, so there's no loop.
@@ -106,7 +109,17 @@ struct MadlibSentence: View {
             Self.placeTokenFade,
             value: sentence.tokens.first { $0.kind == .place }?.text
         )
-        .animation(Self.placeRevealFade, value: sentence.placeIsPending)
+        // 5.10a.4: the line goes the moment detection starts (the 0.15 s
+        // token fade above) and shows once, after the new city's text is
+        // already in, so the old name never cross-fades into the new one.
+        .onChange(of: sentence.placeIsPending) { _, isPending in
+            if isPending {
+                placeRevealed = false
+            } else {
+                withAnimation(Self.placeRevealFade) { placeRevealed = true }
+            }
+        }
+        .onAppear { placeRevealed = !sentence.placeIsPending }
         .foregroundStyle(Theme.Colors.textPrimary)
         .tint(Theme.Colors.accent)
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -135,6 +148,13 @@ struct MadlibSentence: View {
                 }
             }
         }
+    }
+
+    // MARK: - Place line
+
+    /// The place line stays out while detecting, and until its reveal runs.
+    private func hidesLine(_ index: Int, pending: Bool) -> Bool {
+        index == Self.placeLineIndex && (pending || !placeRevealed)
     }
 
     // MARK: - Text

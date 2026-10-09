@@ -568,6 +568,12 @@ sharp). Report: `.agent-reports/5.9.3/findings.md`.
 - **5.10a.4 (Tessa, 2026-10-09): slower, ordered landing.** City line first (0.8 s fade, 8 pt rise), then the card
   at +0.25 s, then the compass at +0.6 s, each 0.7 s ease-out with the 8 pt rise (`ContentLoadIn.replay*`). The
   skeleton leaves on the card's clock. Reduce Motion: no rise, card swap instant as before. Launch load-in unchanged.
+- **5.10a.5 (Tessa, 2026-10-09, from device video 2):** (1) The replaced place's card is gone the instant the change
+  starts: no fade-out of old data (it used the new card's slow fade by mistake). (2) The city line hides at once
+  (0.15 s) and is let in once, after the new name is already in place, so "a city" / the old name never cross-fade
+  into it. (3) The card's frame is the skeleton's and never fades or moves; only its content fades and rises 8 pt
+  into it (same 0.25 s delay, 0.7 s) while the skeleton's blocks fade out above it. The fast path (no skeleton) still
+  replays the whole card block. Reduce Motion: instant swap.
 - **Sentence during My location (5.10a.3):** the city line ("in 📍 City, ST?") is hidden, not a stand-in like "your
   location", and fades in (0.5 s ease-out, opacity only) when the city is known. It keeps its slot, so nothing
   moves; VoiceOver reads the sentence without the place until then. Supersedes §12.2 step 2's "your location".

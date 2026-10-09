@@ -1375,3 +1375,6 @@ The screen, the view model and the Location Off dialog are still to come.
 
 ## 2026-10-09: Slower place-change landing, 5.10a.4 (Tessa)
 - Device video still felt jarring. Place changes now land in order and slower: city line (0.8 s, rises 8 pt), card (+0.25 s), compass (+0.6 s), 0.7 s each. Launch load-in untouched. Spec: LOADER.md §12.3.
+
+## 2026-10-09: Place change polish, 5.10a.5 (Tessa)
+- Device video 2: old city's card lingered and faded out slowly; city line cross-faded old/new text. Now the old card vanishes at once, the city line hides at once and reveals once, and the card's content rises into the skeleton's frame. Spec: LOADER.md §12.3.
