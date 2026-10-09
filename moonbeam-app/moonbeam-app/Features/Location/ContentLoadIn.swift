@@ -74,11 +74,11 @@ struct ContentLoadIn: ViewModifier {
     /// the city line (its own reveal, `MadlibSentence.placeRevealFade`),
     /// then the card, then the compass, each a slow fade with the usual
     /// 8 pt rise. Slower than the launch load-in on purpose.
-    static let replayDuration: TimeInterval = 0.7
+    static let replayDuration: TimeInterval = 0.4
     /// The card starts this long after the city line begins to show.
-    static let replayCardDelay: TimeInterval = 0.25
+    static let replayCardDelay: TimeInterval = 0.1
     /// The compass starts this long after the city line begins to show.
-    static let replayCompassDelay: TimeInterval = 0.6
+    static let replayCompassDelay: TimeInterval = 0.25
 
     /// A replay starts at the card, after the city line has begun.
     static func replayDelay(for block: Block) -> TimeInterval {

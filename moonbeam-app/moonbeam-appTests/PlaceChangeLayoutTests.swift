@@ -38,13 +38,16 @@ struct PlaceChangeLayoutTests {
         timeZone: zone
     )
 
-    /// The device video's case: past the 400 ms threshold, inside the 350 ms
-    /// minimum.
+    /// The device video's slow fix. Since 5.10a.7 the skeleton shows at once
+    /// and holds at least 350 ms, so this fix lands after the minimum.
     private static let fixDelay = Duration.milliseconds(700)
     private static let sampleInterval = Duration.milliseconds(16)
     /// ~1.3 s: past the fix, the minimum and the card's load-in.
     private static let sampleCount = 80
     private static let frameTolerance: CGFloat = 0.01
+    /// "At once", measured with sampling overhead: well under the 400 ms
+    /// wait 5.10a.7 removed.
+    private static let immediateSkeletonBound = Duration.milliseconds(200)
     /// A sentence line of text has thousands of light pixels; a faded-out
     /// one has none.
     private static let minimumInkPixels = 200
@@ -94,6 +97,7 @@ struct PlaceChangeLayoutTests {
 
         var skeletonShown: ContinuousClock.Instant?
         var skeletonGone: ContinuousClock.Instant?
+        var firstSkeletonSample: Int?
         for sample in 0..<Self.sampleCount {
             let sentence = try #require(probe.sentenceFrame, "sentence absent at sample \(sample)")
             #expect(
@@ -105,7 +109,10 @@ struct PlaceChangeLayoutTests {
             #expect(Self.matches(below, restingBelow), "content below moved at sample \(sample): \(below) vs \(restingBelow)")
 
             let showsSkeleton = viewModel.cardPlaceholder == .finding
-            if showsSkeleton, skeletonShown == nil { skeletonShown = .now }
+            if showsSkeleton, skeletonShown == nil {
+                skeletonShown = .now
+                firstSkeletonSample = sample
+            }
             if !showsSkeleton, skeletonShown != nil, skeletonGone == nil { skeletonGone = .now }
             try await Task.sleep(for: Self.sampleInterval)
         }
@@ -119,7 +126,13 @@ struct PlaceChangeLayoutTests {
         #expect(viewModel.place == Self.detectedIrvine)
         let shown = try #require(skeletonShown, "the skeleton never showed for a 700 ms fix")
         let gone = try #require(skeletonGone)
-        #expect(start.duration(to: shown) >= LocationViewModel.placeSkeletonThreshold)
+        // 5.10a.7: no 400 ms wait. The skeleton is in by the first sample
+        // after the replacement begins (sample 0 may land before the task
+        // has run, so allow sample 1).
+        #expect((firstSkeletonSample ?? .max) <= 1, "skeleton first seen at sample \(firstSkeletonSample ?? -1)")
+        // Wall clock includes each sample's screen capture (~30 ms), so the
+        // bound is loose; it still fails if a 400 ms wait comes back.
+        #expect(start.duration(to: shown) < Self.immediateSkeletonBound)
         // Sampled, so allow one interval of slack on the minimum.
         #expect(shown.duration(to: gone) >= LocationViewModel.placeSkeletonMinimum - Self.sampleInterval)
     }

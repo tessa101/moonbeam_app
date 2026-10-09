@@ -8,8 +8,9 @@ import Testing
 @testable import moonbeam_app
 
 /// LOADER.md §12.2–12.3 and §12.5: the card skeleton during an explicit
-/// "Use my location" replacement. The 400 ms threshold is injected, so each
-/// test decides whether it has passed.
+/// "Use my location" replacement. Since 5.10a.7 the skeleton shows at once
+/// and holds a 350 ms minimum; that minimum is injected, so each test
+/// decides whether it has passed.
 @Suite("Place change card skeleton", .timeLimit(.minutes(1)))
 @MainActor
 struct PlaceSkeletonTests {
@@ -48,11 +49,14 @@ struct PlaceSkeletonTests {
         return calendar.date(from: components) ?? Date(timeIntervalSince1970: 0)
     }()
 
-    /// The threshold passes at once.
-    private static let thresholdPassed: @Sendable (Duration) async throws -> Void = { _ in }
+    /// The skeleton's minimum passes at once, so a landed fix shows its card
+    /// straight away.
+    private static let minimumPassed: @Sendable (Duration) async throws -> Void = { _ in }
 
-    /// The threshold never passes within a test; a landed fix cancels it.
-    private static let thresholdPending: @Sendable (Duration) async throws -> Void = { _ in
+    /// The minimum never passes within a test. Only for tests whose fix
+    /// fails (a failure cancels it) or that never land one: a landed fix
+    /// would wait it out.
+    private static let minimumPending: @Sendable (Duration) async throws -> Void = { _ in
         try await Task.sleep(for: .seconds(30))
     }
 
@@ -93,19 +97,20 @@ struct PlaceSkeletonTests {
 
     // MARK: - Tests
 
-    @Test("§12.2 under 400 ms: no skeleton, straight to the card")
-    func fastFixShowsNoSkeleton() async {
+    @Test("5.10a.7 the skeleton shows the moment the replacement begins, before any fix")
+    func skeletonShowsAtOnce() async {
         let location = FakeLocationService(
             authorizationState: .authorized,
             placeResult: .success(Self.detectedLosAngeles)
         )
-        let viewModel = await Self.makeReadyViewModel(location: location, placeChangeSleep: Self.thresholdPending)
+        let viewModel = await Self.makeReadyViewModel(location: location, placeChangeSleep: Self.minimumPassed)
         location.holdsFixes = true
 
         let locate = Task { await viewModel.useMyLocation() }
         await Self.waitUntil { location.heldFixCount > 0 }
+        // No 400 ms wait: the slot is the skeleton while the fix is out.
         #expect(viewModel.moonTable == nil)
-        #expect(viewModel.cardPlaceholder == nil)
+        #expect(viewModel.cardPlaceholder == .finding)
 
         location.releaseFixes()
         await locate.value
@@ -116,13 +121,13 @@ struct PlaceSkeletonTests {
         #expect(viewModel.place == Self.detectedLosAngeles)
     }
 
-    @Test("§12.2 over 400 ms: skeleton sized by the old card, then the new card")
+    @Test("§12.2 skeleton sized by the old card, then the new card")
     func slowFixShowsSkeletonThenCard() async {
         let location = FakeLocationService(
             authorizationState: .authorized,
             placeResult: .success(Self.detectedLosAngeles)
         )
-        let viewModel = await Self.makeReadyViewModel(location: location, placeChangeSleep: Self.thresholdPassed)
+        let viewModel = await Self.makeReadyViewModel(location: location, placeChangeSleep: Self.minimumPassed)
         let generation = viewModel.loadInGeneration
         location.holdsFixes = true
 
@@ -148,7 +153,7 @@ struct PlaceSkeletonTests {
     @Test("§12.2 step 5: a failed fix shows the failure in the skeleton; the old place stays gone")
     func failedFixShowsFailureInSkeleton() async {
         let location = FakeLocationService(authorizationState: .authorized)
-        let viewModel = await Self.makeReadyViewModel(location: location, placeChangeSleep: Self.thresholdPending)
+        let viewModel = await Self.makeReadyViewModel(location: location, placeChangeSleep: Self.minimumPending)
 
         await viewModel.useMyLocation()
 
@@ -161,7 +166,7 @@ struct PlaceSkeletonTests {
     @Test("§12.2 step 5: Location Off ends the replacement as a failure, not an endless Finding")
     func blockedReplacementShowsFailure() async {
         let location = FakeLocationService(authorizationState: .denied)
-        let viewModel = await Self.makeReadyViewModel(location: location, placeChangeSleep: Self.thresholdPassed)
+        let viewModel = await Self.makeReadyViewModel(location: location, placeChangeSleep: Self.minimumPassed)
 
         await viewModel.useMyLocation()
 
@@ -173,7 +178,7 @@ struct PlaceSkeletonTests {
     @Test("A retry after a failure shows Finding at once, with no empty slot")
     func retryAfterFailureShowsFindingImmediately() async {
         let location = FakeLocationService(authorizationState: .authorized)
-        let viewModel = await Self.makeReadyViewModel(location: location, placeChangeSleep: Self.thresholdPending)
+        let viewModel = await Self.makeReadyViewModel(location: location, placeChangeSleep: Self.minimumPending)
         await viewModel.useMyLocation()
         #expect(viewModel.cardPlaceholder == .failed)
 
@@ -198,7 +203,9 @@ struct PlaceSkeletonTests {
             authorizationState: .authorized,
             placeResult: .success(Self.detectedLosAngeles)
         )
-        let viewModel = await Self.makeReadyViewModel(location: location, placeChangeSleep: Self.thresholdPending)
+        // The fix lands, so the minimum must pass (`minimumPending` would
+        // hold the card back for its whole sleep).
+        let viewModel = await Self.makeReadyViewModel(location: location, placeChangeSleep: Self.minimumPassed)
         // A week on from the reference day (Wed, Sep 23).
         viewModel.select(day: DateComponents(year: 2026, month: 9, day: 30))
         let selectedDate = Self.dateTokenText(viewModel)
@@ -220,7 +227,7 @@ struct PlaceSkeletonTests {
     @Test("§12.9 the date is kept after a failure too, while the place line is hidden")
     func failedReplacementKeepsSelectedDate() async {
         let location = FakeLocationService(authorizationState: .authorized)
-        let viewModel = await Self.makeReadyViewModel(location: location, placeChangeSleep: Self.thresholdPending)
+        let viewModel = await Self.makeReadyViewModel(location: location, placeChangeSleep: Self.minimumPending)
         viewModel.select(day: DateComponents(year: 2026, month: 9, day: 30))
         let selectedDate = Self.dateTokenText(viewModel)
 
@@ -258,35 +265,25 @@ struct PlaceSkeletonTests {
         #expect(LocationViewModel.placeSkeletonMinimum == .milliseconds(350))
     }
 
-    @Test("§12.9 the card replays when it lands in an empty slot, not when a skeleton held it")
+    @Test("§12.9 Use my location never replays the card block (a skeleton always holds the slot); a pick does")
     func cardReplayOnlyWithoutSkeleton() async {
         let location = FakeLocationService(
             authorizationState: .authorized,
             placeResult: .success(Self.detectedLosAngeles)
         )
-        let fast = await Self.makeReadyViewModel(location: location, placeChangeSleep: Self.thresholdPending)
-        let fastCard = fast.cardLoadInGeneration
-        await fast.useMyLocation()
-        #expect(fast.cardLoadInGeneration == fastCard + 1)
+        let viewModel = await Self.makeReadyViewModel(location: location, placeChangeSleep: Self.minimumPassed)
+        let card = viewModel.cardLoadInGeneration
 
-        let slowLocation = FakeLocationService(
-            authorizationState: .authorized,
-            placeResult: .success(Self.detectedLosAngeles)
-        )
-        let slow = await Self.makeReadyViewModel(location: slowLocation, placeChangeSleep: Self.thresholdPassed)
-        let slowCard = slow.cardLoadInGeneration
-        slowLocation.holdsFixes = true
-        let locate = Task { await slow.useMyLocation() }
-        await Self.waitUntil { slowLocation.heldFixCount > 0 && slow.cardPlaceholder == .finding }
-        slowLocation.releaseFixes()
-        await locate.value
-        // The skeleton cross-fades into the card; the card block doesn't
-        // blank and load in again.
-        #expect(slow.cardLoadInGeneration == slowCard)
+        // Even a fix that lands at once: since 5.10a.7 the skeleton is in
+        // from the first frame, so the card lands over it instead of
+        // blanking the block and loading it in again.
+        await viewModel.useMyLocation()
+        #expect(viewModel.place == Self.detectedLosAngeles)
+        #expect(viewModel.cardLoadInGeneration == card)
 
-        // A pick replays the card as before.
-        slow.select(Self.sydney)
-        #expect(slow.cardLoadInGeneration == slowCard + 1)
+        // A pick has no skeleton and replays the card as before.
+        viewModel.select(Self.sydney)
+        #expect(viewModel.cardLoadInGeneration == card + 1)
     }
 
     @Test("§12.9 a place change replays the card and compass, never the sentence")
@@ -305,7 +302,7 @@ struct PlaceSkeletonTests {
             authorizationState: .authorized,
             placeResult: .success(Self.detectedLosAngeles)
         )
-        let viewModel = await Self.makeReadyViewModel(location: location, placeChangeSleep: Self.thresholdPassed)
+        let viewModel = await Self.makeReadyViewModel(location: location, placeChangeSleep: Self.minimumPassed)
         location.holdsFixes = true
 
         let locate = Task { await viewModel.useMyLocation() }

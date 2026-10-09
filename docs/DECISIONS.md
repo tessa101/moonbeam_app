@@ -1378,3 +1378,9 @@ The screen, the view model and the Location Off dialog are still to come.
 
 ## 2026-10-09: Place change polish, 5.10a.5 (Tessa)
 - Device video 2: old city's card lingered and faded out slowly; city line cross-faded old/new text. Now the old card vanishes at once, the city line hides at once and reveals once, and the card's content rises into the skeleton's frame. Spec: LOADER.md §12.3.
+
+## 2026-10-09: Place change timing and card entrance, 5.10a.6 (Tessa)
+- Video 3: the old-card bug is fixed, but My location loads in too slowly and the content-only fade on the card looks bad. City line: cross-fade only (0.3 s, no movement). Card and compass: whole-block fade + 8 pt rise, 0.4 s, card +0.1 s, compass +0.25 s. Spec: LOADER.md §12.3.
+
+## 2026-10-09: My location starts clean, 5.10a.7 (Tessa)
+- Video 4: the old city's card and city lingered after the search drawer closed, then a blank gap before the skeleton. Now the old card and city line go in the same frame as the replacement starts, and the skeleton shows in that frame (no 400 ms threshold; 350 ms minimum stays). Spec: LOADER.md §12.2–12.3, §12.9.

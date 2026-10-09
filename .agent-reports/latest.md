@@ -1,3 +1,28 @@
+# Builds 5.10a.6 + 5.10a.7: cross-fade city line, instant old card, immediate skeleton
+
+Updated October 9, 2026.
+
+- **Done:** built and tested the uncommitted 5.10a.6 + 5.10a.7 changes.
+  - City line: cross-fade only, with shorter timings (0.4 s; card +0.1 s; compass +0.25 s).
+  - The whole card fades and rises in.
+  - The replaced card and city line go in one frame (`.transaction(value:)`).
+  - The skeleton shows at once and holds 350 ms; `placeSkeletonThreshold` is removed.
+- **Tests:** updated to the new behaviour.
+  - Skeleton at once; Use my location never replays the card block.
+  - The minimum stub split, so no landed fix waits on a 30 s sleep.
+  - `PlaceChangeLayoutTests:122` now checks the skeleton is in by the first sample.
+  - `ContentLoadInTests` pins the new values.
+- **Runs:** each suite on its own with 1-minute limits: 6/6, 11/11, 1/1. Full suite **990/990**. No hangs.
+- **Flags:**
+  - Three stale threshold comments in `LocationViewModel.swift`.
+  - `placeRevealFade` is a literal 0.3.
+  - The DECISIONS.md entries sit at the bottom of the file.
+  - No way into search after a failed My location.
+- **Next:** Tessa's device check.
+- Findings: `.agent-reports/5.10a.6-7/findings.md`.
+
+---
+
 # Build 5.10a.5: place change polish
 
 Updated October 9, 2026.

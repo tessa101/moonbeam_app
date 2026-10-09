@@ -574,6 +574,13 @@ sharp). Report: `.agent-reports/5.9.3/findings.md`.
   into it. (3) The card's frame is the skeleton's and never fades or moves; only its content fades and rises 8 pt
   into it (same 0.25 s delay, 0.7 s) while the skeleton's blocks fade out above it. The fast path (no skeleton) still
   replays the whole card block. Reduce Motion: instant swap.
+- **5.10a.6 (Tessa, 2026-10-09, video 3): faster, simpler.** Too slow, and the content-only fade looked bad. City line:
+  cross-fade only, 0.3 s, no movement. Card: the whole card fades and rises 8 pt, like the compass (0.4 s, +0.1 s);
+  compass +0.25 s, 0.4 s. Supersedes the 5.10a.4/5.10a.5 timings and the content-only rise above.
+- **5.10a.7 (Tessa, 2026-10-09, video 4): no leftovers.** The replaced card and city line are gone in the frame the
+  replacement starts (the old card used to linger ~0.5 s: a `.identity` removal keeps a view on screen for the whole
+  animation, here the sheet's dismissal). The skeleton shows in that same frame, with no 400 ms wait and no empty
+  slot, and holds at least 350 ms. Supersedes §12.2 step 4's "over 400 ms" and the threshold in §12.9.
 - **Sentence during My location (5.10a.3):** the city line ("in 📍 City, ST?") is hidden, not a stand-in like "your
   location", and fades in (0.5 s ease-out, opacity only) when the city is known. It keeps its slot, so nothing
   moves; VoiceOver reads the sentence without the place until then. Supersedes §12.2 step 2's "your location".

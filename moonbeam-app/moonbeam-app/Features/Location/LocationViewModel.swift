@@ -45,11 +45,9 @@ final class LocationViewModel {
     /// last-viewed place.
     static let defaultFetchTimeout = Duration.seconds(10)
 
-    /// LOADER.md §12.2: a replacement ready sooner shows no placeholder.
-    static let placeSkeletonThreshold = Duration.milliseconds(400)
-
-    /// LOADER.md §12.9 (proposed, tune on device): once shown, the skeleton
-    /// stays this long, so a fix just past the threshold doesn't flash it.
+    /// LOADER.md §12.9 (proposed, tune on device): the skeleton shows the
+    /// moment a replacement begins (5.10a.7; no 400 ms wait) and stays this
+    /// long, so a quick fix doesn't flash it.
     static let placeSkeletonMinimum = Duration.milliseconds(350)
 
     static let searchPlaceholder = "Search for a city"
@@ -1100,7 +1098,11 @@ final class LocationViewModel {
         isReplacingPlace = true
         skeletonLayoutTable = moonTable ?? skeletonLayoutTable
         replacedTimeZone = place?.timeZone ?? replacedTimeZone
-        showsPlaceSkeleton = false
+        // 5.10a.7 (Tessa, 2026-10-09): the skeleton is there from the same
+        // frame the old card goes, with no empty gap before it (it used to
+        // wait 400 ms). A fix that lands inside the minimum waits it out
+        // (`performLocate`), so it never flashes.
+        showsPlaceSkeleton = true
         place = nil
         moonTable = nil
         locationFailed = false
@@ -1111,17 +1113,8 @@ final class LocationViewModel {
 
         let placeChangeSleep = placeChangeSleep
         placeSkeletonTask?.cancel()
-        placeSkeletonTask = Task { [weak self] in
-            do {
-                try await placeChangeSleep(Self.placeSkeletonThreshold)
-                guard let self, self.isReplacingPlace, !self.locationFailed else { return }
-                self.showsPlaceSkeleton = true
-                // The task stays running through the minimum; a fix that
-                // lands meanwhile waits on it (`performLocate`).
-                try await placeChangeSleep(Self.placeSkeletonMinimum)
-            } catch {
-                // A fast result cancels the threshold; no placeholder flashes.
-            }
+        placeSkeletonTask = Task {
+            try? await placeChangeSleep(Self.placeSkeletonMinimum)
         }
     }
 

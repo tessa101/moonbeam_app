@@ -47,13 +47,13 @@ struct ContentLoadInTests {
         #expect(abs(last - 0.6) < Self.tolerance)
     }
 
-    @Test("5.10a.4 place-change landing: city line, then card, then compass, slower than launch")
+    @Test("5.10a.6 place-change landing: city line, then card, then compass, a little slower than launch")
     func placeChangeLanding() {
-        #expect(ContentLoadIn.replayDuration == 0.7)
+        #expect(ContentLoadIn.replayDuration == 0.4)
         #expect(ContentLoadIn.replayDelay(for: .card) == ContentLoadIn.replayCardDelay)
         #expect(ContentLoadIn.replayDelay(for: .compass) == ContentLoadIn.replayCompassDelay)
-        #expect(ContentLoadIn.replayCardDelay == 0.25)
-        #expect(ContentLoadIn.replayCompassDelay == 0.6)
+        #expect(ContentLoadIn.replayCardDelay == 0.1)
+        #expect(ContentLoadIn.replayCompassDelay == 0.25)
         // The city line (delay 0) leads, then the card, then the compass.
         #expect(0 < ContentLoadIn.replayCardDelay)
         #expect(ContentLoadIn.replayCardDelay < ContentLoadIn.replayCompassDelay)

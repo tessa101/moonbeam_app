@@ -59,10 +59,6 @@ struct MoonCard: View {
 
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @Environment(\.hidesCardPhaseGlyph) private var hidesPhaseGlyph
-    @Environment(\.risesCardContent) private var risesContent
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    /// Only used when `risesContent`: false until the landing starts.
-    @State private var isContentIn = false
 
     // MARK: - Header constants (COMPASS-1.1.md §9.2)
 
@@ -139,18 +135,6 @@ struct MoonCard: View {
             header
             hairline
             riseSetArea
-        }
-        // Content only, before the frame is drawn: the card's surface and
-        // outline stay put while the content rises into them.
-        .opacity(risesContent && !isContentIn ? 0 : 1)
-        .offset(y: risesContent && !isContentIn && !reduceMotion ? ContentLoadIn.rise : 0)
-        .onAppear {
-            guard risesContent else { return }
-            if reduceMotion {
-                isContentIn = true
-            } else {
-                withAnimation(ContentLoadIn.cardLandingAnimation) { isContentIn = true }
-            }
         }
         .padding(.vertical, Theme.Metrics.cardPaddingVertical)
         .padding(.horizontal, Theme.Metrics.cardPaddingHorizontal)

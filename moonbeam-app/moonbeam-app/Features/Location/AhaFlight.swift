@@ -86,9 +86,6 @@ extension EnvironmentValues {
     /// The card's phase glyph is hidden while the loader moon flies into
     /// its slot, so there's one moon on screen.
     @Entry var hidesCardPhaseGlyph = false
-    /// 5.10a.4: the card landing over its skeleton. The card's frame is
-    /// already there (the skeleton's), so only its content fades and rises.
-    @Entry var risesCardContent = false
 
     /// The screen arrives under the flying "Aha" moon: its blocks fade in
     /// together, after a short delay, with no rise (§10.4).
