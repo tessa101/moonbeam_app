@@ -143,6 +143,33 @@ struct MoonCardHeightTests {
         #expect(noRise == normal)
     }
 
+    /// COMPASS-1.1.md §9.16 item 2: exercise the real card layout across the
+    /// full 30-days-either-side stepping range, including Oct 3 and Oct 25 →
+    /// 26. A fixed card height keeps the header buttons and everything below
+    /// the card on the same y coordinates; each button's hit frame is a fixed
+    /// 44 points in `DayStepButtonStyle`.
+    @Test("Sixty-one stepped days keep the rendered card layout fixed", arguments: [
+        iPhone17CardWidth,
+        se3CardWidth,
+    ])
+    func dayStepsKeepLayoutFixed(width: CGFloat) throws {
+        let viewModel = Self.realEngineViewModel(day: 3)
+        for _ in 0..<30 {
+            viewModel.previousDay()
+        }
+
+        var heights: [CGFloat] = []
+        for offset in -30...30 {
+            heights.append(try Self.render(viewModel, width: width, size: .large))
+            if offset < 30 {
+                viewModel.nextDay()
+            }
+        }
+
+        let expected = try #require(heights.first)
+        #expect(heights.allSatisfy { abs($0 - expected) < 0.01 })
+    }
+
     @Test("Sat, Oct 3 really has no moonrise and the moon up; Fri, Oct 2 has both")
     func realEngineFixture() throws {
         let noRise = try #require(Self.realEngineViewModel(day: 3).moonTable)

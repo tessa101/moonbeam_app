@@ -38,9 +38,15 @@ struct PressFeedback: ViewModifier {
 
     func body(content: Content) -> some View {
         content
-            .scaleEffect(Self.scale(isPressed: isPressed, reduceMotion: reduceMotion))
-            .opacity(Self.opacity(isPressed: isPressed))
-            .animation(Self.animation, value: isPressed)
+            // Scope the spring to the two pressed-state effects. The older
+            // value-based modifier also animated layout changes delivered in
+            // the release transaction; a day-step tap could therefore move
+            // the tapped chevron from a stale header position.
+            .animation(Self.animation) { content in
+                content
+                    .scaleEffect(Self.scale(isPressed: isPressed, reduceMotion: reduceMotion))
+                    .opacity(Self.opacity(isPressed: isPressed))
+            }
     }
 }
 

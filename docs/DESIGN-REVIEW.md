@@ -42,7 +42,7 @@ _Started: 2026-09-26_
 - [ ] Compass direction format ("105° ESE"): degrees, letters, or both?
 
 ## Date control and calendar sheet (Step 3, built plain; DATE.md §9)
-- [ ] **Bug, parked (Tessa, 2026-10-03): the tapped ‹ / › floats out of the card.** On some day steps the tapped arrow jumps ~40 pt up, above the card's top edge, then slides back over ~0.3–0.5 s; the other arrow and the card stay put (› Oct 25 → 26, ‹ to Oct 19; seen on the 5.4.6c build). Frames: `design/bugs/arrows-float-frames.png`. Full write-up, suspects and the day-stepping test: COMPASS-1.1.md §9.16 item 2. **Not in 5.4.8; come back to it later.**
+- [x] **Bug, parked (Tessa, 2026-10-03): the tapped ‹ / › floats out of the card.** On some day steps the tapped arrow jumps ~40 pt up, above the card's top edge, then slides back over ~0.3–0.5 s; the other arrow and the card stay put (› Oct 25 → 26, ‹ to Oct 19; seen on the 5.4.6c build). Frames: `design/bugs/arrows-float-frames.png`. Full write-up, suspects and the day-stepping test: COMPASS-1.1.md §9.16 item 2. **Fixed in 5.10 (2026-10-08):** the press spring was leaking into the date-change layout transaction; it is now scoped to scale/opacity, with the 61-day rendered layout test from the spec.
 - [ ] **Copy that assumes "tonight"** when another date is picked: the screen prompt "Where are you watching the moon tonight?" and the midnight note (e.g. "Oct 3 · at midnight")
 - [ ] Getting back to today takes two taps (open calendar → Today). Revisit with the relative-day chips idea.
 - [ ] **Arrow styling and hit areas; the field's chevron**
@@ -51,6 +51,18 @@ _Started: 2026-09-26_
 - [ ] **App left open across the place's midnight:** the day only moves on the next foreground (Decision 1). Revisit if it's noticed
 - [ ] **Custom look for ‹ / › and the calendar sheet**, or keep the system style? (Tessa, 2026-09-26)
 - [ ] **Relative-day chips always visible** (Today, Tomorrow, …), with the selected one highlighted, instead of a Today chip that only appears off today (Tessa, 2026-09-26)
+
+## Build 8 testing notes (Tessa, 2026-10-07/08) → where each went
+- [ ] **Day arrows float** when stepping days → 5.10 (Date control item above)
+- [ ] **Landing haptic missing** when the moon locks into the card → 5.10 check (built only on the recovery flight, LOADER.md §11.2.7)
+- [ ] **Place change looks broken** (old city flashes back, "Finding your location…" pushes the card, everything swaps in one frame, compass letters fly through the centre; videos 2026-10-08) → 5.10a, LOADER.md §12: one replayable load-in, card skeleton (placeholder A), compass rotates as one piece with a ~10° settle
+- [ ] **Degree readout** closer to the tick; fades out as the lock target takes over → 5.10a.3 (LOADER.md §12.4.1)
+- [ ] **Now pulse** keeps going until the user locks on Now → 5.10a.3 (LOADER.md §12.4.1)
+- [ ] **Moon logic: "not up, check back"; already set for today; morning rise column shows tonight's rise; degrees above the horizon** → 5.11, MOON-STATE.md
+- [ ] **Friendly "ChatGPT digest" voice** → 5.11.3 edge-case line now (MOON-STATE.md §4); always-on answer line under the sentence after the design review (Brand / product below)
+- [ ] **Dynamic scaling for the Up now card** (now three columns on every today) → 5.5
+- [ ] **Location off: show a dimmed compass** that shows what you're missing, not just "Turn on location" → 5.12 (to spec)
+- [ ] **Version naming** 1.0 → 0.1 from build 9; design rounds named D1.x → DECISIONS.md 2026-10-08
 
 ## Compass (Step 4; COMPASS.md)
 - [ ] **Portrait lock.** App is locked to portrait for v1 so the compass stays readable and heading stays simple (COMPASS.md §1, decision F). Deliberate choice under WCAG 1.3.4 (orientation essential for a compass). Revisit landscape later; upgrade path is allowing rotation and matching the heading orientation to the device
@@ -92,6 +104,8 @@ _Started: 2026-09-26_
 ## Brand / product
 - [ ] Display name: **"Moon Signal"** for now (was "Moonbeam"; DECISIONS.md 2026-09-28). Lives in `AppInfo.name`; confirm final name with design partner
 - [ ] Primary persona (confirm with design partner)
+- [ ] **Voice A (Tessa, 2026-10-08, after the design review):** an always-on one-line answer under the sentence ("Look southwest, about 40° up. Hard to miss."), reusing 5.11.3's `MoonVoice` table. Tone: facts first, one wry aside at most (the pre-app ChatGPT moon digest is the reference)
+- [ ] **Daily Moon Report** widget / morning push in the digest format (later)
 
 ## Later
 - [x] ~~Recently searched cities list (weather-app pattern; storage already shaped for it)~~ Built in Step 2.1 (SEARCH-RECENTS.md)

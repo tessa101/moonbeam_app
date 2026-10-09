@@ -5,6 +5,33 @@
 
 ---
 
+### 2026-10-08 · Version naming: 0.x until launch; build number counts; design rounds are "D"
+- **Decision (Tessa):** the app's version (`MARKETING_VERSION`) goes from **1.0 to 0.1 at build 9**: TestFlight shows
+  **0.1 (9)**. The build number (`CURRENT_PROJECT_VERSION`) keeps counting up and never resets.
+  - **0.1 (9, 10, …)**: current work (5.10–5.12), one build per upload
+  - **0.2**: the next milestone (e.g. after the design review)
+  - **1.0**: first App Store release; **1.0.1** etc. for fixes after launch
+- **Never put the build count in the version** (no 0.1.9): the build field already counts.
+- **Design rounds are named D1.1, D1.2 …** (was "Design 1.1", "Compass 1.1") so "1.x" only ever means an app version.
+  Existing file names (DESIGN-1.1.md, COMPASS-1.1.md, `design/1.x/`) stay as they are.
+- **Risk:** App Store Connect requires a version higher than the last one *approved for the App Store*; nothing has
+  been approved, so 0.1 should be accepted. If the build-9 upload is rejected for the version, go back to 1.0 and
+  keep the rule from there.
+- **Considered:** keep 1.0 for the pre-release train (common, no risk; rejected because 1.0 reads as finished).
+
+### 2026-10-08 · Moon state on the card: today always has a middle column; altitude; edge-case voice (MOON-STATE.md)
+- **Decision (Tessa):** on today the middle column always shows: **Up now** (`266° W · 23° up`), **Not up yet**
+  (`in 3h 20m`), or **Set for today** (`Back late tonight, 12:20 AM`). Other dates keep two columns.
+- **Altitude:** `23° up`, after the bearing.
+- **Voice:** B now, one line under the card only in confusing states (set for today, no rise / no set on the date,
+  full, new); A, an always-on answer line under the sentence, after the design review.
+- **Considered:** two columns + a note line (the state hides below the times); a banner sentence replacing the
+  columns (loses the rise/set layout); "23° above the horizon" (wraps at large text); Low / Mid / High bands.
+- **Wording (Tessa):** "Back late tonight, 12:20 AM" ("tomorrow night" read as the next evening).
+- **Date change (Tessa):** no load-in; the card's values cross-fade quickly in place, opacity only (LOADER.md §12.1).
+- **Full / new lines (proposed):** on the day of the exact phase only; voice copy stays draft.
+- **Morning rise (Tessa, option A):** while the moon is up today, the rise column shows this pass's rise (`Rose 10:06 PM` / `last night`), not tonight's calendar rise (MOON-STATE.md §1.1). Considered: B, calendar times without the solid line; C, leave it.
+
 ### 2026-10-08 · One main-screen load-in, replayed on a place change; card skeleton; compass turns as one piece (LOADER.md §12)
 - **Decision (Tessa, after device videos of build 8):** `ContentLoadIn` is the only main-screen entrance and replays
   whenever *where* changes (launch, any place change, a foreground return to a different detected place), keyed to a

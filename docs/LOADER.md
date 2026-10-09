@@ -537,7 +537,7 @@ sharp). Report: `.agent-reports/5.9.3/findings.md`.
 | Place change: search pick, recent, Use my location, Forget saved place → new place | **Yes, full** |
 | Back from the background, same place | No |
 | Back from the background, detected place changed | Yes |
-| Date change (arrows, calendar), midnight rollover | No: the card's values change in place (proposed, Tessa to confirm) |
+| Date change (arrows, calendar), midnight rollover | No load-in. The card's values **cross-fade quickly in place** (opacity only, ~150 ms ease-out, no rise or movement). Tessa, 2026-10-08 |
 | Same place re-detected / refreshed | No |
 
 - Reduce Motion: same order and stagger, opacity only (as now).
@@ -576,6 +576,15 @@ sharp). Report: `.agent-reports/5.9.3/findings.md`.
   change, so it reads as "finding" north.
 - Reduce Motion: fade in, already aligned; no settle.
 
+### 12.4.1 Compass polish from build 8 testing (Tessa, 2026-10-07), built with 12.4
+- **Degree readout:** sits closer to the top tick (gap to be tuned on the device; start at half the current gap).
+  While the dial is turning toward a rise / set / Now target and the lock is about to engage, the readout **fades
+  out** (150 ms) so the lock pill shows alone; it fades back in when the lock releases. No overlap of readout and
+  pill.
+- **Now pulse:** the Now (moon) target keeps pulsing **until the user locks onto Now**, not until the dial first moves.
+  Locking on rise or set doesn't stop it. Stops for the session once Now is locked (as now after the first lock).
+- Tests: readout opacity 0 while locked, 1 otherwise; pulse continues after a rise lock, stops after a Now lock.
+
 ### 12.5 Tests
 - `loadInGeneration` bumps on each place change, not on a date change, a same-place refresh or a foreground return.
 - A place change hides the old card before the new one shows (no frame with the old place after the change starts).
@@ -589,7 +598,7 @@ sharp). Report: `.agent-reports/5.9.3/findings.md`.
 - **5.10a.1** Replayable `ContentLoadIn` + `loadInGeneration`; old place out on change; sentence token switches
   straight away (§12.1, §12.2 1–3).
 - **5.10a.2** Card skeleton (§12.3, §12.2 4–5).
-- **5.10a.3** Compass entrance: wait for heading, rotate as one piece, settle (§12.4).
+- **5.10a.3** Compass entrance: wait for heading, rotate as one piece, settle (§12.4); readout fade + Now pulse (§12.4.1).
 
 ## Decision log
 
