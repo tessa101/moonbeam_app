@@ -17,4 +17,13 @@ _2026-10-08 · COMPASS-1.1.md §9.16 item 2; STATUS.md Roadmap item 2_
 
 ## Landing haptic
 
-Pending the second 5.10 item/commit.
+**Finding: no clear bug; no code change.** COMPASS.md §4.5 belongs to compass lock acquisition and calls for one firm tap (`.impact(weight: .heavy)`). The landing feedback is a separate cue specified by LOADER.md §11.2.7: soft, intensity 0.6, deliberately distinguishable from the compass lock.
+
+The implementation matches that split:
+
+- `LocationScreen` observes `LocationLoader.landingCount` with `.sensoryFeedback(.impact(flexibility: .soft, intensity: 0.6), trigger:)`.
+- `landingCount` advances only from `didLand()`, once after `flyAway()` has recorded a real flight.
+- A repeated landing callback is ignored, and a normal/fast launch without the recovery → Aha → flight path remains silent by design.
+- Reduce Motion waits for the 0.2-second cross-fade, then uses the same trigger.
+
+The focused existing test `Loader flow/landingHaptic()` covers one tap per flight, no tap without a flight, and no duplicate tap. The earlier full-flow tests also assert that fast launch and skipped loader paths leave `landingCount` at zero. The complete suite passes: **972/972**. A screenshot cannot prove a haptic; final physical-device installation is recorded below after both commits.

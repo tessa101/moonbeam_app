@@ -109,8 +109,8 @@ Rule: finish what changes the card before the AX reflow, or the reflow is done t
    (TESTFLIGHT-BUILD-8.md "What to Test") into App Store Connect.
 2. [ ] **5.10 quick fixes** (one commit each):
    - [x] ‹ › day arrows float above the card when stepping days (COMPASS-1.1.md §9.16 item 2; fixed 2026-10-08: pressed-state animation scoped to scale/opacity; 61-day rendered layout test)
-   - Landing haptic: confirm it fires on the recovery flight (LOADER.md §11.2.7); Tessa felt none, possibly the
-     non-recovery path, which has no haptic by design
+   - [x] Landing haptic audited (2026-10-08): implementation matches LOADER.md §11.2.7 and stays distinct from
+     COMPASS.md §4.5's firm lock tap; recovery flight only, as designed. No clear bug/code change.
 3. [ ] **5.10a place change + one load-in** (LOADER.md §12): 5.10a.1 replayable load-in, old place out → 5.10a.2 card
    skeleton → 5.10a.3 compass entrance + readout fade + Now pulse (§12.4, §12.4.1). Date changes cross-fade in place.
 4. [ ] **5.11 moon state** (MOON-STATE.md): 5.11.1 middle column on today (Up now / Not up yet / Set for today),
