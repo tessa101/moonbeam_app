@@ -600,6 +600,13 @@ sharp). Report: `.agent-reports/5.9.3/findings.md`.
 - **5.10a.2** Card skeleton (§12.3, §12.2 4–5).
 - **5.10a.3** Compass entrance: wait for heading, rotate as one piece, settle (§12.4); readout fade + Now pulse (§12.4.1).
 
+### 12.7 As built — 5.10a.1
+- `ContentLoadIn` now keys its existing stagger to `loadInGeneration`.
+- Search picks replace the old place before sheet dismissal. “Use my location” removes the old place and switches
+  the sentence token to “your location” immediately; a failed replacement never restores the old card.
+- Generation changes only when *where* changes, not for a date, same-city refresh, or unchanged foreground return.
+  Findings: `.agent-reports/5.10a/5.10a.1-findings.md`.
+
 ## Decision log
 
 - **2026-10-08 (Tessa, device videos of a place change):** the old place mustn't show after a change; placeholder A

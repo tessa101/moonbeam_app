@@ -153,7 +153,7 @@ struct LocationScreen: View {
                 // DESIGN-1.1.md §3.1: the sentence is the header; its tokens
                 // open the calendar and the search sheet.
                 MadlibSentence(viewModel: viewModel)
-                    .contentLoadIn(.sentence)
+                    .contentLoadIn(.sentence, generation: viewModel.loadInGeneration)
 
                 // Location status stays with the card, under the sentence
                 // whose place token it's about. The no-place screen and its
@@ -174,7 +174,7 @@ struct LocationScreen: View {
                     }
                 }
                 .padding(.top, Theme.Metrics.sentenceToCard)
-                .contentLoadIn(.card)
+                .contentLoadIn(.card, generation: viewModel.loadInGeneration)
 
                 // A stack that's always there, so the load-in runs once when
                 // the screen arrives, not again when the compass comes later.
@@ -199,7 +199,7 @@ struct LocationScreen: View {
                         .padding(.top)
                     }
                 }
-                .contentLoadIn(.compass)
+                .contentLoadIn(.compass, generation: viewModel.loadInGeneration)
             }
             .padding(.horizontal, Theme.Metrics.screenMargin)
             .padding(.top, Theme.Metrics.contentTopSpacing)
@@ -242,7 +242,7 @@ struct LocationScreen: View {
                     .transition(.move(edge: .bottom).combined(with: .opacity))
                 }
             }
-            .contentLoadIn(.compass)
+            .contentLoadIn(.compass, generation: viewModel.loadInGeneration)
         }
         .animation(reduceMotion ? nil : Self.bottomBarAnimation, value: viewModel.compass.bottomNote)
         // 4.15: content mustn't slide under the clock unreadably. The

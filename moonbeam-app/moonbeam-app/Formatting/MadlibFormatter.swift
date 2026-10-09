@@ -128,6 +128,7 @@ nonisolated struct MadlibFormatter {
     func sentence(
         place: Place?,
         standIn: Place? = nil,
+        standInText: String? = nil,
         day: Date,
         dayOffset: Int,
         today: Date,
@@ -146,7 +147,7 @@ nonisolated struct MadlibFormatter {
             dateLine = [.words(Self.dateLead + " " + Self.today)]
         }
 
-        let place = placeToken(place ?? standIn)
+        let place = placeToken(place ?? standIn, standInText: standInText)
         let placeLine: [Part] = [
             .words(Self.placeLead + " "),
             .token(place.withSpaces(space)),
@@ -184,7 +185,15 @@ nonisolated struct MadlibFormatter {
         )
     }
 
-    private func placeToken(_ place: Place?) -> Token {
+    private func placeToken(_ place: Place?, standInText: String? = nil) -> Token {
+        if let standInText {
+            return Token(
+                kind: .place,
+                symbol: Self.placeSymbol,
+                text: standInText,
+                accessibilityLabel: AttributedString(Self.placeLabelPrefix + standInText)
+            )
+        }
         guard let place else {
             return Token(
                 kind: .place,

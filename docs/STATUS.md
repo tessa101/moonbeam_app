@@ -113,11 +113,12 @@ Rule: finish what changes the card before the AX reflow, or the reflow is done t
    (TESTFLIGHT-BUILD-8.md "What to Test") into App Store Connect.
 2. [ ] **5.10 quick fixes** (one commit each):
    - [x] ‹ › day arrows float above the card when stepping days (fixed in 5.10b, **confirmed on device by Tessa 2026-10-09**: exact madlib line slot + both arrows sampled during the 0.5 s transition on all four dates, both directions, plus spread dates; §9.19–9.20). Then the ‹ › tap response
-   - [x] **5.10c** ‹ › tap response: 0.88 scale, lighter fill held ≥ 90 ms, soft 0.5 haptic per enabled step; extended frame sampling; 974 cases pass (COMPASS-1.1.md §9.20)
+   - [x] **5.10c** (confirmed on device by Tessa 2026-10-09) ‹ › tap response: 0.88 scale, lighter fill held ≥ 90 ms, soft 0.5 haptic per enabled step; extended frame sampling; 974 cases pass (COMPASS-1.1.md §9.20)
    - [x] Landing haptic audited (2026-10-08; Tessa: OK on device 2026-10-08): implementation matches LOADER.md §11.2.7 and stays distinct from
      COMPASS.md §4.5's firm lock tap; recovery flight only, as designed. No clear bug/code change.
 3. [ ] **5.10a place change + one load-in** (LOADER.md §12): 5.10a.1 replayable load-in, old place out → 5.10a.2 card
    skeleton → 5.10a.3 compass entrance + readout fade + Now pulse (§12.4, §12.4.1). Date changes cross-fade in place.
+   - [x] **5.10a.1:** replayable `ContentLoadIn`; old place removed and token changed before sheet dismissal.
 4. [ ] **5.11 moon state** (MOON-STATE.md): 5.11.1 middle column on today (Up now / Not up yet / Set for today),
    countdown, this pass's rise while up → 5.11.2 `23° up` → 5.11.3 edge-case voice line (draft copy).
 5. [ ] **5.5 AX reflow** incl. the always-three-column card on today and the SE 3 connector; loader VoiceOver /

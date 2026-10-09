@@ -329,6 +329,69 @@ struct LocationViewModelTests {
         #expect(viewModel.place == Self.detectedLosAngeles)
     }
 
+    @Test("§12.1 generation changes only when where changes")
+    func loadInGenerationTracksPlaceChangesOnly() async {
+        let location = FakeLocationService(
+            authorizationState: .authorized,
+            placeResult: .success(Self.detectedLosAngeles)
+        )
+        let viewModel = Self.makeViewModel(
+            location: location,
+            store: InMemoryPlaceStore(lastViewed: Self.sydney)
+        )
+        await viewModel.start()
+        let launchGeneration = viewModel.loadInGeneration
+
+        viewModel.select(Self.sydney)
+        #expect(viewModel.loadInGeneration == launchGeneration + 1)
+        let sydneyGeneration = viewModel.loadInGeneration
+
+        viewModel.select(Self.sydney)
+        #expect(viewModel.loadInGeneration == sydneyGeneration)
+
+        viewModel.nextDay()
+        #expect(viewModel.loadInGeneration == sydneyGeneration)
+
+        await viewModel.sceneDidBecomeActive()
+        #expect(viewModel.loadInGeneration == sydneyGeneration)
+    }
+
+    @Test("§12.2 Use my location removes the old place and switches its token immediately")
+    func useMyLocationRemovesOldPlaceImmediately() async throws {
+        let location = FakeLocationService(
+            authorizationState: .authorized,
+            placeResult: .success(Self.detectedLosAngeles)
+        )
+        let viewModel = Self.makeViewModel(
+            location: location,
+            store: InMemoryPlaceStore(lastViewed: Self.sydney)
+        )
+        await viewModel.start()
+        viewModel.select(Self.sydney)
+        location.holdsFixes = true
+        let oldGeneration = viewModel.loadInGeneration
+        viewModel.presentSearch()
+        let sheet = try #require(viewModel.searchSheet)
+
+        sheet.useMyLocation()
+
+        #expect(viewModel.place == nil)
+        #expect(viewModel.moonTable == nil)
+        #expect(Self.placeTokenText(viewModel) == "your location")
+        #expect(viewModel.loadInGeneration == oldGeneration + 1)
+
+        let locate = Task { await viewModel.searchDidDismiss() }
+        while location.heldFixCount == 0 {
+            await Task.yield()
+        }
+        location.releaseFixes()
+        await locate.value
+
+        #expect(viewModel.place == Self.detectedLosAngeles)
+        #expect(Self.placeTokenText(viewModel) == "Los Angeles, CA")
+        #expect(viewModel.loadInGeneration == oldGeneration + 2)
+    }
+
     @Test("Not determined: prompts, then fetches when granted")
     func notDeterminedPromptsThenFetches() async {
         let location = FakeLocationService(placeResult: .success(Self.detectedLosAngeles))
@@ -378,7 +441,7 @@ struct LocationViewModelTests {
         #expect(store.recents.isEmpty)
     }
 
-    @Test("Authorized, but a tapped fix fails: the place stays and the failure shows")
+    @Test("Authorized, but a tapped fix fails: the old place stays gone and the failure shows")
     func authorizedTapFailureIsReported() async {
         let viewModel = Self.makeViewModel(
             location: FakeLocationService(authorizationState: .authorized),
@@ -388,7 +451,7 @@ struct LocationViewModelTests {
 
         await viewModel.useMyLocation()
 
-        #expect(viewModel.place == Self.sydney)
+        #expect(viewModel.place == nil)
         #expect(viewModel.locationFailed)
         #expect(viewModel.showsUseMyLocation)
     }
@@ -644,7 +707,7 @@ struct LocationViewModelTests {
         let reopened = try #require(viewModel.searchSheet)
         #expect(reopened !== firstSheet)
         #expect(reopened.query.isEmpty)
-        #expect(viewModel.place == Self.sydney)
+        #expect(viewModel.place == nil)
     }
 
     /// Open Settings and a drag-to-dismiss close the dialog too; neither

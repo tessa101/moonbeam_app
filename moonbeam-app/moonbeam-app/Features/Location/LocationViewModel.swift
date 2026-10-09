@@ -96,6 +96,15 @@ final class LocationViewModel {
     /// §3 has them fall back quietly.
     private(set) var locationFailed = false
 
+    /// The one main-screen entrance replays when the selected place changes,
+    /// never for a date or same-place refresh (LOADER.md §12.1).
+    private(set) var loadInGeneration = 0
+
+    /// During an explicit switch back to GPS, the old place is removed at
+    /// once and the sentence names the pending destination.
+    private(set) var isReplacingPlace = false
+    private(set) var replacementPlaceToken: String?
+
     /// Settable so the view's sheet binding can dismiss it.
     var locationOffDialog: LocationOffVariant?
 
@@ -246,6 +255,7 @@ final class LocationViewModel {
             return madlibFormatter.sentence(
                 place: nil,
                 standIn: standIn,
+                standInText: replacementPlaceToken,
                 day: now(),
                 dayOffset: 0,
                 today: now(),
@@ -511,6 +521,7 @@ final class LocationViewModel {
                 break
             }
         }
+        beginReplacingPlace()
         await runLocationFlow(detectionOnly: false)
     }
 
@@ -650,6 +661,7 @@ final class LocationViewModel {
     }
 
     private func useMyLocationFromSearch() {
+        beginReplacingPlace()
         useMyLocationAfterSearch = true
         isSearchPresented = false
     }
@@ -996,15 +1008,35 @@ final class LocationViewModel {
     /// `remember` is true for anything the user picked (§3: search or
     /// detect), which makes it the new last-viewed place.
     private func show(_ place: Place, remember: Bool) {
+        let changesWhere = isReplacingPlace || self.place.map { !$0.isSameCity(as: place) } == true
         // The selection carries over: following today resolves to the new
         // city's today, a picked day stays the same calendar day (DATE.md §3).
         self.place = place
+        isReplacingPlace = false
+        replacementPlaceToken = nil
         reloadMoonTable()
         locationFailed = false
+
+        if launchStage == .ready, changesWhere {
+            loadInGeneration += 1
+        }
 
         if remember {
             placeStore.lastViewed = place
             lastViewed = place
+        }
+    }
+
+    private func beginReplacingPlace() {
+        guard !isReplacingPlace else { return }
+        isReplacingPlace = true
+        replacementPlaceToken = "your location"
+        place = nil
+        moonTable = nil
+        locationFailed = false
+        updateCompass()
+        if launchStage == .ready {
+            loadInGeneration += 1
         }
     }
 }

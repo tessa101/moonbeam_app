@@ -64,6 +64,7 @@ struct ContentLoadIn: ViewModifier {
     // MARK: - Modifier
 
     let block: Block
+    let generation: Int
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.contentArrivesAfterAha) private var afterAha
@@ -73,7 +74,16 @@ struct ContentLoadIn: ViewModifier {
         content
             .opacity(isIn ? 1 : 0)
             .offset(y: isIn ? 0 : Self.startOffset(reduceMotion: reduceMotion))
-            .onAppear {
+            .task(id: generation) {
+                // A place replacement reuses the one launch animation. Snap
+                // this block out without animating, then let its normal
+                // stagger bring the new generation in.
+                var transaction = Transaction()
+                transaction.disablesAnimations = true
+                withTransaction(transaction) {
+                    isIn = false
+                }
+                await Task.yield()
                 withAnimation(Self.animation(for: block, afterAha: afterAha)) {
                     isIn = true
                 }
@@ -83,7 +93,10 @@ struct ContentLoadIn: ViewModifier {
 
 extension View {
     /// Loads this block in when the main screen arrives (LOADER.md §2.1).
-    func contentLoadIn(_ block: ContentLoadIn.Block) -> some View {
-        modifier(ContentLoadIn(block: block))
+    func contentLoadIn(
+        _ block: ContentLoadIn.Block,
+        generation: Int = 0
+    ) -> some View {
+        modifier(ContentLoadIn(block: block, generation: generation))
     }
 }

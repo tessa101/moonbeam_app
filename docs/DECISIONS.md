@@ -72,6 +72,8 @@
   animating their positions through the centre), and settles ~10° into true heading over 0.5 s.
 - **Considered:** B, a small phase-cycle moon in the card's place (heavier than the wait deserves); C, sentence only
   (looks frozen on a slow fix).
+- **As built (5.10a.1):** `loadInGeneration` replays the existing stagger only when where changes; a search pick
+  replaces the place before dismissal, and Use my location clears the old content and says “your location” at once.
 
 ### 2026-10-06 · Build 5.9.3c: moon smoothness as built (LOADER.md §11.3)
 - **Eased stop:** a constant 2.6× run, then speed falling linearly to zero over the last 0.4 s (all slowdown when the
