@@ -74,6 +74,11 @@
   (looks frozen on a slow fix).
 - **As built (5.10a.1):** `loadInGeneration` replays the existing stagger only when where changes; a search pick
   replaces the place before dismissal, and Use my location clears the old content and says “your location” at once.
+- **As built (5.10a.2, 2026-10-09):** the skeleton sizes itself from the replaced card (hidden template) and appears
+  after a 400 ms threshold. A refused prompt or a Location Off dialog during a replacement counts as a failure
+  (the skeleton reads the §12.2 step 5 copy): the spec covered only a failed fix, and without this the skeleton
+  would read "Finding your location…" forever. After a failure the slot stays filled, so a retry shows "Finding"
+  at once instead of an empty gap.
 
 ### 2026-10-06 · Build 5.9.3c: moon smoothness as built (LOADER.md §11.3)
 - **Eased stop:** a constant 2.6× run, then speed falling linearly to zero over the last 0.4 s (all slowdown when the

@@ -160,18 +160,7 @@ struct LocationScreen: View {
                 // Use my location button are gone (LOADER.md §10): the way
                 // back to your location is the search sheet's row.
                 VStack(alignment: .leading, spacing: Theme.Metrics.sentenceToCard) {
-                    if viewModel.isLocating {
-                        ProgressView("Finding your location…")
-                    }
-
-                    if viewModel.locationFailed {
-                        Text("Couldn't find your location. Try again, or search for a city.")
-                    }
-
-                    // §3.2. The place's zone sits beside each time.
-                    if let moonTable = viewModel.moonTable {
-                        MoonCard(viewModel: viewModel, table: moonTable)
-                    }
+                    PlaceCardRegion(viewModel: viewModel)
                 }
                 .padding(.top, Theme.Metrics.sentenceToCard)
                 .contentLoadIn(.card, generation: viewModel.loadInGeneration)
@@ -182,7 +171,8 @@ struct LocationScreen: View {
                     // COMPASS.md §1: at the bottom, below the moon card. DEBUG
                     // builds keep it in every state for its diagnostic readout;
                     // the sensors still only run when it's shown.
-                    if viewModel.compass.visibility != .hidden || Self.showsDebugReadout {
+                    if !viewModel.isReplacingPlace,
+                       viewModel.compass.visibility != .hidden || Self.showsDebugReadout {
                         compass
                             .id(Self.compassScrollID)
                             .padding(.top, Theme.Metrics.cardToCompass)

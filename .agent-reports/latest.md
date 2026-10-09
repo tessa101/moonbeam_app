@@ -1,3 +1,16 @@
+# Build 5.10a.2: card skeleton during Use my location
+
+Updated October 9, 2026. Continued from Codex's uncommitted work.
+
+- **Done:** when the fix takes over 400 ms, a skeleton sized by the replaced card holds the slot. Moon outline breathing, quiet bars, "Finding your location…" on the date line. 200 ms cross-fade into the real card. No compass or bottom bar until the card is in. VoiceOver focus moves to the card.
+- A failed fix, a refused prompt or Location Off shows "Couldn't find your location. Try again, or search for a city." inside the skeleton. A retry shows "Finding" at once.
+- 6 new `PlaceSkeletonTests`; full suite **982/982 pass**.
+- **Not done:** no on-screen check this run (a slow fix is hard to stage in the simulator); needs a device look.
+- **Next:** 5.10a.3 compass entrance + readout fade + Now pulse (LOADER.md §12.4, §12.4.1).
+- Findings: `.agent-reports/5.10a/5.10a.2-findings.md`.
+
+---
+
 # Build 5.10c: stronger day-arrow response
 
 Updated October 9, 2026.

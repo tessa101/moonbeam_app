@@ -607,6 +607,17 @@ sharp). Report: `.agent-reports/5.9.3/findings.md`.
 - Generation changes only when *where* changes, not for a date, same-city refresh, or unchanged foreground return.
   Findings: `.agent-reports/5.10a/5.10a.1-findings.md`.
 
+### 12.8 As built — 5.10a.2
+- `PlaceCardRegion` (`MoonCardSkeleton.swift`) owns the card slot. `LocationViewModel.cardPlaceholder` is `.finding`
+  after `placeSkeletonThreshold` (400 ms, injectable), `.failed` when the replacement ends without a place. The
+  stock `ProgressView` and the failure text above the card are gone.
+- The skeleton draws over the replaced card rendered `hidden()`, so it has that card's frame. Failure copy shows on
+  the skeleton's line, and the moon holds still at 0.55.
+- A refused prompt or Location Off during a replacement also reads as the failure (DECISIONS.md 2026-10-08, 5.10a.2).
+- Cross-fade 200 ms ease-out (none with Reduce Motion). VoiceOver focus moves to the card when it lands.
+- Compass and its bottom bar stay hidden until the real card is in (`isReplacingPlace`).
+- Tests: `PlaceSkeletonTests` (6). Findings: `.agent-reports/5.10a/5.10a.2-findings.md`.
+
 ## Decision log
 
 - **2026-10-08 (Tessa, device videos of a place change):** the old place mustn't show after a change; placeholder A

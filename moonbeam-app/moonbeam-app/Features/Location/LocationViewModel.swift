@@ -45,6 +45,9 @@ final class LocationViewModel {
     /// last-viewed place.
     static let defaultFetchTimeout = Duration.seconds(10)
 
+    /// LOADER.md §12.2: a replacement ready sooner shows no placeholder.
+    static let placeSkeletonThreshold = Duration.milliseconds(400)
+
     static let searchPlaceholder = "Search for a city"
 
     /// The compass's key in Info.plist's
@@ -105,6 +108,27 @@ final class LocationViewModel {
     private(set) var isReplacingPlace = false
     private(set) var replacementPlaceToken: String?
 
+    /// LOADER.md §12.2–12.3: the replacement has taken past the threshold
+    /// (or ended without a place), so the card's slot holds the skeleton.
+    private(set) var showsPlaceSkeleton = false
+
+    /// The card being replaced, kept only as an invisible size template so
+    /// the skeleton matches the real card's frame (§12.3).
+    private(set) var skeletonLayoutTable: MoonTableViewModel?
+
+    /// What fills the card's slot while a replacement has no place yet.
+    enum CardPlaceholder: Equatable {
+        case finding
+        case failed
+    }
+
+    /// `nil` while the real card shows, or before the §12.2 threshold.
+    var cardPlaceholder: CardPlaceholder? {
+        guard isReplacingPlace || locationFailed else { return nil }
+        if locationFailed { return .failed }
+        return showsPlaceSkeleton ? .finding : nil
+    }
+
     /// Settable so the view's sheet binding can dismiss it.
     var locationOffDialog: LocationOffVariant?
 
@@ -138,12 +162,14 @@ final class LocationViewModel {
     private let deviceTimeZone: TimeZone
     private let now: () -> Date
     private let sleep: @Sendable (Duration) async throws -> Void
+    private let placeChangeSleep: @Sendable (Duration) async throws -> Void
     private let dayLabelFormatter = DayLabelFormatter()
     private let madlibFormatter = MadlibFormatter()
 
     // MARK: - Bookkeeping
 
     @ObservationIgnored private var locateTask: Task<Void, Never>?
+    @ObservationIgnored private var placeSkeletonTask: Task<Void, Never>?
 
     /// Decision A: the search sheet's location row closes the sheet, and the
     /// flow runs once it has gone, because the Location Off dialog can't
@@ -195,6 +221,8 @@ final class LocationViewModel {
     ///     selection resolves against (DATE.md §3).
     ///   - sleep: the launch loader's waits (LOADER.md §2), so tests can
     ///     decide when 400 ms and 700 ms have passed.
+    ///   - placeChangeSleep: the card skeleton's 400 ms threshold during a
+    ///     place replacement (LOADER.md §12.2), so tests can decide it.
     ///   - onboardingStore: first-run state, for the first "Aha" ride's
     ///     extra lap.
     ///   - reducesMotion: the Reduce Motion setting; the app passes
@@ -214,6 +242,7 @@ final class LocationViewModel {
         deviceTimeZone: TimeZone = .current,
         now: @escaping () -> Date = Date.init,
         sleep: @escaping @Sendable (Duration) async throws -> Void = { try await Task.sleep(for: $0) },
+        placeChangeSleep: @escaping @Sendable (Duration) async throws -> Void = { try await Task.sleep(for: $0) },
         loaderNow: @escaping () -> Date = Date.init
     ) {
         self.locationService = locationService
@@ -226,6 +255,7 @@ final class LocationViewModel {
         self.deviceTimeZone = deviceTimeZone
         self.now = now
         self.sleep = sleep
+        self.placeChangeSleep = placeChangeSleep
         // `start()` reads the real state, off the main actor where it can
         // block; nothing reads this before then (LOADER.md §9).
         lastSeenAuthState = .notDetermined
@@ -566,6 +596,13 @@ final class LocationViewModel {
         case .servicesOff:
             detectionOnlyAfterSettings = detectionOnly
             locationOffDialog = .servicesOff
+        }
+        // A refused prompt or a Location Off dialog leaves the replacement
+        // with no fix coming; without this the skeleton would keep saying
+        // "Finding your location…" (LOADER.md §12.2 step 5). A fetch that
+        // superseded this one (`isLocating`) still decides for itself.
+        if isReplacingPlace, !locationFailed, !isLocating {
+            failReplacement()
         }
     }
 
@@ -966,7 +1003,7 @@ final class LocationViewModel {
         } catch {
             guard !Task.isCancelled else { return }
             if userInitiated {
-                locationFailed = true
+                failReplacement()
             } else if !detectionOnly, let lastViewed {
                 // A quiet detection-only retry (4.8) never touches the place.
                 show(lastViewed, remember: false)
@@ -1014,6 +1051,10 @@ final class LocationViewModel {
         self.place = place
         isReplacingPlace = false
         replacementPlaceToken = nil
+        showsPlaceSkeleton = false
+        skeletonLayoutTable = nil
+        placeSkeletonTask?.cancel()
+        placeSkeletonTask = nil
         reloadMoonTable()
         locationFailed = false
 
@@ -1031,6 +1072,8 @@ final class LocationViewModel {
         guard !isReplacingPlace else { return }
         isReplacingPlace = true
         replacementPlaceToken = "your location"
+        skeletonLayoutTable = moonTable ?? skeletonLayoutTable
+        showsPlaceSkeleton = false
         place = nil
         moonTable = nil
         locationFailed = false
@@ -1038,5 +1081,28 @@ final class LocationViewModel {
         if launchStage == .ready {
             loadInGeneration += 1
         }
+
+        let placeChangeSleep = placeChangeSleep
+        placeSkeletonTask?.cancel()
+        placeSkeletonTask = Task { [weak self] in
+            do {
+                try await placeChangeSleep(Self.placeSkeletonThreshold)
+                guard let self, self.isReplacingPlace, !self.locationFailed else { return }
+                self.showsPlaceSkeleton = true
+            } catch {
+                // A fast result cancels the threshold; no placeholder flashes.
+            }
+        }
+    }
+
+    /// §12.2 step 5: a replacement that ends without a place (a failed fix,
+    /// a refused prompt, location off) shows the failure in the skeleton's
+    /// frame. The slot stays filled, so a retry shows "Finding" at once
+    /// rather than an empty gap.
+    private func failReplacement() {
+        locationFailed = true
+        showsPlaceSkeleton = true
+        placeSkeletonTask?.cancel()
+        placeSkeletonTask = nil
     }
 }
