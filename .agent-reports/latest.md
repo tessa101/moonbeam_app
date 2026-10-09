@@ -1,3 +1,23 @@
+# Build 5.10a.13: two-layer card slot, ordinary card replay
+
+Updated October 9, 2026.
+
+- **Done:** built and tested the uncommitted 5.10a.13 change.
+  - The card slot is two layers. The card layer loads in like a searched city's (8 pt, 0.4 s, +0.1 s) and always replays on landing.
+  - The skeleton or failure layer sits on top and fades out over 0.2 s.
+  - `RisingIn` and the custom landing constants are removed.
+- **Fixes:**
+  - The `PlaceChangeLayoutTests` harness mirrors the new layout (the only compile error).
+  - `cardReplayOnlyWithoutSkeleton` became `cardReplaysOnEveryLanding`.
+- **Runs:** `ContentLoadInTests` 7/7, `PlaceSkeletonTests` 11/11, `PlaceChangeLayoutTests` 1/1; full suite **991/991**.
+- **Flags:**
+  - A possible extra 0.2 s cross-fade on the card layer.
+  - Older items still open.
+- **Next:** Tessa's device check.
+- Findings: `.agent-reports/5.10a.13/findings.md`.
+
+---
+
 # Build 5.10a.12: separate fade and rise curves
 
 Updated October 9, 2026.

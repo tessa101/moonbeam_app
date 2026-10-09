@@ -93,28 +93,12 @@ struct ContentLoadIn: ViewModifier {
         .easeOut(duration: replayDuration).delay(replayDelay(for: block))
     }
 
-    /// The card landing over its skeleton (§12.3): same timing as the card's
-    /// own replay, so both paths feel alike.
-    static let cardLandingAnimation = Animation.easeOut(duration: cardLandingDuration).delay(replayCardDelay)
-
-    /// 5.10a.9 (Tessa, 2026-10-09): the card visibly moves up into place as
-    /// its content fills. It sits above the skeleton, whose frame used to
-    /// hide the card's own rise (8 pt under an opaque frame), so the rise is
-    /// larger and the skeleton leaves faster.
-    static let cardLandingRise: CGFloat = 24
-    static let cardLandingDuration: TimeInterval = 0.45
-    static let skeletonExitDuration: TimeInterval = 0.1
+    /// 5.10a.13 (Tessa, 2026-10-09, video 9): the real card lands with the
+    /// ordinary replay (`replayAnimation(for: .card)`: 8 pt rise, 0.4 s,
+    /// 0.1 s delay), as for a searched city. Only the skeleton's exit is its
+    /// own: it fades out over the card's arrival.
+    static let skeletonExitDuration: TimeInterval = 0.2
     static let skeletonExitAnimation = Animation.easeOut(duration: skeletonExitDuration)
-
-    /// 5.10a.12 (Tessa, 2026-10-09, video 8): fade and rise run on separate
-    /// curves. With one shared ease-out about 70% of the rise was done while
-    /// the card was still faint, so it looked to fade in place. The fade is
-    /// quick and the rise slower and gentler, finishing after the card is
-    /// opaque, so the whole card is seen travelling.
-    static let cardFadeDuration: TimeInterval = 0.25
-    static let cardRiseDuration: TimeInterval = 0.55
-    static let cardFadeAnimation = Animation.easeOut(duration: cardFadeDuration).delay(replayCardDelay)
-    static let cardRiseAnimation = Animation.easeInOut(duration: cardRiseDuration).delay(replayCardDelay)
 
     // MARK: - Modifier
 

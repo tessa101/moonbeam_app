@@ -1399,3 +1399,6 @@ Video 7 (on 5.10a.10) measured the whole card rising 16 pt, but the skeleton's s
 
 ## 2026-10-09: Separate fade and rise curves, 5.10a.12 (Tessa)
 Video 8 (5.10a.11): every row moved equally, but fade and rise shared one ease-out, so most of the rise happened while the card was nearly transparent and only high-contrast items (date line, arrows) looked like they moved. Fade 0.25 s ease-out, rise 0.55 s ease-in-out (both delayed 0.1 s).
+
+## 2026-10-09: Card lands through the ordinary load-in, 5.10a.13 (Tessa)
+Video 9 showed the custom landing (`RisingIn`, 24 pt, separate curves) moving only part of the card; the phase line, % and rise/set rows did not move at all, while skeleton, date and arrows over-travelled. Removed `RisingIn`, `cardLanding*`, `cardFade*`, `cardRise*`. `PlaceCardRegion` now takes a `layer` (`.card` / `.placeholder`); `LocationScreen` stacks them and puts `.contentLoadIn(.card)` on the card layer only. `show()` bumps `cardLoadInGeneration` every landing, so the card arrives exactly as a searched city's does. Skeleton exit 0.2 s, no delay.

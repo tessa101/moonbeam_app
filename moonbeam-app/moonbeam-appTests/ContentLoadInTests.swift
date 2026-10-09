@@ -47,23 +47,15 @@ struct ContentLoadInTests {
         #expect(abs(last - 0.6) < Self.tolerance)
     }
 
-    @Test("5.10a.9 card landing over the skeleton: a visible 16 pt rise, the skeleton leaving faster")
+    @Test("5.10a.13 card landing over the skeleton: the ordinary replay, the skeleton fading out over it")
     func cardLandingOverSkeleton() {
-        #expect(ContentLoadIn.cardLandingRise == 24)
-        #expect(ContentLoadIn.cardLandingRise > ContentLoadIn.rise)
-        #expect(ContentLoadIn.cardLandingDuration == 0.45)
-        #expect(ContentLoadIn.skeletonExitDuration == 0.1)
-        // The skeleton is gone before the card has finished arriving.
-        #expect(ContentLoadIn.skeletonExitDuration < ContentLoadIn.cardLandingDuration)
-        // The skeleton is gone before the card starts to move, so its frame
-        // can't hide the card's own frame moving.
-        #expect(ContentLoadIn.skeletonExitDuration <= ContentLoadIn.replayCardDelay)
-        // Both start on the card's replay delay (+0.1 s).
+        // The real card lands with the replay (8 pt rise, 0.4 s, 0.1 s delay), as for a searched city.
+        #expect(ContentLoadIn.rise == 8)
+        #expect(ContentLoadIn.replayDuration == 0.4)
         #expect(ContentLoadIn.replayCardDelay == 0.1)
-        // 5.10a.12: the card is opaque before its rise ends, so the rise is seen.
-        #expect(ContentLoadIn.cardFadeDuration == 0.25)
-        #expect(ContentLoadIn.cardRiseDuration == 0.55)
-        #expect(ContentLoadIn.cardFadeDuration < ContentLoadIn.cardRiseDuration)
+        // The skeleton fades out over the card's arrival, shorter than it.
+        #expect(ContentLoadIn.skeletonExitDuration == 0.2)
+        #expect(ContentLoadIn.skeletonExitDuration < ContentLoadIn.replayDuration)
     }
 
     @Test("5.10a.6 place-change landing: city line, then card, then compass, a little slower than launch")

@@ -12,17 +12,24 @@ import SwiftUI
 /// content or accessibility survives.
 struct PlaceCardRegion: View {
 
-    let viewModel: LocationViewModel
+    /// 5.10a.13: the slot is drawn as two layers in one ZStack (see
+    /// `LocationScreen`). The `.card` layer (real card, or an invisible slot
+    /// of its size) is the one that loads in with `.contentLoadIn(.card)`,
+    /// exactly like a searched city. The `.placeholder` layer (skeleton or
+    /// failure) sits on top of it and is not part of that load-in, so it can
+    /// stay on screen until the card starts to arrive.
+    enum Layer {
+        case card
+        case placeholder
+    }
 
+    let viewModel: LocationViewModel
+    let layer: Layer
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @AccessibilityFocusState private var isCardFocused: Bool
 
-    /// True once a skeleton has held the slot: the card then rises in over it.
-    /// (Launch and other first appearances keep their own load-in.)
-    @State private var landsOverSkeleton = false
-
-    /// The skeleton leaves quicker than the card arrives.
+    /// The skeleton leaves under the card that is arriving.
     private var skeletonExit: AnyTransition {
         reduceMotion ? .identity : AnyTransition.opacity.animation(ContentLoadIn.skeletonExitAnimation)
     }
@@ -30,66 +37,59 @@ struct PlaceCardRegion: View {
     var body: some View {
         let isReplacing = viewModel.isReplacingPlace
         ZStack {
-            if let placeholder = viewModel.cardPlaceholder {
-                if let layoutTable = viewModel.skeletonLayoutTable {
-                    MoonCardSkeleton(
-                        viewModel: viewModel,
-                        layoutTable: layoutTable,
-                        placeholder: placeholder
-                    )
-                    // Appears at once; leaves quickly, beneath the card that
-                    // is rising into its place.
-                    .transition(.asymmetric(insertion: .opacity, removal: skeletonExit))
-                    .zIndex(1)
-                } else if placeholder == .failed {
-                    // No card to size against (nothing was showing): the
-                    // message on its own.
-                    LocationFailureCard()
-                        .transition(.opacity)
+            switch layer {
+            case .placeholder:
+                if let placeholder = viewModel.cardPlaceholder {
+                    if let layoutTable = viewModel.skeletonLayoutTable {
+                        MoonCardSkeleton(
+                            viewModel: viewModel,
+                            layoutTable: layoutTable,
+                            placeholder: placeholder
+                        )
+                        // Appears at once; leaves quickly.
+                        .transition(.asymmetric(insertion: .opacity, removal: skeletonExit))
+                    } else if placeholder == .failed {
+                        // No card to size against (nothing was showing): the
+                        // message on its own.
+                        LocationFailureCard()
+                            .transition(.opacity)
+                    }
                 }
-            } else if let moonTable = viewModel.moonTable {
-                // 5.10a.10: the whole card fades and rises as one unit, driven
-                // by explicit state (a transition offset moved only the date
-                // line and arrows; video 6).
-                RisingIn(rises: landsOverSkeleton && !reduceMotion) {
+            case .card:
+                if viewModel.cardPlaceholder == nil, let moonTable = viewModel.moonTable {
+                    // The card itself is not animated here: `.contentLoadIn`
+                    // on this layer fades it in and rises it 8 pt as one
+                    // unit, as for a searched city (Tessa, 2026-10-09, video 9).
                     MoonCard(viewModel: viewModel, table: moonTable)
                         .accessibilityFocused($isCardFocused)
+                } else if viewModel.cardPlaceholder != nil || viewModel.moonTable == nil,
+                          let layoutTable = viewModel.skeletonLayoutTable {
+                    // §12.9: from the first frame the old card leaves until
+                    // the new card is in, an invisible slot with the replaced
+                    // card's frame, so nothing below moves.
+                    MoonCard(viewModel: viewModel, table: layoutTable)
+                        .hidden()
+                        .accessibilityHidden(true)
                 }
-                .transition(.identity)
-                // Above the skeleton, so its frame is seen moving.
-                    .zIndex(2)
-            } else if let layoutTable = viewModel.skeletonLayoutTable {
-                // §12.9: from the first frame the old card leaves until the
-                // skeleton or the new card is in, an invisible slot with the
-                // replaced card's frame, so nothing below moves.
-                MoonCard(viewModel: viewModel, table: layoutTable)
-                    .hidden()
-                    .accessibilityHidden(true)
             }
         }
         // 5.10a.7: the moment a replacement begins, the old card goes and
         // the skeleton shows in one frame, whatever animation is in flight
-        // (the search sheet's dismissal included). A removal that merely
-        // animates as `.identity` would leave the old card on screen for
-        // the whole animation. Innermost, so it wins over the two below.
+        // (the search sheet's dismissal included).
         .transaction(value: isReplacing) { transaction in
             if isReplacing {
                 transaction.animation = nil
                 transaction.disablesAnimations = true
             }
         }
-        // 5.10a.8 (video 5): `disablesAnimations` alone lost to these two,
-        // and the old card faded out over the skeleton fading in. While a
-        // replacement is pending they don't animate at all; they animate
-        // again when the place lands (`isReplacing` is false by then).
+        // While a replacement is pending the placeholder doesn't animate at
+        // all; it fades out when the place lands.
         .animation(reduceMotion || isReplacing ? nil : ContentLoadIn.skeletonExitAnimation, value: viewModel.cardPlaceholder)
-        .animation(reduceMotion || isReplacing ? nil : ContentLoadIn.cardLandingAnimation, value: viewModel.moonTable != nil)
         .accessibilityElement(children: .contain)
         // §12.3: VoiceOver focus moves from the skeleton to the card when it
         // lands.
         .onChange(of: viewModel.cardPlaceholder) { previous, current in
-            if current != nil { landsOverSkeleton = true }
-            if previous != nil, current == nil, viewModel.moonTable != nil {
+            if layer == .card, previous != nil, current == nil, viewModel.moonTable != nil {
                 isCardFocused = true
             }
         }
@@ -281,26 +281,5 @@ private struct LocationFailureCard: View {
                 Theme.Colors.surface,
                 in: RoundedRectangle(cornerRadius: Theme.Metrics.cardCornerRadius)
             )
-    }
-}
-
-
-/// Fades in and rises `ContentLoadIn.cardLandingRise` as one unit on appear.
-private struct RisingIn<Content: View>: View {
-    let rises: Bool
-    @ViewBuilder let content: Content
-    @State private var isVisible = false
-    @State private var isRisen = false
-
-    var body: some View {
-        content
-            .opacity(rises && !isVisible ? 0 : 1)
-            .offset(y: rises && !isRisen ? ContentLoadIn.cardLandingRise : 0)
-            .onAppear {
-                guard rises else { return }
-                // Separate curves (5.10a.12): quick fade, slower rise.
-                withAnimation(ContentLoadIn.cardFadeAnimation) { isVisible = true }
-                withAnimation(ContentLoadIn.cardRiseAnimation) { isRisen = true }
-            }
     }
 }

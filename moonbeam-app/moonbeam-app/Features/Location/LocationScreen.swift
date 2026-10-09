@@ -161,11 +161,15 @@ struct LocationScreen: View {
                 // whose place token it's about. The no-place screen and its
                 // Use my location button are gone (LOADER.md §10): the way
                 // back to your location is the search sheet's row.
-                VStack(alignment: .leading, spacing: Theme.Metrics.sentenceToCard) {
-                    PlaceCardRegion(viewModel: viewModel)
+                // 5.10a.13: the card layer loads in like a searched city's
+                // card; the skeleton or failure layer sits over it, outside
+                // that load-in, and fades out as the card arrives.
+                ZStack(alignment: .top) {
+                    PlaceCardRegion(viewModel: viewModel, layer: .card)
+                        .contentLoadIn(.card, generation: viewModel.cardLoadInGeneration)
+                    PlaceCardRegion(viewModel: viewModel, layer: .placeholder)
                 }
                 .padding(.top, Theme.Metrics.sentenceToCard)
-                .contentLoadIn(.card, generation: viewModel.cardLoadInGeneration)
 
                 // A stack that's always there, so the load-in runs once when
                 // the screen arrives, not again when the compass comes later.

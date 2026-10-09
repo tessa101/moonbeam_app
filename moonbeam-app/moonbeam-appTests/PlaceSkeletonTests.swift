@@ -265,8 +265,8 @@ struct PlaceSkeletonTests {
         #expect(LocationViewModel.placeSkeletonMinimum == .milliseconds(350))
     }
 
-    @Test("§12.9 Use my location never replays the card block (a skeleton always holds the slot); a pick does")
-    func cardReplayOnlyWithoutSkeleton() async {
+    @Test("5.10a.13 the card replays its load-in on every landing, over the skeleton or not")
+    func cardReplaysOnEveryLanding() async {
         let location = FakeLocationService(
             authorizationState: .authorized,
             placeResult: .success(Self.detectedLosAngeles)
@@ -274,16 +274,17 @@ struct PlaceSkeletonTests {
         let viewModel = await Self.makeReadyViewModel(location: location, placeChangeSleep: Self.minimumPassed)
         let card = viewModel.cardLoadInGeneration
 
-        // Even a fix that lands at once: since 5.10a.7 the skeleton is in
-        // from the first frame, so the card lands over it instead of
-        // blanking the block and loading it in again.
+        // Use my location: the skeleton held the slot, and the card still
+        // lands with the ordinary replay, like a searched city. The skeleton
+        // is on its own layer, outside that load-in, so the replay can't
+        // blank it.
         await viewModel.useMyLocation()
         #expect(viewModel.place == Self.detectedLosAngeles)
-        #expect(viewModel.cardLoadInGeneration == card)
-
-        // A pick has no skeleton and replays the card as before.
-        viewModel.select(Self.sydney)
         #expect(viewModel.cardLoadInGeneration == card + 1)
+
+        // A pick (no skeleton) replays it the same way.
+        viewModel.select(Self.sydney)
+        #expect(viewModel.cardLoadInGeneration == card + 2)
     }
 
     @Test("§12.9 a place change replays the card and compass, never the sentence")

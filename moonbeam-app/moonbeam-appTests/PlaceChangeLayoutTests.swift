@@ -251,10 +251,15 @@ private struct PlaceChangeHarness: View {
             MadlibSentence(viewModel: viewModel)
                 .contentLoadIn(.sentence)
                 .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { probe.sentenceFrame = $0 }
-            PlaceCardRegion(viewModel: viewModel)
-                .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { probe.cardFrame = $0 }
-                .padding(.top, Theme.Metrics.sentenceToCard)
-                .contentLoadIn(.card, generation: viewModel.cardLoadInGeneration)
+            // 5.10a.13, as in `LocationScreen`: the card layer loads in, the
+            // placeholder layer sits over it outside that load-in.
+            ZStack(alignment: .top) {
+                PlaceCardRegion(viewModel: viewModel, layer: .card)
+                    .contentLoadIn(.card, generation: viewModel.cardLoadInGeneration)
+                PlaceCardRegion(viewModel: viewModel, layer: .placeholder)
+            }
+            .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { probe.cardFrame = $0 }
+            .padding(.top, Theme.Metrics.sentenceToCard)
             Color.clear
                 .frame(height: 1)
                 .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { probe.belowFrame = $0 }

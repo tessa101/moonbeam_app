@@ -599,6 +599,13 @@ sharp). Report: `.agent-reports/5.9.3/findings.md`.
 - **5.10a.12 (Tessa, 2026-10-09, video 8): the rise is seen on every row.** Measured: all rows moved together, but ~70% of
   the 24 pt rise was done while the card was still faint (one shared ease-out for fade and rise). Fade is now 0.25 s ease-out,
   rise 0.55 s ease-in-out, both after the 0.1 s delay, so the card is opaque with most of its rise still to go.
+- **5.10a.13 (Tessa, 2026-10-09, video 9): the card lands exactly like a searched city's.** Video 9 (slow) showed the
+  custom rise (5.10a.9-12, an offset on an inner wrapper) moved only the card frame, moon, arrows and the date line; the
+  phase line, % and the rise/set rows stayed in place. It is removed. `PlaceCardRegion` is two layers in one ZStack
+  (`LocationScreen`): the `.card` layer (real card, or the invisible size slot) carries the ordinary
+  `.contentLoadIn(.card, generation: cardLoadInGeneration)`, and `show()` always bumps that generation (8 pt rise, 0.4 s,
+  0.1 s delay, whole card as one unit); the `.placeholder` layer (skeleton / failure) sits over it, outside that load-in,
+  and fades out in 0.2 s with no delay as the card arrives.
 - **Sentence during My location (5.10a.3):** the city line ("in 📍 City, ST?") is hidden, not a stand-in like "your
   location", and fades in (0.5 s ease-out, opacity only) when the city is known. It keeps its slot, so nothing
   moves; VoiceOver reads the sentence without the place until then. Supersedes §12.2 step 2's "your location".

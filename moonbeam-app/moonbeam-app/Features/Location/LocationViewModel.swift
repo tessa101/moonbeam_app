@@ -1069,7 +1069,6 @@ final class LocationViewModel {
         let changesWhere = isReplacingPlace || self.place.map { !$0.isSameCity(as: place) } == true
         // The selection carries over: following today resolves to the new
         // city's today, a picked day stays the same calendar day (DATE.md §3).
-        let skeletonHeldSlot = showsPlaceSkeleton
         self.place = place
         isReplacingPlace = false
         replacedTimeZone = nil
@@ -1082,9 +1081,9 @@ final class LocationViewModel {
 
         if launchStage == .ready, changesWhere {
             loadInGeneration += 1
-            if !skeletonHeldSlot {
-                cardLoadInGeneration += 1
-            }
+            // 5.10a.13: the card always replays its load-in when it lands,
+            // over the skeleton or not, like a searched city.
+            cardLoadInGeneration += 1
         }
 
         if remember {
