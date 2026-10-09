@@ -14,21 +14,22 @@ struct PlaceCardRegion: View {
 
     let viewModel: LocationViewModel
 
-    /// §12.2 step 4: the skeleton cross-fades into the real card.
-    private static let replacementAnimation = Animation.easeOut(duration: 0.5)
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @AccessibilityFocusState private var isCardFocused: Bool
 
-    /// Fade plus the usual 8 pt rise (an offset: nothing else moves).
-    private var riseTransition: AnyTransition {
-        .opacity.combined(with: .offset(y: ContentLoadIn.rise))
+    /// Fade plus a rise (an offset: nothing else moves). Reduce Motion
+    /// keeps its instant swap.
+    private var cardLanding: AnyTransition {
+        guard !reduceMotion else { return .identity }
+        return AnyTransition.opacity
+            .combined(with: .offset(y: ContentLoadIn.cardLandingRise))
+            .animation(ContentLoadIn.cardLandingAnimation)
     }
 
-    /// 5.10a.6: the card lands just after the city line begins.
-    /// Reduce Motion keeps its existing instant swap.
-    private func landingTransition(_ transition: AnyTransition) -> AnyTransition {
-        reduceMotion ? .identity : transition.animation(ContentLoadIn.cardLandingAnimation)
+    /// The skeleton leaves quicker than the card arrives.
+    private var skeletonExit: AnyTransition {
+        reduceMotion ? .identity : AnyTransition.opacity.animation(ContentLoadIn.skeletonExitAnimation)
     }
 
     var body: some View {
@@ -41,9 +42,9 @@ struct PlaceCardRegion: View {
                         layoutTable: layoutTable,
                         placeholder: placeholder
                     )
-                    // Appears at once; leaves slowly, over the card's own
-                    // frame, while the content rises in beneath it.
-                    .transition(.asymmetric(insertion: .opacity, removal: landingTransition(.opacity)))
+                    // Appears at once; leaves quickly, beneath the card that
+                    // is rising into its place.
+                    .transition(.asymmetric(insertion: .opacity, removal: skeletonExit))
                     .zIndex(1)
                 } else if placeholder == .failed {
                     // No card to size against (nothing was showing): the
@@ -56,7 +57,9 @@ struct PlaceCardRegion: View {
                     .accessibilityFocused($isCardFocused)
                     // The whole card moves in, like the compass does (Tessa,
                     // 2026-10-09); the replaced place's card is gone at once.
-                    .transition(.asymmetric(insertion: landingTransition(riseTransition), removal: .identity))
+                    .transition(.asymmetric(insertion: cardLanding, removal: .identity))
+                    // Above the skeleton, so its frame is seen moving.
+                    .zIndex(2)
             } else if let layoutTable = viewModel.skeletonLayoutTable {
                 // §12.9: from the first frame the old card leaves until the
                 // skeleton or the new card is in, an invisible slot with the
@@ -81,8 +84,8 @@ struct PlaceCardRegion: View {
         // and the old card faded out over the skeleton fading in. While a
         // replacement is pending they don't animate at all; they animate
         // again when the place lands (`isReplacing` is false by then).
-        .animation(reduceMotion || isReplacing ? nil : Self.replacementAnimation, value: viewModel.cardPlaceholder)
-        .animation(reduceMotion || isReplacing ? nil : Self.replacementAnimation, value: viewModel.moonTable != nil)
+        .animation(reduceMotion || isReplacing ? nil : ContentLoadIn.skeletonExitAnimation, value: viewModel.cardPlaceholder)
+        .animation(reduceMotion || isReplacing ? nil : ContentLoadIn.cardLandingAnimation, value: viewModel.moonTable != nil)
         .accessibilityElement(children: .contain)
         // §12.3: VoiceOver focus moves from the skeleton to the card when it
         // lands.

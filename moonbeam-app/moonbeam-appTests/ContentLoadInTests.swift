@@ -47,6 +47,18 @@ struct ContentLoadInTests {
         #expect(abs(last - 0.6) < Self.tolerance)
     }
 
+    @Test("5.10a.9 card landing over the skeleton: a visible 16 pt rise, the skeleton leaving faster")
+    func cardLandingOverSkeleton() {
+        #expect(ContentLoadIn.cardLandingRise == 16)
+        #expect(ContentLoadIn.cardLandingRise > ContentLoadIn.rise)
+        #expect(ContentLoadIn.cardLandingDuration == 0.45)
+        #expect(ContentLoadIn.skeletonExitDuration == 0.25)
+        // The skeleton is gone before the card has finished arriving.
+        #expect(ContentLoadIn.skeletonExitDuration < ContentLoadIn.cardLandingDuration)
+        // Both start on the card's replay delay (+0.1 s).
+        #expect(ContentLoadIn.replayCardDelay == 0.1)
+    }
+
     @Test("5.10a.6 place-change landing: city line, then card, then compass, a little slower than launch")
     func placeChangeLanding() {
         #expect(ContentLoadIn.replayDuration == 0.4)

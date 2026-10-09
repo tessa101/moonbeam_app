@@ -95,7 +95,16 @@ struct ContentLoadIn: ViewModifier {
 
     /// The card landing over its skeleton (§12.3): same timing as the card's
     /// own replay, so both paths feel alike.
-    static let cardLandingAnimation = Animation.easeOut(duration: replayDuration).delay(replayCardDelay)
+    static let cardLandingAnimation = Animation.easeOut(duration: cardLandingDuration).delay(replayCardDelay)
+
+    /// 5.10a.9 (Tessa, 2026-10-09): the card visibly moves up into place as
+    /// its content fills. It sits above the skeleton, whose frame used to
+    /// hide the card's own rise (8 pt under an opaque frame), so the rise is
+    /// larger and the skeleton leaves faster.
+    static let cardLandingRise: CGFloat = 16
+    static let cardLandingDuration: TimeInterval = 0.45
+    static let skeletonExitDuration: TimeInterval = 0.25
+    static let skeletonExitAnimation = Animation.easeOut(duration: skeletonExitDuration).delay(replayCardDelay)
 
     // MARK: - Modifier
 

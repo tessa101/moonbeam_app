@@ -1387,3 +1387,6 @@ The screen, the view model and the Location Off dialog are still to come.
 
 ## 2026-10-09: Hard cut when My location starts, 5.10a.8 (Tessa)
 - Video 5: the first My location attempt still showed a blip of the old card (fading under the skeleton) and the city line fading. The ambient fades are now off while a replacement is pending; the swap is a hard cut. Spec: LOADER.md §12.3.
+
+## 2026-10-09: Card moves up as content fills, 5.10a.9 (Tessa)
+- The card looked already in place when the content filled: the skeleton's frame covered its rise. The card now sits above the skeleton, rises 16 pt over 0.45 s, and the skeleton exits in 0.25 s. Spec: LOADER.md §12.3.

@@ -1,3 +1,22 @@
+# Build 5.10a.9: card rises above the skeleton
+
+Updated October 9, 2026.
+
+- **Done:** built and tested the uncommitted 5.10a.9 changes.
+  - The real card sits above the skeleton and rises 16 pt (0.45 s, +0.1 s).
+  - The skeleton exits in 0.25 s.
+  - `replacementAnimation` is removed.
+- **Tests:** no test assumed the old timings or the constant. Added `cardLandingOverSkeleton()` pinning the new values.
+- **Runs:** `ContentLoadInTests` 7/7, `PlaceSkeletonTests` 11/11, `PlaceChangeLayoutTests` 1/1; full suite **991/991**.
+- **Flags:**
+  - `cardLandingAnimation`'s comment says it matches the replay (it doesn't now).
+  - A stray blank line where `replacementAnimation` was.
+  - Older items still open.
+- **Next:** Tessa's device check.
+- Findings: `.agent-reports/5.10a.9/findings.md`.
+
+---
+
 # Build 5.10a.8: one-frame swap when a replacement begins
 
 Updated October 9, 2026.

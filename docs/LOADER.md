@@ -585,6 +585,10 @@ sharp). Report: `.agent-reports/5.9.3/findings.md`.
   out (~0.25 s) over the skeleton fading in, and the city line faded too. Cause: `disablesAnimations` lost to the
   ambient `.animation(value:)` fades. Now those fades are switched off while a replacement is pending and the
   transaction's animation is cleared, so the swap is a hard cut in one frame; the landing still animates.
+- **5.10a.9 (Tessa, 2026-10-09, video 5): the card visibly moves up into place.** The skeleton's frame sat on top of
+  the card and hid its 8 pt rise. Now the real card is above the skeleton and rises 16 pt (0.45 s ease-out, +0.1 s)
+  while the skeleton fades out quicker (0.25 s). `ContentLoadIn.cardLanding*`, `skeletonExit*`. Reduce Motion:
+  instant swap. The compass and the fast path (no skeleton) keep the 8 pt rise.
 - **Sentence during My location (5.10a.3):** the city line ("in 📍 City, ST?") is hidden, not a stand-in like "your
   location", and fades in (0.5 s ease-out, opacity only) when the city is known. It keeps its slot, so nothing
   moves; VoiceOver reads the sentence without the place until then. Supersedes §12.2 step 2's "your location".
