@@ -35,6 +35,8 @@ Line breaks are fixed at default size (manual `\n`); fall back to natural wrappi
 - Path chip (denied, services off only): 16 pt under the body; 1 pt `stroke` border, radius 14, padding 8 / 14, `surfaceRaised` fill, footnote-size `textSecondary`, centred, two lines as in the table.
 - Bottom block: side margins 28, bottom padding 30. Primary: 56 pt capsule, `accent` fill, `onAccent` text, glow `accent` 25% radius 30. Under it, 6 pt gap, the text link: 44 pt tall, Nunito Sans 600 16, `accent`. Then an 18 pt spacer.
 - Large text / small screens: illustration scales down first (to ~160 pt wide), then copy to ~0.8×, primary stays 56 pt; scroll only the message region if it still doesn't fit (LOADER.md §10.5 rule).
+- **Accessibility sizes (Tessa, 2026-10-10, after the Chunk 2 SE 3 AX5 shots; added to this file by Claude from the prompt, the edit hadn't reached the file):** the illustration drops to ~96 pt at accessibility sizes, and is hidden at AX4+ if still needed. Headline and body fully readable on SE 3 at AX1–AX3. At AX5 only the message region may scroll, and the primary button stays visible.
+  - *As built:* steps in order, each only if the one before doesn't fit the tallest cause: 240 pt → 160 pt → copy 0.8× → (AX1+) 96 pt → (AX4+) no art, headline at the art's top → the message scrolls. **Open:** on SE 3 this reads fully at AX1 only; at AX2 the denied / services-off path chip, and at AX3 the bodies, still scroll (screenshots in `.agent-reports/5.10a-chunk2/`).
 - Hidden on this screen: the sentence, pinned compass bar, DEBUG readout, Show onboarding, the "a city" token.
 
 ---
@@ -129,6 +131,10 @@ Tests: step order and start times use the existing constants; text blocks start 
 1. Illustrations on **failure screens only**; loading keeps today's loader.
 2. Services off and Restricted both use the map: fine for now.
 3. **Merge** the launch message screens (no saved place) into this one view.
+
+## Decisions from Chunk 2 (Tessa, 2026-10-10)
+1. **First ask stays on the loader moon** (it isn't a failure; no art or copy for it here).
+2. **The launch loader's four failure messages keep the moon until Chunk 3/6.**
 
 ## Still open
 - Failure with a saved place on a user-started search (e.g. Use my location): show this screen, or reopen the saved place with the small note? This doc assumes this screen; LOADER.md §12.2 step 5 assumed the card-slot line.

@@ -179,13 +179,67 @@ struct LocationFailureScreenTests {
         #expect(!smallArt.scrollsMessage)
 
         let smallText = resolve(200, 160)
-        #expect(smallText.artSize.width == 160)
+        #expect(smallText.artSize?.width == 160)
         #expect(smallText.textScale == 0.8)
         #expect(!smallText.scrollsMessage)
 
+        // Standard sizes never go below 160 pt or hide the art.
         let scrolls = resolve(400, 320)
+        #expect(scrolls.artSize?.width == 160)
         #expect(scrolls.textScale == 0.8)
         #expect(scrolls.scrollsMessage)
+    }
+
+    private static func resolveSE(
+        _ regular: CGFloat,
+        _ compact: CGFloat,
+        _ textSize: LocationFailureLayout.TextSize
+    ) -> LocationFailureLayout {
+        LocationFailureLayout.resolve(
+            screenHeight: iPhoneSE.height,
+            safeAreaTop: iPhoneSE.top,
+            safeAreaBottom: iPhoneSE.bottom,
+            actionsHeight: actionsHeight,
+            tallestMessage: (regular, compact),
+            textSize: textSize
+        )
+    }
+
+    @Test("AX1–AX3: the art drops to ~96 pt rather than the copy scrolling; never hidden")
+    func accessibilityArt() {
+        // Under the 96 pt art (124.8 tall) the headline is at 218.8, so the
+        // room is 513 − 24 − 218.8 = 270.2.
+        let small = Self.resolveSE(320, 260, .accessibility)
+        #expect(small.artSize?.width == 96)
+        #expect(small.textScale == 0.8)
+        #expect(!small.scrollsMessage)
+
+        let scrolls = Self.resolveSE(400, 320, .accessibility)
+        #expect(scrolls.artSize?.width == 96)
+        #expect(scrolls.scrollsMessage)
+    }
+
+    @Test("AX4+: the art is hidden if still needed, the headline at the art's top; then only the message scrolls")
+    func largeAccessibilityHidesArt() {
+        // A message that fits under the 96 pt art keeps it.
+        #expect(Self.resolveSE(320, 260, .largeAccessibility).artSize?.width == 96)
+
+        // No art: the headline at 90 pt, room 513 − 24 − 90 = 399.
+        let hidden = Self.resolveSE(400, 320, .largeAccessibility)
+        #expect(hidden.artSize == nil)
+        #expect(hidden.headlineTop(safeAreaTop: Self.iPhoneSE.top) == 90)
+        #expect(!hidden.scrollsMessage)
+
+        let scrolls = Self.resolveSE(600, 480, .largeAccessibility)
+        #expect(scrolls.artSize == nil)
+        #expect(scrolls.scrollsMessage)
+    }
+
+    @Test("Large text only takes the extra steps when it needs them")
+    func largeTextFitsFirst() {
+        #expect(Self.resolveSE(80, 64, .largeAccessibility) == .regular)
+        #expect(LocationFailureLayout.steps(for: .standard).allSatisfy { $0.artSize != nil })
+        #expect(!LocationFailureLayout.steps(for: .accessibility).contains { $0.artSize == nil })
     }
 
     @Test("Before anything is measured it's the regular layout")

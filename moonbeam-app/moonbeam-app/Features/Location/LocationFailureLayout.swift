@@ -5,21 +5,35 @@
 
 import CoreGraphics
 
-/// How the failure screen fits (STEP-5.10a, "Layout"): the art's size, the
-/// copy's scale, and whether only the message scrolls.
+/// How the failure screen fits (STEP-5.10a, "Layout"): the art's size (or
+/// none), the copy's scale, and whether only the message scrolls.
 ///
 /// Decided from the **tallest** of the four causes' messages, not the one
 /// showing, so the art frame, headline and primary button sit at the same
 /// height on every cause (Tessa's decision), small screens included.
 ///
-/// Fallback order, LOADER.md §10.5's rule: the art scales down first (240 →
-/// 160 pt wide), then the copy (to 0.8×); the button stays 56 pt; if it
-/// still doesn't fit, the message region scrolls.
+/// Fallback order, each step only if the one before doesn't fit: the art
+/// scales down (240 → 160 pt wide), then the copy (to 0.8×); at
+/// accessibility sizes the art drops on to ~96 pt, and from AX4 it's hidden
+/// (Tessa, 2026-10-10: the SE 3 at AX5 had ~1.5 lines of headline left).
+/// Only then does the message region scroll. The button stays 56 pt and
+/// always on screen.
 ///
 /// `nonisolated`: a plain value, testable without a view.
 nonisolated struct LocationFailureLayout: Equatable {
 
-    let artSize: CGSize
+    /// How large the text is, for the steps only large text may take.
+    enum TextSize: Equatable {
+        /// Up to xxxLarge.
+        case standard
+        /// AX1–AX3: the art may drop to ~96 pt.
+        case accessibility
+        /// AX4 and AX5: the art may also be hidden.
+        case largeAccessibility
+    }
+
+    /// `nil`: hidden.
+    let artSize: CGSize?
     let textScale: CGFloat
     let scrollsMessage: Bool
 
@@ -29,8 +43,11 @@ nonisolated struct LocationFailureLayout: Equatable {
     static let artWidth: CGFloat = 240
     /// Small screens and large text: the art's first step down.
     static let compactArtWidth: CGFloat = 160
+    /// Accessibility sizes: the art's last step before it's hidden.
+    static let accessibilityArtWidth: CGFloat = 96
     /// The art's top from the screen's top (not the safe area's): the mock's
-    /// 90 pt on the 393 pt screen. The art has its own margin inside.
+    /// 90 pt on the 393 pt screen. The art has its own margin inside. With
+    /// the art hidden, the headline starts here.
     static let artTopFromScreenTop: CGFloat = 90
     /// The headline starts ~4 pt under the art's frame.
     static let artToHeadline: CGFloat = 4
@@ -59,7 +76,7 @@ nonisolated struct LocationFailureLayout: Equatable {
         )
     }
 
-    /// The art's top inside the safe area.
+    /// The art's top (or, with no art, the headline's) inside the safe area.
     static func artTop(safeAreaTop: CGFloat) -> CGFloat {
         max(artTopFromScreenTop - safeAreaTop, 0)
     }
@@ -72,10 +89,31 @@ nonisolated struct LocationFailureLayout: Equatable {
 
     /// The headline's top from the screen's top.
     func headlineTop(safeAreaTop: CGFloat) -> CGFloat {
-        safeAreaTop + Self.artTop(safeAreaTop: safeAreaTop) + artSize.height + Self.artToHeadline
+        let art = artSize.map { $0.height + Self.artToHeadline } ?? 0
+        return safeAreaTop + Self.artTop(safeAreaTop: safeAreaTop) + art
     }
 
     // MARK: - Fitting
+
+    /// The steps `textSize` may take, most preferred first. The last is
+    /// also the one that scrolls when nothing fits.
+    static func steps(for textSize: TextSize) -> [LocationFailureLayout] {
+        func step(_ width: CGFloat?, _ scale: CGFloat) -> LocationFailureLayout {
+            LocationFailureLayout(artSize: width.map(artSize(width:)), textScale: scale, scrollsMessage: false)
+        }
+        var steps = [
+            step(artWidth, 1),
+            step(compactArtWidth, 1),
+            step(compactArtWidth, compactTextScale),
+        ]
+        if textSize != .standard {
+            steps.append(step(accessibilityArtWidth, compactTextScale))
+        }
+        if textSize == .largeAccessibility {
+            steps.append(step(nil, compactTextScale))
+        }
+        return steps
+    }
 
     /// - Parameters:
     ///   - screenHeight: the whole screen's, safe areas included.
@@ -87,32 +125,23 @@ nonisolated struct LocationFailureLayout: Equatable {
         safeAreaTop: CGFloat,
         safeAreaBottom: CGFloat,
         actionsHeight: CGFloat,
-        tallestMessage: (regular: CGFloat, compact: CGFloat)
+        tallestMessage: (regular: CGFloat, compact: CGFloat),
+        textSize: TextSize = .standard
     ) -> LocationFailureLayout {
         guard tallestMessage.regular > 0 else { return .regular }
 
         let actionsTop = screenHeight - safeAreaBottom - bottomInset(safeAreaBottom: safeAreaBottom) - actionsHeight
-        func room(for layout: LocationFailureLayout) -> CGFloat {
-            actionsTop - minimumMessageToActions - layout.headlineTop(safeAreaTop: safeAreaTop)
+        func fits(_ layout: LocationFailureLayout) -> Bool {
+            let height = layout.textScale == 1 ? tallestMessage.regular : tallestMessage.compact
+            // Not measured at this scale yet: assume it fits for now.
+            guard height > 0 else { return true }
+            return height <= actionsTop - minimumMessageToActions - layout.headlineTop(safeAreaTop: safeAreaTop)
         }
 
-        if tallestMessage.regular <= room(for: .regular) { return .regular }
-
-        let smallArt = LocationFailureLayout(
-            artSize: artSize(width: compactArtWidth),
-            textScale: 1,
-            scrollsMessage: false
-        )
-        if tallestMessage.regular <= room(for: smallArt) { return smallArt }
-
-        let smallArtAndText = LocationFailureLayout(
-            artSize: smallArt.artSize,
-            textScale: compactTextScale,
-            scrollsMessage: false
-        )
-        guard tallestMessage.compact > 0, tallestMessage.compact > room(for: smallArtAndText) else {
-            return smallArtAndText
-        }
-        return LocationFailureLayout(artSize: smallArt.artSize, textScale: compactTextScale, scrollsMessage: true)
+        let steps = steps(for: textSize)
+        if let fitting = steps.first(where: fits) { return fitting }
+        // Nothing fits: only the message scrolls, at the last step.
+        let last = steps.last ?? .regular
+        return LocationFailureLayout(artSize: last.artSize, textScale: last.textScale, scrollsMessage: true)
     }
 }

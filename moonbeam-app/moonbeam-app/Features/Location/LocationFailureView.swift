@@ -25,6 +25,7 @@ struct LocationFailureView: View {
     let onSearch: () -> Void
 
     @Environment(\.openURL) private var openURL
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @AccessibilityFocusState private var headlineIsFocused: Bool
 
     /// The tallest cause's message at each copy scale, keyed by scale, and
@@ -49,14 +50,18 @@ struct LocationFailureView: View {
                 safeAreaTop: top,
                 safeAreaBottom: bottom,
                 actionsHeight: actionsHeight,
-                tallestMessage: (tallest(compact: false), tallest(compact: true))
+                tallestMessage: (tallest(compact: false), tallest(compact: true)),
+                textSize: textSize
             )
 
             VStack(spacing: 0) {
                 Color.clear.frame(height: LocationFailureLayout.artTop(safeAreaTop: top))
-                LocationIllustration(kind: failure.illustration)
-                    .frame(width: layout.artSize.width, height: layout.artSize.height)
-                Color.clear.frame(height: LocationFailureLayout.artToHeadline)
+                // Hidden at AX4+ when the copy needs the room.
+                if let artSize = layout.artSize {
+                    LocationIllustration(kind: failure.illustration)
+                        .frame(width: artSize.width, height: artSize.height)
+                    Color.clear.frame(height: LocationFailureLayout.artToHeadline)
+                }
                 message(layout)
                 actions
                 Color.clear.frame(height: LocationFailureLayout.bottomInset(safeAreaBottom: bottom))
@@ -72,6 +77,12 @@ struct LocationFailureView: View {
             // Focus moves to the headline when the screen appears.
             headlineIsFocused = true
         }
+    }
+
+    /// Which of the layout's large-text steps are allowed.
+    private var textSize: LocationFailureLayout.TextSize {
+        if dynamicTypeSize >= .accessibility4 { return .largeAccessibility }
+        return dynamicTypeSize.isAccessibilitySize ? .accessibility : .standard
     }
 
     // MARK: - Message
