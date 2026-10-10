@@ -38,9 +38,9 @@ struct DebugScreenState: View {
         /// lands and Try again is tapped for you, so "Aha" and the fly into
         /// the card follow.
         case recoveryAha
-        /// The location failure screen alone (STEP-5.10a Chunk 2), for
-        /// screenshots before it's wired in (Chunk 3): Try again and the
-        /// search do nothing yet; Open Settings opens Settings.
+        /// The location failure screen (STEP-5.10a): Irvine saved and
+        /// shown, then Use my location fails for the cause, through the
+        /// real wiring (Chunk 3), so Try again and Enter a city work too.
         case locationFailedDenied = "locationFailed.denied"
         case locationFailedServicesOff = "locationFailed.servicesOff"
         case locationFailedNoFix = "locationFailed.noFix"
@@ -78,15 +78,10 @@ struct DebugScreenState: View {
     }
 
     var body: some View {
-        if let failure = state.locationFailure {
-            LocationFailureView(failure: failure, onTryAgain: {}, onSearch: {})
-                .background { ScreenBackground() }
-        } else {
-            LocationScreen(viewModel: fixture.viewModel)
-                .task {
-                    await fixture.apply(state)
-                }
-        }
+        LocationScreen(viewModel: fixture.viewModel)
+            .task {
+                await fixture.apply(state)
+            }
     }
 
     // MARK: - Fixture
@@ -150,15 +145,16 @@ struct DebugScreenState: View {
             self.here = here
             let now = state == .noMoonrise ? Self.time(3, 7, 53) : Self.time(2, 7, 53)
             let authState: LocationAuthState = switch state {
-            case .locationOff, .messageDenied: .denied
+            case .locationOff, .messageDenied, .locationFailedDenied: .denied
             case .messageFirstAsk: .notDetermined
-            case .messageServicesOff: .servicesOff
-            case .messageRestricted: .restricted
+            case .messageServicesOff, .locationFailedServicesOff: .servicesOff
+            case .messageRestricted, .locationFailedRestricted: .restricted
             default: .authorized
             }
-            let placeResult: Result<Place, any Error> = state == .messageNoFix || state == .recoveryAha
-                ? .failure(LocationError.locationUnavailable)
-                : .success(here)
+            let placeResult: Result<Place, any Error> = switch state {
+            case .messageNoFix, .recoveryAha, .locationFailedNoFix: .failure(LocationError.locationUnavailable)
+            default: .success(here)
+            }
             location = FakeLocationService(authorizationState: authState, placeResult: placeResult)
             location.isPreciseLocationOff = state == .preciseOff || state == .aha
             if state == .aha {
@@ -179,7 +175,9 @@ struct DebugScreenState: View {
             viewModel = LocationViewModel(
                 locationService: location,
                 placeSearch: FakePlaceSearchService(),
-                placeStore: InMemoryPlaceStore(lastViewed: state == .locationOff ? Place.irvine : nil),
+                placeStore: InMemoryPlaceStore(
+                    lastViewed: state == .locationOff || state.locationFailure != nil ? Place.irvine : nil
+                ),
                 moonService: moonService,
                 headingService: heading,
                 deviceTimeZone: Self.zone,
@@ -240,6 +238,16 @@ struct DebugScreenState: View {
             let limit = state == .launchFast || state == .launchSlow ? Self.launchPollLimit : Self.pollLimit
             for _ in 0..<limit where viewModel.moonTable == nil {
                 try? await Task.sleep(for: Self.pollInterval)
+            }
+            if state.locationFailure != nil {
+                // The launch must be over first: tapped while `start()` is
+                // still finishing, the launch would see no place and stop
+                // on the loader's message instead.
+                for _ in 0..<limit where viewModel.launchStage != .ready {
+                    try? await Task.sleep(for: Self.pollInterval)
+                }
+                await viewModel.useMyLocation()
+                return
             }
             switch state {
             case .otherDate: viewModel.nextDay()

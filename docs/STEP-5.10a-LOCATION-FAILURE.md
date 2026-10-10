@@ -18,6 +18,11 @@
 `design/1.6-location-error-illustrations/`: `assets/anim/` (`searching.svg`, `location-not-found.svg`, `permission-off.svg`, `services-off.svg`, `restricted.svg`: 400 × 520, transparent, layers named by `data-part`), `ILLUSTRATIONS_MOTION.md` (keyframes, pivots, durations), `Location Illustrations Motion.dc.html` + `support.js` (animated reference, open in a browser).
 **Still fallback:** `design/d2-luminous-calico/stills/*.svg` and `D2Illustrations.xcassets` (already compiled with `actool`; image names `d2-searching`, `d2-location-not-found`, `d2-permission-off`, `d2-services-off`, `d2-restricted`). The `anim` SVGs are the source for the layered, animated version. Older `design/1.4-location-flow` and `1.5-loader-polish` are unchanged and not part of this step.
 
+## Decisions from Chunk 2 (Tessa, 2026-10-10)
+- **First ask is not a failure.** It has no `LocationFailure` case, art or copy in this step. It stays on the launch loader's stopped moon + message, sharing the same message-block code (`MessageText`, `MessageActions`, `MessageCopy`). Revisit later.
+- **Shared view now, swap later.** `LocationFailureView` exists and shows through the DEBUG `-screenState locationFailed.*` states. The launch loader's four failure messages (denied, services off, restricted, no fix, no saved place) **keep the moon until Chunks 3 and 6** wire the swap and its transition, so Aha's flight from the moon stays intact and no half-built transition ships.
+- Large-text layout rule changed (see Layout).
+
 ## Causes, copy, art and actions
 Line breaks are fixed at default size (manual `\n`); fall back to natural wrapping at AX sizes. VoiceOver reads headline and body as one sentence each, without the breaks.
 
@@ -34,9 +39,7 @@ Line breaks are fixed at default size (manual `\n`); fall back to natural wrappi
 - Headline: Young Serif 28, line height ×1.22, centred, max width 300. Then 14 pt gap, body: Nunito Sans 17, ×1.45, centred, max width 290.
 - Path chip (denied, services off only): 16 pt under the body; 1 pt `stroke` border, radius 14, padding 8 / 14, `surfaceRaised` fill, footnote-size `textSecondary`, centred, two lines as in the table.
 - Bottom block: side margins 28, bottom padding 30. Primary: 56 pt capsule, `accent` fill, `onAccent` text, glow `accent` 25% radius 30. Under it, 6 pt gap, the text link: 44 pt tall, Nunito Sans 600 16, `accent`. Then an 18 pt spacer.
-- Large text / small screens: illustration scales down first (to ~160 pt wide), then copy to ~0.8×, primary stays 56 pt; scroll only the message region if it still doesn't fit (LOADER.md §10.5 rule).
-- **Accessibility sizes (Tessa, 2026-10-10, after the Chunk 2 SE 3 AX5 shots; added to this file by Claude from the prompt, the edit hadn't reached the file):** the illustration drops to ~96 pt at accessibility sizes, and is hidden at AX4+ if still needed. Headline and body fully readable on SE 3 at AX1–AX3. At AX5 only the message region may scroll, and the primary button stays visible.
-  - *As built:* steps in order, each only if the one before doesn't fit the tallest cause: 240 pt → 160 pt → copy 0.8× → (AX1+) 96 pt → (AX4+) no art, headline at the art's top → the message scrolls. **Open:** on SE 3 this reads fully at AX1 only; at AX2 the denied / services-off path chip, and at AX3 the bodies, still scroll (screenshots in `.agent-reports/5.10a-chunk2/`).
+- Large text / small screens (updated 2026-10-10 after Chunk 2 shots): the message matters more than the art. At accessibility sizes the illustration drops to ~96 pt first (hidden at AX4+ if still needed), then copy scales to ~0.8×. Headline and body must be fully readable without scrolling on iPhone SE 3 at AX1–AX3; at AX5 only the message region may scroll, and the primary button stays visible. The art never takes space from the words.
 - Hidden on this screen: the sentence, pinned compass bar, DEBUG readout, Show onboarding, the "a city" token.
 
 ---
@@ -68,9 +71,13 @@ Add DEBUG `-screenState locationFailed.<denied|servicesOff|noFix|restricted>` fo
 ## Chunk 3: Wire it in
 > Claude Code prompt
 
+First ask stays on the loader moon (see Decisions from Chunk 2). If wiring the launch failures can't be done without touching the moon / Aha flight, stop and ask before choosing.
+
 Show `LocationFailureView` in place of the main content whenever `locationFailure != nil`. Re-check permission when the app returns from Settings; if it's now authorized, clear the failure and fetch automatically, then continue into the existing recovery flow (loader → Aha → load-in). Entering a city clears the failure and goes through the §12 place-change flow (`loadInGeneration` bump, old place stays out). Don't touch the date controls or compass.
 
 Tests: return from Settings with access granted → fetch starts once; Enter a city → failure cleared and place-change load-in plays; Open Settings only offered for denied and services off.
+
+*As built (2026-10-10):* the failure screen replaces the main content only once the screen is up (`failureScreen`); a launch with no saved place keeps the loader moon's message (Decisions from Chunk 2). **Recovery (Tessa):** Try again and a return from Settings with access both run the existing loader → Aha → flight into the card; another miss brings the failure screen back. **Dialog (Tessa):** the main screen's Use my location no longer opens the Location Off dialog; the compass's Turn On Location and the launch loader's search row keep it.
 
 ## Chunk 4: Import the illustrations as layers
 > Claude Code prompt
@@ -131,10 +138,6 @@ Tests: step order and start times use the existing constants; text blocks start 
 1. Illustrations on **failure screens only**; loading keeps today's loader.
 2. Services off and Restricted both use the map: fine for now.
 3. **Merge** the launch message screens (no saved place) into this one view.
-
-## Decisions from Chunk 2 (Tessa, 2026-10-10)
-1. **First ask stays on the loader moon** (it isn't a failure; no art or copy for it here).
-2. **The launch loader's four failure messages keep the moon until Chunk 3/6.**
 
 ## Still open
 - Failure with a saved place on a user-started search (e.g. Use my location): show this screen, or reopen the saved place with the small note? This doc assumes this screen; LOADER.md §12.2 step 5 assumed the card-slot line.

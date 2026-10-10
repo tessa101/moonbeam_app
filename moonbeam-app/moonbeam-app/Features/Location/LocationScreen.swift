@@ -57,16 +57,28 @@ struct LocationScreen: View {
             case .waiting, .phaseCycle:
                 Color.clear
             case .ready:
-                // §2.1: no whole-screen fade. The screen arrives at once and
-                // its blocks load in (`ContentLoadIn`). Under "Aha"'s flying
-                // moon they're timed around the flight, and the card's glyph
-                // waits for the moon (§10.4, §11.2.6).
-                ScrollViewReader { scrollProxy in
-                    scrollView(scrollProxy)
+                if let failure = viewModel.failureScreen {
+                    // STEP-5.10a Chunk 3: in place of the main content, so
+                    // no sentence, card, compass or DEBUG buttons. Its
+                    // entrance is Chunk 6's.
+                    LocationFailureView(
+                        failure: failure,
+                        onTryAgain: { Task { await viewModel.tryAgainFromFailureScreen() } },
+                        onSearch: viewModel.presentSearch
+                    )
+                    .transition(.identity)
+                } else {
+                    // §2.1: no whole-screen fade. The screen arrives at once
+                    // and its blocks load in (`ContentLoadIn`). Under "Aha"'s
+                    // flying moon they're timed around the flight, and the
+                    // card's glyph waits for the moon (§10.4, §11.2.6).
+                    ScrollViewReader { scrollProxy in
+                        scrollView(scrollProxy)
+                    }
+                    .environment(\.contentArrivesAfterAha, isAhaFlying)
+                    .environment(\.hidesCardPhaseGlyph, isAhaFlying)
+                    .transition(.identity)
                 }
-                .environment(\.contentArrivesAfterAha, isAhaFlying)
-                .environment(\.hidesCardPhaseGlyph, isAhaFlying)
-                .transition(.identity)
             }
         }
         // The loader sits over the screen, so it can stay up while "Aha"'s

@@ -101,6 +101,11 @@ Picking any place (search or detect ~~, or chip~~) makes it the new **last-viewe
 | Location Services off system-wide | Shows the custom dialog in its services-off variant |
 | Approximate location only | Treated as authorized. Approximate is enough for moon times. |
 
+**Superseded on the main screen (STEP-5.10a Chunk 3, Tessa, 2026-10-10):** once the screen is up, Use my location
+while denied / restricted / services off shows the **location failure screen** in place of the main content
+(STEP-5.10a-LOCATION-FAILURE.md), not the dialog. The dialog stays for the compass's Turn On Location and for the
+search row over a launch loader message.
+
 ### Custom "Location Off" dialog
 A custom in-app sheet or dialog, **not** a system alert.
 

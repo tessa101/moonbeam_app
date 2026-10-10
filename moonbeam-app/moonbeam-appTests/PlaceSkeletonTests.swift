@@ -175,7 +175,10 @@ struct PlaceSkeletonTests {
 
         await viewModel.useMyLocation()
 
-        #expect(viewModel.locationOffDialog == .denied)
+        // STEP-5.10a Chunk 3: the failure screen, not the dialog (Tessa,
+        // 2026-10-10).
+        #expect(viewModel.locationOffDialog == nil)
+        #expect(viewModel.failureScreen == .permissionDenied)
         #expect(viewModel.cardPlaceholder == .failed)
         #expect(viewModel.place == nil)
     }

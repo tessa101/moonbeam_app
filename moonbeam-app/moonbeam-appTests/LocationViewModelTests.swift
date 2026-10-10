@@ -679,7 +679,10 @@ struct LocationViewModelTests {
         #expect(store.recents == [Self.sydney])
     }
 
-    @Test("Location row with permission denied: the dialog shows, and Search instead reopens the sheet")
+    // STEP-5.10a Chunk 3 (Tessa, 2026-10-10): on the ready screen the
+    // failure screen replaces the Location Off dialog; its Enter a city
+    // instead opens a fresh sheet.
+    @Test("Location row with permission denied: the failure screen, no dialog; Enter a city reopens the sheet")
     func locationRowDeniedThenSearchInstead() async throws {
         let location = FakeLocationService(authorizationState: .denied)
         let viewModel = Self.makeViewModel(
@@ -690,18 +693,13 @@ struct LocationViewModelTests {
         let firstSheet = try Self.openSearch(viewModel)
 
         firstSheet.useMyLocation()
-        #expect(viewModel.locationOffDialog == nil)
         await viewModel.searchDidDismiss()
 
-        #expect(viewModel.locationOffDialog == .denied)
-        #expect(!viewModel.isSearchPresented)
-
-        viewModel.searchInsteadOfLocation()
         #expect(viewModel.locationOffDialog == nil)
-        // Not until the dialog has finished closing.
+        #expect(viewModel.failureScreen == .permissionDenied)
         #expect(!viewModel.isSearchPresented)
 
-        viewModel.locationOffDialogDidDismiss()
+        viewModel.presentSearch()
 
         #expect(viewModel.isSearchPresented)
         let reopened = try #require(viewModel.searchSheet)

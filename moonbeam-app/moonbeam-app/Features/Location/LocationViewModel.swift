@@ -108,6 +108,14 @@ final class LocationViewModel {
     /// Cleared when a new search starts or a place lands.
     private(set) var locationFailure: LocationFailure?
 
+    /// The failure screen, shown in place of the main content (STEP-5.10a
+    /// Chunk 3). Only once the screen is up: a launch with no saved place
+    /// keeps the loader moon's message instead ("Decisions from Chunk 2"),
+    /// and a recovery hands back to the loader, so it's `nil` meanwhile.
+    var failureScreen: LocationFailure? {
+        launchStage == .ready ? locationFailure : nil
+    }
+
     /// The one main-screen entrance replays when the selected place changes,
     /// never for a date or same-place refresh (LOADER.md §12.1).
     private(set) var loadInGeneration = 0
@@ -558,6 +566,52 @@ final class LocationViewModel {
         }
     }
 
+    // MARK: - Failure screen (STEP-5.10a Chunk 3)
+
+    /// The failure screen's Try again (No fix only).
+    func tryAgainFromFailureScreen() async {
+        guard failureScreen == .noFix else { return }
+        await recoverFromFailureScreen()
+    }
+
+    /// Try again, or back from Settings with access: the failure screen goes
+    /// at once and the existing recovery runs, as after a launch message:
+    /// the loader with its entrance, then "Aha" and the moon's flight into
+    /// the card as the screen loads in (Tessa, 2026-10-10). Another miss
+    /// brings the failure screen back.
+    ///
+    /// The screen is out from here on (`launchStage` back to the loader), so
+    /// a second tap or foreground finds no failure screen and doesn't stack
+    /// a fix.
+    private func recoverFromFailureScreen() async {
+        locationFailure = nil
+        locationFailed = false
+        showLoader()
+        await locate(userInitiated: true)
+        LaunchSignposts.signposter.emitEvent("Failure screen recovery fix received")
+        // A pick meanwhile has already ended the loader.
+        guard launchStage == .phaseCycle else { return }
+        if let place {
+            await finishWithAha(for: place)
+        } else {
+            finishLoader()
+        }
+    }
+
+    /// Back in the foreground on the failure screen: access granted in
+    /// Settings recovers once; a different reason changes the screen; No fix
+    /// waits for Try again, as the loader's message does (§10.3).
+    private func failureScreenDidBecomeActive(on failure: LocationFailure, state: LocationAuthState) async {
+        lastSeenAuthState = state
+        detectionOnlyAfterSettings = false
+        if state.isAuthorized {
+            guard failure != .noFix, !isLocating else { return }
+            await recoverFromFailureScreen()
+        } else if let current = LocationFailure(state), current != failure {
+            locationFailure = current
+        }
+    }
+
     /// Call when the phase cycle comes on screen. Returns what VoiceOver
     /// should announce the first time per launch, `nil` after (LOADER.md §4).
     func phaseCycleDidAppear() -> String? {
@@ -626,14 +680,11 @@ final class LocationViewModel {
         case .authorized:
             await locate(userInitiated: true, detectionOnly: detectionOnly)
         case .denied:
-            detectionOnlyAfterSettings = detectionOnly
-            locationOffDialog = .denied
+            offerLocationOff(.denied, detectionOnly: detectionOnly)
         case .restricted:
-            detectionOnlyAfterSettings = detectionOnly
-            locationOffDialog = .restricted
+            offerLocationOff(.restricted, detectionOnly: detectionOnly)
         case .servicesOff:
-            detectionOnlyAfterSettings = detectionOnly
-            locationOffDialog = .servicesOff
+            offerLocationOff(.servicesOff, detectionOnly: detectionOnly)
         }
         // A refused prompt or a Location Off dialog leaves the replacement
         // with no fix coming; without this the skeleton would keep saying
@@ -642,6 +693,16 @@ final class LocationViewModel {
         if isReplacingPlace, !locationFailed, !isLocating {
             failReplacement(LocationFailure(settledState))
         }
+    }
+
+    /// The Location Off dialog, except for the main screen's Use my
+    /// location: its failure screen says the same, with the same actions
+    /// (Tessa, 2026-10-10). The compass's Turn On Location (no failure
+    /// screen) and the launch loader's search row keep it.
+    private func offerLocationOff(_ variant: LocationOffVariant, detectionOnly: Bool) {
+        detectionOnlyAfterSettings = detectionOnly
+        guard detectionOnly || launchStage != .ready else { return }
+        locationOffDialog = variant
     }
 
     /// Call when the scene becomes active. §4: coming back from Settings with
@@ -666,6 +727,11 @@ final class LocationViewModel {
         // launch's own fetch decides the place then; a retry here would
         // cancel it, and the launch would open with no place (LOADER.md §9).
         guard launchStage == .ready else { return }
+
+        if let failure = failureScreen {
+            await failureScreenDidBecomeActive(on: failure, state: state)
+            return
+        }
 
         let wasAuthorized = lastSeenAuthState.isAuthorized
         lastSeenAuthState = state
@@ -1115,7 +1181,10 @@ final class LocationViewModel {
     /// `remember` is true for anything the user picked (§3: search or
     /// detect), which makes it the new last-viewed place.
     private func show(_ place: Place, remember: Bool) {
-        let changesWhere = isReplacingPlace || self.place.map { !$0.isSameCity(as: place) } == true
+        // No place before (on the ready screen, only after a failure): a city
+        // entered from the failure screen is a place change too (STEP-5.10a
+        // Chunk 3, §12).
+        let changesWhere = isReplacingPlace || self.place.map { !$0.isSameCity(as: place) } ?? true
         // The selection carries over: following today resolves to the new
         // city's today, a picked day stays the same calendar day (DATE.md §3).
         self.place = place
