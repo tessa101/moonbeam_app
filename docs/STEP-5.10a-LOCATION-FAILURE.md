@@ -119,6 +119,12 @@ Sequence (numbers are the existing ones; use the constants, not these literals):
 Reduce Motion: same order, opacity only, no rise. VoiceOver: announce the headline once the message is in, then focus the primary button.
 Tests: step order and start times use the existing constants; text blocks start after the illustration; Reduce Motion drops the rise; instant failures skip the loader fade. Report where you reused each constant.
 
+**From the Chunk 3 recordings (Tessa, 2026-10-10; `.agent-reports/5.10a-chunk3/recordings/`), owned by this chunk:**
+1. A ~0.5 s flash of the main screen with an empty sentence (no city) and the placeholder card, between the search sheet closing and the failure screen appearing (recordings 01 and 05).
+2. When the failure screen returns after a missed Try again, the loader moon fades out over the headline (~0.2 s, recording 04).
+3. A fast failure flashes the loader: there's no 1.2 s minimum search time before the failure screen yet.
+4. VoiceOver check: Restricted's hidden "Enter a city instead" (kept for its 44 pt room) must be skipped.
+
 ---
 
 ## Tests (overall)

@@ -1420,3 +1420,6 @@ On SE 3 at AX5 the Chunk 2 fallback left ~1.5 lines of headline. Tessa's rule: t
 
 ## 2026-10-10: Fixes from the Chunk 3 recordings, 5.10a (Tessa)
 The launch loader's message link now reads "Enter a city instead", the failure screens' wording (`LocationIssue.searchLinkTitle` is `LocationFailure.enterCityTitle`); restricted keeps "Search for a city" as its button, and the launch messages otherwise look as before. The search sheet hides its Use my location row while location is restricted (`showsUseMyLocation` checks `lastSeenAuthState`), since the user can't change it.
+
+## 2026-10-10: Bug logged: one-line sentence token tap areas (pre-existing, not part of 5.10a)
+Found while recording the Chunk 3 scenarios on the iPhone 17 simulator. When the madlib sentence fits on one line ("Where can I find the moon today in Irvine, CA?"), the date and place tokens' accessibility frames sit ~23 pt above the visible tokens and overlap each other; tapping the place token's reported hit point opened the **calendar** instead of search. Tapping the visible "Irvine, CA" text worked. With a two-line sentence (San Diego) the frames line up. Likely in `MadlibSentence`'s token frame reporting for the single-line layout. Not fixed; needs its own step (a frame test like 5.10b's would catch it).
