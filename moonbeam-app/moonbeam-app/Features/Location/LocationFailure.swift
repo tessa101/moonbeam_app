@@ -13,7 +13,7 @@ import Foundation
 /// first-ask message, so it has no case here.
 ///
 /// `nonisolated`: a plain value, testable without a view.
-nonisolated enum LocationFailure: Equatable, Sendable {
+nonisolated enum LocationFailure: Equatable, Sendable, CaseIterable {
     /// The app's permission is off (`denied`).
     case permissionDenied
     /// The device-wide Location Services switch is off.

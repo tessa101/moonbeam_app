@@ -38,6 +38,23 @@ struct DebugScreenState: View {
         /// lands and Try again is tapped for you, so "Aha" and the fly into
         /// the card follow.
         case recoveryAha
+        /// The location failure screen alone (STEP-5.10a Chunk 2), for
+        /// screenshots before it's wired in (Chunk 3): Try again and the
+        /// search do nothing yet; Open Settings opens Settings.
+        case locationFailedDenied = "locationFailed.denied"
+        case locationFailedServicesOff = "locationFailed.servicesOff"
+        case locationFailedNoFix = "locationFailed.noFix"
+        case locationFailedRestricted = "locationFailed.restricted"
+
+        var locationFailure: LocationFailure? {
+            switch self {
+            case .locationFailedDenied: .permissionDenied
+            case .locationFailedServicesOff: .servicesOff
+            case .locationFailedNoFix: .noFix
+            case .locationFailedRestricted: .restricted
+            default: nil
+            }
+        }
     }
 
     /// The launch argument, then the kind's name.
@@ -61,10 +78,15 @@ struct DebugScreenState: View {
     }
 
     var body: some View {
-        LocationScreen(viewModel: fixture.viewModel)
-            .task {
-                await fixture.apply(state)
-            }
+        if let failure = state.locationFailure {
+            LocationFailureView(failure: failure, onTryAgain: {}, onSearch: {})
+                .background { ScreenBackground() }
+        } else {
+            LocationScreen(viewModel: fixture.viewModel)
+                .task {
+                    await fixture.apply(state)
+                }
+        }
     }
 
     // MARK: - Fixture
@@ -282,4 +304,8 @@ struct DebugScreenState: View {
 #Preview("21 Message: Restricted") { DebugScreenState(.messageRestricted) }
 #Preview("22 Message: No fix") { DebugScreenState(.messageNoFix) }
 #Preview("23 Aha after a recovery") { DebugScreenState(.recoveryAha) }
+#Preview("24 Failed: App permission off") { DebugScreenState(.locationFailedDenied) }
+#Preview("25 Failed: Services off") { DebugScreenState(.locationFailedServicesOff) }
+#Preview("26 Failed: No fix") { DebugScreenState(.locationFailedNoFix) }
+#Preview("27 Failed: Restricted") { DebugScreenState(.locationFailedRestricted) }
 #endif

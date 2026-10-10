@@ -121,5 +121,19 @@ nonisolated enum LocationIssue: Equatable, Sendable {
     }
 
     static let searchLinkTitle = "Search for a city instead"
-    private static let searchTitle = "Search for a city"
+    /// Restricted's button, here and on its failure screen.
+    static let searchTitle = "Search for a city"
+
+    /// All of the above, for the shared message block.
+    var copy: MessageCopy {
+        MessageCopy(
+            headline: headline,
+            headlineLines: headlineLines,
+            body: body,
+            bodyLines: bodyLines,
+            primaryTitle: primaryTitle,
+            linkTitle: Self.searchLinkTitle,
+            showsLink: showsSearchLink
+        )
+    }
 }
