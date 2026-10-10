@@ -67,8 +67,12 @@ def tag(element):
 def leaves_in_order(root, animated):
     """Every drawable shape in document order, with the chain of animated
     parts it sits in (outermost first) and the nearest data-part of any kind
-    (for naming static runs)."""
+    (for naming static runs).
+
+    The route's waypoint circles each glow on their own (Chunk 5), so each
+    is its own part: waypoint-1, waypoint-2, waypoint-3 in document order."""
     result = []
+    waypoints = [0]
 
     def walk(element, chain, named):
         name = element.get("data-part")
@@ -77,6 +81,9 @@ def leaves_in_order(root, animated):
         if name:
             named = name
         if tag(element) in SHAPES:
+            if tag(element) == "circle" and chain and chain[-1] == "route":
+                waypoints[0] += 1
+                chain = chain[:-1] + [f"waypoint-{waypoints[0]}"]
             result.append((element, tuple(chain), named))
             return
         if tag(element) in ("defs", "metadata", "title", "desc"):

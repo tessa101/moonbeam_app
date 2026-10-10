@@ -1,3 +1,185 @@
+# Build 5.10a Chunk 5: location failure illustration motion
+
+Updated October 10, 2026.
+
+- **Done:** all four failure illustrations run the approved “Playful beats” motion at the specified 0.85× timings:
+  - No fix: moon ring, head, question mark and tail.
+  - Permission off: breathing moon, telescope and star.
+  - Services off: breathing moon, floating map, travelling spark and waypoint glow.
+  - Restricted: breathing moon, travelling/bouncing spark, waypoint glow and lock shake.
+- `LocationIllustration` creates its `TimelineView(.animation)` only while the artwork is visible and the scene is active.
+  - Background, inactive and dismissed states select static artwork, so no timeline remains running.
+  - Reduce Motion takes the same static branch—there is no paused or hidden `TimelineView`; the spark/star are hidden and the question mark is shown at rest.
+- Motion values and formulas live in `IllustrationSpec`, `IllustrationKeyframes`, `IllustrationMotion` and `IllustrationSpark`; views only render sampled poses.
+- **Tests:** seven Chunk 5 tests cover exact keyframe stops, linear ring sampling, still poses, smoothstep, spark bounce/fade, lock-shake cutoff, and the no-timeline lifecycle policy. Build-for-testing succeeds; full suite **1095/1095**.
+- **Recordings:** `.agent-reports/5.10a-chunk5/recordings/` has all four default-size iPhone 17 clips, their 40 source frames, contact sheets and README.
+  - Direct `simctl recordVideo` and macOS capture could not reach CoreSimulatorService in the managed environment, so the H.264 clips are reconstructed from sequential full-resolution Xcode device captures (402 × 874, 10 frames / 9.09 s each).
+  - All four show distinct motion with no overlap, truncation, clipping, crash or unexpected exit. A denied-state Home/return check reached `RunningInBackground`, then `Running`, cleanly.
+- **Next:** Chunk 6.
+
+---
+
+# Fix: foreground retry race
+
+Updated October 10, 2026. Commit `3f49365`.
+
+- The quiet detection retry now skips while Use my location is pending.
+- The regression test fails without the guard and passes with it.
+- 1088/1088.
+- **Next:** Chunk 5.
+
+---
+
+# Build 5.10a Chunk 4: illustrations as layers
+
+Updated October 10, 2026. Commit `93aa83b`.
+
+- **Done:**
+  - `scripts/slice_illustrations.py` cuts the 4 failure SVGs into 19 slices, written to `Illustrations.xcassets`.
+  - `IllustrationSpec` holds the layers, the parts each moves with, and the pivots.
+  - `LocationIllustration` stacks the layers.
+  - The D2 stills are removed from the app catalog.
+- **Import:**
+  - All 19 imported cleanly as SVG (vector + @3x), with no actool warnings.
+  - No PDF or PNG fallback was needed.
+- **Check:** the layered art matches the old stills on screen, max 2/255 per pixel, 0 px > 8, for all four causes. Files: `.agent-reports/5.10a-chunk4/before|after/`, `before_after_art.png`.
+- **Runs:** 1087/1087.
+- **Found (not fixed):**
+  - A foreground's quiet detection retry can cancel Use my location. The result is no failure screen, just "a city" plus the old failure card; it happened in 3 of 6 fixture launches.
+  - A `!isReplacingPlace` guard fixed 8/8. I reverted it pending your call.
+- **Next:** your call on that fix, then Chunk 5.
+
+---
+
+# 5.10a: small fixes from the recordings + docs
+
+Updated October 10, 2026. Commits `1fb4cde`, `7911661`.
+
+- **Done:**
+  - The launch messages' link now reads "Enter a city instead".
+  - No Use my location row when restricted. Tests updated.
+  - Chunk 6 now owns the 4 recording findings (step doc).
+  - The one-line tap-area bug is logged as pre-existing in DECISIONS.md.
+- **Runs:** 1079 tests; the one failing test (it expected the row when restricted) was updated and passes.
+- **Next:** Chunk 4.
+
+---
+
+# 5.10a Chunk 3 recordings for review
+
+Updated October 10, 2026. Commit `52f7e1c` (DEBUG fixture only).
+
+- **Done:** 7 videos plus `README.md` in `.agent-reports/5.10a-chunk3/recordings/`.
+  - Real simulator: 01, 05, 07. DEBUG fixture: 02, 03, 04, 06.
+  - Uncut originals are in `raw/`.
+- **Fixture changes (DEBUG only):**
+  - The denied and services-off kinds grant access when the app goes to the background.
+  - noFix's Try again now succeeds.
+  - New `locationFailed.noFixAgain` keeps failing.
+- **Runs:** full suite **1076/1076**. The Xcode destination had been left on the T2 iPhone; switched back to iPhone 17.
+- **Why you see the moon:** everything on the launch loader keeps it (no saved city plus a failure, Forget saved place, a fresh install, First ask), plus the recovery's own loader → Aha. The failure screen needs a saved city, then Use my location. Details in the README.
+- **Flags:**
+  - Open Settings landed on Settings' top level.
+  - A ~0.5 s placeholder flash before the failure screen.
+  - The loader fades over the failure text when it returns (04).
+  - The moon message still says "Search for a city instead".
+  - The search sheet offers Use my location while restricted.
+  - The one-line Irvine sentence's token tap areas sit 23 pt high (tapping the place token opened the calendar).
+- **Next:** your review, then Chunk 4.
+
+---
+
+# Build 5.10a Chunk 3: failure screen wired in
+
+Updated October 10, 2026. Commit `fe8e23d`.
+
+- **Done:** `LocationFailureView` replaces the main content while `failureScreen` is set, which is only once the screen is up. Launch failures keep the loader moon.
+- **Asked first, your calls:** recovery runs loader → Aha; the Location Off dialog is dropped for the main Use my location.
+- **Behaviour:**
+  - **Back from Settings with access:** the failure screen goes at once; the loader appears with its entrance; one fix (a second foreground doesn't add one); Aha; the moon flies into the card as the screen loads in.
+  - **Back from Settings, other cases:** still off keeps the screen; a different reason switches it; No fix waits for Try again.
+  - **Try again (No fix):** the same loader → Aha. Another miss brings the failure screen back. A double tap starts only one fix.
+  - **Enter a city / Search for a city:** search sheet, field focused; picking a city clears the failure and plays the §12 place-change load-in (`loadInGeneration` + card replay). The old place stays out.
+- **Runs:** `LocationFailureWiringTests` 17 new; 2 old dialog tests updated to the new behaviour; full suite **1076/1076**.
+- **Screens:** `.agent-reports/5.10a-chunk3/` shows the wired DEBUG states on iPhone 17. Taps weren't driven on screen; they're covered by unit tests.
+- **Flags:**
+  1. The doc says "whenever `locationFailure != nil`". I scoped it to the ready screen so launch messages keep the moon.
+  2. Try again that fails fast flashes the loader, because there's no 1.2 s minimum here. That timing is Chunk 6's.
+  3. The search sheet's Use my location row, opened from the failure screen, uses the §12 skeleton path, not loader → Aha.
+  4. Back from Settings with "Ask Next Time" (not determined) keeps the failure screen; there's no First ask here.
+  5. Fixed a DEBUG fixture race: No fix landed on the launch loader because Use my location fired before `start()` finished.
+- **Next:** Chunk 4, plus your calls on SE 3 AX2/AX3 and flags 2–4.
+
+---
+
+# Build 5.10a Chunk 2b: failure screen at accessibility sizes
+
+Updated October 10, 2026. Commit `69d4b96`.
+
+- **Done:** your large-text rule.
+  - At AX1+ the art drops to 96 pt; at AX4+ it's hidden if still needed.
+  - The message scrolls only after that; the button is always visible.
+  - Unit tests updated (31/31); full suite 1059/1059.
+- **Shots:** `shots/se3_AX1_*`, `se3_AX5_*`, plus checks `se3_AX3_*` and `se3_AX2_{denied,noFix}`, with `sheet_se3_*.png`.
+  - AX1: all four fully readable.
+  - AX5: art hidden, headline whole, body scrolls.
+- **Flags:**
+  - SE 3 at AX2 (path chip) and AX3 (bodies) still scroll, so "fully readable at AX1–AX3" holds at AX1 only.
+  - The step doc on disk didn't have the new rule or "Decisions from Chunk 2"; I added both from your prompt.
+- **Next:** Chunk 3.
+
+---
+
+# Build 5.10a Chunk 2: location failure screen, still art
+
+Updated October 10, 2026. Commit `a82c9c1`.
+
+- **Done:** `LocationFailureView(failure:)` (Option D) and `LocationIllustration(kind:)` in front of the D2 stills (copied into `Assets.xcassets/LocationIllustrations`). Copy, chips, actions and art are all in `LocationFailure+Copy.swift`. DEBUG `-screenState locationFailed.<denied|servicesOff|noFix|restricted>`. Not wired into the app yet (Chunk 3).
+- **Merge with the launch message screens (§10.3):** one message block, two layouts. `MessageText` (headline, body, chip) and `MessageActions` (56 pt primary, link, the hidden link's room kept) take a `MessageCopy`. `LoaderMessage` is rebuilt from them with its old 12 / 22 pt gaps, so the launch messages look the same. The failure screen uses the doc's 14 / 6 pt.
+- **Defaults taken (my question didn't reach you):**
+  1. First ask stays on the loader's moon message. The step doc has no failure cause, art or copy for it.
+  2. The launch loader's four failure messages keep the moon until Chunks 3/6 wire the swap and its transition.
+- **Alignment:** `LocationFailureLayout` fits the tallest of the four causes' messages, so art, headline and button sit at the same height on every cause. Fallback: art 240 → 160 pt, then copy 0.8×, then only the message scrolls. Unit-tested (iPhone 17 headline at 406 pt; SE 3 fallback order).
+- **Runs:** `LocationFailureScreenTests` 28 new, targeted 107/107, full suite **1056/1056** (Xcode runner).
+- **Screenshots:** `.agent-reports/5.10a-chunk2/shots/` (20 shots: iPhone 17 at default, AX1 and AX5; SE 3 at default and AX5), plus `sheet_*.png` contact sheets.
+- **Flags:**
+  - SE 3 at AX5: the doc's fallback leaves ~1.5 lines of visible message (it scrolls; nothing clipped). The link was truncating there; fixed.
+  - Couldn't compare against the canvas board "Error states with the calico illustrations" (not in the repo).
+  - The D2 stills are vector reconstructions (their README); the restricted lock and the permission-off telescope have no cat.
+  - Committed `design/1.6-…` and `design/d2-luminous-calico/`; the zip inside d2 duplicates the folder (176 KB).
+  - Stash dropped: its code was covered by Chunk 1; only its 5.10a.15 DECISIONS/LOADER notes weren't carried over.
+- **Next:** Chunk 3 (wiring), after your calls on First ask, merge scope and SE AX5.
+
+---
+
+# Build 5.10a Chunk 1: location failure model
+
+Updated October 10, 2026. Commit `ecb41f4`.
+
+- **Done:** `LocationFailure` enum and `LocationViewModel.locationFailure`. No UI change except that a failed Use my location no longer leaves skeleton state behind.
+- **Mapping:**
+
+| Source | Failure |
+|---|---|
+| `denied` (launch, Use my location, Don't Allow at the prompt) | `.permissionDenied` |
+| `servicesOff` | `.servicesOff` |
+| `restricted` | `.restricted` |
+| `authorized` / `notDetermined` | none |
+| CoreLocation error, `locationUnavailable`, `couldNotIdentifyPlace` (offline geocode), 10 s timeout | `.noFix` (no wait) |
+| `notAuthorized` mid-fix | re-read state: its failure, else `.noFix` |
+| Launch with saved place, compass detection-only fix | never set |
+
+- **Runs:** Xcode runner: `LocationFailureTests` + `PlaceSkeletonTests` + `LoaderFlowTests` 90/90; full suite **1028/1028**. CLI `xcodebuild test` fails to launch the runner here (sandbox "Pseudo Terminal Setup Error"), not a test failure.
+- **Didn't fit cleanly:** none of the cases. Two judgement calls: a prompt left unanswered and the compass's detection-only fix set no failure.
+- **Flags:**
+  - `stash@{0}` (5.10a.15 WIP, token returns after a failed fix) overlaps Chunk 1. Drop it, or should I merge what's still useful? Backup: `.agent-reports/5.10a.15-wip-backup.patch`.
+  - Until Chunk 3, the old failure line still shows in the card slot.
+  - The still-open question (failure with a saved place on Use my location) follows the doc's assumption: failure screen, saved place not reopened.
+  - LOADER.md §12.2 step 5 marked as superseded; DECISIONS.md entry added.
+- **Next:** Chunk 2, the failure screen view with still art.
+
+---
+
 # Build 5.10a.14: the whole block rises as one unit
 
 Updated October 9, 2026.

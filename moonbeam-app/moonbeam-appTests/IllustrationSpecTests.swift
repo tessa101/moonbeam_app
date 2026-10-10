@@ -38,8 +38,10 @@ struct IllustrationSpecTests {
     @Test("Every part that rotates or scales has a pivot", arguments: LocationIllustration.Kind.allCases)
     func everyTurningPartHasAPivot(kind: LocationIllustration.Kind) {
         let spec = kind.spec
-        // The map floats and the route glows: no pivot.
-        let pivotless: Set<IllustrationSpec.Part> = [.map, .route]
+        // The map floats; the route and waypoints only change opacity.
+        let pivotless: Set<IllustrationSpec.Part> = [
+            .map, .route, .waypoint1, .waypoint2, .waypoint3,
+        ]
         for layer in spec.layers {
             for part in layer.parts where !pivotless.contains(part) {
                 #expect(spec.anchor(for: part) != nil, "\(layer.asset): \(part)")
@@ -58,9 +60,11 @@ struct IllustrationSpecTests {
         ])
         #expect(IllustrationSpec.servicesOff.layers.map(\.asset) == [
             "servicesOff_moonHalo", "servicesOff_moonDisc", "servicesOff_map", "servicesOff_route",
+            "servicesOff_waypoint1", "servicesOff_waypoint2", "servicesOff_waypoint3",
         ])
         #expect(IllustrationSpec.restricted.layers.map(\.asset) == [
-            "restricted_moonHalo", "restricted_moonDisc", "restricted_map", "restricted_route", "restricted_lock",
+            "restricted_moonHalo", "restricted_moonDisc", "restricted_map", "restricted_route",
+            "restricted_waypoint1", "restricted_waypoint2", "restricted_waypoint3", "restricted_lock",
         ])
     }
 
