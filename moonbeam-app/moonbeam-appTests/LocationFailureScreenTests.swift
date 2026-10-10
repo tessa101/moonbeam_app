@@ -29,9 +29,12 @@ struct LocationFailureScreenTests {
         #expect(failure.illustration == kind)
     }
 
-    @Test("Every still is in the app's asset catalog", arguments: LocationIllustration.Kind.allCases)
-    func stillsExist(kind: LocationIllustration.Kind) {
-        #expect(UIImage(named: kind.stillImageName) != nil)
+    @Test("Every layer is in the app's asset catalog, on the shared 400 × 520 canvas", arguments: LocationIllustration.Kind.allCases)
+    func layersExist(kind: LocationIllustration.Kind) throws {
+        for layer in kind.spec.layers {
+            let image = try #require(UIImage(named: layer.asset), "missing \(layer.asset)")
+            #expect(image.size == IllustrationSpec.viewBox, "\(layer.asset) is \(image.size)")
+        }
     }
 
     // MARK: - Copy

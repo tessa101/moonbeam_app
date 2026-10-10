@@ -91,6 +91,8 @@ Read `design/1.6-location-error-illustrations/ILLUSTRATIONS_MOTION.md` and open 
 
 Report back with which layers imported cleanly and which used a fallback.
 
+*As built (2026-10-10):* `scripts/slice_illustrations.py` cut the four failure SVGs into 19 slices (each keeps the whole document, defs and transforms; only its own shapes), written into `Illustrations.xcassets` (`locNotFound/`, `permissionOff/`, `servicesOff/`, `restricted/`) as single-scale vector image sets rendered as Original. **All 19 imported cleanly as SVG; no PDF or PNG fallback** (gradients, the dashed ring and strokes all render). The anim SVGs' shapes are identical to the D2 stills', and the stacked layers match the old stills on screen to within 2/255 per pixel, so the D2 stills were removed from `Assets.xcassets`. `IllustrationSpec` holds each state's layers (with the parts each moves with: route and lock move with the map) and the pivot table.
+
 ## Chunk 5: Motion
 > Claude Code prompt
 
