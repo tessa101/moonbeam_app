@@ -203,6 +203,10 @@ final class LocationViewModel {
     /// present over a sheet that's still up.
     @ObservationIgnored private var useMyLocationAfterSearch = false
 
+    /// An explicit main-screen/search-sheet location request is transitioning
+    /// to the failure screen rather than the legacy Location Off dialog.
+    @ObservationIgnored private var failureSearchInProgress = false
+
     /// "Search instead" reopens the search sheet once the dialog has gone,
     /// for the same reason in reverse.
     @ObservationIgnored private var presentSearchAfterDialog = false
@@ -596,6 +600,7 @@ final class LocationViewModel {
         if let place {
             await finishWithAha(for: place)
         } else {
+            guard await loader.prepareFailure() else { return }
             finishLoader()
         }
     }
@@ -628,6 +633,7 @@ final class LocationViewModel {
     /// detected place.
     func useMyLocation() async {
         detectionOnlyAfterSettings = false
+        let usesFailureScreen = launchStage == .ready
         // The search sheet's row, opened from a loader message: the loader
         // asks or searches, so a fix opens the screen and a miss shows the
         // message again (§10.3). Off still gets the Location Off dialog.
@@ -644,6 +650,12 @@ final class LocationViewModel {
             }
         }
         beginReplacingPlace()
+        // Leave the old screen in the same turn the replacement begins, so an
+        // empty sentence/card cannot flash. Known off/restricted states go
+        // straight from this neutral frame to their failure screen.
+        if usesFailureScreen { launchStage = .waiting }
+        failureSearchInProgress = usesFailureScreen
+        defer { failureSearchInProgress = false }
         await runLocationFlow(detectionOnly: false)
     }
 
@@ -677,9 +689,11 @@ final class LocationViewModel {
             // A refusal at the prompt ends here: the user has just answered,
             // so following up with the Location Off dialog would nag.
             if state.isAuthorized {
+                if !detectionOnly { showLoader() }
                 await locate(userInitiated: true, detectionOnly: detectionOnly)
             }
         case .authorized:
+            if !detectionOnly { showLoader() }
             await locate(userInitiated: true, detectionOnly: detectionOnly)
         case .denied:
             offerLocationOff(.denied, detectionOnly: detectionOnly)
@@ -695,6 +709,15 @@ final class LocationViewModel {
         if isReplacingPlace, !locationFailed, !isLocating {
             failReplacement(LocationFailure(settledState))
         }
+        if failureSearchInProgress, launchStage == .waiting {
+            // Instant permission/services failures never showed the loader.
+            finishLoader()
+        } else if failureSearchInProgress, launchStage == .phaseCycle, locationFailure != nil {
+            guard await loader.prepareFailure() else { return }
+            finishLoader()
+        } else if failureSearchInProgress, launchStage == .phaseCycle, let place {
+            await finishWithAha(for: place)
+        }
     }
 
     /// The Location Off dialog, except for the main screen's Use my
@@ -703,6 +726,7 @@ final class LocationViewModel {
     /// screen) and the launch loader's search row keep it.
     private func offerLocationOff(_ variant: LocationOffVariant, detectionOnly: Bool) {
         detectionOnlyAfterSettings = detectionOnly
+        guard detectionOnly || !failureSearchInProgress else { return }
         guard detectionOnly || launchStage != .ready else { return }
         locationOffDialog = variant
     }
@@ -1192,7 +1216,8 @@ final class LocationViewModel {
         // No place before (on the ready screen, only after a failure): a city
         // entered from the failure screen is a place change too (STEP-5.10a
         // Chunk 3, §12).
-        let changesWhere = isReplacingPlace || self.place.map { !$0.isSameCity(as: place) } ?? true
+        let wasReplacingPlace = isReplacingPlace
+        let changesWhere = wasReplacingPlace || self.place.map { !$0.isSameCity(as: place) } ?? true
         // The selection carries over: following today resolves to the new
         // city's today, a picked day stays the same calendar day (DATE.md §3).
         self.place = place
@@ -1206,7 +1231,7 @@ final class LocationViewModel {
         locationFailed = false
         locationFailure = nil
 
-        if launchStage == .ready, changesWhere {
+        if changesWhere, launchStage == .ready || wasReplacingPlace {
             loadInGeneration += 1
             // 5.10a.13: the card always replays its load-in when it lands,
             // over the skeleton or not, like a searched city.

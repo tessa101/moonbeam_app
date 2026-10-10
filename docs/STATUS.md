@@ -3,7 +3,7 @@
 > A living note on where things stand. Update it at the end of each work session
 > so the next session (you, or Claude) can pick up cold.
 
-_Current session, 2026-10-10: 5.10a Chunk 5 complete. Four failure illustrations animate to the approved motion spec. `TimelineView` exists only while visible, active and motion is allowed; Reduce Motion, background and dismissal use static artwork with no timeline. Seven motion/lifecycle tests added; full suite 1095/1095. Four default-size iPhone 17 recordings and source frames are in `.agent-reports/5.10a-chunk5/recordings/`. Next: Chunk 6._
+_Current session, 2026-10-10: 5.10a Chunk 6 complete. Failure searches now leave the old screen in the same turn, hold the existing searching loader for `LocationLoader.minimumSearchBeforeMessage`, crossfade it out over `ContentLoadIn.duration`, then reveal illustration → headline → body → optional path → primary → secondary using the existing stagger/rise. Instant permission/services/restricted failures skip the loader. Reduce Motion keeps the order/fades and drops the rise. Focused motion/wiring tests pass; full suite 1099/1099. Default-size iPhone 17 device evidence is in `.agent-reports/5.10a-chunk6/recordings/`; continuous recording was unavailable because the managed shell could not connect to CoreSimulatorService. Next: stop for review._
 
 _Release preparation, 2026-10-06 (Codex takeover): 5.9.3a is complete at `1b66c3e`; uploaded **TestFlight 1.0 (8)**. Full suite: **648 tests / 970 cases pass**. Signed Release archive succeeds, bundle version verified as 1.0 (8). Assessment and tester notes: `docs/TESTFLIGHT-BUILD-8.md`. Upload succeeded at 9:13 PM PDT; Apple reports the package is processing. Tester notes are ready to paste (App Store Connect browser signed out); loader accessibility review and 5.5 remain deferred._
 
@@ -127,6 +127,7 @@ Rule: finish what changes the card before the AX reflow, or the reflow is done t
      device check pending.
    - [x] **5.10a.2b** (built 2026-10-09, 988 cases pass; device check pending; LOADER.md §12.10): device-check fixes from Tessa's 2026-10-09 video: the sentence stays and keeps its date (only the city cross-fades), hold the card slot, skeleton shown ≥ 350 ms (LOADER.md §12.9, DECISIONS.md 2026-10-09)
    - [ ] **5.10a.3:** compass entrance + readout fade + Now pulse (§12.4, §12.4.1).
+   - [x] **5.10a location-failure Chunk 6** (built 2026-10-10, 1099 cases pass): loader → failure crossfade, ordered `ContentLoadIn` entrance, 1.2 s shared search minimum, instant-failure path, Reduce Motion zero-rise; Chunk 3 flash/overlap findings resolved. Continuous simulator recording unavailable; representative device captures retained locally.
 4. [ ] **5.11 moon state** (MOON-STATE.md): 5.11.1 middle column on today (Up now / Not up yet / Set for today),
    countdown, this pass's rise while up → 5.11.2 `23° up` → 5.11.3 edge-case voice line (draft copy).
 5. [ ] **5.5 AX reflow** incl. the always-three-column card on today and the SE 3 connector; loader VoiceOver /

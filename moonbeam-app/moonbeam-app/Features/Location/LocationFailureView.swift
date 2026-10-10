@@ -60,6 +60,7 @@ struct LocationFailureView: View {
                 if let artSize = layout.artSize {
                     LocationIllustration(kind: failure.illustration)
                         .frame(width: artSize.width, height: artSize.height)
+                        .failureLoadIn(.illustration, hasPath: failure.pathChipLines != nil, isEnabled: true)
                     Color.clear.frame(height: LocationFailureLayout.artToHeadline)
                 }
                 message(layout)
@@ -93,7 +94,8 @@ struct LocationFailureView: View {
             copy: failure.copy,
             textScale: layout.textScale,
             headlineToBody: Self.headlineToBody,
-            headlineFocus: $headlineIsFocused
+            headlineFocus: $headlineIsFocused,
+            failureLoadIn: true
         )
         if layout.scrollsMessage {
             // §10.5: only the message region scrolls; the buttons stay put.
@@ -113,7 +115,8 @@ struct LocationFailureView: View {
             copy: failure.copy,
             buttonToLink: Self.buttonToLink,
             onPrimary: primary,
-            onLink: onSearch
+            onLink: onSearch,
+            failureLoadIn: true
         )
         // Its natural height always: a scrolling message above mustn't
         // squeeze the link into truncation (SE 3 at AX5).

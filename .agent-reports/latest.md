@@ -1,3 +1,21 @@
+# Build 5.10a Chunk 6: failure entrance and recovery handoff
+
+Updated October 10, 2026.
+
+- **Done:** the four location-failure screens now enter through one ordered handoff: illustration, headline, body, optional Settings path, primary action, secondary action.
+  - Every block reuses `ContentLoadIn.duration` (0.3 s), `stagger` (0.15 s), `rise` (8 pt), and its ease-out curve.
+  - Reduce Motion keeps the order and opacity fades but reuses `ContentLoadIn.startOffset(reduceMotion:)` to remove the rise.
+- **Searching failures:** the old screen is removed in the same turn, the loader reuses `LocationLoader.minimumSearchBeforeMessage` (1.2 s), and its removal uses `ContentLoadIn.duration` while the illustration crossfades in. This removes the empty sentence/card flash, fast-loader flash, and loader-over-headline return seen in the Chunk 3 recordings.
+- **Instant failures:** denied, services off, and restricted go from a neutral frame directly into the ordered failure entrance; no loader fade is scheduled.
+- **Recovery:** Try again and Settings return still remove failure content immediately and resume the existing loader/Aha flow. A second miss observes the same minimum before returning to failure.
+- **Preserved:** Chunk 5 illustration motion/lifecycle behavior and existing accessibility behavior, including Restricted's hidden/disabled secondary control. Additional accessibility work remains deferred.
+- **Tests/build:** build-for-testing succeeds; focused Chunk 6 motion/wiring run 6/6; regression reruns pass; full suite **1099/1099**.
+- **Device check:** iPhone 17 simulator at default 402 × 874 sizing; all four states settled cleanly, instant paths showed no loader, No fix recovery sampled loader-only then headline-only frames with no overlap, and city-search actions worked. Evidence: `.agent-reports/5.10a-chunk6/recordings/README.md` plus eight PNGs.
+- **Recording limitation:** true continuous capture was unavailable. `simctl recordVideo` could not reach CoreSimulatorService (`connection invalid/refused`; `simdiskimaged` unavailable), so no video was fabricated.
+- **Next:** stop for review.
+
+---
+
 # Build 5.10a Chunk 5: location failure illustration motion
 
 Updated October 10, 2026.

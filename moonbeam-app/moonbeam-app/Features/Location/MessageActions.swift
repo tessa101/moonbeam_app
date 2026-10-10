@@ -18,6 +18,8 @@ struct MessageActions: View {
 
     let onPrimary: () -> Void
     let onLink: () -> Void
+    /// Chunk 6: only failure screens stagger these controls.
+    var failureLoadIn = false
 
     var body: some View {
         VStack(spacing: buttonToLink) {
@@ -27,6 +29,7 @@ struct MessageActions: View {
                 // title remains available to VoiceOver.
                 .dynamicTypeSize(.large)
                 .buttonStyle(.primary)
+                .failureLoadIn(.primary, hasPath: copy.pathChipLines != nil, isEnabled: failureLoadIn)
             // With no link (restricted), its room is kept, so the button
             // sits where it does on the other messages (Tessa, 2026-10-06).
             Button(copy.linkTitle, action: onLink)
@@ -34,6 +37,7 @@ struct MessageActions: View {
                 .opacity(copy.showsLink ? 1 : 0)
                 .disabled(!copy.showsLink)
                 .accessibilityHidden(!copy.showsLink)
+                .failureLoadIn(.secondary, hasPath: copy.pathChipLines != nil, isEnabled: failureLoadIn)
         }
     }
 }

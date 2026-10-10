@@ -200,6 +200,17 @@ final class LocationLoader {
         return true
     }
 
+    /// Search → failure screen (STEP-5.10a Chunk 6): keep the searching
+    /// loader up for the same minimum as Search → message, then let the view
+    /// crossfade it into the illustration.
+    @discardableResult
+    func prepareFailure() async -> Bool {
+        generation += 1
+        let step = generation
+        let searched = now().timeIntervalSince(searchStartedAt)
+        return await wait(Self.minimumSearchBeforeMessage - searched, step: step)
+    }
+
     /// Return after a fix (§10.3, the handoff's "gone instantly"): the
     /// message goes at once, the glow breathes again, and 0.2 s later the
     /// label comes back and the cycle resumes.

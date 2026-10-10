@@ -22,6 +22,8 @@ struct MessageText: View {
 
     /// Where VoiceOver focus goes when the screen appears; `nil` leaves it.
     var headlineFocus: AccessibilityFocusState<Bool>.Binding? = nil
+    /// Chunk 6: failure screens reveal these children separately.
+    var failureLoadIn = false
 
     // MARK: - Constants
 
@@ -46,15 +48,18 @@ struct MessageText: View {
                 .frame(maxWidth: maxWidth(Self.headlineMaxWidth))
                 .accessibilityAddTraits(.isHeader)
                 .modifier(OptionalAccessibilityFocus(binding: headlineFocus))
+                .failureLoadIn(.headline, hasPath: copy.pathChipLines != nil, isEnabled: failureLoadIn)
             BrokenText(text: copy.body, lines: copy.bodyLines)
                 .font(Theme.Fonts.messageBody(scale: textScale))
                 .foregroundStyle(Theme.Colors.textBody)
                 .themeLineHeight(Theme.Fonts.messageBodyLineHeightMultiple)
                 .frame(maxWidth: maxWidth(Self.bodyMaxWidth))
                 .padding(.top, headlineToBody * textScale)
+                .failureLoadIn(.body, hasPath: copy.pathChipLines != nil, isEnabled: failureLoadIn)
             if let lines = copy.pathChipLines, let label = copy.pathChipAccessibilityLabel {
                 PathChip(lines: lines, accessibilityLabel: label)
                     .padding(.top, Self.bodyToChip * textScale)
+                    .failureLoadIn(.path, hasPath: true, isEnabled: failureLoadIn)
             }
         }
         .multilineTextAlignment(.center)

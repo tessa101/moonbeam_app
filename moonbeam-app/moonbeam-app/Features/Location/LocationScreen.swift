@@ -44,8 +44,9 @@ struct LocationScreen: View {
     /// §11.2.7 (proposed): a light tap as the moon lands in the card.
     private static let landingHapticIntensity = 0.6
 
-    private static func launchStageAnimation(to stage: LaunchStage) -> Animation {
-        .easeOut(duration: stage == .ready ? LaunchStage.phaseCycleFadeOutDuration : LaunchStage.fadeDuration)
+    private static func launchStageAnimation(to stage: LaunchStage, showingFailure: Bool) -> Animation {
+        let readyDuration = showingFailure ? ContentLoadIn.duration : LaunchStage.phaseCycleFadeOutDuration
+        return .easeOut(duration: stage == .ready ? readyDuration : LaunchStage.fadeDuration)
     }
 
     var body: some View {
@@ -101,7 +102,13 @@ struct LocationScreen: View {
                 }
             }
         }
-        .animation(Self.launchStageAnimation(to: viewModel.launchStage), value: viewModel.launchStage)
+        .animation(
+            Self.launchStageAnimation(
+                to: viewModel.launchStage,
+                showingFailure: viewModel.failureScreen != nil
+            ),
+            value: viewModel.launchStage
+        )
         // §10.4: the moon has landed (or, with Reduce Motion, the
         // cross-fade to the screen has ended) and the card's own glyph takes
         // over, with a light tap (§11.2.7).
