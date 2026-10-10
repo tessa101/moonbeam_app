@@ -555,6 +555,10 @@ sharp). Report: `.agent-reports/5.9.3/findings.md`.
    replay if it's already showing the new place.
 5. Fix fails: the skeleton's line reads "Couldn't find your location. Try again, or search for a city." (current
    copy), in the card's place; the old place does not come back.
+   **Superseded by STEP-5.10a-LOCATION-FAILURE.md, Chunk 1 (2026-10-10):** a failed replacement ends cleanly: no
+   skeleton or size template left, the sentence's place token back to "a city", the old place still gone. The view
+   model sets `locationFailure` (`.permissionDenied` / `.servicesOff` / `.restricted` / `.noFix`); the failure
+   screen (Chunk 3) replaces the failure line in the card slot, which shows until then.
 
 ### 12.3 Placeholder A: card skeleton
 - Same size and position as the real card (two-column layout), so nothing moves when the real card replaces it.

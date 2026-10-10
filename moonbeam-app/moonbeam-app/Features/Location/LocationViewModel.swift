@@ -101,6 +101,13 @@ final class LocationViewModel {
     /// §3 has them fall back quietly.
     private(set) var locationFailed = false
 
+    /// Why a search the user is waiting on ended without a place: Use my
+    /// location, Try again, the permission flows, or a launch with no saved
+    /// place (STEP-5.10a-LOCATION-FAILURE.md, Chunk 1). A launch with a saved
+    /// place never sets it; it opens that place instead (LOADER.md §10.1).
+    /// Cleared when a new search starts or a place lands.
+    private(set) var locationFailure: LocationFailure?
+
     /// The one main-screen entrance replays when the selected place changes,
     /// never for a date or same-place refresh (LOADER.md §12.1).
     private(set) var loadInGeneration = 0
@@ -170,6 +177,7 @@ final class LocationViewModel {
     @ObservationIgnored private let reducesMotion: () -> Bool
     private let moonService: any MoonService
     private let fetchTimeout: Duration
+    private let fetchTimeoutSleep: @Sendable (Duration) async throws -> Void
     private let deviceTimeZone: TimeZone
     private let now: () -> Date
     private let sleep: @Sendable (Duration) async throws -> Void
@@ -226,6 +234,8 @@ final class LocationViewModel {
 
     /// - Parameters:
     ///   - fetchTimeout: injectable so tests needn't wait the full 10 s.
+    ///   - fetchTimeoutSleep: the timeout's wait, so a test can fire the
+    ///     10 s by hand.
     ///   - deviceTimeZone: injectable because a test process can't change
     ///     `TimeZone.current`.
     ///   - now: the clock. It decides the place's today, which the day
@@ -250,6 +260,7 @@ final class LocationViewModel {
         onboardingStore: any OnboardingStore = InMemoryOnboardingStore(),
         reducesMotion: @escaping () -> Bool = { false },
         fetchTimeout: Duration = LocationViewModel.defaultFetchTimeout,
+        fetchTimeoutSleep: @escaping @Sendable (Duration) async throws -> Void = { try await Task.sleep(for: $0) },
         deviceTimeZone: TimeZone = .current,
         now: @escaping () -> Date = Date.init,
         sleep: @escaping @Sendable (Duration) async throws -> Void = { try await Task.sleep(for: $0) },
@@ -263,6 +274,7 @@ final class LocationViewModel {
         self.reducesMotion = reducesMotion
         self.moonService = moonService
         self.fetchTimeout = fetchTimeout
+        self.fetchTimeoutSleep = fetchTimeoutSleep
         self.deviceTimeZone = deviceTimeZone
         self.now = now
         self.sleep = sleep
@@ -294,8 +306,9 @@ final class LocationViewModel {
         let standIn = isLocating ? lastViewed : nil
         guard let place else {
             // A pending replacement keeps the selected date in the zone it
-            // was read in (§12.9); only the city token changes.
-            let zone = isReplacingPlace ? replacedTimeZone : nil
+            // was read in (§12.9); only the city token changes. A failed
+            // replacement keeps it too; its place token is "a city" again.
+            let zone = isReplacingPlace || locationFailed ? replacedTimeZone : nil
             return madlibFormatter.sentence(
                 place: nil,
                 standIn: standIn,
@@ -364,6 +377,10 @@ final class LocationViewModel {
         // fix): the loader stops on a message instead of opening empty.
         if place == nil {
             loader.cancel()
+            // A failed fetch has already said why, from its error.
+            if locationFailure == nil {
+                locationFailure = LocationFailure(state)
+            }
             await showLoaderMessage(LocationIssue(state) ?? .noFix)
             return
         }
@@ -401,6 +418,7 @@ final class LocationViewModel {
         place = nil
         detectedPlace = nil
         locationFailed = false
+        locationFailure = nil
         daySelection = .today
         reloadMoonTable()
         await start()
@@ -476,6 +494,8 @@ final class LocationViewModel {
         lastSeenAuthState = state
         updateCompass()
         if let issue = LocationIssue(state) {
+            // Don't Allow: app permission off.
+            locationFailure = LocationFailure(state)
             await loader.showMessage(issue)
         } else {
             await recoverFromLoader()
@@ -533,6 +553,7 @@ final class LocationViewModel {
             guard issue != .noFix else { return }
             await recoverFromLoader()
         } else if let current = LocationIssue(state), current != issue {
+            locationFailure = LocationFailure(state)
             await loader.showMessage(current)
         }
     }
@@ -588,12 +609,14 @@ final class LocationViewModel {
 
     private func runLocationFlow(detectionOnly: Bool) async {
         // "Off" and "denied" get different dialogs, so read the switch now.
-        switch await locationService.refreshAuthorizationState() {
+        var settledState = await locationService.refreshAuthorizationState()
+        switch settledState {
         case .notDetermined:
             isRequestingPermission = true
             let state = await locationService.requestAuthorization()
             isRequestingPermission = false
             lastSeenAuthState = state
+            settledState = state
             updateCompass()
             // A refusal at the prompt ends here: the user has just answered,
             // so following up with the Location Off dialog would nag.
@@ -617,7 +640,7 @@ final class LocationViewModel {
         // "Finding your location…" (LOADER.md §12.2 step 5). A fetch that
         // superseded this one (`isLocating`) still decides for itself.
         if isReplacingPlace, !locationFailed, !isLocating {
-            failReplacement()
+            failReplacement(LocationFailure(settledState))
         }
     }
 
@@ -1002,6 +1025,11 @@ final class LocationViewModel {
 
         isLocating = true
         locationFailed = false
+        // A fresh search: the last one's failure no longer stands. A quiet
+        // detection-only fix isn't the search the user is waiting on.
+        if !detectionOnly {
+            locationFailure = nil
+        }
 
         do {
             let detected = try await currentPlaceWithTimeout()
@@ -1023,15 +1051,35 @@ final class LocationViewModel {
             show(detected, remember: userInitiated)
         } catch {
             guard !Task.isCancelled else { return }
-            if userInitiated {
-                failReplacement()
-            } else if !detectionOnly, let lastViewed {
+            if !detectionOnly, !userInitiated, let lastViewed {
+                // A launch with a saved place opens it, with no failure.
                 // A quiet detection-only retry (4.8) never touches the place.
                 show(lastViewed, remember: false)
+            } else if userInitiated || !detectionOnly {
+                // A search the user is waiting on, or a launch with nothing
+                // to fall back to. Detection only (the compass) has no
+                // failure screen.
+                let failure = detectionOnly ? nil : await failure(after: error)
+                guard !Task.isCancelled else { return }
+                if userInitiated {
+                    failReplacement(failure)
+                } else {
+                    locationFailure = failure
+                }
             }
         }
 
         isLocating = false
+    }
+
+    /// Why a fetch failed. Only a permission withdrawn mid-fix needs a fresh
+    /// read, to tell services off from denied; everything else is No fix at
+    /// once, with no wait.
+    private func failure(after error: any Error) async -> LocationFailure {
+        guard case LocationError.notAuthorized = error else {
+            return LocationFailure(fixError: error, state: .authorized)
+        }
+        return LocationFailure(fixError: error, state: await locationService.refreshAuthorizationState())
     }
 
     /// `currentPlace()` with the §3 timeout.
@@ -1042,8 +1090,9 @@ final class LocationViewModel {
     private func currentPlaceWithTimeout() async throws -> Place {
         let fetch = Task { try await locationService.currentPlace() }
         let timeout = fetchTimeout
+        let timeoutSleep = fetchTimeoutSleep
         let watchdog = Task {
-            try await Task.sleep(for: timeout)
+            try await timeoutSleep(timeout)
             fetch.cancel()
         }
         defer { watchdog.cancel() }
@@ -1078,6 +1127,7 @@ final class LocationViewModel {
         placeSkeletonTask = nil
         reloadMoonTable()
         locationFailed = false
+        locationFailure = nil
 
         if launchStage == .ready, changesWhere {
             loadInGeneration += 1
@@ -1105,6 +1155,7 @@ final class LocationViewModel {
         place = nil
         moonTable = nil
         locationFailed = false
+        locationFailure = nil
         updateCompass()
         if launchStage == .ready {
             loadInGeneration += 1
@@ -1117,13 +1168,25 @@ final class LocationViewModel {
         }
     }
 
-    /// §12.2 step 5: a replacement that ends without a place (a failed fix,
-    /// a refused prompt, location off) shows the failure in the skeleton's
-    /// frame. The slot stays filled, so a retry shows "Finding" at once
-    /// rather than an empty gap.
-    private func failReplacement() {
+    /// A replacement that ends without a place (a failed fix, a refused
+    /// prompt, location off). STEP-5.10a Chunk 1 supersedes §12.2 step 5's
+    /// failure inside the skeleton: the replacement ends cleanly (no
+    /// skeleton, no size template, the token back to "a city") and the old
+    /// place stays gone. The fix and its timeout have already ended; a
+    /// superseding fetch never gets here (see `runLocationFlow`).
+    ///
+    /// `locationFailed` stays the "it failed" flag the card slot reads, so
+    /// the failure card shows until the failure screen replaces it
+    /// (Chunk 3). `failure` is `nil` for the compass's detection-only fix
+    /// and a prompt left unanswered: no failure screen for those.
+    private func failReplacement(_ failure: LocationFailure?) {
+        if let failure {
+            locationFailure = failure
+        }
         locationFailed = true
-        showsPlaceSkeleton = true
+        isReplacingPlace = false
+        showsPlaceSkeleton = false
+        skeletonLayoutTable = nil
         placeSkeletonTask?.cancel()
         placeSkeletonTask = nil
     }

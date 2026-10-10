@@ -150,7 +150,10 @@ struct PlaceSkeletonTests {
         #expect(viewModel.loadInGeneration == generation + 2)
     }
 
-    @Test("§12.2 step 5: a failed fix shows the failure in the skeleton; the old place stays gone")
+    // STEP-5.10a Chunk 1 supersedes the failure inside the skeleton: the
+    // replacement ends with no skeleton state left; the failure card stays
+    // until the failure screen (Chunk 3).
+    @Test("§12.2 step 5: a failed fix shows the failure with no skeleton left; the old place stays gone")
     func failedFixShowsFailureInSkeleton() async {
         let location = FakeLocationService(authorizationState: .authorized)
         let viewModel = await Self.makeReadyViewModel(location: location, placeChangeSleep: Self.minimumPending)
@@ -158,7 +161,9 @@ struct PlaceSkeletonTests {
         await viewModel.useMyLocation()
 
         #expect(viewModel.cardPlaceholder == .failed)
-        #expect(viewModel.skeletonLayoutTable != nil)
+        #expect(viewModel.skeletonLayoutTable == nil)
+        #expect(!viewModel.showsPlaceSkeleton)
+        #expect(!viewModel.isReplacingPlace)
         #expect(viewModel.place == nil)
         #expect(viewModel.moonTable == nil)
     }
@@ -224,7 +229,7 @@ struct PlaceSkeletonTests {
         #expect(Self.placeTokenText(viewModel) == "Los Angeles, CA")
     }
 
-    @Test("§12.9 the date is kept after a failure too, while the place line is hidden")
+    @Test("§12.9 the date is kept after a failure too, and the place token is \"a city\" again (STEP-5.10a Chunk 1)")
     func failedReplacementKeepsSelectedDate() async {
         let location = FakeLocationService(authorizationState: .authorized)
         let viewModel = await Self.makeReadyViewModel(location: location, placeChangeSleep: Self.minimumPending)
@@ -235,7 +240,8 @@ struct PlaceSkeletonTests {
 
         #expect(viewModel.cardPlaceholder == .failed)
         #expect(Self.dateTokenText(viewModel) == selectedDate)
-        #expect(viewModel.madlibSentence(allowsBreaksInsideTokens: true).placeIsPending)
+        #expect(!viewModel.madlibSentence(allowsBreaksInsideTokens: true).placeIsPending)
+        #expect(Self.placeTokenText(viewModel) == "a city")
     }
 
     @Test("§12.9 once shown, the skeleton stays its 350 ms minimum before the card")
