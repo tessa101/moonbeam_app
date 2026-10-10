@@ -45,15 +45,25 @@ struct DebugScreenState: View {
         case locationFailedServicesOff = "locationFailed.servicesOff"
         case locationFailedNoFix = "locationFailed.noFix"
         case locationFailedRestricted = "locationFailed.restricted"
+        /// No fix whose Try again fails too (`locationFailed.noFix`'s
+        /// succeeds).
+        case locationFailedNoFixAgain = "locationFailed.noFixAgain"
 
         var locationFailure: LocationFailure? {
             switch self {
             case .locationFailedDenied: .permissionDenied
             case .locationFailedServicesOff: .servicesOff
-            case .locationFailedNoFix: .noFix
+            case .locationFailedNoFix, .locationFailedNoFixAgain: .noFix
             case .locationFailedRestricted: .restricted
             default: nil
             }
+        }
+
+        /// Leaving the app stands for a trip to Settings that turns access
+        /// on, so Open Settings → back can be recorded (the fakes can't hear
+        /// the real Settings app).
+        var grantsAccessInSettings: Bool {
+            self == .locationFailedDenied || self == .locationFailedServicesOff
         }
     }
 
@@ -71,6 +81,7 @@ struct DebugScreenState: View {
     let state: Kind
 
     @State private var fixture: Fixture
+    @Environment(\.scenePhase) private var scenePhase
 
     init(_ state: Kind) {
         self.state = state
@@ -81,6 +92,12 @@ struct DebugScreenState: View {
         LocationScreen(viewModel: fixture.viewModel)
             .task {
                 await fixture.apply(state)
+            }
+            .onChange(of: scenePhase) { _, phase in
+                // Before the return's `sceneDidBecomeActive` reads it.
+                if phase == .background, state.grantsAccessInSettings {
+                    fixture.grantAccess()
+                }
             }
     }
 
@@ -152,7 +169,8 @@ struct DebugScreenState: View {
             default: .authorized
             }
             let placeResult: Result<Place, any Error> = switch state {
-            case .messageNoFix, .recoveryAha, .locationFailedNoFix: .failure(LocationError.locationUnavailable)
+            case .messageNoFix, .recoveryAha, .locationFailedNoFix, .locationFailedNoFixAgain:
+                .failure(LocationError.locationUnavailable)
             default: .success(here)
             }
             location = FakeLocationService(authorizationState: authState, placeResult: placeResult)
@@ -219,6 +237,16 @@ struct DebugScreenState: View {
         /// label's 0.7 s, like a real fix, so the label leaves at the fix
         /// (LOADER.md §11.2.1).
         private static let recoveryFixDelay = Duration.seconds(1)
+        /// `locationFailedNoFixAgain`'s Try again: long enough to see the
+        /// loader before the failure screen is back (a real miss is 10 s).
+        private static let failAgainFixDelay = Duration.seconds(2.5)
+
+        /// `grantsAccessInSettings`: access is on, and a fix will land.
+        func grantAccess() {
+            location.authorizationState = .authorized
+            location.placeResult = .success(here)
+            location.fixDelay = Self.recoveryFixDelay
+        }
 
         private static let messageKinds: Set<Kind> = [
             .messageFirstAsk, .messageDenied, .messageServicesOff, .messageRestricted, .messageNoFix,
@@ -247,6 +275,16 @@ struct DebugScreenState: View {
                     try? await Task.sleep(for: Self.pollInterval)
                 }
                 await viewModel.useMyLocation()
+                // What Try again finds, after a GPS-like wait.
+                switch state {
+                case .locationFailedNoFix:
+                    location.placeResult = .success(here)
+                    location.fixDelay = Self.recoveryFixDelay
+                case .locationFailedNoFixAgain:
+                    location.fixDelay = Self.failAgainFixDelay
+                default:
+                    break
+                }
                 return
             }
             switch state {
@@ -316,4 +354,5 @@ struct DebugScreenState: View {
 #Preview("25 Failed: Services off") { DebugScreenState(.locationFailedServicesOff) }
 #Preview("26 Failed: No fix") { DebugScreenState(.locationFailedNoFix) }
 #Preview("27 Failed: Restricted") { DebugScreenState(.locationFailedRestricted) }
+#Preview("28 Failed: No fix, Try again fails too") { DebugScreenState(.locationFailedNoFixAgain) }
 #endif
