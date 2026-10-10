@@ -300,7 +300,9 @@ final class LocationViewModel {
     /// the place isn't the detected current location. Hidden while a fix is
     /// in flight, since tapping it would only restart it.
     var showsUseMyLocation: Bool {
-        !isLocating && !(place?.isCurrentLocation ?? false)
+        // Restricted can't be changed by the user, so the row could never
+        // work (Tessa, 2026-10-10, from the Chunk 3 recordings).
+        !isLocating && !(place?.isCurrentLocation ?? false) && lastSeenAuthState != .restricted
     }
 
     /// The madlib sentence, the screen's header (DESIGN-1.1.md §3.1): "Where

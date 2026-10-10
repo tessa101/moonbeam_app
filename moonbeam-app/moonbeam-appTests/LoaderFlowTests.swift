@@ -576,6 +576,9 @@ struct LoaderFlowTests {
         #expect(LocationIssue.restricted.primaryAction == .search)
         #expect(!LocationIssue.restricted.showsSearchLink)
         #expect(LocationIssue.appDenied.showsSearchLink)
+        // As on the failure screens (Tessa, 2026-10-10).
+        #expect(LocationIssue.appDenied.copy.linkTitle == "Enter a city instead")
+        #expect(LocationIssue.restricted.copy.primaryTitle == "Search for a city")
     }
 
     @Test("Each message has the prototype's default-size line breaks")

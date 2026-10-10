@@ -6,8 +6,8 @@
 import SwiftUI
 
 /// The block under the stopped loader moon (LOADER.md §10.3): headline and
-/// body at the top, the primary button and "Search for a city instead" at
-/// the bottom. Copy and actions come from `LocationIssue`.
+/// body at the top, the primary button and "Enter a city instead" at the
+/// bottom. Copy and actions come from `LocationIssue`.
 ///
 /// Built from the same `MessageText` and `MessageActions` as the failure
 /// screen (STEP-5.10a Chunk 2), with the loader handoff's spacing.

@@ -114,13 +114,16 @@ nonisolated enum LocationIssue: Equatable, Sendable {
         }
     }
 
-    /// "Search for a city instead", under the button; restricted already has
+    /// "Enter a city instead", under the button; restricted already has
     /// search as its button, so it has none.
     var showsSearchLink: Bool {
         primaryAction != .search
     }
 
-    static let searchLinkTitle = "Search for a city instead"
+    /// The failure screens' words, so the two read the same (Tessa,
+    /// 2026-10-10, from the Chunk 3 recordings; was "Search for a city
+    /// instead").
+    static let searchLinkTitle = LocationFailure.enterCityTitle
     /// Restricted's button, here and on its failure screen.
     static let searchTitle = "Search for a city"
 

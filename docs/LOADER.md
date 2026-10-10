@@ -194,9 +194,12 @@ prompt → app permission off.
   1.2 s minimum stays; the message is in at ~1.55 s (was ~3.3 s).
 - **One message block (STEP-5.10a Chunk 2, 2026-10-10):** `LoaderMessage` is now built from `MessageText` +
   `MessageActions`, the same pieces as the location failure screen (`LocationFailureView`), each with its own
-  spacing; copy goes through `MessageCopy`. No visible change here: the loader keeps its moon, 12 / 22 pt gaps and
-  "Search for a city instead" until Chunks 3 and 6 swap the four failure causes onto the failure screen. First ask
-  has no failure screen in the doc and stays on the loader's message.
+  spacing; copy goes through `MessageCopy`. Otherwise no visible change here: the loader keeps its moon and 12 / 22 pt
+  gaps until Chunk 6 swaps the four failure causes onto the failure screen. First ask has no failure screen in the doc
+  and stays on the loader's message.
+- **Link wording (Tessa, 2026-10-10, from the Chunk 3 recordings):** the messages' link now reads **"Enter a city
+  instead"**, as on the failure screens (was "Search for a city instead"); restricted keeps "Search for a city" as its
+  button. The search sheet hides its Use my location row while location is restricted.
 
 ### 10.4 "Aha" — only after a recovery
 - Plays **only** when a fix lands after a message or the iOS prompt. Ordinary launches (fast or slow) use the

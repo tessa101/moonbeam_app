@@ -241,6 +241,33 @@ struct LocationFailureWiringTests {
         #expect(viewModel.place == Self.detected)
     }
 
+    // MARK: - Search sheet
+
+    @Test("Restricted: the search sheet has no Use my location row; denied keeps it", arguments: [
+        (LocationAuthState.restricted, false),
+        (.denied, true),
+    ])
+    func useMyLocationRowWhenRestricted(state: LocationAuthState, shows: Bool) async throws {
+        let (viewModel, _) = await Self.makeFailedViewModel(state)
+
+        viewModel.presentSearch()
+
+        let sheet = try #require(viewModel.searchSheet)
+        #expect(sheet.showsUseMyLocation == shows)
+    }
+
+    @Test("A launch with no saved place and restricted: the loader's search has no Use my location row")
+    func restrictedLoaderSearchHasNoRow() async throws {
+        let viewModel = Self.makeViewModel(location: FakeLocationService(authorizationState: .restricted))
+        await viewModel.start()
+        #expect(viewModel.loaderIssue == .restricted)
+
+        await viewModel.performLoaderAction()
+
+        let sheet = try #require(viewModel.searchSheet)
+        #expect(!sheet.showsUseMyLocation)
+    }
+
     // MARK: - Enter a city
 
     @Test("Enter a city: the failure clears and the §12 place-change load-in plays; the old place stays out")

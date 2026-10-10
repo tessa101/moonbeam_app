@@ -296,7 +296,8 @@ struct LocationViewModelTests {
 
         #expect(viewModel.place == Self.sydney)
         #expect(Self.placeTokenText(viewModel) == "Sydney, NSW")
-        #expect(viewModel.showsUseMyLocation)
+        // Restricted can't use the row, so it's hidden (Tessa, 2026-10-10).
+        #expect(viewModel.showsUseMyLocation == (state != .restricted))
         // LOADER.md §10.1: a saved place opens directly, whatever the issue.
         #expect(viewModel.launchStage == .ready)
         #expect(viewModel.loaderIssue == nil)
