@@ -241,6 +241,40 @@ struct LocationFailureWiringTests {
         #expect(viewModel.place == Self.detected)
     }
 
+    // MARK: - Foreground during Use my location
+
+    @Test("A foreground's quiet detection retry doesn't cancel an in-flight Use my location")
+    func foregroundRetryDoesNotCancelUseMyLocation() async {
+        // Authorized, but the launch fix fails: the saved place opens and
+        // nothing is detected, so a foreground would retry quietly (4.8).
+        let location = FakeLocationService(
+            authorizationState: .authorized,
+            placeResult: .failure(LocationError.locationUnavailable)
+        )
+        let viewModel = Self.makeViewModel(location: location, lastViewed: Self.saved)
+        await viewModel.start()
+        #expect(viewModel.place == Self.saved)
+        location.placeResult = .success(Self.detected)
+        let fixesBefore = location.currentPlaceCount
+
+        // Queued back to back on the main actor, as traced in the app
+        // (DECISIONS.md 2026-10-10): Use my location runs to `locate()`,
+        // which queues its fix task; the foreground runs before that task
+        // starts, while the replacement is pending and nothing is locating.
+        let locate = Task { await viewModel.useMyLocation() }
+        let foreground = Task { await viewModel.sceneDidBecomeActive() }
+        await locate.value
+        await foreground.value
+
+        // The user's fix wasn't cancelled and the retry didn't start one;
+        // their place landed.
+        #expect(location.currentPlaceCount == fixesBefore + 1)
+        #expect(location.cancelledFixCount == 0)
+        #expect(viewModel.place == Self.detected)
+        #expect(viewModel.cardPlaceholder == nil)
+        #expect(viewModel.failureScreen == nil)
+    }
+
     // MARK: - Search sheet
 
     @Test("Restricted: the search sheet has no Use my location row; denied keeps it", arguments: [

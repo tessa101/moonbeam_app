@@ -745,7 +745,13 @@ final class LocationViewModel {
             // compass stays hidden until something detects you, so retry
             // quietly. Detection only: the selected place never changes, and
             // a failure shows nothing.
-            if detectedPlace == nil, !isLocating {
+            //
+            // Not while Use my location is under way (`isReplacingPlace`):
+            // its fix task may be queued but not started (`isLocating` still
+            // false), and `locate()` would cancel it, ending the replacement
+            // with no place and no failure screen (DECISIONS.md 2026-10-10).
+            // That fix detects you anyway.
+            if detectedPlace == nil, !isLocating, !isReplacingPlace {
                 await locate(userInitiated: false, detectionOnly: true)
             }
             return
