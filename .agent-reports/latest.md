@@ -14,7 +14,14 @@ Updated October 11, 2026. Step doc: `docs/STEP-5.10a-CHUNK-2C-OFFLINE-AND-COPY.m
   - Open Settings and Use my location are unchanged.
   - Known oddity recorded: Restricted offline with no recents has no action.
   - Build-for-testing succeeds; tests not run.
-- **Next:** item 3 (two checks: not determined offline; Never + Forget saved place).
+- **Item 3 done: two checks, no bug found, tests added.**
+  - 3a: not determined never tries a fix, so the cat means an authorized state (an Allow Once still active).
+  - 3b: both orders traced and tested.
+    - Order 1 (Never, then Forget) goes straight to the telescope.
+    - Order 2 (First ask up, then Never, then back) shows First ask, then the telescope, which is expected.
+    - If Tessa confirms order 1, suspect CoreLocation's first status read at relaunch (needs a device trace).
+  - Build-for-testing succeeds; tests not run.
+- **Next:** item 4 (Services off chip: "Back to Settings › Privacy & Security ›").
 
 ---
 
