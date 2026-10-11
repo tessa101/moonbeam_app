@@ -13,14 +13,7 @@ Updated October 10, 2026. Step doc: `docs/STEP-5.10a-CHUNK-2B-DEVICE-FIXES.md`. 
   - Permission chip is now "Settings › Moon Signal › / Location".
   - Flag for Tessa: First ask arrives as at launch, with the 1.2 s searching label first, though nothing is being searched.
   - Build-for-testing succeeds; tests not run.
-- **Item 3 done: moon screens line up with the illustrated screens.**
-  - The moon sits centred in the failure art frame (240 × 312 at 90 pt), and the headline starts at 406 pt.
-  - Actions use the failure screen's bottom inset and its 6 pt button-to-link gap.
-  - Computed on iPhone 17, before → after: moon 354–494 → 176–316 pt; headline 514 → 406; link bottom 832 → 826.
-  - Positions are computed from the code. One sampled Xcode preview of the searching loader matches (moon about 175–316 pt). No settled-message capture; the preview tool's labels were inconsistent.
-  - Aha starts from the moon's measured frame, so it now starts higher.
-  - Flagged: the fit check ignores the bottom safe area (pre-existing, kept); the loader's headline-to-body gap is 12 pt against the failure screen's 14.
-  - Build-for-testing succeeds; tests not run.
+- **Item 3 reverted (Tessa, 2026-10-10):** the moon and "Finding your location…" stay vertically centred as before (moon about 354–494 pt, headline about 514 pt on iPhone 17). Matching the illustrated screens' vertical layout is dropped for now. Reverted `aa94da3` (see below).
 - **Item 4 stopped, as the step doc asks: no change made.**
   - I mirrored only the moon group (`moon-halo` + `moon-disc`) about the art's centre line (x 200), in test copies.
   - Services off and restricted look right: the crescent sits behind the map's top edge as before.

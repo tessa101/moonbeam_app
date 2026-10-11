@@ -55,10 +55,6 @@ nonisolated struct LocationFailureLayout: Equatable {
     static let compactTextScale: CGFloat = 0.8
     /// The least gap between the message and the button.
     static let minimumMessageToActions: CGFloat = 24
-    /// STEP-5.10a Layout: 6 pt from the button to the link. The loader's
-    /// messages use it too, so their actions sit at the same heights
-    /// (Chunk 2b).
-    static let buttonToLink: CGFloat = 6
     /// Under the link: an 18 pt spacer, then 30 pt to the screen's edge.
     static let belowLink: CGFloat = 18
     static let bottomPadding: CGFloat = 30
@@ -89,19 +85,6 @@ nonisolated struct LocationFailureLayout: Equatable {
     /// 30 pt from the screen's edge, less the home indicator's inset.
     static func bottomInset(safeAreaBottom: CGFloat) -> CGFloat {
         max(belowLink + bottomPadding - safeAreaBottom, minimumAboveHomeIndicator)
-    }
-
-    /// The art's frame for the loader's moon to sit in, so the moon
-    /// screens line up with these (Chunk 2b): full size, or the compact
-    /// step's when the loader's message needs the room.
-    static func artFrameSize(compact: Bool) -> CGSize {
-        artSize(width: compact ? compactArtWidth : artWidth)
-    }
-
-    /// The headline's top inside the safe area, under an art frame of
-    /// `artHeight`.
-    static func headlineTop(underArtOfHeight artHeight: CGFloat, safeAreaTop: CGFloat) -> CGFloat {
-        artTop(safeAreaTop: safeAreaTop) + artHeight + artToHeadline
     }
 
     /// The headline's top from the screen's top.

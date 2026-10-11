@@ -37,6 +37,8 @@ Why: "Ask Next Time Or When I Share" is not determined, and iOS can still show t
 
 ## 3. Vertical alignment: moon screens match the illustrated screens
 
+> **Reverted (Tessa, 2026-10-10).** Built in `aa94da3`, reverted: the moon screens stay vertically centred as before. Matching the illustrated screens' vertical layout is dropped for now (DECISIONS.md).
+
 The First ask screen, the launch moon screens and the searching loader sit lower than the illustrated failure screens (headline at about 61% of the screen height against about 49%).
 
 - Align them at the default size: the moon occupies the illustration's frame (240 × 312, top at 90 pt), headline top at 406 pt, primary and link at the same heights.
