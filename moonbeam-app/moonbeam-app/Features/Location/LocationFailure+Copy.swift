@@ -53,7 +53,10 @@ nonisolated extension LocationFailure {
         // Chunk 2b (Tessa, 2026-10-10): any choice but Never works, so the
         // chip stops at the app's Location page.
         case .permissionDenied: ["Settings › \(AppInfo.name) ›", "Location"]
-        case .servicesOff: ["Settings › Privacy & Security ›", "Location Services"]
+        // Chunk 2c (Tessa, 2026-10-11): Open Settings can only reach the
+        // app's own page, and iOS has no public link to the device-wide
+        // switch, so the chip starts with the way back from there.
+        case .servicesOff: ["Back to Settings › Privacy & Security ›", "Location Services"]
         case .noFix, .restricted: nil
         }
     }

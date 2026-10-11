@@ -1,4 +1,4 @@
-# Consolidation Chunk 2c: offline search, copy, two checks (in progress)
+# Consolidation Chunk 2c: offline search, copy, two checks (done)
 
 Updated October 11, 2026. Step doc: `docs/STEP-5.10a-CHUNK-2C-OFFLINE-AND-COPY.md`. One commit per item; tests are run by Tessa outside the agent.
 
@@ -21,7 +21,27 @@ Updated October 11, 2026. Step doc: `docs/STEP-5.10a-CHUNK-2C-OFFLINE-AND-COPY.m
     - Order 2 (First ask up, then Never, then back) shows First ask, then the telescope, which is expected.
     - If Tessa confirms order 1, suspect CoreLocation's first status read at relaunch (needs a device trace).
   - Build-for-testing succeeds; tests not run.
-- **Next:** item 4 (Services off chip: "Back to Settings › Privacy & Security ›").
+- **Item 4 done: Services off chip** is now "Back to Settings › Privacy & Security › / Location Services".
+  - VoiceOver: "Back to Settings, Privacy & Security, Location Services".
+  - The compass dialog shows it on one bold line.
+  - Preview renders at the default size fit: `.agent-reports/5.10a-chunk2c/` (local).
+  - Open Settings stays; no `App-Prefs:` URL.
+- **Tests: none run by the agent.** Commands below.
+- **Next:** Tessa runs the tests and tells which order she tested 3b in. Chunk 3 not started; Tessa's 11-case device checklist (2c doc) goes into its "needs device review" list.
+
+**Focused:**
+
+```
+xcodebuild test-without-building -project moonbeam-app/moonbeam-app.xcodeproj -scheme moonbeam-app \
+  -destination 'platform=iOS Simulator,name=iPhone 17' -derivedDataPath /tmp/mb-dd \
+  -only-testing:moonbeam-appTests/SearchActionOfflineTests -only-testing:moonbeam-appTests/LoaderFlowTests \
+  -only-testing:moonbeam-appTests/LocationLoaderStepTests -only-testing:moonbeam-appTests/LocationFailureTests \
+  -only-testing:moonbeam-appTests/LocationFailureWiringTests -only-testing:moonbeam-appTests/LocationFailureScreenTests \
+  -only-testing:moonbeam-appTests/LocationViewModelTests -only-testing:moonbeam-appTests/OnboardingMainScreenTests \
+  -only-testing:moonbeam-appTests/LocationViewModelCompassTests -only-testing:moonbeam-appTests/LaunchLoaderTests
+```
+
+**Full suite:** the same without the `-only-testing` lines. Paste back the `Test run with N tests in M suites …` line, `TEST EXECUTE SUCCEEDED/FAILED`, and any `✘` lines.
 
 ---
 

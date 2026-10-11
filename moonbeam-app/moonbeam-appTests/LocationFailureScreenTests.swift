@@ -92,7 +92,8 @@ struct LocationFailureScreenTests {
     func pathChips() {
         // Chunk 2b: the app's Location page; any choice but Never works.
         #expect(LocationFailure.permissionDenied.pathChipLines == ["Settings › Moon Signal ›", "Location"])
-        #expect(LocationFailure.servicesOff.pathChipLines == ["Settings › Privacy & Security ›", "Location Services"])
+        // Chunk 2c: the first step back from the app's own page.
+        #expect(LocationFailure.servicesOff.pathChipLines == ["Back to Settings › Privacy & Security ›", "Location Services"])
         #expect(LocationFailure.noFix.pathChipLines == nil)
         #expect(LocationFailure.restricted.pathChipLines == nil)
     }
@@ -102,6 +103,10 @@ struct LocationFailureScreenTests {
         #expect(
             LocationFailure.permissionDenied.copy.pathChipAccessibilityLabel
                 == "Settings, Moon Signal, Location"
+        )
+        #expect(
+            LocationFailure.servicesOff.copy.pathChipAccessibilityLabel
+                == "Back to Settings, Privacy & Security, Location Services"
         )
         #expect(LocationFailure.noFix.copy.pathChipAccessibilityLabel == nil)
     }

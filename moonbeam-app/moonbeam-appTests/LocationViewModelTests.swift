@@ -502,6 +502,19 @@ struct LocationViewModelTests {
         #expect(variant.offersSettings == (failure.pathChipLines != nil))
     }
 
+    @Test("The compass dialog shows each cause's path on one line, Services off's new first step included")
+    func dialogShowsSharedPath() {
+        #expect(
+            LocationViewModel.LocationOffVariant.servicesOff.failure.copy.pathChipLines?.joined(separator: " ")
+                == "Back to Settings › Privacy & Security › Location Services"
+        )
+        #expect(
+            LocationViewModel.LocationOffVariant.denied.failure.copy.pathChipLines?.joined(separator: " ")
+                == "Settings › \(AppInfo.name) › Location"
+        )
+        #expect(LocationViewModel.LocationOffVariant.restricted.failure.copy.pathChipLines == nil)
+    }
+
     // MARK: - Back from Settings (§4)
 
     @Test("Foreground after Settings with permission newly granted: fetches automatically")
