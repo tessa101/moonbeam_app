@@ -5,8 +5,10 @@
 
 import Foundation
 
-/// Why the loader stopped and shows a message (LOADER.md §10.3): only with
-/// no saved place (§10.1); with one, the app just opens it.
+/// Why a launch with no saved place found nothing (LOADER.md §10.1); with
+/// one, the app just opens it. Only First ask stops the loader on a
+/// message; the four causes open their failure screen
+/// (STEP-5.10a-LOCATION-CONSOLIDATION.md §2).
 ///
 /// First ask's copy is the handoff's (`design/1.4-location-flow/README.md`,
 /// "Message"). The other four are causes, so their words and actions are
@@ -81,16 +83,9 @@ nonisolated enum LocationIssue: Equatable, Sendable {
         failure?.headlineLines ?? ["Find the moon", "from where you are"]
     }
 
-    /// The body's lines at the default size (§11.1.3). Restricted keeps
-    /// wrapping naturally under the moon until Consolidation Chunk 2 moves
-    /// it to the failure screen, which sets its lines; the words are the
-    /// same either way.
+    /// The body's lines at the default size (§11.1.3).
     var bodyLines: [String]? {
-        switch failure {
-        case nil: ["\(AppInfo.name) uses your location to show", "when and where the moon rises and sets."]
-        case .restricted: nil
-        case let failure?: failure.bodyLines
-        }
+        failure?.bodyLines ?? ["\(AppInfo.name) uses your location to show", "when and where the moon rises and sets."]
     }
 
     var primaryAction: Action {
@@ -115,11 +110,12 @@ nonisolated enum LocationIssue: Equatable, Sendable {
     /// Location Off dialog.
     static let searchTitle = "Search for a city"
 
-    /// All of the above, for the shared message block. The Settings path
-    /// chip is left off under the moon until Consolidation Chunk 2 moves
-    /// these causes to the failure screen, which shows it.
+    /// All of the above, for the shared message block: a cause's is its
+    /// failure screen's exactly, Settings path chip included
+    /// (STEP-5.10a-LOCATION-CONSOLIDATION.md, Chunk 2).
     var copy: MessageCopy {
-        MessageCopy(
+        if let failure { return failure.copy }
+        return MessageCopy(
             headline: headline,
             headlineLines: headlineLines,
             body: body,

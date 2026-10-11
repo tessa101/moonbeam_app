@@ -119,9 +119,10 @@ final class LocationViewModel {
     private(set) var locationFailure: LocationFailure?
 
     /// The failure screen, shown in place of the main content (STEP-5.10a
-    /// Chunk 3). Only once the screen is up: a launch with no saved place
-    /// keeps the loader moon's message instead ("Decisions from Chunk 2"),
-    /// and a recovery hands back to the loader, so it's `nil` meanwhile.
+    /// Chunk 3): after an explicit request, and at a launch with no saved
+    /// place (STEP-5.10a-LOCATION-CONSOLIDATION.md §2). Only once the screen
+    /// is up: a search or recovery is on the loader, so it's `nil`
+    /// meanwhile.
     var failureScreen: LocationFailure? {
         launchStage == .ready ? locationFailure : nil
     }
@@ -213,8 +214,8 @@ final class LocationViewModel {
     /// present over a sheet that's still up.
     @ObservationIgnored private var useMyLocationAfterSearch = false
 
-    /// An explicit main-screen/search-sheet location request is transitioning
-    /// to the failure screen rather than the legacy Location Off dialog.
+    /// An explicit Use my location is under way: it ends on the screen, with
+    /// "Aha", or on its failure screen, never the Location Off dialog.
     @ObservationIgnored private var failureSearchInProgress = false
 
     /// "Search instead" reopens the search sheet once the dialog has gone,
@@ -397,15 +398,21 @@ final class LocationViewModel {
             show(lastViewed, remember: false)
         }
 
-        // §10.1: no saved place and nothing found (permission off, or no
-        // fix): the loader stops on a message instead of opening empty.
+        // §10.1: no saved place and nothing found. First ask stops the
+        // loader on its invitation; a cause opens its failure screen, the
+        // same one an explicit request gets
+        // (STEP-5.10a-LOCATION-CONSOLIDATION.md §2–3).
         if place == nil {
             loader.cancel()
+            if state == .notDetermined {
+                await showLoaderMessage(.firstAsk)
+                return
+            }
             // A failed fetch has already said why, from its error.
             if locationFailure == nil {
-                locationFailure = LocationFailure(state)
+                locationFailure = LocationFailure(state) ?? .noFix
             }
-            await showLoaderMessage(LocationIssue(state) ?? .noFix)
+            await showFailureScreen(afterSearch: state.isAuthorized)
             return
         }
 
@@ -481,6 +488,22 @@ final class LocationViewModel {
         launchStage = .ready
     }
 
+    /// `locationFailure`'s screen, timed by whether a search ran
+    /// (STEP-5.10a-LOCATION-CONSOLIDATION.md §3). A known blocked state
+    /// needs no searching: straight from the neutral frame (or the loader
+    /// already up) to the screen. A search that came up empty shows the
+    /// searching moon at least `LocationLoader.minimumSearchBeforeMessage`,
+    /// even when it failed inside the 400 ms grace, so it reads as an
+    /// attempt; then the loader cross-fades into the illustration.
+    /// A pick meanwhile ends the loader, and with it the wait.
+    private func showFailureScreen(afterSearch: Bool) async {
+        if afterSearch {
+            showLoader()
+            guard await loader.prepareFailure() else { return }
+        }
+        finishLoader()
+    }
+
     // MARK: - Loader messages (LOADER.md §10)
 
     /// The message the loader is showing, if it's stopped on one.
@@ -496,38 +519,35 @@ final class LocationViewModel {
         await loader.showMessage(issue)
     }
 
-    /// The message's primary button, except Open Settings, which the view
-    /// opens itself; the return is handled in `sceneDidBecomeActive()`.
+    /// The message's primary button. Only First ask stops the loader now
+    /// (STEP-5.10a-LOCATION-CONSOLIDATION.md §2); the causes' Try again,
+    /// search and Open Settings are the failure screen's.
     func performLoaderAction() async {
-        guard let issue = loaderIssue else { return }
-        switch issue.primaryAction {
-        case .requestPermission: await askFromLoader()
-        case .tryAgain: await recoverFromLoader()
-        case .search: presentSearch()
-        case .openSettings: break
-        }
+        guard let issue = loaderIssue, issue.primaryAction == .requestPermission else { return }
+        await askFromLoader()
     }
 
     /// First ask's Use my location: iOS's prompt over the stopped loader,
-    /// message still up. Allow searches again; Don't Allow turns the message
-    /// into "app permission off" (§10.3).
+    /// message still up. Allow searches again; Don't Allow opens the app
+    /// permission failure screen, with no searching (§3). Left unanswered,
+    /// First ask stays: that isn't No fix.
     private func askFromLoader() async {
         isRequestingPermission = true
         let state = await locationService.requestAuthorization()
         isRequestingPermission = false
         lastSeenAuthState = state
         updateCompass()
-        if let issue = LocationIssue(state) {
-            // Don't Allow: app permission off.
-            locationFailure = LocationFailure(state)
-            await loader.showMessage(issue)
-        } else {
+        if state.isAuthorized {
             await recoverFromLoader()
+        } else if let failure = LocationFailure(state) {
+            failReplacement(failure)
+            await showFailureScreen(afterSearch: false)
         }
     }
 
-    /// Back to searching from a message, then the fix: "Aha" and the screen
-    /// if it lands, the right message again if not.
+    /// Back to searching from First ask, then the fix: "Aha" and the screen
+    /// if it lands, the cause's failure screen if not, after the searching
+    /// minimum (§3).
     private func recoverFromLoader() async {
         guard await loader.resume() else { return }
         await locate(userInitiated: true)
@@ -535,10 +555,16 @@ final class LocationViewModel {
         guard launchStage == .phaseCycle else { return }
         if let place {
             await finishWithAha(for: place)
-        } else {
-            let state = await locationService.refreshAuthorizationState()
-            await loader.showMessage(LocationIssue(state) ?? .noFix)
+            return
         }
+        // The failed fix has said why; a cancelled one hasn't.
+        if locationFailure == nil {
+            let state = await locationService.refreshAuthorizationState()
+            // A pick meanwhile has already ended the loader.
+            guard launchStage == .phaseCycle else { return }
+            locationFailure = LocationFailure(state) ?? .noFix
+        }
+        await showFailureScreen(afterSearch: true)
     }
 
     /// LOADER.md §10.4, §11.2: a fix after a message (or the iOS prompt)
@@ -566,19 +592,16 @@ final class LocationViewModel {
         finishLoader()
     }
 
-    /// Back in the foreground on a message: permission granted in Settings
-    /// searches again; a different reason changes the message. No fix
-    /// waits for Try again (§10.3).
-    private func loaderDidBecomeActive(on issue: LocationIssue, state: LocationAuthState) async {
+    /// Back in the foreground on First ask, the only message left: access
+    /// granted in Settings searches again; turned off there, the cause's
+    /// failure screen, with no searching (§3).
+    private func loaderDidBecomeActive(state: LocationAuthState) async {
         lastSeenAuthState = state
         if state.isAuthorized {
-            // Opened from the search row's Location Off dialog.
-            locationOffDialog = nil
-            guard issue != .noFix else { return }
             await recoverFromLoader()
-        } else if let current = LocationIssue(state), current != issue {
-            locationFailure = LocationFailure(state)
-            await loader.showMessage(current)
+        } else if let failure = LocationFailure(state) {
+            locationFailure = failure
+            await showFailureScreen(afterSearch: false)
         }
     }
 
@@ -643,28 +666,31 @@ final class LocationViewModel {
     /// detected place.
     func useMyLocation() async {
         detectionOnlyAfterSettings = false
-        let usesFailureScreen = launchStage == .ready
-        // The search sheet's row, opened from a loader message: the loader
-        // asks or searches, so a fix opens the screen and a miss shows the
-        // message again (§10.3). Off still gets the Location Off dialog.
+        // The search sheet's row, opened from First ask: the loader asks or
+        // searches, so a fix opens the screen and a miss its failure
+        // screen. Off goes straight to its failure screen, with no Location
+        // Off dialog (STEP-5.10a-LOCATION-CONSOLIDATION.md §3).
         if loaderIssue != nil {
-            switch await locationService.refreshAuthorizationState() {
+            let state = await locationService.refreshAuthorizationState()
+            lastSeenAuthState = state
+            switch state {
             case .notDetermined:
                 await askFromLoader()
-                return
             case .authorized:
                 await recoverFromLoader()
-                return
             case .denied, .restricted, .servicesOff:
-                break
+                // The row began a replacement; it ends here, as any miss.
+                failReplacement(LocationFailure(state))
+                await showFailureScreen(afterSearch: false)
             }
+            return
         }
         beginReplacingPlace()
         // Leave the old screen in the same turn the replacement begins, so an
         // empty sentence/card cannot flash. Known off/restricted states go
         // straight from this neutral frame to their failure screen.
-        if usesFailureScreen { launchStage = .waiting }
-        failureSearchInProgress = usesFailureScreen
+        if launchStage == .ready { launchStage = .waiting }
+        failureSearchInProgress = true
         defer { failureSearchInProgress = false }
         await runLocationFlow(detectionOnly: false)
     }
@@ -730,14 +756,14 @@ final class LocationViewModel {
         }
     }
 
-    /// The Location Off dialog, except for the main screen's Use my
-    /// location: its failure screen says the same, with the same actions
-    /// (Tessa, 2026-10-10). The compass's Turn On Location (no failure
-    /// screen) and the launch loader's search row keep it.
+    /// The Location Off dialog, for the compass's Turn On Location only: it
+    /// keeps the selected city, so it has no failure screen. Every explicit
+    /// Use my location gets the cause's failure screen instead, which says
+    /// the same with the same actions (STEP-5.10a-LOCATION-CONSOLIDATION.md
+    /// §3–4).
     private func offerLocationOff(_ variant: LocationOffVariant, detectionOnly: Bool) {
         detectionOnlyAfterSettings = detectionOnly
-        guard detectionOnly || !failureSearchInProgress else { return }
-        guard detectionOnly || launchStage != .ready else { return }
+        guard detectionOnly else { return }
         locationOffDialog = variant
     }
 
@@ -755,8 +781,8 @@ final class LocationViewModel {
         compass.sceneDidBecomeActive()
 
         guard !isRequestingPermission else { return }
-        if let issue = loaderIssue {
-            await loaderDidBecomeActive(on: issue, state: state)
+        if loaderIssue != nil {
+            await loaderDidBecomeActive(state: state)
             return
         }
         // The scene turns active while the launch is still loading. The
@@ -844,7 +870,11 @@ final class LocationViewModel {
     }
 
     private func useMyLocationFromSearch() {
-        beginReplacingPlace()
+        // The old card goes at once (§12.2). With no place (a failure
+        // screen, First ask) there's nothing to remove, and starting now
+        // would swap the failure screen for an empty main screen under the
+        // closing sheet; `useMyLocation()` starts it once the sheet has gone.
+        if place != nil { beginReplacingPlace() }
         useMyLocationAfterSearch = true
         isSearchPresented = false
     }

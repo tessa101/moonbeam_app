@@ -1,3 +1,53 @@
+# Consolidation Chunk 2: unified destinations and recovery
+
+Updated October 10, 2026.
+
+- **Done:**
+  - **Launch, no saved city:** First ask keeps the stopped moon. Denied, services off and restricted open their illustrated failure screen straight from the neutral frame, with no searching. A failed authorized search shows the searching moon for at least `minimumSearchBeforeMessage` (1.2 s), then hands off to No fix the same way as Chunk 6.
+  - **Recovery:** First ask's Don't Allow, a First ask → Allow that misses, a foreground on First ask with access turned off, and the search row over First ask all land on the same screens. Try again and Settings recovery (newly authorized → one fix → Aha; another miss → the same screen) now also work from launch-origin screens.
+  - **Location Off dialog:** compass-only now; no acquisition route opens it.
+  - **Copy:** launch causes show the Settings chip and restricted's set lines (`LocationIssue.copy == LocationFailure.copy`).
+  - **Tessa's call (§3 row 9):** a return from Settings as "not determined" keeps the guidance in both contexts.
+  - **Found and fixed:** the search row tapped on a failure screen cleared it before the sheet had closed, so the empty main screen flashed underneath. With no place on screen, the replacement now starts after the dismiss.
+  - **DEBUG:** `messageDenied/ServicesOff/Restricted/NoFix` show the launch failure screens. `messageDenied`/`messageServicesOff` grant access on a background trip, like `locationFailed.*`. `recoveryAha` uses No fix's Try again. `messageFirstAsk` is unchanged.
+- **Build:** build-for-testing succeeds after each of the five steps.
+- **Tests: not run yet.** The agent can't run `xcodebuild test` here. Commands for Tessa are below.
+- **Coverage by §3 row (automated, state-level):**
+  - 1 blocked launch: `blockedLaunchOpensFailureScreen`, `launchOpensFailureScreen`, `declinedShowsEmptyState`
+  - 2 failed launch search: `noFix(error:)`, `launchNoSavedPlaceFixFails`
+  - 3 explicit while blocked: `blockedStatesOpenTheirFailureScreen`, `launchAndExplicitMatch`, `searchRowWhileDenied`, `searchRowFromFirstAskWhileOff`, `searchRowKeepsFailureScreenUntilDismissed`
+  - 4 not determined: `searchRowFromFirstAsk`, `notDeterminedRefusedDoesNothingMore`, `firstAskUnanswered`
+  - 5 Try again: `tryAgainSucceeds`, `tryAgainFails`, `tryAgainDoesNotStack`, Aha tests
+  - 6 Settings granted: `backFromSettingsAllowed`, `backFromSettingsAllowedThenMiss`, `foregroundWithNewPermissionFetches`
+  - 7 unchanged: `backFromSettingsStillOff`; 8 other cause: `backFromSettingsOtherCause`, `firstAskThenOffInSettings`; 9 not determined: `servicesOnKeepsGuidance`; 10 No fix foreground: `noFixWaitsForTryAgain`
+  - 11 First ask: `firstAskAllow`, `firstAskDeny`, `firstAskAllowThenMiss`, `ahaAfterPrompt`
+  - 12 city search: `searchThenPick`, `searchThenCancel`, `restrictedSearches`, `restrictedLaunchSearchHasNoRow`, `pickSupersedesFailure`
+- **Not covered automatically:**
+  - Anything visual: the neutral-frame → illustration entrance at launch, the loader → illustration crossfade, no-flash under the closing sheet.
+  - The real Settings app. An unanswered prompt from the search row on a ready screen (code unchanged).
+  - The DEBUG routes themselves. No screenshots or recordings this chunk.
+- **Flagged, not changed:**
+  - LOADER.md §10.3 (cause messages on the moon) and LOCATION-STATE-INVENTORY.md §2–4 (launch messages, chip omission, "Location is off for Moon Signal" dialog headline, dialog from the launch search row) no longer match the code. The plan gives that reconciliation to Chunk 3.
+  - `LocationIssue`'s four cause cases no longer reach the loader. Pruning them would be a model change, so it needs Tessa's go-ahead.
+- **Next:** Tessa runs the tests; then Consolidation Chunk 3.
+
+**Focused (location flow, failure, recovery, search, compass):**
+
+```
+xcodebuild test-without-building -project moonbeam-app/moonbeam-app.xcodeproj -scheme moonbeam-app \
+  -destination 'platform=iOS Simulator,name=iPhone 17' -derivedDataPath /tmp/mb-dd \
+  -only-testing:moonbeam-appTests/LoaderFlowTests -only-testing:moonbeam-appTests/LocationLoaderStepTests \
+  -only-testing:moonbeam-appTests/LocationFailureTests -only-testing:moonbeam-appTests/LocationFailureWiringTests \
+  -only-testing:moonbeam-appTests/LocationFailureScreenTests -only-testing:moonbeam-appTests/LocationViewModelTests \
+  -only-testing:moonbeam-appTests/OnboardingMainScreenTests -only-testing:moonbeam-appTests/LocationViewModelCompassTests \
+  -only-testing:moonbeam-appTests/PlaceSkeletonTests -only-testing:moonbeam-appTests/LaunchLoaderTests \
+  -only-testing:moonbeam-appTests/FailureLoadInTests -only-testing:moonbeam-appTests/SearchSheetViewModelTests
+```
+
+**Full suite:** the same command without the `-only-testing` lines. Paste back the `Test run with N tests in M suites …` line, `TEST EXECUTE SUCCEEDED/FAILED`, and any `✘` lines with their `Expectation failed` text.
+
+---
+
 # Consolidation Chunk 1: shared cause definitions
 
 Updated October 10, 2026.

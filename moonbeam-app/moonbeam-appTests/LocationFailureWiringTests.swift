@@ -124,14 +124,14 @@ struct LocationFailureWiringTests {
         #expect(viewModel.place == Self.saved)
     }
 
-    @Test("A launch with no saved place keeps the loader moon's message: no failure screen")
-    func launchKeepsMoon() async {
+    @Test("A launch with no saved place opens the same failure screen, not the loader moon's message")
+    func launchOpensFailureScreen() async {
         let viewModel = Self.makeViewModel(location: FakeLocationService(authorizationState: .denied))
         await viewModel.start()
 
-        #expect(viewModel.locationFailure == .permissionDenied)
-        #expect(viewModel.loaderIssue == .appDenied)
-        #expect(viewModel.failureScreen == nil)
+        #expect(viewModel.launchStage == .ready)
+        #expect(viewModel.failureScreen == .permissionDenied)
+        #expect(viewModel.loaderIssue == nil)
     }
 
     // MARK: - Back from Settings
@@ -290,13 +290,14 @@ struct LocationFailureWiringTests {
         #expect(sheet.showsUseMyLocation == shows)
     }
 
-    @Test("A launch with no saved place and restricted: the loader's search has no Use my location row")
-    func restrictedLoaderSearchHasNoRow() async throws {
+    @Test("A launch with no saved place and restricted: its Search for a city has no Use my location row")
+    func restrictedLaunchSearchHasNoRow() async throws {
         let viewModel = Self.makeViewModel(location: FakeLocationService(authorizationState: .restricted))
         await viewModel.start()
-        #expect(viewModel.loaderIssue == .restricted)
+        #expect(viewModel.failureScreen == .restricted)
 
-        await viewModel.performLoaderAction()
+        // The screen's primary: `LocationFailureView` calls `onSearch`.
+        viewModel.presentSearch()
 
         let sheet = try #require(viewModel.searchSheet)
         #expect(!sheet.showsUseMyLocation)

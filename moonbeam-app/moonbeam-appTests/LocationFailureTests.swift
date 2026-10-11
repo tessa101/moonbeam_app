@@ -280,7 +280,7 @@ struct LocationFailureTests {
         )
         await viewModel.start()
         #expect(viewModel.locationFailure == .noFix)
-        #expect(viewModel.loaderIssue == .noFix)
+        #expect(viewModel.failureScreen == .noFix)
     }
 
     @Test(
@@ -324,8 +324,8 @@ struct LocationFailureTests {
 
         location.placeResult = .success(Self.detected)
         location.holdsFixes = true
-        let first = Task { await viewModel.performLoaderAction() }
-        let second = Task { await viewModel.performLoaderAction() }
+        let first = Task { await viewModel.tryAgainFromFailureScreen() }
+        let second = Task { await viewModel.tryAgainFromFailureScreen() }
         await Self.waitUntil { location.heldFixCount > 0 }
         for _ in 0..<100 { await Task.yield() }
 

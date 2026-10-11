@@ -8,9 +8,11 @@ import Foundation
 import Testing
 @testable import moonbeam_app
 
-/// The location flow (LOADER.md §10.1, §10.3): with no saved place the
-/// loader stops on a message; its buttons, Settings and Try again bring it
-/// back to searching; a pick or a fix ends it.
+/// The location flow (LOADER.md §10.1, §10.3;
+/// STEP-5.10a-LOCATION-CONSOLIDATION.md §3): with no saved place the loader
+/// stops on First ask, and a cause opens its failure screen; their buttons,
+/// Settings and Try again bring it back to searching; a pick or a fix ends
+/// it.
 @Suite("Loader flow", .timeLimit(.minutes(1)))
 @MainActor
 struct LoaderFlowTests {
@@ -100,42 +102,77 @@ struct LoaderFlowTests {
         }
     }
 
-    // MARK: - Which message (§10.1)
+    // MARK: - Which destination (§10.1; STEP-5.10a-LOCATION-CONSOLIDATION.md §2–3)
 
-    @Test(
-        "No saved place: the loader stops on the message for the permission state",
-        arguments: [
-            (LocationAuthState.notDetermined, LocationIssue.firstAsk),
-            (.denied, .appDenied),
-            (.servicesOff, .servicesOff),
-            (.restricted, .restricted),
-        ]
-    )
-    func messageForState(state: LocationAuthState, issue: LocationIssue) async {
-        let harness = Self.makeHarness(state)
+    /// The minimum search before a failure, as `LocationLoader` asks for it
+    /// with a clock that doesn't move.
+    private static let searchMinimum = Duration.seconds(LocationLoader.minimumSearchBeforeMessage)
+
+    @Test("No saved place, never asked: the loader stops on First ask")
+    func firstAskOnLoader() async {
+        let harness = Self.makeHarness(.notDetermined)
         await harness.viewModel.start()
 
         #expect(harness.viewModel.launchStage == .phaseCycle)
-        #expect(harness.viewModel.loaderIssue == issue)
+        #expect(harness.viewModel.loaderIssue == .firstAsk)
+        #expect(harness.viewModel.failureScreen == nil)
         #expect(harness.viewModel.place == nil)
         #expect(!harness.location.didRequestAuthorization)
         #expect(harness.location.currentPlaceCount == 0)
     }
 
-    @Test("Authorized but no fix, nothing saved: No fix")
-    func noFix() async {
-        let harness = Self.makeHarness(.authorized, placeResult: .failure(LocationError.locationUnavailable))
+    /// §3 row 1: known blocked, so no searching and no minimum.
+    @Test(
+        "No saved place, access blocked: its failure screen at once, no searching wait",
+        arguments: [
+            (LocationAuthState.denied, LocationFailure.permissionDenied),
+            (.servicesOff, .servicesOff),
+            (.restricted, .restricted),
+        ]
+    )
+    func blockedLaunchOpensFailureScreen(state: LocationAuthState, failure: LocationFailure) async {
+        let harness = Self.makeHarness(state)
         await harness.viewModel.start()
-        #expect(harness.viewModel.loaderIssue == .noFix)
+
+        #expect(harness.viewModel.launchStage == .ready)
+        #expect(harness.viewModel.failureScreen == failure)
+        #expect(harness.viewModel.loaderIssue == nil)
+        #expect(harness.viewModel.place == nil)
+        #expect(!harness.sleeper.durations.contains(Self.searchMinimum))
+        #expect(!harness.location.didRequestAuthorization)
+        #expect(harness.location.currentPlaceCount == 0)
     }
 
-    /// Offline, reverse geocoding fails at once rather than waiting out
-    /// the 10 s (§10.1).
-    @Test("The city can't be named (offline): No fix")
-    func offlineIsNoFix() async {
-        let harness = Self.makeHarness(.authorized, placeResult: .failure(LocationError.couldNotIdentifyPlace))
+    /// §3 row 2: a search ran, so it shows at least the minimum, even when
+    /// the fix failed at once (inside the 400 ms grace).
+    @Test(
+        "Authorized but no fix, nothing saved: searching for the minimum, then the No fix screen",
+        arguments: [LocationError.locationUnavailable, .couldNotIdentifyPlace]
+    )
+    func noFix(error: LocationError) async {
+        let harness = Self.makeHarness(.authorized, placeResult: .failure(error))
         await harness.viewModel.start()
-        #expect(harness.viewModel.loaderIssue == .noFix)
+
+        #expect(harness.viewModel.launchStage == .ready)
+        #expect(harness.viewModel.failureScreen == .noFix)
+        #expect(harness.viewModel.loaderIssue == nil)
+        #expect(harness.sleeper.durations.contains(Self.searchMinimum))
+        #expect(harness.viewModel.loader.appearedAt == Self.reference)
+    }
+
+    @Test("A launch failure screen and an explicit request's are the same screen", arguments: [
+        LocationAuthState.denied, .servicesOff, .restricted,
+    ])
+    func launchAndExplicitMatch(state: LocationAuthState) async {
+        let launch = Self.makeHarness(state)
+        await launch.viewModel.start()
+        let explicit = Self.makeHarness(state, lastViewed: Place.marVista)
+        await explicit.viewModel.start()
+        await explicit.viewModel.useMyLocation()
+
+        #expect(launch.viewModel.failureScreen != nil)
+        #expect(explicit.viewModel.failureScreen == launch.viewModel.failureScreen)
+        #expect(explicit.viewModel.locationOffDialog == nil)
     }
 
     @Test(
@@ -148,6 +185,7 @@ struct LoaderFlowTests {
         #expect(harness.viewModel.launchStage == .ready)
         #expect(harness.viewModel.place == Place.marVista)
         #expect(harness.viewModel.loaderIssue == nil)
+        #expect(harness.viewModel.failureScreen == nil)
     }
 
     @Test("A saved place opens when the fix fails, too")
@@ -160,12 +198,13 @@ struct LoaderFlowTests {
         await harness.viewModel.start()
         #expect(harness.viewModel.launchStage == .ready)
         #expect(harness.viewModel.place == Place.marVista)
+        #expect(harness.viewModel.failureScreen == nil)
     }
 
     // MARK: - Forget saved place (DEBUG / TestFlight, temporary)
 
-    @Test("Forget saved place: last-viewed and recents cleared, then the loader stops on the message")
-    func forgetSavedPlaceShowsMessage() async {
+    @Test("Forget saved place: last-viewed and recents cleared, then the launch's failure screen")
+    func forgetSavedPlaceShowsFailure() async {
         let harness = Self.makeHarness(.denied, lastViewed: Place.marVista)
         harness.store.addRecent(Place.marVista)
         await harness.viewModel.start()
@@ -177,8 +216,8 @@ struct LoaderFlowTests {
         #expect(harness.store.recents.isEmpty)
         #expect(harness.viewModel.place == nil)
         #expect(harness.viewModel.moonTable == nil)
-        #expect(harness.viewModel.launchStage == .phaseCycle)
-        #expect(harness.viewModel.loaderIssue == .appDenied)
+        #expect(harness.viewModel.launchStage == .ready)
+        #expect(harness.viewModel.failureScreen == .permissionDenied)
     }
 
     @Test("Forget saved place, authorized: the launch finds you again")
@@ -195,27 +234,19 @@ struct LoaderFlowTests {
         #expect(harness.store.recents.isEmpty)
     }
 
-    // MARK: - Search → message (§10.3)
+    // MARK: - First ask (§10.3; §3 rows 4 and 11)
 
-    @Test("Searching shows 1.2 s before the message, even when the reason is known")
-    func searchesFirst() async {
-        let harness = Self.makeHarness(.denied)
-        await harness.viewModel.start()
-        #expect(harness.sleeper.durations.contains(.seconds(1.2)))
-    }
-
-    @Test("On the message: label gone, moon frozen at the hold phase, glow pulsing")
+    @Test("On First ask: label gone, moon frozen at the hold phase, glow pulsing")
     func messageState() async {
-        let harness = Self.makeHarness(.denied)
+        let harness = Self.makeHarness(.notDetermined)
         await harness.viewModel.start()
+        #expect(harness.sleeper.durations.contains(Self.searchMinimum))
         let loader = harness.viewModel.loader
         #expect(!loader.showsLabel)
         #expect(loader.glow.mode == .pulse)
         let later = Self.reference.addingTimeInterval(10)
         #expect(abs(loader.moon.elapsed(at: later) - PhaseCycle.holdElapsed) < 1e-9)
     }
-
-    // MARK: - First ask
 
     @Test("First ask → Use my location → Allow: searching again, then the screen")
     func firstAskAllow() async {
@@ -233,20 +264,63 @@ struct LoaderFlowTests {
         #expect(harness.store.lastViewed == Self.detected)
     }
 
-    @Test("First ask → Don't Allow: app permission off")
+    @Test("First ask → Don't Allow: the app permission failure screen, no searching")
     func firstAskDeny() async {
         let harness = Self.makeHarness(.notDetermined)
         await harness.viewModel.start()
+        let waitsBefore = harness.sleeper.durations.count
         harness.location.stateAfterRequest = .denied
 
         await harness.viewModel.performLoaderAction()
 
-        #expect(harness.viewModel.launchStage == .phaseCycle)
-        #expect(harness.viewModel.loaderIssue == .appDenied)
+        #expect(harness.viewModel.launchStage == .ready)
+        #expect(harness.viewModel.failureScreen == .permissionDenied)
+        #expect(harness.viewModel.loaderIssue == nil)
+        #expect(harness.sleeper.durations.count == waitsBefore)
         #expect(harness.location.currentPlaceCount == 0)
     }
 
-    // MARK: - Back from Settings
+    @Test("First ask, the prompt left unanswered: First ask stays, not No fix")
+    func firstAskUnanswered() async {
+        let harness = Self.makeHarness(.notDetermined)
+        await harness.viewModel.start()
+        harness.location.stateAfterRequest = .notDetermined
+
+        await harness.viewModel.performLoaderAction()
+
+        #expect(harness.viewModel.loaderIssue == .firstAsk)
+        #expect(harness.viewModel.failureScreen == nil)
+        #expect(harness.viewModel.locationFailure == nil)
+        #expect(harness.location.currentPlaceCount == 0)
+    }
+
+    @Test("First ask → Allow → the fix fails: searching for the minimum, then No fix")
+    func firstAskAllowThenMiss() async {
+        let harness = Self.makeHarness(.notDetermined, placeResult: .failure(LocationError.locationUnavailable))
+        await harness.viewModel.start()
+        harness.location.stateAfterRequest = .authorized
+
+        await harness.viewModel.performLoaderAction()
+
+        #expect(harness.viewModel.launchStage == .ready)
+        #expect(harness.viewModel.failureScreen == .noFix)
+        #expect(harness.location.currentPlaceCount == 1)
+    }
+
+    @Test("First ask, turned off in Settings meanwhile: that cause's failure screen")
+    func firstAskThenOffInSettings() async {
+        let harness = Self.makeHarness(.notDetermined)
+        await harness.viewModel.start()
+        harness.location.authorizationState = .servicesOff
+
+        await harness.viewModel.sceneDidBecomeActive()
+
+        #expect(harness.viewModel.launchStage == .ready)
+        #expect(harness.viewModel.failureScreen == .servicesOff)
+        #expect(harness.location.currentPlaceCount == 0)
+    }
+
+    // MARK: - Back from Settings (§3 rows 6–9)
 
     @Test("Denied → Settings → back allowed: searching again, then the screen")
     func backFromSettingsAllowed() async {
@@ -256,31 +330,62 @@ struct LoaderFlowTests {
 
         await harness.viewModel.sceneDidBecomeActive()
 
+        #expect(harness.location.currentPlaceCount == 1)
         #expect(harness.viewModel.launchStage == .ready)
         #expect(harness.viewModel.place == Self.detected)
+        #expect(harness.viewModel.failureScreen == nil)
     }
 
-    @Test("Back from Settings still off: the message stays, still pulsing")
+    @Test("Denied → Settings → back allowed, but no fix: the No fix screen, after the minimum")
+    func backFromSettingsAllowedThenMiss() async {
+        let harness = Self.makeHarness(.denied, placeResult: .failure(LocationError.locationUnavailable))
+        await harness.viewModel.start()
+        harness.location.authorizationState = .authorized
+
+        await harness.viewModel.sceneDidBecomeActive()
+
+        #expect(harness.location.currentPlaceCount == 1)
+        #expect(harness.viewModel.failureScreen == .noFix)
+        #expect(harness.sleeper.durations.contains(Self.searchMinimum))
+    }
+
+    @Test("Back from Settings still off: the screen stays, no fix")
     func backFromSettingsStillOff() async {
         let harness = Self.makeHarness(.denied)
         await harness.viewModel.start()
 
         await harness.viewModel.sceneDidBecomeActive()
 
-        #expect(harness.viewModel.loaderIssue == .appDenied)
-        #expect(harness.viewModel.loader.glow.mode == .pulse)
+        #expect(harness.viewModel.failureScreen == .permissionDenied)
         #expect(harness.location.currentPlaceCount == 0)
     }
 
-    @Test("Services turned on, app never asked: the message becomes First ask")
-    func servicesOnThenFirstAsk() async {
+    @Test("Back from Settings with another cause: that cause's screen")
+    func backFromSettingsOtherCause() async {
+        let harness = Self.makeHarness(.denied)
+        await harness.viewModel.start()
+        harness.location.authorizationState = .servicesOff
+
+        await harness.viewModel.sceneDidBecomeActive()
+
+        #expect(harness.viewModel.failureScreen == .servicesOff)
+        #expect(harness.location.currentPlaceCount == 0)
+    }
+
+    /// §3 row 9 (Tessa, 2026-10-10): kept for now; whether this should be
+    /// First ask is a §6 follow-up.
+    @Test("Services turned on, app never asked: the guidance stays, no prompt")
+    func servicesOnKeepsGuidance() async {
         let harness = Self.makeHarness(.servicesOff)
         await harness.viewModel.start()
         harness.location.authorizationState = .notDetermined
 
         await harness.viewModel.sceneDidBecomeActive()
 
-        #expect(harness.viewModel.loaderIssue == .firstAsk)
+        #expect(harness.viewModel.failureScreen == .servicesOff)
+        #expect(harness.viewModel.loaderIssue == nil)
+        #expect(!harness.location.didRequestAuthorization)
+        #expect(harness.location.currentPlaceCount == 0)
     }
 
     @Test("Open Settings is the view's: the view model does nothing for it")
@@ -288,11 +393,13 @@ struct LoaderFlowTests {
         let harness = Self.makeHarness(.denied)
         await harness.viewModel.start()
         await harness.viewModel.performLoaderAction()
-        #expect(harness.viewModel.loaderIssue == .appDenied)
+        await harness.viewModel.tryAgainFromFailureScreen()
+        #expect(harness.viewModel.failureScreen == .permissionDenied)
         #expect(harness.location.requestAuthorizationCount == 0)
+        #expect(harness.location.currentPlaceCount == 0)
     }
 
-    // MARK: - No fix
+    // MARK: - No fix (§3 rows 5 and 10)
 
     @Test("No fix → Try again → a fix: the screen")
     func tryAgainSucceeds() async {
@@ -300,20 +407,21 @@ struct LoaderFlowTests {
         await harness.viewModel.start()
         harness.location.placeResult = .success(Self.detected)
 
-        await harness.viewModel.performLoaderAction()
+        await harness.viewModel.tryAgainFromFailureScreen()
 
         #expect(harness.viewModel.launchStage == .ready)
         #expect(harness.viewModel.place == Self.detected)
+        #expect(harness.viewModel.failureScreen == nil)
     }
 
-    @Test("No fix → Try again → still nothing: No fix again")
+    @Test("No fix → Try again → still nothing: the same No fix screen")
     func tryAgainFails() async {
         let harness = Self.makeHarness(.authorized, placeResult: .failure(LocationError.locationUnavailable))
         await harness.viewModel.start()
 
-        await harness.viewModel.performLoaderAction()
+        await harness.viewModel.tryAgainFromFailureScreen()
 
-        #expect(harness.viewModel.loaderIssue == .noFix)
+        #expect(harness.viewModel.failureScreen == .noFix)
         #expect(harness.location.currentPlaceCount == 2)
     }
 
@@ -323,15 +431,16 @@ struct LoaderFlowTests {
         await harness.viewModel.start()
         await harness.viewModel.sceneDidBecomeActive()
         #expect(harness.location.currentPlaceCount == 1)
-        #expect(harness.viewModel.loaderIssue == .noFix)
+        #expect(harness.viewModel.failureScreen == .noFix)
     }
 
-    // MARK: - Search for a city
+    // MARK: - Search for a city (§3 rows 3 and 12)
 
-    @Test("Search for a city, then a pick: the screen loads in for it")
+    @Test("Enter a city, then a pick: the failure clears and the screen loads in for it")
     func searchThenPick() async {
         let harness = Self.makeHarness(.denied)
         await harness.viewModel.start()
+        let loadIns = harness.viewModel.loadInGeneration
 
         harness.viewModel.presentSearch()
         #expect(harness.viewModel.isSearchPresented)
@@ -339,7 +448,23 @@ struct LoaderFlowTests {
 
         #expect(harness.viewModel.launchStage == .ready)
         #expect(harness.viewModel.place == Place.marVista)
-        #expect(harness.viewModel.loaderIssue == nil)
+        #expect(harness.viewModel.failureScreen == nil)
+        #expect(harness.viewModel.loadInGeneration == loadIns + 1)
+        // A city load-in, not GPS "Aha".
+        #expect(harness.viewModel.loader.flightStartedAt == nil)
+    }
+
+    @Test("Enter a city, then cancel: the failure screen stays")
+    func searchThenCancel() async {
+        let harness = Self.makeHarness(.servicesOff)
+        await harness.viewModel.start()
+
+        harness.viewModel.presentSearch()
+        harness.viewModel.isSearchPresented = false
+        await harness.viewModel.searchDidDismiss()
+
+        #expect(harness.viewModel.failureScreen == .servicesOff)
+        #expect(harness.viewModel.place == nil)
     }
 
     @Test("The search sheet's Use my location from First ask → Allow: the screen, not the message")
@@ -355,6 +480,20 @@ struct LoaderFlowTests {
         #expect(harness.viewModel.place == Self.detected)
     }
 
+    @Test("The search sheet's Use my location from First ask, now off: its failure screen, no dialog")
+    func searchRowFromFirstAskWhileOff() async {
+        let harness = Self.makeHarness(.notDetermined)
+        await harness.viewModel.start()
+        harness.location.authorizationState = .denied
+
+        await harness.viewModel.useMyLocation()
+
+        #expect(harness.viewModel.launchStage == .ready)
+        #expect(harness.viewModel.failureScreen == .permissionDenied)
+        #expect(harness.viewModel.locationOffDialog == nil)
+        #expect(!harness.viewModel.isReplacingPlace)
+    }
+
     @Test("The search sheet's Use my location from No fix, still nothing: No fix again, no dialog")
     func searchRowFromNoFix() async {
         let harness = Self.makeHarness(.authorized, placeResult: .failure(LocationError.locationUnavailable))
@@ -362,38 +501,64 @@ struct LoaderFlowTests {
 
         await harness.viewModel.useMyLocation()
 
-        #expect(harness.viewModel.loaderIssue == .noFix)
+        #expect(harness.viewModel.failureScreen == .noFix)
         #expect(harness.viewModel.locationOffDialog == nil)
         #expect(harness.location.currentPlaceCount == 2)
     }
 
-    @Test("The search sheet's Use my location while denied: the dialog; back allowed closes it")
+    @Test("The search sheet's Use my location while denied: the same failure screen, no dialog; back allowed recovers")
     func searchRowWhileDenied() async {
         let harness = Self.makeHarness(.denied)
         await harness.viewModel.start()
 
         await harness.viewModel.useMyLocation()
-        #expect(harness.viewModel.locationOffDialog == .denied)
+        #expect(harness.viewModel.locationOffDialog == nil)
+        #expect(harness.viewModel.failureScreen == .permissionDenied)
 
         harness.location.authorizationState = .authorized
         await harness.viewModel.sceneDidBecomeActive()
 
-        #expect(harness.viewModel.locationOffDialog == nil)
         #expect(harness.viewModel.launchStage == .ready)
         #expect(harness.viewModel.place == Self.detected)
+        #expect(harness.location.currentPlaceCount == 1)
+    }
+
+    @Test("The search row from a failure screen: the screen stays while the sheet closes, then its flow runs")
+    func searchRowKeepsFailureScreenUntilDismissed() async throws {
+        let harness = Self.makeHarness(.denied)
+        await harness.viewModel.start()
+        harness.viewModel.presentSearch()
+        let sheet = try #require(harness.viewModel.searchSheet)
+
+        sheet.useMyLocation()
+
+        // Under the closing sheet: no empty main screen or skeleton.
+        #expect(!harness.viewModel.isSearchPresented)
+        #expect(harness.viewModel.failureScreen == .permissionDenied)
+        #expect(!harness.viewModel.isReplacingPlace)
+        #expect(harness.viewModel.cardPlaceholder == nil)
+
+        await harness.viewModel.searchDidDismiss()
+
+        #expect(harness.viewModel.failureScreen == .permissionDenied)
+        #expect(harness.viewModel.locationOffDialog == nil)
+        #expect(!harness.viewModel.isReplacingPlace)
     }
 
     @Test("Restricted: the button is the search")
     func restrictedSearches() async {
         let harness = Self.makeHarness(.restricted)
         await harness.viewModel.start()
-        await harness.viewModel.performLoaderAction()
-        #expect(harness.viewModel.isSearchPresented)
+        #expect(harness.viewModel.failureScreen?.primaryAction == .search)
+        #expect(harness.viewModel.failureScreen?.showsEnterCityLink == false)
     }
 
-    @Test("A pick while the loader is still searching: no message turns up later")
-    func pickSupersedesMessage() async {
-        let location = FakeLocationService(authorizationState: .denied)
+    @Test("A pick while a failed launch is still searching: no failure screen turns up later")
+    func pickSupersedesFailure() async {
+        let location = FakeLocationService(
+            authorizationState: .authorized,
+            placeResult: .failure(LocationError.locationUnavailable)
+        )
         let sleeper = ManualSleeper()
         let viewModel = LocationViewModel(
             locationService: location,
@@ -406,25 +571,27 @@ struct LoaderFlowTests {
             loaderNow: { Self.reference }
         )
         let launch = Task { await viewModel.start() }
-        await Self.settle { viewModel.launchStage == .phaseCycle && sleeper.pendingCount == 1 }
+        // The 400 ms clock, cancelled but never resumed, and the minimum.
+        await Self.settle { viewModel.launchStage == .phaseCycle && sleeper.pendingCount == 2 }
 
         viewModel.select(Place.marVista)
         sleeper.fire()
         await launch.value
 
         #expect(viewModel.launchStage == .ready)
-        #expect(viewModel.loader.content == .searching)
+        #expect(viewModel.place == Place.marVista)
+        #expect(viewModel.failureScreen == nil)
     }
 
     // MARK: - "Aha" (§10.4)
 
-    @Test("A fix after a message: \"Aha\" with the city, then the moon flies as the screen comes up")
+    @Test("A fix after No fix's Try again: \"Aha\" with the city, then the moon flies as the screen comes up")
     func ahaAfterRecovery() async throws {
         let harness = Self.makeHarness(.authorized, placeResult: .failure(LocationError.locationUnavailable))
         await harness.viewModel.start()
         harness.location.placeResult = .success(Self.detected)
 
-        await harness.viewModel.performLoaderAction()
+        await harness.viewModel.tryAgainFromFailureScreen()
 
         let loader = harness.viewModel.loader
         #expect(harness.sleeper.durations.contains(.seconds(LocationLoader.minimumSearchBeforeAha)))
@@ -467,7 +634,7 @@ struct LoaderFlowTests {
         #expect(!harness.onboardingStore.hasSeenFirstFindPass)
         harness.location.placeResult = .success(Self.detected)
 
-        await harness.viewModel.performLoaderAction()
+        await harness.viewModel.tryAgainFromFailureScreen()
 
         let ride = try #require(harness.viewModel.loader.ride)
         #expect(ride.laps >= 1)
@@ -484,7 +651,7 @@ struct LoaderFlowTests {
         await harness.viewModel.start()
         harness.location.placeResult = .success(Self.detected)
 
-        await harness.viewModel.performLoaderAction()
+        await harness.viewModel.tryAgainFromFailureScreen()
 
         let ride = try #require(harness.viewModel.loader.ride)
         #expect(ride.laps < 1)
@@ -500,7 +667,7 @@ struct LoaderFlowTests {
         await harness.viewModel.start()
         harness.location.placeResult = .success(Self.detected)
 
-        await harness.viewModel.performLoaderAction()
+        await harness.viewModel.tryAgainFromFailureScreen()
 
         #expect(harness.viewModel.loader.ride == nil)
         #expect(harness.sleeper.durations.contains(.seconds(LocationLoader.ahaHold)))
@@ -603,7 +770,9 @@ struct LoaderFlowTests {
             "Check your signal and try",
             "again, or search for a city."
         ])
-        #expect(LocationIssue.restricted.bodyLines == nil)
+        #expect(LocationIssue.restricted.bodyLines == [
+            "Location access is limited on", "this iPhone. You can still", "search for a city.",
+        ])
     }
 
     @Test(
@@ -617,21 +786,9 @@ struct LoaderFlowTests {
     )
     func causeMessagesShareFailureCopy(issue: LocationIssue, failure: LocationFailure) {
         #expect(issue.failure == failure)
-        let message = issue.copy
-        let screen = failure.copy
-        #expect(message.headline == screen.headline)
-        #expect(message.headlineLines == screen.headlineLines)
-        #expect(message.body == screen.body)
-        #expect(message.primaryTitle == screen.primaryTitle)
-        #expect(message.linkTitle == screen.linkTitle)
-        #expect(message.showsLink == screen.showsLink)
+        // Consolidation Chunk 2: exactly the screen's, chip and lines too.
+        #expect(issue.copy == failure.copy)
         #expect(issue.primaryAction == failure.primaryAction)
-        // Until Consolidation Chunk 2: no path chip under the moon, and
-        // restricted's body wraps naturally there.
-        #expect(message.pathChipLines == nil)
-        if failure != .restricted {
-            #expect(message.bodyLines == screen.bodyLines)
-        }
     }
 
     @Test("First ask is an invitation, not a cause")

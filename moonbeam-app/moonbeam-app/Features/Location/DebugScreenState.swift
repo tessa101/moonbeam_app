@@ -31,12 +31,15 @@ struct DebugScreenState: View {
         /// A launch whose fix lands at 150 ms (no loader) or 2.5 s (the
         /// phase cycle), then the moon-up screen loading in (LOADER.md §2.1).
         case launchFast, launchSlow
-        /// The loader's messages (LOADER.md §10.3): no saved place, and the
-        /// permission state (or, for No fix, a fix that fails) behind each.
+        /// A launch with no saved place, and the permission state (or, for
+        /// No fix, a fix that fails) behind it: First ask stops the loader
+        /// on its message (LOADER.md §10.3); the four causes open their
+        /// failure screen (STEP-5.10a-LOCATION-CONSOLIDATION.md §2). Names
+        /// kept from when all five were loader messages.
         case messageFirstAsk, messageDenied, messageServicesOff, messageRestricted, messageNoFix
-        /// "Aha" after a recovery (LOADER.md §10.4): No fix, then a fix
-        /// lands and Try again is tapped for you, so "Aha" and the fly into
-        /// the card follow.
+        /// "Aha" after a recovery (LOADER.md §10.4): the launch's No fix
+        /// screen, then a fix lands and Try again is tapped for you, so
+        /// "Aha" and the fly into the card follow.
         case recoveryAha
         /// The location failure screen (STEP-5.10a): Irvine saved and
         /// shown, then Use my location fails for the cause, through the
@@ -63,7 +66,7 @@ struct DebugScreenState: View {
         /// on, so Open Settings → back can be recorded (the fakes can't hear
         /// the real Settings app).
         var grantsAccessInSettings: Bool {
-            self == .locationFailedDenied || self == .locationFailedServicesOff
+            [.locationFailedDenied, .locationFailedServicesOff, .messageDenied, .messageServicesOff].contains(self)
         }
     }
 
@@ -260,7 +263,7 @@ struct DebugScreenState: View {
                 await recover()
                 return
             }
-            // The loader and its messages are the screen's own launch;
+            // The launch destinations are the screen's own launch;
             // nothing to fake on top.
             guard state != .loading, !Self.messageKinds.contains(state) else { return }
             let limit = state == .launchFast || state == .launchSlow ? Self.launchPollLimit : Self.pollLimit
@@ -303,13 +306,13 @@ struct DebugScreenState: View {
 
         /// Waits for No fix, lets it show, then a fix lands and Try again.
         private func recover() async {
-            for _ in 0..<Self.launchPollLimit where viewModel.loaderIssue != .noFix {
+            for _ in 0..<Self.launchPollLimit where viewModel.failureScreen != .noFix {
                 try? await Task.sleep(for: Self.pollInterval)
             }
             try? await Task.sleep(for: Self.recoveryMessageHold)
             location.placeResult = .success(here)
             location.fixDelay = Self.recoveryFixDelay
-            await viewModel.performLoaderAction()
+            await viewModel.tryAgainFromFailureScreen()
         }
 
         private static func reading(for state: Kind) -> HeadingReading {
@@ -345,10 +348,10 @@ struct DebugScreenState: View {
 #Preview("16 Fast launch") { DebugScreenState(.launchFast) }
 #Preview("17 Slow launch") { DebugScreenState(.launchSlow) }
 #Preview("18 Message: First ask") { DebugScreenState(.messageFirstAsk) }
-#Preview("19 Message: App permission off") { DebugScreenState(.messageDenied) }
-#Preview("20 Message: Services off") { DebugScreenState(.messageServicesOff) }
-#Preview("21 Message: Restricted") { DebugScreenState(.messageRestricted) }
-#Preview("22 Message: No fix") { DebugScreenState(.messageNoFix) }
+#Preview("19 Launch: App permission off") { DebugScreenState(.messageDenied) }
+#Preview("20 Launch: Services off") { DebugScreenState(.messageServicesOff) }
+#Preview("21 Launch: Restricted") { DebugScreenState(.messageRestricted) }
+#Preview("22 Launch: No fix") { DebugScreenState(.messageNoFix) }
 #Preview("23 Aha after a recovery") { DebugScreenState(.recoveryAha) }
 #Preview("24 Failed: App permission off") { DebugScreenState(.locationFailedDenied) }
 #Preview("25 Failed: Services off") { DebugScreenState(.locationFailedServicesOff) }

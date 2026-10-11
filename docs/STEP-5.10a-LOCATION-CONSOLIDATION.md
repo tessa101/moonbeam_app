@@ -1,7 +1,7 @@
 # Step 5.10a follow-up: consolidate location guidance and failure flows
 
 > Agreed with Tessa, October 10, 2026. Implementation plan after the original failure work's Chunk 6.
-> **Approved scope; not yet implemented.** This document supersedes earlier instructions to keep the four launch failure causes on the loader moon and to keep the Location Off dialog for acquisition from the launch search row. First ask still uses its existing moon presentation.
+> **Approved scope. Chunks 1–2 implemented (October 10, 2026); Chunk 3 pending.** This document supersedes earlier instructions to keep the four launch failure causes on the loader moon and to keep the Location Off dialog for acquisition from the launch search row. First ask still uses its existing moon presentation.
 > Read `LOCATION-STATE-INVENTORY.md`, `STEP-5.10a-LOCATION-FAILURE.md`, and `LOADER.md` §10–12. Existing illustration/layout/motion specifications remain authoritative.
 
 ## 1. Product model

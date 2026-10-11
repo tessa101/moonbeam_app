@@ -240,7 +240,7 @@ struct LocationViewModelTests {
         #expect(!viewModel.locationFailed)
     }
 
-    @Test("Authorized but the fix fails with nothing saved: the loader stops on No fix")
+    @Test("Authorized but the fix fails with nothing saved: the No fix failure screen")
     func authorizedFetchFailsWithNothingSaved() async {
         let viewModel = Self.makeViewModel(
             location: FakeLocationService(authorizationState: .authorized)
@@ -249,7 +249,7 @@ struct LocationViewModelTests {
         await viewModel.start()
 
         #expect(viewModel.place == nil)
-        #expect(viewModel.loaderIssue == .noFix)
+        #expect(viewModel.failureScreen == .noFix)
     }
 
     /// The timeout has to *cancel* the fix, which is what stops location
@@ -409,7 +409,7 @@ struct LocationViewModelTests {
         #expect(store.lastViewed == Self.detectedLosAngeles)
     }
 
-    @Test("Not determined, refused at the prompt: no fetch and no dialog")
+    @Test("Not determined, refused at the prompt: no fetch, no dialog, the permission failure screen")
     func notDeterminedRefusedDoesNothingMore() async {
         let location = FakeLocationService()
         location.stateAfterRequest = .denied
@@ -421,6 +421,7 @@ struct LocationViewModelTests {
         #expect(location.requestAuthorizationCount == 1)
         #expect(location.currentPlaceCount == 0)
         #expect(viewModel.locationOffDialog == nil)
+        #expect(viewModel.failureScreen == .permissionDenied)
         #expect(viewModel.showsUseMyLocation)
     }
 
@@ -457,24 +458,24 @@ struct LocationViewModelTests {
         #expect(viewModel.showsUseMyLocation)
     }
 
+    /// STEP-5.10a-LOCATION-CONSOLIDATION.md §3: an explicit request gets the
+    /// cause's failure screen; only the compass keeps the dialog.
     @Test(
-        "Denied, services off and restricted each open their own dialog",
+        "Denied, services off and restricted each open their own failure screen, no dialog",
         arguments: [
-            (LocationAuthState.denied, LocationViewModel.LocationOffVariant.denied),
+            (LocationAuthState.denied, LocationFailure.permissionDenied),
             (.servicesOff, .servicesOff),
             (.restricted, .restricted),
         ]
     )
-    func blockedStatesOpenTheirDialog(
-        state: LocationAuthState,
-        expected: LocationViewModel.LocationOffVariant
-    ) async {
+    func blockedStatesOpenTheirFailureScreen(state: LocationAuthState, expected: LocationFailure) async {
         let location = FakeLocationService(authorizationState: state)
         let viewModel = Self.makeViewModel(location: location)
 
         await viewModel.useMyLocation()
 
-        #expect(viewModel.locationOffDialog == expected)
+        #expect(viewModel.failureScreen == expected)
+        #expect(viewModel.locationOffDialog == nil)
         #expect(!location.didRequestAuthorization)
         #expect(location.currentPlaceCount == 0)
     }
@@ -511,15 +512,14 @@ struct LocationViewModelTests {
         )
         let viewModel = Self.makeViewModel(location: location)
         await viewModel.start()
-        await viewModel.useMyLocation()
-        #expect(viewModel.locationOffDialog == .denied)
+        #expect(viewModel.failureScreen == .permissionDenied)
 
         location.authorizationState = .authorized
         await viewModel.sceneDidBecomeActive()
 
         #expect(location.currentPlaceCount == 1)
         #expect(viewModel.place == Self.detectedLosAngeles)
-        #expect(viewModel.locationOffDialog == nil)
+        #expect(viewModel.failureScreen == nil)
     }
 
     @Test("Foreground with permission unchanged: no fetch", arguments: [
@@ -729,7 +729,8 @@ struct LocationViewModelTests {
     @Test("Dismissing the dialog any other way doesn't open search")
     func dialogDismissedOtherwiseDoesNotOpenSearch() async {
         let viewModel = Self.makeViewModel(location: FakeLocationService(authorizationState: .denied))
-        await viewModel.useMyLocation()
+        // The compass's Turn On Location: the one route left to the dialog.
+        await viewModel.turnOnLocationForCompass()
         #expect(viewModel.locationOffDialog == .denied)
 
         viewModel.dismissLocationOffDialog()

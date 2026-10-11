@@ -121,13 +121,12 @@ struct LocationFailureScreenTests {
         #expect(failure.copy.linkTitle == "Enter a city instead")
     }
 
-    @Test("The launch loader's messages keep their copy through the shared block")
-    func loaderCopyUnchanged() {
+    @Test("A launch cause's copy is its failure screen's, Settings chip included")
+    func launchCopyIsTheFailureScreens() {
         let copy = LocationIssue.appDenied.copy
-        #expect(copy.headline == LocationIssue.appDenied.headline)
-        #expect(copy.body == LocationIssue.appDenied.body)
+        #expect(copy == LocationFailure.permissionDenied.copy)
         #expect(copy.linkTitle == LocationIssue.searchLinkTitle)
-        #expect(copy.pathChipLines == nil)
+        #expect(copy.pathChipLines != nil)
         #expect(!LocationIssue.restricted.copy.showsLink)
     }
 

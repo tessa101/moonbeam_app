@@ -46,9 +46,9 @@ struct OnboardingMainScreenTests {
         #expect(!viewModel.isSearchPresented)
     }
 
-    /// LOADER.md §10.1: no "a city" screen; the loader's app-permission
-    /// message instead.
-    @Test("Got it: the loader stops on app permission off, no sheet, no prompt")
+    /// LOADER.md §10.1: no "a city" screen; the app permission failure
+    /// screen instead (STEP-5.10a-LOCATION-CONSOLIDATION.md §4).
+    @Test("Got it: app permission off's failure screen, no sheet, no prompt")
     func declinedShowsEmptyState() async {
         let location = FakeLocationService(authorizationState: .denied)
         let viewModel = Self.makeLocationViewModel(location: location)
@@ -57,7 +57,7 @@ struct OnboardingMainScreenTests {
         await viewModel.start()
 
         #expect(viewModel.place == nil)
-        #expect(viewModel.loaderIssue == .appDenied)
+        #expect(viewModel.failureScreen == .permissionDenied)
         #expect(!viewModel.isSearchPresented)
         #expect(!location.didRequestAuthorization)
     }
