@@ -637,12 +637,19 @@ final class LocationViewModel {
     /// button: Chunk 2b, superseding §3 row 10); a different reason changes
     /// the screen. Once per activation: the search takes the screen away, so
     /// the next activation finds none, and none starts while one runs.
+    ///
+    /// Not determined (Ask Next Time) goes to First ask, whose button can
+    /// show iOS's prompt; Open Settings would loop back to the same screen
+    /// (Chunk 2b, superseding §3 row 9). No prompt by itself.
     private func failureScreenDidBecomeActive(on failure: LocationFailure, state: LocationAuthState) async {
         lastSeenAuthState = state
         detectionOnlyAfterSettings = false
         if state.isAuthorized {
             guard !isLocating else { return }
             await recoverFromFailureScreen()
+        } else if state == .notDetermined {
+            locationFailure = nil
+            await showLoaderMessage(.firstAsk)
         } else if let current = LocationFailure(state), current != failure {
             locationFailure = current
         }

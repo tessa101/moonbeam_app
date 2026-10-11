@@ -87,7 +87,8 @@ struct LocationFailureScreenTests {
 
     @Test("Path chip only where Settings can fix it, on the doc's two lines")
     func pathChips() {
-        #expect(LocationFailure.permissionDenied.pathChipLines == ["Settings › Moon Signal ›", "Location › While Using the App"])
+        // Chunk 2b: the app's Location page; any choice but Never works.
+        #expect(LocationFailure.permissionDenied.pathChipLines == ["Settings › Moon Signal ›", "Location"])
         #expect(LocationFailure.servicesOff.pathChipLines == ["Settings › Privacy & Security ›", "Location Services"])
         #expect(LocationFailure.noFix.pathChipLines == nil)
         #expect(LocationFailure.restricted.pathChipLines == nil)
@@ -97,7 +98,7 @@ struct LocationFailureScreenTests {
     func pathChipLabel() {
         #expect(
             LocationFailure.permissionDenied.copy.pathChipAccessibilityLabel
-                == "Settings, Moon Signal, Location, While Using the App"
+                == "Settings, Moon Signal, Location"
         )
         #expect(LocationFailure.noFix.copy.pathChipAccessibilityLabel == nil)
     }

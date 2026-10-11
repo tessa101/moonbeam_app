@@ -8,7 +8,12 @@ Updated October 10, 2026. Step doc: `docs/STEP-5.10a-CHUNK-2B-DEVICE-FIXES.md`. 
   - Back in the app with access (background or inactive, so Control Center too), No fix runs one search: loader → Aha, or the same screen after the 1.2 s minimum. It doesn't stack.
   - Removed as unreachable: `.tryAgain`, the "Try again" title, `onTryAgain`, `tryAgainFromFailureScreen()`.
   - Build-for-testing succeeds; tests not run.
-- **Next:** item 2 (Settings return as not determined → First ask; shorter permission chip).
+- **Item 2 done: a Settings return as not determined goes to First ask** (at launch and after explicit requests), with no automatic prompt.
+  - Tapping Use my location prompts. No telescope loop.
+  - Permission chip is now "Settings › Moon Signal › / Location".
+  - Flag for Tessa: First ask arrives as at launch, with the 1.2 s searching label first, though nothing is being searched.
+  - Build-for-testing succeeds; tests not run.
+- **Next:** item 3 (moon screens' vertical alignment).
 
 ---
 

@@ -74,7 +74,7 @@ struct MessageText: View {
 // MARK: - Path chip
 
 /// STEP-5.10a Layout: where to find the switch, e.g. "Settings › Moon
-/// Signal › Location › While Using the App", in a quiet raised chip. Only
+/// Signal › Location", in a quiet raised chip. Only
 /// for the causes the user can fix in Settings.
 private struct PathChip: View {
 

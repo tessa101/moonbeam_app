@@ -30,7 +30,7 @@ Line breaks are fixed at default size (manual `\n`); fall back to natural wrappi
 
 | Cause | Detect | Art | Headline | Body | Path chip | Primary | Secondary |
 |---|---|---|---|---|---|---|---|
-| App permission off | `denied` | `permission-off` (telescope) | Moon Signal can't / see your location | Allow location access to see / where the moon is from here. | Settings › Moon Signal › / Location › While Using the App | Open Settings | Enter a city instead |
+| App permission off | `denied` | `permission-off` (telescope) | Moon Signal can't / see your location | Allow location access to see / where the moon is from here. | Settings › Moon Signal › / Location *(Chunk 2b; was “… › Location › While Using the App”)* | Open Settings | Enter a city instead |
 | Services off | `servicesOff` | `services-off` (map) | Location / Services are off | Turn them on to see where / the moon is from here. | Settings › Privacy & Security › / Location Services | Open Settings | Enter a city instead |
 | No fix | timeout (10 s), CoreLocation error, offline / reverse-geocode failure | `location-not-found` (calico) | Couldn't find / your location | Check your cellular or Wi-Fi / connection. We’ll look again / when you come back. *(Chunk 2b; was “Check your signal and try again, or search for a city.”)* | none | none: room kept; looks again on return to the app (Chunk 2b; was Try again) | Enter a city instead |
 | Restricted | `restricted` | `restricted` (map + lock) | Moon Signal can't / see your location | Location access is limited on / this iPhone. You can still / search for a city. | none | Search for a city | none (keep the 44 pt spacer so the primary doesn't move) |

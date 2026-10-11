@@ -22,7 +22,7 @@ Use **one cause-specific presentation regardless of entry point**: launch withou
 
 | Cause | Illustration | Headline | Body | Primary / secondary | Settings chip |
 |---|---|---|---|---|---|
-| Permission off | Existing telescope | Moon Signal can’t see your location | Allow location access to see where the moon is from here. | Open Settings / Enter a city instead | Settings › Moon Signal › Location › While Using the App |
+| Permission off | Existing telescope | Moon Signal can’t see your location | Allow location access to see where the moon is from here. | Open Settings / Enter a city instead | Settings › Moon Signal › Location *(Chunk 2b)* |
 | Services off | Existing map | Location Services are off | Turn them on to see where the moon is from here. | Open Settings / Enter a city instead | Settings › Privacy & Security › Location Services |
 | Restricted | Existing locked map | Moon Signal can’t see your location | Location access is limited on this iPhone. You can still search for a city. | Search for a city / none | None |
 | No fix | Existing calico | Couldn’t find your location | Check your cellular or Wi-Fi connection. We’ll look again when you come back. *(Chunk 2b)* | none (room kept) / Enter a city instead *(Chunk 2b; was Try again)* | None |
@@ -43,7 +43,7 @@ One source supplies cause copy, art, path and actions. First ask's copy stays in
 | Settings return, newly authorized | Remove guidance immediately → one automatic location request → existing searching/Aha/flight/main on success, illustrated cause on failure. No intermediate Try again screen |
 | Settings return, unchanged blocked state | Keep current guidance; no request |
 | Settings return, different blocked cause | Switch to the corresponding shared guidance |
-| Settings return, not determined | Preserve current behavior in this pass: keep current illustrated guidance; do not automatically prompt. Flag for later First ask review |
+| Settings return, not determined | **Superseded by Chunk 2b item 2:** First ask (stopped moon; Use my location shows iOS's prompt on tap), at launch and after explicit requests; no automatic prompt. *(Was: keep the illustrated guidance.)* |
 | No fix foreground, access still authorized | **Superseded by Chunk 2b item 1:** one automatic search per activation (background or inactive → active, Control Center included), none while one runs; same loader → Aha or No fix path. *(Was: wait for Try again.)* |
 | First ask primary | Existing user-triggered prompt; allow → existing recovery, deny → shared illustrated permission guidance |
 | Enter a city / Restricted's Search for a city | Focused search sheet; cancel returns to origin; pick clears cause and uses existing city load-in, not GPS Aha |
@@ -107,7 +107,7 @@ Default-size iPhone 17 is the main flow-review target; check SE 3/large text for
 ## 6. Separate follow-ups
 
 - Decide whether onboarding's decline acknowledgment should proceed directly to focused city search.
-- Decide whether return from Settings as not determined should lead to First ask instead of retaining guidance.
+- ~~Decide whether return from Settings as not determined should lead to First ask instead of retaining guidance.~~ Decided in Chunk 2b: First ask.
 - Review full accessibility behavior and small-screen layout issues already recorded.
 - Review continuous motion and real Settings routes on a physical device; DEBUG background-grants-access fixtures do not verify system navigation.
 - *(Chunk 2b)* **Searching cat in the launch flow.** Show the searching cat while locating; the moon still flies into the card on success, and the cat exits some way (wave goodbye, poof away, scamper off). To be explored later. `searching.svg` is delivered but unused.

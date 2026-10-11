@@ -372,20 +372,62 @@ struct LoaderFlowTests {
         #expect(harness.location.currentPlaceCount == 0)
     }
 
-    /// §3 row 9 (Tessa, 2026-10-10): kept for now; whether this should be
-    /// First ask is a §6 follow-up.
-    @Test("Services turned on, app never asked: the guidance stays, no prompt")
-    func servicesOnKeepsGuidance() async {
+    /// Chunk 2b, superseding §3 row 9: Ask Next Time is not determined,
+    /// where iOS can still prompt, so First ask, not the telescope.
+    @Test("Services turned on, app never asked: First ask, no prompt by itself")
+    func servicesOnGoesToFirstAsk() async {
         let harness = Self.makeHarness(.servicesOff)
         await harness.viewModel.start()
         harness.location.authorizationState = .notDetermined
 
         await harness.viewModel.sceneDidBecomeActive()
 
-        #expect(harness.viewModel.failureScreen == .servicesOff)
-        #expect(harness.viewModel.loaderIssue == nil)
+        #expect(harness.viewModel.loaderIssue == .firstAsk)
+        #expect(harness.viewModel.failureScreen == nil)
         #expect(!harness.location.didRequestAuthorization)
         #expect(harness.location.currentPlaceCount == 0)
+    }
+
+    @Test("Denied, Ask Next Time in Settings, back: First ask; its button prompts, and Allow finds you")
+    func askNextTimeGoesToFirstAsk() async {
+        let harness = Self.makeHarness(.denied)
+        await harness.viewModel.start()
+        #expect(harness.viewModel.failureScreen == .permissionDenied)
+        harness.location.authorizationState = .notDetermined
+
+        await harness.viewModel.sceneDidBecomeActive()
+        #expect(harness.viewModel.loaderIssue == .firstAsk)
+        // Another trip out and back doesn't loop to the telescope.
+        await harness.viewModel.sceneDidBecomeActive()
+        #expect(harness.viewModel.loaderIssue == .firstAsk)
+        #expect(!harness.location.didRequestAuthorization)
+
+        harness.location.stateAfterRequest = .authorized
+        await harness.viewModel.performLoaderAction()
+
+        #expect(harness.location.requestAuthorizationCount == 1)
+        #expect(harness.viewModel.place == Self.detected)
+        #expect(harness.viewModel.launchStage == .ready)
+    }
+
+    @Test("After an explicit request: denied, Ask Next Time, back: First ask too; Don't Allow is the telescope again")
+    func askNextTimeAfterExplicitRequest() async {
+        let harness = Self.makeHarness(.denied, lastViewed: Place.marVista)
+        await harness.viewModel.start()
+        await harness.viewModel.useMyLocation()
+        #expect(harness.viewModel.failureScreen == .permissionDenied)
+        harness.location.authorizationState = .notDetermined
+
+        await harness.viewModel.sceneDidBecomeActive()
+        #expect(harness.viewModel.loaderIssue == .firstAsk)
+        // The explicit failure doesn't bring the old city back.
+        #expect(harness.viewModel.place == nil)
+
+        harness.location.stateAfterRequest = .denied
+        await harness.viewModel.performLoaderAction()
+
+        #expect(harness.location.requestAuthorizationCount == 1)
+        #expect(harness.viewModel.failureScreen == .permissionDenied)
     }
 
     @Test("Open Settings is the view's: the view model does nothing for it")

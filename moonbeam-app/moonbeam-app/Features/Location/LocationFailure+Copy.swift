@@ -48,7 +48,9 @@ nonisolated extension LocationFailure {
     /// Where the switch is, for the causes Settings can fix.
     var pathChipLines: [String]? {
         switch self {
-        case .permissionDenied: ["Settings › \(AppInfo.name) ›", "Location › While Using the App"]
+        // Chunk 2b (Tessa, 2026-10-10): any choice but Never works, so the
+        // chip stops at the app's Location page.
+        case .permissionDenied: ["Settings › \(AppInfo.name) ›", "Location"]
         case .servicesOff: ["Settings › Privacy & Security ›", "Location Services"]
         case .noFix, .restricted: nil
         }
