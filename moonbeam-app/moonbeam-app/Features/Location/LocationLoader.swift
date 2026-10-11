@@ -200,6 +200,24 @@ final class LocationLoader {
         return true
     }
 
+    /// Straight to a message with no search before it (Chunk 2b): the moon
+    /// appears held at the hold phase with the glow pulsing, no "Finding
+    /// your location…", and the message comes in. For a reason no search
+    /// led to: back from Settings as not determined, First ask.
+    func presentMessage(_ issue: LocationIssue) {
+        generation += 1
+        let date = now()
+        appearedAt = date
+        searchStartedAt = date
+        sessionStartedAt = date
+        ride = nil
+        flightStartedAt = nil
+        moon = .held(at: PhaseCycle.holdElapsed, since: date)
+        glow = glow.switching(to: .pulse, at: date, elapsed: moon.elapsed(at: date))
+        showsLabel = false
+        content = .message(issue)
+    }
+
     /// Search → failure screen (STEP-5.10a Chunk 6): keep the searching
     /// loader up for the same minimum as Search → message, then let the view
     /// crossfade it into the illustration.

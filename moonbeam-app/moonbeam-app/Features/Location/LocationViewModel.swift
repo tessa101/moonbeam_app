@@ -640,7 +640,8 @@ final class LocationViewModel {
     ///
     /// Not determined (Ask Next Time) goes to First ask, whose button can
     /// show iOS's prompt; Open Settings would loop back to the same screen
-    /// (Chunk 2b, superseding §3 row 9). No prompt by itself.
+    /// (Chunk 2b, superseding §3 row 9). No prompt by itself, and no
+    /// searching label first: nothing is being searched.
     private func failureScreenDidBecomeActive(on failure: LocationFailure, state: LocationAuthState) async {
         lastSeenAuthState = state
         detectionOnlyAfterSettings = false
@@ -648,8 +649,10 @@ final class LocationViewModel {
             guard !isLocating else { return }
             await recoverFromFailureScreen()
         } else if state == .notDetermined {
+            // Nothing searched, so no searching label first (Chunk 2b).
             locationFailure = nil
-            await showLoaderMessage(.firstAsk)
+            loader.presentMessage(.firstAsk)
+            launchStage = .phaseCycle
         } else if let current = LocationFailure(state), current != failure {
             locationFailure = current
         }

@@ -1451,3 +1451,6 @@ Offline, Try again and city search need the same connection, and fixing it means
 
 ## 2026-10-10: Moon screens stay centred; item 3 reverted (Tessa)
 Tessa didn't like the moved moon: the loader moon and "Finding your location…" stay vertically centred as before, so `aa94da3` is reverted (`git revert`). Matching the illustrated screens' vertical layout is dropped for now. The loader's own constants are back (`moonCentreAboveScreenCentre` 13, `moonToMessage` 20, `compactMoonRise` 28, `messageBottomInset` 40, button-to-link 22 pt); `LocationFailureLayout.buttonToLink`, `artFrameSize` and `headlineTop(underArtOfHeight:)` are gone; the Aha flight starts from the centred moon again. The loader's 12 pt vs the failure screen's 14 pt headline-to-body gap belonged to item 3 and is dropped with it.
+
+## 2026-10-10: First ask on a not-determined return comes in at once, Chunk 2b item 2 fix (Tessa)
+Nothing is searched on that return, so no "Finding your location…" and no `minimumSearchBeforeMessage` wait first. New `LocationLoader.presentMessage(_:)` puts the loader straight on the message: the moon held at the hold phase, the glow pulsing, the label off; `failureScreenDidBecomeActive` uses it for `.notDetermined` and sets `launchStage` to the loader. The launch's own First ask (no saved place, never asked) is unchanged and still searches first (LOADER.md §10.3).

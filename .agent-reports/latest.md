@@ -11,7 +11,7 @@ Updated October 10, 2026. Step doc: `docs/STEP-5.10a-CHUNK-2B-DEVICE-FIXES.md`. 
 - **Item 2 done: a Settings return as not determined goes to First ask** (at launch and after explicit requests), with no automatic prompt.
   - Tapping Use my location prompts. No telescope loop.
   - Permission chip is now "Settings › Moon Signal › / Location".
-  - Flag for Tessa: First ask arrives as at launch, with the 1.2 s searching label first, though nothing is being searched.
+  - Fixed after review: First ask now comes in at once on that return, with no searching label or 1.2 s wait (`LocationLoader.presentMessage`).
   - Build-for-testing succeeds; tests not run.
 - **Item 3 reverted (Tessa, 2026-10-10):** the moon and "Finding your location…" stay vertically centred as before (moon about 354–494 pt, headline about 514 pt on iPhone 17). Matching the illustrated screens' vertical layout is dropped for now. Reverted `aa94da3` (see below).
 - **Item 4 stopped, as the step doc asks: no change made.**

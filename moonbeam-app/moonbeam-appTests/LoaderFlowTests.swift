@@ -397,6 +397,10 @@ struct LoaderFlowTests {
 
         await harness.viewModel.sceneDidBecomeActive()
         #expect(harness.viewModel.loaderIssue == .firstAsk)
+        // Straight there: no searching label, no searching minimum.
+        #expect(!harness.viewModel.loader.showsLabel)
+        #expect(!harness.sleeper.durations.contains(Self.searchMinimum))
+        #expect(harness.viewModel.loader.glow.mode == .pulse)
         // Another trip out and back doesn't loop to the telescope.
         await harness.viewModel.sceneDidBecomeActive()
         #expect(harness.viewModel.loaderIssue == .firstAsk)
@@ -420,6 +424,8 @@ struct LoaderFlowTests {
 
         await harness.viewModel.sceneDidBecomeActive()
         #expect(harness.viewModel.loaderIssue == .firstAsk)
+        #expect(!harness.viewModel.loader.showsLabel)
+        #expect(!harness.sleeper.durations.contains(Self.searchMinimum))
         // The explicit failure doesn't bring the old city back.
         #expect(harness.viewModel.place == nil)
 
@@ -1163,6 +1169,22 @@ struct LocationLoaderStepTests {
             #expect(loader.ride == nil)
             #expect(clock.waits.dropFirst(waitsBefore).map(Self.seconds) == [LocationLoader.ahaHold])
         }
+    }
+
+    @Test("Straight to a message (Chunk 2b): no label, no wait, the moon held at the hold phase, glow pulsing")
+    func presentsMessageAtOnce() {
+        let clock = Clock()
+        let loader = Self.makeLoader(clock)
+
+        loader.presentMessage(.firstAsk)
+
+        #expect(loader.content == .message(.firstAsk))
+        #expect(!loader.showsLabel)
+        #expect(clock.waits.isEmpty)
+        #expect(loader.glow.mode == .pulse)
+        #expect(loader.appearedAt == clock.date)
+        let later = clock.date.addingTimeInterval(10)
+        #expect(abs(loader.moon.elapsed(at: later) - PhaseCycle.holdElapsed) < 1e-9)
     }
 
     @Test("Already on a message, a new one swaps in place, no wait")
