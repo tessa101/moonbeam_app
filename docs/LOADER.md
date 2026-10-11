@@ -156,6 +156,8 @@ location work.
 
 ## 10. Location flow: messages, recovery and "Aha" (Tessa's handoff, 2026-10-05)
 
+> **Approved follow-up, October 10, implementation pending:** see `STEP-5.10a-LOCATION-CONSOLIDATION.md`. The four no-saved-city launch causes will share the illustrated destination and recovery used by explicit acquisition. Known blocked access skips searching; attempted failures reuse the existing searching minimum and Chunk 6 handoff. First ask retains its moon invitation. This supersedes the launch cause presentation rules below when the consolidation is implemented; preserve existing success timing and saved-city fallback.
+
 **Source:** `design/1.4-location-flow/` (README.md, `Location Flow Prototype.dc.html`, `LocationFlowReference.swift`).
 The handoff is a **prototype**: follow its **flow, timing, copy and motion ideas**; where it differs from the built
 loader, **the built version wins** (moon 140 pt, label 17 pt `body`, `PhaseGlyph`, theme tokens). Amendments below
