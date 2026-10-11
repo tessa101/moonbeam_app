@@ -46,11 +46,15 @@ struct LocationOffDialog: View {
 
                 // The cause's button title; "Search instead" stays the
                 // dialog's own.
-                if variant.offersSettings {
-                    Button(copy.primaryTitle, action: openSettings)
-                    Button("Search instead", action: onSearch)
-                } else {
-                    Button(copy.primaryTitle, action: onSearch)
+                // Every variant's cause has a button; only No fix has none,
+                // and it's never a dialog.
+                if let primaryTitle = copy.primaryTitle {
+                    if variant.offersSettings {
+                        Button(primaryTitle, action: openSettings)
+                        Button("Search instead", action: onSearch)
+                    } else {
+                        Button(primaryTitle, action: onSearch)
+                    }
                 }
             }
             .padding()

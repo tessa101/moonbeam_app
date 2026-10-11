@@ -1,3 +1,17 @@
+# Consolidation Chunk 2b: device-test fixes (in progress)
+
+Updated October 10, 2026. Step doc: `docs/STEP-5.10a-CHUNK-2B-DEVICE-FIXES.md`. One commit per item; tests are run by Tessa outside the agent.
+
+- **Item 1 done: No fix has no button.**
+  - "Enter a city instead" is the only action; the 56 pt primary slot is kept and hidden from VoiceOver.
+  - New body: "Check your cellular or Wi-Fi / connection. We’ll look again / when you come back."
+  - Back in the app with access (background or inactive, so Control Center too), No fix runs one search: loader → Aha, or the same screen after the 1.2 s minimum. It doesn't stack.
+  - Removed as unreachable: `.tryAgain`, the "Try again" title, `onTryAgain`, `tryAgainFromFailureScreen()`.
+  - Build-for-testing succeeds; tests not run.
+- **Next:** item 2 (Settings return as not determined → First ask; shorter permission chip).
+
+---
+
 # Consolidation Chunk 2: unified destinations and recovery
 
 Updated October 10, 2026.

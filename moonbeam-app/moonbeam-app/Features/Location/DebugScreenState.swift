@@ -38,17 +38,18 @@ struct DebugScreenState: View {
         /// kept from when all five were loader messages.
         case messageFirstAsk, messageDenied, messageServicesOff, messageRestricted, messageNoFix
         /// "Aha" after a recovery (LOADER.md §10.4): the launch's No fix
-        /// screen, then a fix lands and Try again is tapped for you, so
-        /// "Aha" and the fly into the card follow.
+        /// screen, then a fix lands and a return to the app is played for
+        /// you (No fix looks again then, Chunk 2b), so "Aha" and the fly
+        /// into the card follow.
         case recoveryAha
         /// The location failure screen (STEP-5.10a): Irvine saved and
         /// shown, then Use my location fails for the cause, through the
-        /// real wiring (Chunk 3), so Try again and Enter a city work too.
+        /// real wiring (Chunk 3), so recovery and Enter a city work too.
         case locationFailedDenied = "locationFailed.denied"
         case locationFailedServicesOff = "locationFailed.servicesOff"
         case locationFailedNoFix = "locationFailed.noFix"
         case locationFailedRestricted = "locationFailed.restricted"
-        /// No fix whose Try again fails too (`locationFailed.noFix`'s
+        /// No fix whose look on return fails too (`locationFailed.noFix`'s
         /// succeeds).
         case locationFailedNoFixAgain = "locationFailed.noFixAgain"
 
@@ -234,13 +235,13 @@ struct DebugScreenState: View {
         /// The launch kinds wait up to the 10 s launch timeout.
         private static let launchPollLimit = 1_000
 
-        /// How long `recoveryAha` sits on No fix before Try again.
+        /// How long `recoveryAha` sits on No fix before the return.
         private static let recoveryMessageHold = Duration.seconds(1.5)
-        /// How long `recoveryAha`'s fix takes after Try again: past the
+        /// How long `recoveryAha`'s fix takes after the return: past the
         /// label's 0.7 s, like a real fix, so the label leaves at the fix
         /// (LOADER.md §11.2.1).
         private static let recoveryFixDelay = Duration.seconds(1)
-        /// `locationFailedNoFixAgain`'s Try again: long enough to see the
+        /// `locationFailedNoFixAgain`'s look on return: long enough to see the
         /// loader before the failure screen is back (a real miss is 10 s).
         private static let failAgainFixDelay = Duration.seconds(2.5)
 
@@ -278,7 +279,7 @@ struct DebugScreenState: View {
                     try? await Task.sleep(for: Self.pollInterval)
                 }
                 await viewModel.useMyLocation()
-                // What Try again finds, after a GPS-like wait.
+                // What a return to the app finds, after a GPS-like wait.
                 switch state {
                 case .locationFailedNoFix:
                     location.placeResult = .success(here)
@@ -304,7 +305,7 @@ struct DebugScreenState: View {
             heading.send(Self.reading(for: state))
         }
 
-        /// Waits for No fix, lets it show, then a fix lands and Try again.
+        /// Waits for No fix, lets it show, then a fix lands and the app returns.
         private func recover() async {
             for _ in 0..<Self.launchPollLimit where viewModel.failureScreen != .noFix {
                 try? await Task.sleep(for: Self.pollInterval)
@@ -312,7 +313,7 @@ struct DebugScreenState: View {
             try? await Task.sleep(for: Self.recoveryMessageHold)
             location.placeResult = .success(here)
             location.fixDelay = Self.recoveryFixDelay
-            await viewModel.tryAgainFromFailureScreen()
+            await viewModel.sceneDidBecomeActive()
         }
 
         private static func reading(for state: Kind) -> HeadingReading {
@@ -357,5 +358,5 @@ struct DebugScreenState: View {
 #Preview("25 Failed: Services off") { DebugScreenState(.locationFailedServicesOff) }
 #Preview("26 Failed: No fix") { DebugScreenState(.locationFailedNoFix) }
 #Preview("27 Failed: Restricted") { DebugScreenState(.locationFailedRestricted) }
-#Preview("28 Failed: No fix, Try again fails too") { DebugScreenState(.locationFailedNoFixAgain) }
+#Preview("28 Failed: No fix, looking again fails too") { DebugScreenState(.locationFailedNoFixAgain) }
 #endif

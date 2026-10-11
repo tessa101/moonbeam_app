@@ -22,7 +22,9 @@ nonisolated struct MessageCopy: Equatable, Sendable {
     /// Where the switch is in Settings, on its set lines, in a chip under
     /// the body; `nil` shows none.
     var pathChipLines: [String]? = nil
-    let primaryTitle: String
+    /// `nil`: no button, but its room is kept, so the link sits where it
+    /// does on the other messages (No fix, Chunk 2b).
+    let primaryTitle: String?
     let linkTitle: String
     /// Restricted has no link, but its room is kept, so the button sits
     /// where it does on the other messages (Tessa, 2026-10-06).

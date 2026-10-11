@@ -55,7 +55,7 @@ struct LocationFailureScreenTests {
             (
                 .noFix,
                 "Couldn’t find\nyour location",
-                "Check your signal and try\nagain, or search for a city."
+                "Check your cellular or Wi-Fi\nconnection. We’ll look again\nwhen you come back."
             ),
             (
                 .restricted,
@@ -107,13 +107,14 @@ struct LocationFailureScreenTests {
     @Test(
         "Primary and secondary per cause; Open Settings only for denied and services off",
         arguments: [
-            (LocationFailure.permissionDenied, LocationIssue.Action.openSettings, "Open Settings", true),
+            (LocationFailure.permissionDenied, LocationIssue.Action?.some(.openSettings), String?.some("Open Settings"), true),
             (.servicesOff, .openSettings, "Open Settings", true),
-            (.noFix, .tryAgain, "Try again", true),
+            // Chunk 2b: no button, only the link.
+            (.noFix, nil, nil, true),
             (.restricted, .search, "Search for a city", false),
         ]
     )
-    func actions(failure: LocationFailure, action: LocationIssue.Action, title: String, showsLink: Bool) {
+    func actions(failure: LocationFailure, action: LocationIssue.Action?, title: String?, showsLink: Bool) {
         #expect(failure.primaryAction == action)
         #expect(failure.copy.primaryTitle == title)
         #expect(failure.copy.showsLink == showsLink)

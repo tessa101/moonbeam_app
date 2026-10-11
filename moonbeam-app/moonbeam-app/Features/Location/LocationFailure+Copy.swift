@@ -38,7 +38,9 @@ nonisolated extension LocationFailure {
         switch self {
         case .permissionDenied: ["Allow location access to see", "where the moon is from here."]
         case .servicesOff: ["Turn them on to see where", "the moon is from here."]
-        case .noFix: ["Check your signal and try", "again, or search for a city."]
+        // Chunk 2b (Tessa, 2026-10-10): offline, the fix needs a connection,
+        // and the app looks again when the user comes back.
+        case .noFix: ["Check your cellular or Wi-Fi", "connection. We’ll look again", "when you come back."]
         case .restricted: ["Location access is limited on", "this iPhone. You can still", "search for a city."]
         }
     }
@@ -55,20 +57,21 @@ nonisolated extension LocationFailure {
     // MARK: - Actions
 
     /// Open Settings only where the user can change it there; restricted
-    /// can't, so its button is the search.
-    var primaryAction: LocationIssue.Action {
+    /// can't, so its button is the search. No fix has none (Chunk 2b): the
+    /// fix is a connection iOS can't open, and a foreground looks again.
+    var primaryAction: LocationIssue.Action? {
         switch self {
         case .permissionDenied, .servicesOff: .openSettings
-        case .noFix: .tryAgain
+        case .noFix: nil
         case .restricted: .search
         }
     }
 
-    var primaryTitle: String {
+    var primaryTitle: String? {
         switch primaryAction {
         case .openSettings: "Open Settings"
-        case .tryAgain: "Try again"
         case .search, .requestPermission: LocationIssue.searchTitle
+        case nil: nil
         }
     }
 

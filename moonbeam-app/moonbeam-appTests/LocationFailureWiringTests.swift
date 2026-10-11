@@ -8,7 +8,8 @@ import Testing
 @testable import moonbeam_app
 
 /// STEP-5.10a-LOCATION-FAILURE.md, Chunk 3: the failure screen in place of
-/// the main content, the return from Settings, Try again and Enter a city.
+/// the main content, the return from Settings, No fix's look on return and
+/// Enter a city.
 /// Recovery runs the existing loader → Aha (Tessa, 2026-10-10).
 @Suite("Location failure wiring", .timeLimit(.minutes(1)))
 @MainActor
@@ -186,25 +187,17 @@ struct LocationFailureWiringTests {
         #expect(viewModel.failureScreen == .servicesOff)
     }
 
-    @Test("No fix waits for Try again: a foreground doesn't search by itself")
-    func noFixWaitsForTryAgain() async {
+    // MARK: - No fix looks again (Chunk 2b, superseding §3 row 10)
+
+    @Test("No fix, back in the app: the loader, one fix, then Aha into the card")
+    func foregroundRetryRecovers() async {
         let (viewModel, location) = await Self.makeFailedViewModel(.authorized)
         let fixesBefore = location.currentPlaceCount
+        location.placeResult = .success(Self.detected)
 
         await viewModel.sceneDidBecomeActive()
 
-        #expect(viewModel.failureScreen == .noFix)
-        #expect(location.currentPlaceCount == fixesBefore)
-    }
-
-    // MARK: - Try again
-
-    @Test("Try again: the loader, one fix, then Aha into the card")
-    func tryAgainRecovers() async {
-        let (viewModel, location) = await Self.makeFailedViewModel(.authorized)
-        location.placeResult = .success(Self.detected)
-
-        await viewModel.tryAgainFromFailureScreen()
+        #expect(location.currentPlaceCount == fixesBefore + 1)
 
         #expect(viewModel.place == Self.detected)
         #expect(viewModel.launchStage == .ready)
@@ -212,27 +205,27 @@ struct LocationFailureWiringTests {
         #expect(viewModel.failureScreen == nil)
     }
 
-    @Test("Try again, still nothing: the failure screen comes back")
-    func tryAgainFailsAgain() async {
+    @Test("No fix, back in the app, still nothing: the failure screen comes back")
+    func foregroundRetryFailsAgain() async {
         let (viewModel, _) = await Self.makeFailedViewModel(.authorized)
 
-        await viewModel.tryAgainFromFailureScreen()
+        await viewModel.sceneDidBecomeActive()
 
         #expect(viewModel.launchStage == .ready)
         #expect(viewModel.failureScreen == .noFix)
         #expect(viewModel.place == nil)
     }
 
-    @Test("Try again twice: one fix, no stacking")
-    func tryAgainDoesNotStack() async {
+    @Test("Two activations while No fix looks again: one fix, no stacking")
+    func foregroundRetryDoesNotStack() async {
         let (viewModel, location) = await Self.makeFailedViewModel(.authorized)
         let fixesBefore = location.currentPlaceCount
         location.placeResult = .success(Self.detected)
         location.holdsFixes = true
 
-        let first = Task { await viewModel.tryAgainFromFailureScreen() }
+        let first = Task { await viewModel.sceneDidBecomeActive() }
         await Self.waitUntil { location.heldFixCount > 0 }
-        await viewModel.tryAgainFromFailureScreen()
+        await viewModel.sceneDidBecomeActive()
         #expect(location.heldFixCount == 1)
 
         location.releaseFixes()

@@ -62,11 +62,7 @@ struct LocationScreen: View {
                     // STEP-5.10a Chunk 3: in place of the main content, so
                     // no sentence, card, compass or DEBUG buttons. Its
                     // entrance is Chunk 6's.
-                    LocationFailureView(
-                        failure: failure,
-                        onTryAgain: { Task { await viewModel.tryAgainFromFailureScreen() } },
-                        onSearch: viewModel.presentSearch
-                    )
+                    LocationFailureView(failure: failure, onSearch: viewModel.presentSearch)
                     .transition(.identity)
                 } else {
                     // §2.1: no whole-screen fade. The screen arrives at once

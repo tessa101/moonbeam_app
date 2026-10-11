@@ -312,10 +312,10 @@ struct LocationFailureTests {
         #expect(viewModel.place == Self.saved)
     }
 
-    // MARK: - Try again
+    // MARK: - Looking again (Chunk 2b)
 
-    @Test("Try again: the failure clears as the fresh search starts, and a double tap doesn't stack fixes")
-    func tryAgainDoesNotStack() async {
+    @Test("No fix's look on return: the failure clears as the fresh search starts, and two activations don't stack fixes")
+    func lookAgainDoesNotStack() async {
         let location = FakeLocationService(authorizationState: .authorized)
         let viewModel = Self.makeViewModel(location: location)
         await viewModel.start()
@@ -324,8 +324,8 @@ struct LocationFailureTests {
 
         location.placeResult = .success(Self.detected)
         location.holdsFixes = true
-        let first = Task { await viewModel.tryAgainFromFailureScreen() }
-        let second = Task { await viewModel.tryAgainFromFailureScreen() }
+        let first = Task { await viewModel.sceneDidBecomeActive() }
+        let second = Task { await viewModel.sceneDidBecomeActive() }
         await Self.waitUntil { location.heldFixCount > 0 }
         for _ in 0..<100 { await Task.yield() }
 

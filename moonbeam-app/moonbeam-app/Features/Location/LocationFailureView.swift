@@ -14,12 +14,11 @@ import SwiftUI
 /// The message is the same `MessageText` + `MessageActions` the launch
 /// loader's messages use (LOADER.md §10.3), with this screen's spacing.
 /// Copy, art and actions come from `LocationFailure`. Open Settings is
-/// handled here; the rest go to the caller.
+/// handled here; search goes to the caller. No fix has no button: the view
+/// model looks again when the app comes back (Chunk 2b).
 struct LocationFailureView: View {
 
     let failure: LocationFailure
-    /// Try again: start a fresh search.
-    let onTryAgain: () -> Void
     /// Enter a city instead, and restricted's Search for a city: the
     /// search sheet, field focused.
     let onSearch: () -> Void
@@ -131,10 +130,10 @@ struct LocationFailureView: View {
         case .openSettings:
             guard let url = URL(string: UIApplication.openSettingsURLString) else { return }
             openURL(url)
-        case .tryAgain:
-            onTryAgain()
         case .search, .requestPermission:
             onSearch()
+        case nil:
+            break
         }
     }
 
@@ -177,21 +176,21 @@ struct LocationFailureView: View {
 }
 
 #Preview("No fix") {
-    LocationFailureView(failure: .noFix, onTryAgain: {}, onSearch: {})
+    LocationFailureView(failure: .noFix, onSearch: {})
         .background { ScreenBackground() }
 }
 
 #Preview("Permission off") {
-    LocationFailureView(failure: .permissionDenied, onTryAgain: {}, onSearch: {})
+    LocationFailureView(failure: .permissionDenied, onSearch: {})
         .background { ScreenBackground() }
 }
 
 #Preview("Services off") {
-    LocationFailureView(failure: .servicesOff, onTryAgain: {}, onSearch: {})
+    LocationFailureView(failure: .servicesOff, onSearch: {})
         .background { ScreenBackground() }
 }
 
 #Preview("Restricted") {
-    LocationFailureView(failure: .restricted, onTryAgain: {}, onSearch: {})
+    LocationFailureView(failure: .restricted, onSearch: {})
         .background { ScreenBackground() }
 }

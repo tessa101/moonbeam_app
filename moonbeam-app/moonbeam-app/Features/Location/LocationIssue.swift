@@ -35,8 +35,6 @@ nonisolated enum LocationIssue: Equatable, Sendable {
         case requestPermission
         /// The app's page in Settings (iOS can't open the system switch).
         case openSettings
-        /// Search again, in place.
-        case tryAgain
         /// The city search sheet.
         case search
     }
@@ -88,12 +86,15 @@ nonisolated enum LocationIssue: Equatable, Sendable {
         failure?.bodyLines ?? ["\(AppInfo.name) uses your location to show", "when and where the moon rises and sets."]
     }
 
-    var primaryAction: Action {
-        failure?.primaryAction ?? .requestPermission
+    /// `nil` for No fix, which has no button (Chunk 2b).
+    var primaryAction: Action? {
+        guard let failure else { return .requestPermission }
+        return failure.primaryAction
     }
 
-    var primaryTitle: String {
-        failure?.primaryTitle ?? "Use my location"
+    var primaryTitle: String? {
+        guard let failure else { return "Use my location" }
+        return failure.primaryTitle
     }
 
     /// "Enter a city instead", under the button; restricted already has

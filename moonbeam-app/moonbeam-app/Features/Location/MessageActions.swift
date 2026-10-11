@@ -23,13 +23,22 @@ struct MessageActions: View {
 
     var body: some View {
         VStack(spacing: buttonToLink) {
-            Button(copy.primaryTitle, action: onPrimary)
-                // §10.5 keeps this control at the designed 56 pt even when
-                // the surrounding message uses an AX text size. The full
-                // title remains available to VoiceOver.
-                .dynamicTypeSize(.large)
-                .buttonStyle(.primary)
-                .failureLoadIn(.primary, hasPath: copy.pathChipLines != nil, isEnabled: failureLoadIn)
+            if let primaryTitle = copy.primaryTitle {
+                Button(primaryTitle, action: onPrimary)
+                    // §10.5 keeps this control at the designed 56 pt even
+                    // when the surrounding message uses an AX text size. The
+                    // full title remains available to VoiceOver.
+                    .dynamicTypeSize(.large)
+                    .buttonStyle(.primary)
+                    .failureLoadIn(.primary, hasPath: copy.pathChipLines != nil, isEnabled: failureLoadIn)
+            } else {
+                // No button (No fix): its 56 pt room is kept, so the link
+                // sits where it does on the other causes, the mirror of
+                // restricted's kept link (Chunk 2b).
+                Color.clear
+                    .frame(height: Theme.Metrics.primaryButtonHeight)
+                    .accessibilityHidden(true)
+            }
             // With no link (restricted), its room is kept, so the button
             // sits where it does on the other messages (Tessa, 2026-10-06).
             Button(copy.linkTitle, action: onLink)

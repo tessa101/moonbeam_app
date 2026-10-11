@@ -112,7 +112,7 @@ final class LocationViewModel {
     private(set) var locationFailed = false
 
     /// Why a search the user is waiting on ended without a place: Use my
-    /// location, Try again, the permission flows, or a launch with no saved
+    /// location, a recovery, the permission flows, or a launch with no saved
     /// place (STEP-5.10a-LOCATION-FAILURE.md, Chunk 1). A launch with a saved
     /// place never sets it; it opens that place instead (LOADER.md §10.1).
     /// Cleared when a new search starts or a place lands.
@@ -520,8 +520,8 @@ final class LocationViewModel {
     }
 
     /// The message's primary button. Only First ask stops the loader now
-    /// (STEP-5.10a-LOCATION-CONSOLIDATION.md §2); the causes' Try again,
-    /// search and Open Settings are the failure screen's.
+    /// (STEP-5.10a-LOCATION-CONSOLIDATION.md §2); the causes' search and
+    /// Open Settings are the failure screen's.
     func performLoaderAction() async {
         guard let issue = loaderIssue, issue.primaryAction == .requestPermission else { return }
         await askFromLoader()
@@ -607,21 +607,15 @@ final class LocationViewModel {
 
     // MARK: - Failure screen (STEP-5.10a Chunk 3)
 
-    /// The failure screen's Try again (No fix only).
-    func tryAgainFromFailureScreen() async {
-        guard failureScreen == .noFix else { return }
-        await recoverFromFailureScreen()
-    }
-
-    /// Try again, or back from Settings with access: the failure screen goes
+    /// Back in the foreground with access (from Settings, or No fix's
+    /// connection fixed in Control Center or elsewhere): the failure screen goes
     /// at once and the existing recovery runs, as after a launch message:
     /// the loader with its entrance, then "Aha" and the moon's flight into
     /// the card as the screen loads in (Tessa, 2026-10-10). Another miss
     /// brings the failure screen back.
     ///
     /// The screen is out from here on (`launchStage` back to the loader), so
-    /// a second tap or foreground finds no failure screen and doesn't stack
-    /// a fix.
+    /// a second foreground finds no failure screen and doesn't stack a fix.
     private func recoverFromFailureScreen() async {
         locationFailure = nil
         locationFailed = false
@@ -638,14 +632,16 @@ final class LocationViewModel {
         }
     }
 
-    /// Back in the foreground on the failure screen: access granted in
-    /// Settings recovers once; a different reason changes the screen; No fix
-    /// waits for Try again, as the loader's message does (§10.3).
+    /// Back in the foreground on the failure screen: with access, one search
+    /// (access granted in Settings, or No fix looking again, since it has no
+    /// button: Chunk 2b, superseding §3 row 10); a different reason changes
+    /// the screen. Once per activation: the search takes the screen away, so
+    /// the next activation finds none, and none starts while one runs.
     private func failureScreenDidBecomeActive(on failure: LocationFailure, state: LocationAuthState) async {
         lastSeenAuthState = state
         detectionOnlyAfterSettings = false
         if state.isAuthorized {
-            guard failure != .noFix, !isLocating else { return }
+            guard !isLocating else { return }
             await recoverFromFailureScreen()
         } else if let current = LocationFailure(state), current != failure {
             locationFailure = current

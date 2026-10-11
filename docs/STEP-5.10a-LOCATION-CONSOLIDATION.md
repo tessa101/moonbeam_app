@@ -12,7 +12,7 @@ Three moments have different meanings:
 |---|---|---|
 | Invitation | We have not asked for access yet | Existing onboarding or First ask: benefit explanation, Use my location, city alternative |
 | Access guidance | We know why location cannot be used | Permission off, Services off, or restricted: cause-specific illustration, explanation and next action |
-| Attempt failed | We attempted to locate but could not obtain a usable city | Calico, Couldn't find your location, Try again or city search |
+| Attempt failed | We attempted to locate but could not obtain a usable city | Calico, Couldn't find your location, city search; looks again on return (Chunk 2b; was Try again) |
 
 Guidance and attempt failure share the existing illustrated layout and entrance system. They do not need a new screen between the explanation and the action. Access off is guidance, not evidence that a search ran. `LocationFailure` can keep its current technical name and cases; this distinction does not require a model rename or new enum.
 
@@ -25,7 +25,7 @@ Use **one cause-specific presentation regardless of entry point**: launch withou
 | Permission off | Existing telescope | Moon Signal can’t see your location | Allow location access to see where the moon is from here. | Open Settings / Enter a city instead | Settings › Moon Signal › Location › While Using the App |
 | Services off | Existing map | Location Services are off | Turn them on to see where the moon is from here. | Open Settings / Enter a city instead | Settings › Privacy & Security › Location Services |
 | Restricted | Existing locked map | Moon Signal can’t see your location | Location access is limited on this iPhone. You can still search for a city. | Search for a city / none | None |
-| No fix | Existing calico | Couldn’t find your location | Check your signal and try again, or search for a city. | Try again / Enter a city instead | None |
+| No fix | Existing calico | Couldn’t find your location | Check your cellular or Wi-Fi connection. We’ll look again when you come back. *(Chunk 2b)* | none (room kept) / Enter a city instead *(Chunk 2b; was Try again)* | None |
 
 Use `AppInfo.name`, existing fixed line breaks/default sizing and accessibility wrapping. Preserve distinct cause art. Keep timeout, location-service errors and city-naming/reverse-geocoding errors grouped as No fix. Keep Restricted's reserved secondary space without exposing an actionable secondary button.
 
@@ -39,12 +39,12 @@ One source supplies cause copy, art, path and actions. First ask's copy stays in
 | Launch, no saved city, authorized attempt fails | Existing launch searching moon when applicable → illustrated No fix; preserve searching minimum before failure |
 | Main/search Use my location, known access blocked | Remove old screen / dismiss search → matching illustrated guidance directly; no Location Off dialog |
 | Use my location when not determined | Permission prompt on user tap; allow → searching; deny → illustrated permission guidance. Unanswered prompt is not No fix |
-| Try again from No fix | Remove failed content immediately → existing searching moon → Aha/flight/main on success, same illustrated failure on another miss |
+| ~~Try again from No fix~~ No fix looks again on return (Chunk 2b, row 10) | Remove failed content immediately → existing searching moon → Aha/flight/main on success, same illustrated failure on another miss |
 | Settings return, newly authorized | Remove guidance immediately → one automatic location request → existing searching/Aha/flight/main on success, illustrated cause on failure. No intermediate Try again screen |
 | Settings return, unchanged blocked state | Keep current guidance; no request |
 | Settings return, different blocked cause | Switch to the corresponding shared guidance |
 | Settings return, not determined | Preserve current behavior in this pass: keep current illustrated guidance; do not automatically prompt. Flag for later First ask review |
-| No fix foreground, access still authorized | Wait for Try again; foreground alone does not restart |
+| No fix foreground, access still authorized | **Superseded by Chunk 2b item 1:** one automatic search per activation (background or inactive → active, Control Center included), none while one runs; same loader → Aha or No fix path. *(Was: wait for Try again.)* |
 | First ask primary | Existing user-triggered prompt; allow → existing recovery, deny → shared illustrated permission guidance |
 | Enter a city / Restricted's Search for a city | Focused search sheet; cancel returns to origin; pick clears cause and uses existing city load-in, not GPS Aha |
 
@@ -110,5 +110,8 @@ Default-size iPhone 17 is the main flow-review target; check SE 3/large text for
 - Decide whether return from Settings as not determined should lead to First ask instead of retaining guidance.
 - Review full accessibility behavior and small-screen layout issues already recorded.
 - Review continuous motion and real Settings routes on a physical device; DEBUG background-grants-access fixtures do not verify system navigation.
+- *(Chunk 2b)* **Searching cat in the launch flow.** Show the searching cat while locating; the moon still flies into the card on success, and the cat exits some way (wave goodbye, poof away, scamper off). To be explored later. `searching.svg` is delivered but unused.
+- *(Chunk 2b)* **Offline continuation.** If a fix succeeds but the city can't be named, continue with the coordinates labeled "Your location" (the moon times are computed on the device).
+- *(Chunk 2b)* A connectivity monitor that retries the moment a signal returns, without leaving the app.
 
 No additional approval is required for the implementation scope above. Separate follow-ups do not block these chunks; preserve their current behavior and report them.
