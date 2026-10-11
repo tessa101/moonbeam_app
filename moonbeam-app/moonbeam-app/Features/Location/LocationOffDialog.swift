@@ -12,6 +12,10 @@ import UIKit
 /// Custom rather than a system alert so the copy can carry the Settings path
 /// and offer search as an equal alternative. Functional only: the visual
 /// design comes later.
+///
+/// The headline, explanation and Settings path are the cause's, from
+/// `LocationFailure` (STEP-5.10a-LOCATION-CONSOLIDATION.md, Chunk 1), so the
+/// dialog and the failure screen say the same thing; its actions are its own.
 struct LocationOffDialog: View {
 
     let variant: LocationViewModel.LocationOffVariant
@@ -27,17 +31,26 @@ struct LocationOffDialog: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
-                Text("Location is off for \(AppInfo.name)")
+                Text(copy.headline)
                     .font(.headline)
                     .accessibilityAddTraits(.isHeader)
 
-                Text(message)
+                Text(copy.body)
 
+                // The failure screen's path chip, as a line of its own.
+                if let path = copy.pathChipLines?.joined(separator: " ") {
+                    Text(path)
+                        .bold()
+                        .accessibilityLabel(copy.pathChipAccessibilityLabel ?? path)
+                }
+
+                // The cause's button title; "Search instead" stays the
+                // dialog's own.
                 if variant.offersSettings {
-                    Button("Open Settings", action: openSettings)
+                    Button(copy.primaryTitle, action: openSettings)
                     Button("Search instead", action: onSearch)
                 } else {
-                    Button("Search for a city", action: onSearch)
+                    Button(copy.primaryTitle, action: onSearch)
                 }
             }
             .padding()
@@ -47,18 +60,7 @@ struct LocationOffDialog: View {
 
     // MARK: - Copy
 
-    private var message: LocalizedStringKey {
-        switch variant {
-        case .denied:
-            "To find the moon where you are, turn on location in **Settings › \(AppInfo.name) › Location** and choose **While Using the App**. You can also just search for a city."
-        case .servicesOff:
-            // Open Settings can only reach the app's own page, so the copy
-            // carries the path to the device-wide switch.
-            "Location Services are off on this device. Turn them on in **Settings › Privacy & Security › Location Services**, or search for a city."
-        case .restricted:
-            "Location access is restricted on this device. Search for a city instead."
-        }
-    }
+    private var copy: MessageCopy { variant.failure.copy }
 
     // MARK: - Actions
 

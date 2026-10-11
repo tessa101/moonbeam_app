@@ -8,8 +8,9 @@ import Foundation
 /// Why the loader stopped and shows a message (LOADER.md §10.3): only with
 /// no saved place (§10.1); with one, the app just opens it.
 ///
-/// Copy is the handoff's (`design/1.4-location-flow/README.md`, "Message"),
-/// with §10.1's amendment for restricted.
+/// First ask's copy is the handoff's (`design/1.4-location-flow/README.md`,
+/// "Message"). The other four are causes, so their words and actions are
+/// `LocationFailure`'s (STEP-5.10a-LOCATION-CONSOLIDATION.md, Chunk 1).
 ///
 /// `nonisolated`: a plain value, testable without a view.
 nonisolated enum LocationIssue: Equatable, Sendable {
@@ -50,84 +51,73 @@ nonisolated enum LocationIssue: Equatable, Sendable {
         }
     }
 
-    // MARK: - Copy
-
-    var headline: String {
+    /// The shared cause behind the four messages that are also failure
+    /// screens; `nil` for first ask, an invitation with its own copy
+    /// (STEP-5.10a-LOCATION-CONSOLIDATION.md §1). The cause's words and
+    /// actions come only from `LocationFailure`, so the two can't drift.
+    var failure: LocationFailure? {
         switch self {
-        case .firstAsk: "Find the moon from where you are"
-        case .appDenied, .restricted: "\(AppInfo.name) can’t see your location"
-        case .servicesOff: "Location Services are off"
-        case .noFix: "Couldn’t find your location"
+        case .firstAsk: nil
+        case .appDenied: .permissionDenied
+        case .servicesOff: .servicesOff
+        case .restricted: .restricted
+        case .noFix: .noFix
         }
     }
 
+    // MARK: - Copy
+
+    var headline: String {
+        failure?.copy.headline ?? "Find the moon from where you are"
+    }
+
     var body: String {
-        switch self {
-        case .firstAsk: "\(AppInfo.name) uses your location to show when and where the moon rises and sets."
-        case .appDenied: "Allow location access to see where the moon is from here."
-        // Tessa, 2026-10-06: a restricted user can't allow it.
-        case .restricted: "Location access is limited on this iPhone. You can still search for a city."
-        case .servicesOff: "Turn them on to see where the moon is from here."
-        case .noFix: "Check your signal and try again, or search for a city."
-        }
+        failure?.copy.body ?? "\(AppInfo.name) uses your location to show when and where the moon rises and sets."
     }
 
     /// The headline's lines at the default size (LOADER.md §11.1.3, from
     /// the prototype's balanced wrapping). Joined, they're `headline`.
     var headlineLines: [String] {
-        switch self {
-        case .firstAsk: ["Find the moon", "from where you are"]
-        case .appDenied, .restricted: ["\(AppInfo.name) can’t", "see your location"]
-        case .servicesOff: ["Location", "Services are off"]
-        case .noFix: ["Couldn’t find", "your location"]
-        }
+        failure?.headlineLines ?? ["Find the moon", "from where you are"]
     }
 
-    /// The body's lines at the default size (§11.1.3); restricted has its
-    /// own copy and no set breaks, so it wraps naturally.
+    /// The body's lines at the default size (§11.1.3). Restricted keeps
+    /// wrapping naturally under the moon until Consolidation Chunk 2 moves
+    /// it to the failure screen, which sets its lines; the words are the
+    /// same either way.
     var bodyLines: [String]? {
-        switch self {
-        case .firstAsk: ["\(AppInfo.name) uses your location to show", "when and where the moon rises and sets."]
-        case .appDenied: ["Allow location access to see", "where the moon is from here."]
-        case .servicesOff: ["Turn them on to see where", "the moon is from here."]
-        case .noFix: ["Check your signal and try", "again, or search for a city."]
+        switch failure {
+        case nil: ["\(AppInfo.name) uses your location to show", "when and where the moon rises and sets."]
         case .restricted: nil
+        case let failure?: failure.bodyLines
         }
     }
 
     var primaryAction: Action {
-        switch self {
-        case .firstAsk: .requestPermission
-        case .appDenied, .servicesOff: .openSettings
-        // §10.1: no Open Settings, since the user can't change it there.
-        case .restricted: .search
-        case .noFix: .tryAgain
-        }
+        failure?.primaryAction ?? .requestPermission
     }
 
     var primaryTitle: String {
-        switch primaryAction {
-        case .requestPermission: "Use my location"
-        case .openSettings: "Open Settings"
-        case .tryAgain: "Try again"
-        case .search: Self.searchTitle
-        }
+        failure?.primaryTitle ?? "Use my location"
     }
 
     /// "Enter a city instead", under the button; restricted already has
     /// search as its button, so it has none.
     var showsSearchLink: Bool {
-        primaryAction != .search
+        failure?.showsEnterCityLink ?? true
     }
 
     /// The failure screens' words, so the two read the same (Tessa,
     /// 2026-10-10, from the Chunk 3 recordings; was "Search for a city
     /// instead").
     static let searchLinkTitle = LocationFailure.enterCityTitle
-    /// Restricted's button, here and on its failure screen.
+    /// Restricted's button, here, on its failure screen and in the
+    /// Location Off dialog.
     static let searchTitle = "Search for a city"
 
-    /// All of the above, for the shared message block.
+    /// All of the above, for the shared message block. The Settings path
+    /// chip is left off under the moon until Consolidation Chunk 2 moves
+    /// these causes to the failure screen, which shows it.
     var copy: MessageCopy {
         MessageCopy(
             headline: headline,

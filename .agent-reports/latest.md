@@ -1,3 +1,18 @@
+# Consolidation Chunk 1: shared cause definitions
+
+Updated October 10, 2026.
+
+- **Done:** the launch message (`LocationIssue`) and the Location Off dialog now take their words and actions from `LocationFailure`, so they can't drift from the failure screens.
+  - **Shared:** for denied, services off, restricted and no fix, the message's headline, headline lines, body, body lines, primary action, primary title, and the "Enter a city instead" link and whether it shows. The dialog's headline, body, Settings path and primary button title. `LocationOffVariant.failure` maps each variant to its cause, and `offersSettings` is worked out from the cause's primary action.
+  - **Kept separate:** First ask (an invitation, not a cause). The dialog's "Search instead". Until Chunk 2: no path chip under the moon, and restricted's body still wraps naturally there.
+  - **Visible change:** the dialog's headline is now the cause's (was "Location is off for Moonbeam"). The Settings path shows as **one bold line** (e.g. "Settings › Moonbeam › Location › While Using the App") instead of bold text inside a sentence.
+- **Remaining duplication:** `MoonCardSkeleton.failedText` (the saved-place card line, separate on purpose), onboarding copy, and search-sheet strings.
+- **Tests:** new `causeMessagesShareFailureCopy`, `firstAskIsNotACause` and `dialogVariantsShareCauses`. The agent's `build-for-testing` succeeds. **Tessa ran the tests outside the agent, in Terminal:** focused tests and the full suite pass (counts not recorded). The agent can't run `xcodebuild test` here: the runner can't open a pseudo-terminal ("Pseudo Terminal Setup Error", EPERM) and hangs in `simctl diagnose`. This also caused the 20:06 stall.
+- **Next:** stop for review, then Consolidation Chunk 2.
+
+---
+
+
 # Build 5.10a Chunk 6: failure entrance and recovery handoff
 
 Updated October 10, 2026.

@@ -486,6 +486,21 @@ struct LocationViewModelTests {
         #expect(!LocationViewModel.LocationOffVariant.restricted.offersSettings)
     }
 
+    @Test(
+        "The dialog's variants are the shared causes, Settings where the cause offers it",
+        arguments: [
+            (LocationViewModel.LocationOffVariant.denied, LocationFailure.permissionDenied),
+            (.servicesOff, .servicesOff),
+            (.restricted, .restricted),
+        ]
+    )
+    func dialogVariantsShareCauses(variant: LocationViewModel.LocationOffVariant, failure: LocationFailure) {
+        #expect(variant.failure == failure)
+        #expect(variant.offersSettings == (failure.primaryAction == .openSettings))
+        // The dialog shows the path exactly where the failure screen has a chip.
+        #expect(variant.offersSettings == (failure.pathChipLines != nil))
+    }
+
     // MARK: - Back from Settings (§4)
 
     @Test("Foreground after Settings with permission newly granted: fetches automatically")

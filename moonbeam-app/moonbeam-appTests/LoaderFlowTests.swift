@@ -606,6 +606,41 @@ struct LoaderFlowTests {
         #expect(LocationIssue.restricted.bodyLines == nil)
     }
 
+    @Test(
+        "Each cause message takes its words and actions from its failure screen",
+        arguments: [
+            (LocationIssue.appDenied, LocationFailure.permissionDenied),
+            (.servicesOff, .servicesOff),
+            (.restricted, .restricted),
+            (.noFix, .noFix),
+        ]
+    )
+    func causeMessagesShareFailureCopy(issue: LocationIssue, failure: LocationFailure) {
+        #expect(issue.failure == failure)
+        let message = issue.copy
+        let screen = failure.copy
+        #expect(message.headline == screen.headline)
+        #expect(message.headlineLines == screen.headlineLines)
+        #expect(message.body == screen.body)
+        #expect(message.primaryTitle == screen.primaryTitle)
+        #expect(message.linkTitle == screen.linkTitle)
+        #expect(message.showsLink == screen.showsLink)
+        #expect(issue.primaryAction == failure.primaryAction)
+        // Until Consolidation Chunk 2: no path chip under the moon, and
+        // restricted's body wraps naturally there.
+        #expect(message.pathChipLines == nil)
+        if failure != .restricted {
+            #expect(message.bodyLines == screen.bodyLines)
+        }
+    }
+
+    @Test("First ask is an invitation, not a cause")
+    func firstAskIsNotACause() {
+        #expect(LocationIssue.firstAsk.failure == nil)
+        #expect(LocationIssue.firstAsk.primaryAction == .requestPermission)
+        #expect(LocationIssue.firstAsk.copy.showsLink)
+    }
+
     @Test("Authorized has no message")
     func authorizedHasNone() {
         #expect(LocationIssue(.authorized) == nil)

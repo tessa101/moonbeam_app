@@ -34,9 +34,19 @@ final class LocationViewModel {
 
         var id: Self { self }
 
+        /// The shared cause, whose words the dialog uses
+        /// (STEP-5.10a-LOCATION-CONSOLIDATION.md, Chunk 1).
+        var failure: LocationFailure {
+            switch self {
+            case .denied: .permissionDenied
+            case .servicesOff: .servicesOff
+            case .restricted: .restricted
+            }
+        }
+
         /// Restricted is a device policy the user can't change, so Settings
-        /// would be a dead end.
-        var offersSettings: Bool { self != .restricted }
+        /// would be a dead end; its cause offers no Open Settings either.
+        var offersSettings: Bool { failure.primaryAction == .openSettings }
     }
 
     // MARK: - Constants
