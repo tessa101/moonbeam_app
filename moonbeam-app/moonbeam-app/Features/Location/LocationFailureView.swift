@@ -34,9 +34,9 @@ struct LocationFailureView: View {
 
     // MARK: - Constants
 
-    /// STEP-5.10a Layout: 14 pt headline → body, 6 pt button → link.
+    /// STEP-5.10a Layout: 14 pt headline → body; the 6 pt button → link is
+    /// `LocationFailureLayout.buttonToLink`, shared with the loader.
     private static let headlineToBody: CGFloat = 14
-    private static let buttonToLink: CGFloat = 6
 
     // MARK: - Body
 
@@ -112,7 +112,7 @@ struct LocationFailureView: View {
     private var actions: some View {
         MessageActions(
             copy: failure.copy,
-            buttonToLink: Self.buttonToLink,
+            buttonToLink: LocationFailureLayout.buttonToLink,
             onPrimary: primary,
             onLink: onSearch,
             failureLoadIn: true

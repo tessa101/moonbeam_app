@@ -56,18 +56,16 @@ struct LaunchPhaseCycle: View {
     private static let moonSize: CGFloat = 140
     /// §10.5: when the message doesn't fit, the moon gives the copy more room.
     private static let compactMoonSize: CGFloat = 96
-    private static let compactMoonRise: CGFloat = 28
     private static let compactTextScale: CGFloat = 0.8
-    /// The handoff puts the moon's centre 13 pt above the screen's.
-    private static let moonCentreAboveScreenCentre: CGFloat = 13
     /// The mock's gap between the moon and the label.
     private static let moonToText: CGFloat = 28
-    /// The handoff's message top (y 500) under its moon (bottom at 479).
-    private static let moonToMessage: CGFloat = 20
-    /// The handoff's 28 pt message sides and 40 pt bottom inset, from the
-    /// screen's edge; never closer than this to the home indicator.
-    private static let messageBottomInset: CGFloat = 40
-    private static let minimumAboveHomeIndicator: CGFloat = 8
+    // Chunk 2b (Tessa, 2026-10-10): the moon sits centred in the failure
+    // screen's art frame, and the message starts at its headline top and
+    // ends at its bottom inset, so moon screens and illustrated screens line
+    // up, and the loader's hand-off to an illustration doesn't jump. Was:
+    // the moon's centre 13 pt above the screen's, the message 20 pt under
+    // it, 40 pt from the screen's bottom edge. The compact step uses the
+    // compact art frame, in place of the old 28 pt lift.
     /// The disc's tight glow: CSS `0 0 40px`, a 20 pt shadow radius
     /// (§11.3).
     private static let glyphGlowCSSBlur: CGFloat = 40
@@ -100,15 +98,16 @@ struct LaunchPhaseCycle: View {
             let bottom = proxy.safeAreaInsets.bottom
             // §10: placed from the screen's centre, not the safe area's.
             let screenHeight = proxy.size.height + top + bottom
-            let bottomInset = max(Self.messageBottomInset - bottom, Self.minimumAboveHomeIndicator)
+            let bottomInset = LocationFailureLayout.bottomInset(safeAreaBottom: bottom)
             let layout = messageLayout(
                 screenHeight: screenHeight,
                 safeAreaTop: top,
                 bottomInset: bottomInset
             )
-            let moonSize = layout == .regular ? Self.moonSize : Self.compactMoonSize
-            let moonRise = layout == .regular ? 0 : Self.compactMoonRise
-            let moonTop = screenHeight / 2 - Self.moonCentreAboveScreenCentre - moonSize / 2 - top - moonRise
+            let compact = layout != .regular
+            let moonSize = compact ? Self.compactMoonSize : Self.moonSize
+            let moonTop = Self.moonTop(compact: compact, safeAreaTop: top)
+            let messageTop = Self.messageTop(compact: compact, safeAreaTop: top)
 
             VStack(spacing: 0) {
                 Color.clear.frame(height: max(0, moonTop))
@@ -129,6 +128,7 @@ struct LaunchPhaseCycle: View {
                     }
                     if case .message(let issue) = loader.content {
                         message(issue, layout: layout, bottomInset: bottomInset)
+                            .padding(.top, messageTop - moonTop - moonSize)
                     }
                 }
                 .frame(maxHeight: .infinity, alignment: .top)
@@ -286,18 +286,33 @@ struct LaunchPhaseCycle: View {
     ) -> MessageLayout {
         guard case .message = loader.content, regularMessageHeight > 0 else { return .regular }
 
-        let regularTop = screenHeight / 2 - Self.moonCentreAboveScreenCentre
-            - Self.moonSize / 2 - safeAreaTop
-        let regularRoom = screenHeight - safeAreaTop - regularTop - Self.moonSize
-            - Self.moonToMessage - bottomInset
+        // As before Chunk 2b, the room doesn't take off the bottom safe
+        // area; flagged, not changed, so large text falls back as it did.
+        let regularRoom = screenHeight - safeAreaTop - Self.messageTop(compact: false, safeAreaTop: safeAreaTop)
+            - bottomInset
         if regularMessageHeight <= regularRoom { return .regular }
 
         guard compactMessageHeight > 0 else { return .compact }
-        let compactTop = screenHeight / 2 - Self.moonCentreAboveScreenCentre
-            - Self.compactMoonSize / 2 - safeAreaTop - Self.compactMoonRise
-        let compactRoom = screenHeight - safeAreaTop - compactTop - Self.compactMoonSize
-            - Self.moonToMessage - bottomInset
+        let compactRoom = screenHeight - safeAreaTop - Self.messageTop(compact: true, safeAreaTop: safeAreaTop)
+            - bottomInset
         return compactMessageHeight <= compactRoom ? .compact : .scroll
+    }
+
+    /// The moon's top inside the safe area: centred in the failure screen's
+    /// art frame (Chunk 2b).
+    private static func moonTop(compact: Bool, safeAreaTop: CGFloat) -> CGFloat {
+        let frame = LocationFailureLayout.artFrameSize(compact: compact)
+        let size = compact ? compactMoonSize : moonSize
+        return LocationFailureLayout.artTop(safeAreaTop: safeAreaTop) + (frame.height - size) / 2
+    }
+
+    /// The message's top inside the safe area: the failure screen's
+    /// headline top under the same frame.
+    private static func messageTop(compact: Bool, safeAreaTop: CGFloat) -> CGFloat {
+        LocationFailureLayout.headlineTop(
+            underArtOfHeight: LocationFailureLayout.artFrameSize(compact: compact).height,
+            safeAreaTop: safeAreaTop
+        )
     }
 
     @ViewBuilder
@@ -326,7 +341,6 @@ struct LaunchPhaseCycle: View {
             }
         }
         .id(issue)
-        .padding(.top, Self.moonToMessage)
         .padding(.horizontal, Theme.Metrics.onboardingMargin)
         .padding(.bottom, bottomInset)
     }
