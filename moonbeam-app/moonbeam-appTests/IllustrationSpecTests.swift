@@ -29,10 +29,13 @@ struct IllustrationSpecTests {
         #expect(IllustrationSpec.locationNotFound.pivots[.tail] == CGPoint(x: 230, y: 455))
         #expect(IllustrationSpec.locationNotFound.pivots[.moonRing] == CGPoint(x: 173, y: 202))
         #expect(IllustrationSpec.permissionOff.pivots[.tube] == CGPoint(x: 155, y: 335))
+        // Chunk 2b: the crescent moon is mirrored about x 200 (was 150, 212),
+        // and the permission-off star with it (was 272, 122).
         for spec in [IllustrationSpec.permissionOff, .servicesOff, .restricted] {
-            #expect(spec.pivots[.moonHalo] == CGPoint(x: 150, y: 212))
-            #expect(spec.pivots[.moonDisc] == CGPoint(x: 150, y: 212))
+            #expect(spec.pivots[.moonHalo] == CGPoint(x: 250, y: 212))
+            #expect(spec.pivots[.moonDisc] == CGPoint(x: 250, y: 212))
         }
+        #expect(IllustrationSpec.permissionOff.star?.centre == CGPoint(x: 128, y: 122))
     }
 
     @Test("Every part that rotates or scales has a pivot", arguments: LocationIllustration.Kind.allCases)

@@ -135,8 +135,10 @@ nonisolated struct IllustrationSpec: Equatable, Sendable {
     )
 
     /// The moon's centre on the permission, services and restricted art:
-    /// the halo and disc breathe around it.
-    private static let crescentMoonCentre = CGPoint(x: 150, y: 212)
+    /// the halo and disc breathe around it. Chunk 2b (Tessa, 2026-10-10):
+    /// the moon is mirrored about the art's centre line (x 200) so the
+    /// crescent is lit on the right, the app's waxing side; was (150, 212).
+    private static let crescentMoonCentre = CGPoint(x: 250, y: 212)
     /// Not found's empty moon: the ring turns around it.
     private static let emptyMoonCentre = CGPoint(x: 173, y: 202)
 
@@ -241,7 +243,9 @@ nonisolated struct IllustrationSpec: Equatable, Sendable {
             ),
         ],
         star: Star(
-            centre: CGPoint(x: 272, y: 122),
+            // Mirrored with the moon (Chunk 2b), clear of its crescent; was
+            // (272, 122).
+            centre: CGPoint(x: 128, y: 122),
             motion: IllustrationMotion(
                 rotation: IllustrationKeyframes(duration: 6.59, [
                     (0, 0), (0.26, 0), (0.36, 45), (0.46, 60), (0.54, 90), (0.66, 135), (1, 135),

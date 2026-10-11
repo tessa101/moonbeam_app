@@ -28,7 +28,7 @@ Unless noted, each keyframe segment uses ease-in-out (`cubic-bezier(.42,0,.58,1)
 ## Shared by all states: moon breathing
 - **Halo** (`moon-halo`): scale 0.95 → 1.06 → 0.95 and opacity 0.7 → 1 → 0.7, loop **5.88 s**, pivot at the moon center.
 - **Disc** (`moon-disc`): brightness 1 → 1.06 → 1 on the same 5.88 s loop.
-- **Moon centers (viewBox):** searching (215, 202); permission, services, and restricted (150, 212); not found (173, 202). Not-found has no halo; see its own section.
+- **Moon centers (viewBox):** searching (215, 202); permission, services, and restricted (250, 212) *(Chunk 2b: the moon group is mirrored about x 200 so the crescent is lit on the right; was (150, 212))*; not found (173, 202). Not-found has no halo; see its own section.
 
 ---
 
@@ -65,7 +65,7 @@ Unless noted, each keyframe segment uses ease-in-out (`cubic-bezier(.42,0,.58,1)
 - **Telescope** (`tube`): rotation around the mount, pivot (155, 335), loop **6.59 s**.
   - Offsets 0 / .22 / .50 / .56 / .62 / .68 / .72 / .90 / 1 → 0° / −7° / −7° / −5.5° / −7.5° / −6.5° / −7° / 0° / 0°.
   - It tilts up, holds, wobbles, and drops back. The stand doesn't move.
-- **Star:** you add it. A 4-point sparkle at (272, 122), 22 pt across, fill `#F7E7BD`. The path, centered at 0,0:
+- **Star:** you add it. A 4-point sparkle at (128, 122) *(Chunk 2b: mirrored with the moon; was (272, 122))*, 22 pt across, fill `#F7E7BD`. The path, centered at 0,0:
   `M0 -11 Q1.4 -1.4 11 0 Q1.4 1.4 0 11 Q-1.4 1.4 -11 0 Q-1.4 -1.4 0 -11Z`
   - Same 6.59 s loop, pivot at its own center:
 

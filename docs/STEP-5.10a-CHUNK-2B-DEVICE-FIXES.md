@@ -49,6 +49,8 @@ The First ask screen, the launch moon screens and the searching loader sit lower
 
 ## 4. Crescent direction in the cause illustrations
 
+> **Done (Tessa, 2026-10-10), with one change:** mirroring alone put the crescent on permission off's star, so the star is mirrored too, (272, 122) → (128, 122). Before/after renders: `.agent-reports/5.10a-chunk2b/crescent/`.
+
 The crescents in the telescope, map and locked-map art are lit on the left. They should be lit on the right, matching the app's waxing convention (the loader cycle already runs lit-right while waxing; don't change it).
 
 - Mirror **only the moon layers** (`moon`, `moon-halo`, `moon-disc`) horizontally about the art's center line, in the `anim` SVGs for permission-off, services-off and restricted. Don't mirror the telescope or the map.

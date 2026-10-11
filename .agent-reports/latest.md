@@ -1,4 +1,4 @@
-# Consolidation Chunk 2b: device-test fixes (items 1–3 done, item 4 stopped)
+# Consolidation Chunk 2b: device-test fixes (done; item 3 reverted)
 
 Updated October 10, 2026. Step doc: `docs/STEP-5.10a-CHUNK-2B-DEVICE-FIXES.md`. One commit per item; tests are run by Tessa outside the agent.
 
@@ -14,13 +14,12 @@ Updated October 10, 2026. Step doc: `docs/STEP-5.10a-CHUNK-2B-DEVICE-FIXES.md`. 
   - Fixed after review: First ask now comes in at once on that return, with no searching label or 1.2 s wait (`LocationLoader.presentMessage`).
   - Build-for-testing succeeds; tests not run.
 - **Item 3 reverted (Tessa, 2026-10-10):** the moon and "Finding your location…" stay vertically centred as before (moon about 354–494 pt, headline about 514 pt on iPhone 17). Matching the illustrated screens' vertical layout is dropped for now. Reverted `aa94da3` (see below).
-- **Item 4 stopped, as the step doc asks: no change made.**
-  - I mirrored only the moon group (`moon-halo` + `moon-disc`) about the art's centre line (x 200), in test copies.
-  - Services off and restricted look right: the crescent sits behind the map's top edge as before.
-  - Permission off breaks: its code-drawn star (`IllustrationSpec` star at (272, 122), 22 pt across) lands on the mirrored crescent's upper tip. Moving the star or the moon would be a hand adjustment.
-  - Not done: no SVG, slice, catalog, pivot or ILLUSTRATIONS_MOTION.md change; the slicer wasn't run.
-  - Before/after renders: `.agent-reports/5.10a-chunk2b/crescent/` (QuickLook thumbnails, cropped square, so the bottom of the art is cut off; the star added to the permission-off pair). Test SVGs alongside.
-  - Needs Tessa's call: move the star, mirror the map art only, or accept the overlap.
+- **Item 4 done:** the crescents in permission off, services off and restricted are now lit on the right.
+  - Only the moon group is mirrored about x 200, via a transform. The slicer was re-run; only the six moon slices changed.
+  - Pivots moved (150, 212) → (250, 212). The permission-off star moved (272, 122) → (128, 122) so it clears the crescent (Tessa).
+  - Before/after at the default size, uncropped: `.agent-reports/5.10a-chunk2b/crescent/*-before-after.png` (committed), with the single images alongside (local).
+- **Item 2 fix:** First ask on a not-determined return comes in at once, with no searching label (`9734eaa`).
+- **Item 3 reverted** (`ad3f292`). Code is identical to `a15d2c7`; the preview measures the moon at 354.7–493.6 pt.
 - **Tests: none run by the agent.** Commands below.
 - **Next:** Tessa runs the tests and decides on item 4. Chunk 3 not started.
 
