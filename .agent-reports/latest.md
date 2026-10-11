@@ -7,7 +7,14 @@ Updated October 11, 2026. Step doc: `docs/STEP-5.10a-CHUNK-2C-OFFLINE-AND-COPY.m
   - Permission off / Restricted headline: "Can’t see / your location".
   - `AppInfo.name` stays in the chip and First ask.
   - Build-for-testing succeeds; tests not run.
-- **Next:** item 2 (hide search actions offline with no recents; `NWPathMonitor` behind a protocol).
+- **Item 2 done: search actions hide offline with no recents.**
+  - Covers the link on the four causes and First ask, and Restricted's button.
+  - `NWPathMonitor` behind `ConnectivityService`, with a fake. Watched only while a failure screen or First ask is up.
+  - A hidden control keeps its room, isn't tappable and is hidden from VoiceOver. Fades with opacity only.
+  - Open Settings and Use my location are unchanged.
+  - Known oddity recorded: Restricted offline with no recents has no action.
+  - Build-for-testing succeeds; tests not run.
+- **Next:** item 3 (two checks: not determined offline; Never + Forget saved place).
 
 ---
 

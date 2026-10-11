@@ -22,6 +22,9 @@ struct LaunchPhaseCycle: View {
     /// The message's primary button, except Open Settings, opened here.
     let onPrimary: () -> Void
     let onSearch: () -> Void
+    /// Online, or recents to pick from: the message's search link shows
+    /// (Chunk 2c).
+    var searchAvailable = true
 
     /// Where "Aha"'s moon lands (§10.4): the card's phase slot, in global
     /// coordinates, and the glyph it settles on. `nil` until the screen is
@@ -312,7 +315,8 @@ struct LaunchPhaseCycle: View {
                         textScale: scale,
                         fillsHeight: false,
                         onPrimary: { primary(issue) },
-                        onSearch: onSearch
+                        onSearch: onSearch,
+                        searchAvailable: searchAvailable
                     )
                 }
                 .scrollIndicators(.hidden)
@@ -321,7 +325,8 @@ struct LaunchPhaseCycle: View {
                     issue: issue,
                     textScale: scale,
                     onPrimary: { primary(issue) },
-                    onSearch: onSearch
+                    onSearch: onSearch,
+                    searchAvailable: searchAvailable
                 )
             }
         }

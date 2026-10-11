@@ -185,6 +185,10 @@ final class LocationViewModel {
     /// The loader screen's moon, glow and label (LOADER.md §10.2).
     let loader: LocationLoader
 
+    /// The device has a network path, as last seen while a screen with a
+    /// search action was up (Chunk 2c). Assumed online until then.
+    private(set) var isOnline = true
+
     // MARK: - Dependencies
 
     private let locationService: any LocationService
@@ -192,6 +196,8 @@ final class LocationViewModel {
     @ObservationIgnored private let placeStore: any PlaceStore
     /// First-run state: the first "Aha" ride's extra lap (LOADER.md §11.2.2).
     @ObservationIgnored private let onboardingStore: any OnboardingStore
+    /// Whether city search can reach the network (Chunk 2c).
+    @ObservationIgnored private let connectivity: any ConnectivityService
     /// Reduce Motion: "Aha" without the ride (§11.2.2). Read when it's needed.
     @ObservationIgnored private let reducesMotion: () -> Bool
     private let moonService: any MoonService
@@ -281,6 +287,7 @@ final class LocationViewModel {
         moonService: any MoonService,
         headingService: any HeadingService,
         onboardingStore: any OnboardingStore = InMemoryOnboardingStore(),
+        connectivity: any ConnectivityService = FakeConnectivityService(),
         reducesMotion: @escaping () -> Bool = { false },
         fetchTimeout: Duration = LocationViewModel.defaultFetchTimeout,
         fetchTimeoutSleep: @escaping @Sendable (Duration) async throws -> Void = { try await Task.sleep(for: $0) },
@@ -294,6 +301,7 @@ final class LocationViewModel {
         self.placeSearch = placeSearch
         self.placeStore = placeStore
         self.onboardingStore = onboardingStore
+        self.connectivity = connectivity
         self.reducesMotion = reducesMotion
         self.moonService = moonService
         self.fetchTimeout = fetchTimeout
@@ -655,6 +663,29 @@ final class LocationViewModel {
             launchStage = .phaseCycle
         } else if let current = LocationFailure(state), current != failure {
             locationFailure = current
+        }
+    }
+
+    // MARK: - City search offline (Chunk 2c)
+
+    /// A search action can work: online, or with recents, which pick
+    /// without the network. Otherwise the failure screens and First ask
+    /// hide theirs, keeping its room (STEP-5.10a-CHUNK-2C item 2).
+    var offersCitySearch: Bool {
+        isOnline || !placeStore.recents.isEmpty
+    }
+
+    /// The screens that have a search action: a failure screen, or First
+    /// ask on the loader. The view observes connectivity only meanwhile.
+    var showsSearchAction: Bool {
+        failureScreen != nil || loaderIssue != nil
+    }
+
+    /// Follows the network path until the caller's task is cancelled (the
+    /// screen with the search action has gone).
+    func observeConnectivity() async {
+        for await online in connectivity.pathUpdates() {
+            isOnline = online
         }
     }
 

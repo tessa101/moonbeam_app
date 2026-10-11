@@ -46,6 +46,7 @@ struct moonbeam_appApp: App {
             moonService: AstronomyEngineMoonService(),
             headingService: CoreLocationHeadingService(),
             onboardingStore: onboardingStore,
+            connectivity: NWPathMonitorConnectivityService(),
             reducesMotion: { UIAccessibility.isReduceMotionEnabled }
         )
         _locationViewModel = State(initialValue: location)

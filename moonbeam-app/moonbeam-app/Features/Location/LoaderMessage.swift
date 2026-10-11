@@ -27,6 +27,8 @@ struct LoaderMessage: View {
 
     let onPrimary: () -> Void
     let onSearch: () -> Void
+    /// Online, or recents to pick from: the link shows (Chunk 2c).
+    var searchAvailable = true
 
     // MARK: - Constants
 
@@ -46,7 +48,13 @@ struct LoaderMessage: View {
             }
 
             // The button keeps its 56 pt (§10.5), so it isn't scaled.
-            MessageActions(copy: issue.copy, onPrimary: onPrimary, onLink: onSearch)
+            MessageActions(
+                copy: issue.copy,
+                onPrimary: onPrimary,
+                onLink: onSearch,
+                primaryIsSearch: issue.primaryAction == .search,
+                searchAvailable: searchAvailable
+            )
         }
         .frame(maxWidth: .infinity, maxHeight: fillsHeight ? .infinity : nil)
     }

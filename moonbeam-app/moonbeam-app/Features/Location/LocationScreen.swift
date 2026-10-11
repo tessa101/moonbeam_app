@@ -62,7 +62,11 @@ struct LocationScreen: View {
                     // STEP-5.10a Chunk 3: in place of the main content, so
                     // no sentence, card, compass or DEBUG buttons. Its
                     // entrance is Chunk 6's.
-                    LocationFailureView(failure: failure, onSearch: viewModel.presentSearch)
+                    LocationFailureView(
+                        failure: failure,
+                        onSearch: viewModel.presentSearch,
+                        searchAvailable: viewModel.offersCitySearch
+                    )
                     .transition(.identity)
                 } else {
                     // §2.1: no whole-screen fade. The screen arrives at once
@@ -89,6 +93,7 @@ struct LocationScreen: View {
                         loader: viewModel.loader,
                         onPrimary: { Task { await viewModel.performLoaderAction() } },
                         onSearch: viewModel.presentSearch,
+                        searchAvailable: viewModel.offersCitySearch,
                         landingSlot: slot.map { globalFrame(of: $0, in: proxy) },
                         landingGlyph: viewModel.moonTable?.glyph
                     )
@@ -130,6 +135,12 @@ struct LocationScreen: View {
         }
         .task {
             await viewModel.start()
+        }
+        // Chunk 2c: the network is watched only while a search action can
+        // show; the task ends, and with it the monitor, when it can't.
+        .task(id: viewModel.showsSearchAction) {
+            guard viewModel.showsSearchAction else { return }
+            await viewModel.observeConnectivity()
         }
         .onChange(of: scenePhase) { _, phase in
             switch phase {

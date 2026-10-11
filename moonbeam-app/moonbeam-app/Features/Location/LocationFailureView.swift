@@ -22,6 +22,9 @@ struct LocationFailureView: View {
     /// Search for a city instead, and restricted's Search for a city: the
     /// search sheet, field focused.
     let onSearch: () -> Void
+    /// Online, or recents to pick from: the search actions show
+    /// (Chunk 2c).
+    var searchAvailable = true
 
     @Environment(\.openURL) private var openURL
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
@@ -115,7 +118,9 @@ struct LocationFailureView: View {
             buttonToLink: Self.buttonToLink,
             onPrimary: primary,
             onLink: onSearch,
-            failureLoadIn: true
+            failureLoadIn: true,
+            primaryIsSearch: failure.primaryAction == .search,
+            searchAvailable: searchAvailable
         )
         // Its natural height always: a scrolling message above mustn't
         // squeeze the link into truncation (SE 3 at AX5).

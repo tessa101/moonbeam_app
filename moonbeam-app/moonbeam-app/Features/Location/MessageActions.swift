@@ -20,6 +20,15 @@ struct MessageActions: View {
     let onLink: () -> Void
     /// Chunk 6: only failure screens stagger these controls.
     var failureLoadIn = false
+    /// The button opens the search (restricted), so it hides with the link
+    /// when search can't work (Chunk 2c).
+    var primaryIsSearch = false
+    /// Online, or recents to pick from (Chunk 2c).
+    var searchAvailable = true
+
+    private var visibility: MessageActionVisibility {
+        MessageActionVisibility(copy: copy, primaryIsSearch: primaryIsSearch, searchAvailable: searchAvailable)
+    }
 
     var body: some View {
         VStack(spacing: buttonToLink) {
@@ -30,6 +39,10 @@ struct MessageActions: View {
                     // full title remains available to VoiceOver.
                     .dynamicTypeSize(.large)
                     .buttonStyle(.primary)
+                    // Hidden, it keeps its room and leaves VoiceOver.
+                    .opacity(visibility.showsPrimary ? 1 : 0)
+                    .disabled(!visibility.showsPrimary)
+                    .accessibilityHidden(!visibility.showsPrimary)
                     .failureLoadIn(.primary, hasPath: copy.pathChipLines != nil, isEnabled: failureLoadIn)
             } else {
                 // No button (No fix): its 56 pt room is kept, so the link
@@ -41,12 +54,16 @@ struct MessageActions: View {
             }
             // With no link (restricted), its room is kept, so the button
             // sits where it does on the other messages (Tessa, 2026-10-06).
+            // Offline with no recents (Chunk 2c), its room is kept too.
             Button(copy.linkTitle, action: onLink)
                 .buttonStyle(.textLink)
-                .opacity(copy.showsLink ? 1 : 0)
-                .disabled(!copy.showsLink)
-                .accessibilityHidden(!copy.showsLink)
+                .opacity(visibility.showsLink ? 1 : 0)
+                .disabled(!visibility.showsLink)
+                .accessibilityHidden(!visibility.showsLink)
                 .failureLoadIn(.secondary, hasPath: copy.pathChipLines != nil, isEnabled: failureLoadIn)
         }
+        // Fades as the connection comes and goes: opacity only, so Reduce
+        // Motion needs nothing different.
+        .animation(.easeOut(duration: ContentLoadIn.duration), value: visibility)
     }
 }
