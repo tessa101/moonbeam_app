@@ -1,4 +1,4 @@
-# Consolidation Chunk 2b: device-test fixes (in progress)
+# Consolidation Chunk 2b: device-test fixes (items 1–3 done, item 4 stopped)
 
 Updated October 10, 2026. Step doc: `docs/STEP-5.10a-CHUNK-2B-DEVICE-FIXES.md`. One commit per item; tests are run by Tessa outside the agent.
 
@@ -21,7 +21,30 @@ Updated October 10, 2026. Step doc: `docs/STEP-5.10a-CHUNK-2B-DEVICE-FIXES.md`. 
   - Aha starts from the moon's measured frame, so it now starts higher.
   - Flagged: the fit check ignores the bottom safe area (pre-existing, kept); the loader's headline-to-body gap is 12 pt against the failure screen's 14.
   - Build-for-testing succeeds; tests not run.
-- **Next:** item 4 (crescent direction in the cause illustrations).
+- **Item 4 stopped, as the step doc asks: no change made.**
+  - I mirrored only the moon group (`moon-halo` + `moon-disc`) about the art's centre line (x 200), in test copies.
+  - Services off and restricted look right: the crescent sits behind the map's top edge as before.
+  - Permission off breaks: its code-drawn star (`IllustrationSpec` star at (272, 122), 22 pt across) lands on the mirrored crescent's upper tip. Moving the star or the moon would be a hand adjustment.
+  - Not done: no SVG, slice, catalog, pivot or ILLUSTRATIONS_MOTION.md change; the slicer wasn't run.
+  - Before/after renders: `.agent-reports/5.10a-chunk2b/crescent/` (QuickLook thumbnails, cropped square, so the bottom of the art is cut off; the star added to the permission-off pair). Test SVGs alongside.
+  - Needs Tessa's call: move the star, mirror the map art only, or accept the overlap.
+- **Tests: none run by the agent.** Commands below.
+- **Next:** Tessa runs the tests and decides on item 4. Chunk 3 not started.
+
+**Focused:**
+
+```
+xcodebuild test-without-building -project moonbeam-app/moonbeam-app.xcodeproj -scheme moonbeam-app \
+  -destination 'platform=iOS Simulator,name=iPhone 17' -derivedDataPath /tmp/mb-dd \
+  -only-testing:moonbeam-appTests/LoaderFlowTests -only-testing:moonbeam-appTests/LocationLoaderStepTests \
+  -only-testing:moonbeam-appTests/LocationFailureTests -only-testing:moonbeam-appTests/LocationFailureWiringTests \
+  -only-testing:moonbeam-appTests/LocationFailureScreenTests -only-testing:moonbeam-appTests/LocationViewModelTests \
+  -only-testing:moonbeam-appTests/OnboardingMainScreenTests -only-testing:moonbeam-appTests/LocationViewModelCompassTests \
+  -only-testing:moonbeam-appTests/PlaceSkeletonTests -only-testing:moonbeam-appTests/LaunchLoaderTests \
+  -only-testing:moonbeam-appTests/FailureLoadInTests
+```
+
+**Full suite:** the same without the `-only-testing` lines. Paste back the `Test run with N tests in M suites …` line, `TEST EXECUTE SUCCEEDED/FAILED`, and any `✘` lines.
 
 ---
 
