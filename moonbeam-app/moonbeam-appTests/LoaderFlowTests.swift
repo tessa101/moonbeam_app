@@ -487,7 +487,7 @@ struct LoaderFlowTests {
         #expect(harness.location.currentPlaceCount == 1)
     }
 
-    @Test("No fix has no button, only Enter a city instead, which opens the search")
+    @Test("No fix has no button, only Search for a city instead, which opens the search")
     func noFixOnlyLink() async {
         let harness = Self.makeHarness(.authorized, placeResult: .failure(LocationError.couldNotIdentifyPlace))
         await harness.viewModel.start()
@@ -505,7 +505,7 @@ struct LoaderFlowTests {
 
     // MARK: - Search for a city (§3 rows 3 and 12)
 
-    @Test("Enter a city, then a pick: the failure clears and the screen loads in for it")
+    @Test("Search for a city instead, then a pick: the failure clears and the screen loads in for it")
     func searchThenPick() async {
         let harness = Self.makeHarness(.denied)
         await harness.viewModel.start()
@@ -523,7 +523,7 @@ struct LoaderFlowTests {
         #expect(harness.viewModel.loader.flightStartedAt == nil)
     }
 
-    @Test("Enter a city, then cancel: the failure screen stays")
+    @Test("Search for a city instead, then cancel: the failure screen stays")
     func searchThenCancel() async {
         let harness = Self.makeHarness(.servicesOff)
         await harness.viewModel.start()
@@ -619,7 +619,7 @@ struct LoaderFlowTests {
         let harness = Self.makeHarness(.restricted)
         await harness.viewModel.start()
         #expect(harness.viewModel.failureScreen?.primaryAction == .search)
-        #expect(harness.viewModel.failureScreen?.showsEnterCityLink == false)
+        #expect(harness.viewModel.failureScreen?.showsSearchLink == false)
     }
 
     @Test("A pick while a failed launch is still searching: no failure screen turns up later")
@@ -799,7 +799,7 @@ struct LoaderFlowTests {
     func copy() {
         #expect(LocationIssue.firstAsk.headline == "Find the moon from where you are")
         #expect(LocationIssue.firstAsk.primaryTitle == "Use my location")
-        #expect(LocationIssue.appDenied.headline == "Moon Signal can’t see your location")
+        #expect(LocationIssue.appDenied.headline == "Can’t see your location")
         #expect(LocationIssue.appDenied.primaryTitle == "Open Settings")
         #expect(LocationIssue.servicesOff.headline == "Location Services are off")
         #expect(LocationIssue.servicesOff.body == "Turn them on to see where the moon is from here.")
@@ -814,7 +814,7 @@ struct LoaderFlowTests {
         #expect(!LocationIssue.restricted.showsSearchLink)
         #expect(LocationIssue.appDenied.showsSearchLink)
         // As on the failure screens (Tessa, 2026-10-10).
-        #expect(LocationIssue.appDenied.copy.linkTitle == "Enter a city instead")
+        #expect(LocationIssue.appDenied.copy.linkTitle == "Search for a city instead")
         #expect(LocationIssue.restricted.copy.primaryTitle == "Search for a city")
     }
 
@@ -825,7 +825,7 @@ struct LoaderFlowTests {
             "Moon Signal uses your location to show",
             "when and where the moon rises and sets."
         ])
-        #expect(LocationIssue.appDenied.headlineLines == ["Moon Signal can’t", "see your location"])
+        #expect(LocationIssue.appDenied.headlineLines == ["Can’t see", "your location"])
         #expect(LocationIssue.appDenied.bodyLines == [
             "Allow location access to see",
             "where the moon is from here."

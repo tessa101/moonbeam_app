@@ -44,7 +44,7 @@ struct DebugScreenState: View {
         case recoveryAha
         /// The location failure screen (STEP-5.10a): Irvine saved and
         /// shown, then Use my location fails for the cause, through the
-        /// real wiring (Chunk 3), so recovery and Enter a city work too.
+        /// real wiring (Chunk 3), so recovery and city search work too.
         case locationFailedDenied = "locationFailed.denied"
         case locationFailedServicesOff = "locationFailed.servicesOff"
         case locationFailedNoFix = "locationFailed.noFix"

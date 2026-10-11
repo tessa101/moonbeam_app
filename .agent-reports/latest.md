@@ -1,3 +1,16 @@
+# Consolidation Chunk 2c: offline search, copy, two checks (in progress)
+
+Updated October 11, 2026. Step doc: `docs/STEP-5.10a-CHUNK-2C-OFFLINE-AND-COPY.md`. One commit per item; tests are run by Tessa outside the agent.
+
+- **Item 1 done: copy.**
+  - The link is now "Search for a city instead" everywhere (constant renamed `searchInsteadTitle`).
+  - Permission off / Restricted headline: "Can’t see / your location".
+  - `AppInfo.name` stays in the chip and First ask.
+  - Build-for-testing succeeds; tests not run.
+- **Next:** item 2 (hide search actions offline with no recents; `NWPathMonitor` behind a protocol).
+
+---
+
 # Consolidation Chunk 2b: device-test fixes (done; item 3 reverted)
 
 Updated October 10, 2026. Step doc: `docs/STEP-5.10a-CHUNK-2B-DEVICE-FIXES.md`. One commit per item; tests are run by Tessa outside the agent.

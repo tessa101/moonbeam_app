@@ -696,9 +696,9 @@ struct LocationViewModelTests {
     }
 
     // STEP-5.10a Chunk 3 (Tessa, 2026-10-10): on the ready screen the
-    // failure screen replaces the Location Off dialog; its Enter a city
+    // failure screen replaces the Location Off dialog; its Search for a city
     // instead opens a fresh sheet.
-    @Test("Location row with permission denied: the failure screen, no dialog; Enter a city reopens the sheet")
+    @Test("Location row with permission denied: the failure screen, no dialog; Search for a city instead reopens the sheet")
     func locationRowDeniedThenSearchInstead() async throws {
         let location = FakeLocationService(authorizationState: .denied)
         let viewModel = Self.makeViewModel(

@@ -28,7 +28,9 @@ nonisolated extension LocationFailure {
 
     var headlineLines: [String] {
         switch self {
-        case .permissionDenied, .restricted: ["\(AppInfo.name) can’t", "see your location"]
+        // Chunk 2c (Tessa, 2026-10-11): no app name in the headline; the
+        // chip and First ask keep `AppInfo.name`.
+        case .permissionDenied, .restricted: ["Can’t see", "your location"]
         case .servicesOff: ["Location", "Services are off"]
         case .noFix: ["Couldn’t find", "your location"]
         }
@@ -77,13 +79,14 @@ nonisolated extension LocationFailure {
         }
     }
 
-    /// "Enter a city instead", the secondary on every cause but restricted,
+    /// "Search for a city instead" (Chunk 2c; was "Enter a city instead"),
+    /// the secondary on every cause but restricted,
     /// whose button already searches.
-    var showsEnterCityLink: Bool {
+    var showsSearchLink: Bool {
         primaryAction != .search
     }
 
-    static let enterCityTitle = "Enter a city instead"
+    static let searchInsteadTitle = "Search for a city instead"
 
     /// Everything above, for the shared message block. VoiceOver reads the
     /// headline and body as one sentence each.
@@ -95,8 +98,8 @@ nonisolated extension LocationFailure {
             bodyLines: bodyLines,
             pathChipLines: pathChipLines,
             primaryTitle: primaryTitle,
-            linkTitle: Self.enterCityTitle,
-            showsLink: showsEnterCityLink
+            linkTitle: Self.searchInsteadTitle,
+            showsLink: showsSearchLink
         )
     }
 }

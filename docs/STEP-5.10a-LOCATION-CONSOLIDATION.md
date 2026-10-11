@@ -22,10 +22,10 @@ Use **one cause-specific presentation regardless of entry point**: launch withou
 
 | Cause | Illustration | Headline | Body | Primary / secondary | Settings chip |
 |---|---|---|---|---|---|
-| Permission off | Existing telescope | Moon Signal can’t see your location | Allow location access to see where the moon is from here. | Open Settings / Enter a city instead | Settings › Moon Signal › Location *(Chunk 2b)* |
-| Services off | Existing map | Location Services are off | Turn them on to see where the moon is from here. | Open Settings / Enter a city instead | Settings › Privacy & Security › Location Services |
-| Restricted | Existing locked map | Moon Signal can’t see your location | Location access is limited on this iPhone. You can still search for a city. | Search for a city / none | None |
-| No fix | Existing calico | Couldn’t find your location | Check your cellular or Wi-Fi connection. We’ll look again when you come back. *(Chunk 2b)* | none (room kept) / Enter a city instead *(Chunk 2b; was Try again)* | None |
+| Permission off | Existing telescope | Can’t see your location *(Chunk 2c)* | Allow location access to see where the moon is from here. | Open Settings / Search for a city instead | Settings › Moon Signal › Location *(Chunk 2b)* |
+| Services off | Existing map | Location Services are off | Turn them on to see where the moon is from here. | Open Settings / Search for a city instead | Settings › Privacy & Security › Location Services |
+| Restricted | Existing locked map | Can’t see your location *(Chunk 2c)* | Location access is limited on this iPhone. You can still search for a city. | Search for a city / none | None |
+| No fix | Existing calico | Couldn’t find your location | Check your cellular or Wi-Fi connection. We’ll look again when you come back. *(Chunk 2b)* | none (room kept) / Search for a city instead *(Chunk 2b; was Try again)* | None |
 
 Use `AppInfo.name`, existing fixed line breaks/default sizing and accessibility wrapping. Preserve distinct cause art. Keep timeout, location-service errors and city-naming/reverse-geocoding errors grouped as No fix. Keep Restricted's reserved secondary space without exposing an actionable secondary button.
 
@@ -113,5 +113,8 @@ Default-size iPhone 17 is the main flow-review target; check SE 3/large text for
 - *(Chunk 2b)* **Searching cat in the launch flow.** Show the searching cat while locating; the moon still flies into the card on success, and the cat exits some way (wave goodbye, poof away, scamper off). To be explored later. `searching.svg` is delivered but unused.
 - *(Chunk 2b)* **Offline continuation.** If a fix succeeds but the city can't be named, continue with the coordinates labeled "Your location" (the moon times are computed on the device).
 - *(Chunk 2b)* A connectivity monitor that retries the moment a signal returns, without leaving the app.
+- *(Chunk 2c)* First ask: a character or illustration to invite allowing location (design TBD; the searching cat is one candidate).
+- *(Chunk 2c)* Retry No fix the moment connectivity returns, without leaving the app (the Chunk 2c monitor makes this cheap; not in that pass).
+- *(Chunk 2c)* Restricted offline: its body mentions searching while no action shows.
 
 No additional approval is required for the implementation scope above. Separate follow-ups do not block these chunks; preserve their current behavior and report them.

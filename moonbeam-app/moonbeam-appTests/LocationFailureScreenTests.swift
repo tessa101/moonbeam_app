@@ -44,7 +44,7 @@ struct LocationFailureScreenTests {
         arguments: [
             (
                 LocationFailure.permissionDenied,
-                "Moon Signal can’t\nsee your location",
+                "Can’t see\nyour location",
                 "Allow location access to see\nwhere the moon is from here."
             ),
             (
@@ -59,7 +59,7 @@ struct LocationFailureScreenTests {
             ),
             (
                 .restricted,
-                "Moon Signal can’t\nsee your location",
+                "Can’t see\nyour location",
                 "Location access is limited on\nthis iPhone. You can still\nsearch for a city."
             ),
         ]
@@ -79,9 +79,12 @@ struct LocationFailureScreenTests {
         #expect(copy.body == copy.bodyLines?.joined(separator: " "))
     }
 
-    @Test("The headline uses the app's name constant")
+    @Test("The app name stays in the chip, not the headline (Chunk 2c)")
     func appName() {
-        #expect(LocationFailure.permissionDenied.copy.headline.hasPrefix(AppInfo.name))
+        // Chunk 2c: the headline has no app name; the chip keeps it.
+        #expect(!LocationFailure.permissionDenied.copy.headline.contains(AppInfo.name))
+        #expect(LocationFailure.permissionDenied.copy.headline == "Can’t see your location")
+        #expect(LocationFailure.restricted.copy.headline == LocationFailure.permissionDenied.copy.headline)
         #expect(LocationFailure.permissionDenied.pathChipLines?.first?.contains(AppInfo.name) == true)
     }
 
@@ -120,7 +123,7 @@ struct LocationFailureScreenTests {
         #expect(failure.copy.primaryTitle == title)
         #expect(failure.copy.showsLink == showsLink)
         // Restricted keeps the link's room under the same title.
-        #expect(failure.copy.linkTitle == "Enter a city instead")
+        #expect(failure.copy.linkTitle == "Search for a city instead")
     }
 
     @Test("A launch cause's copy is its failure screen's, Settings chip included")

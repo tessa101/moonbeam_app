@@ -9,7 +9,7 @@ import Testing
 
 /// STEP-5.10a-LOCATION-FAILURE.md, Chunk 3: the failure screen in place of
 /// the main content, the return from Settings, No fix's look on return and
-/// Enter a city.
+/// city search.
 /// Recovery runs the existing loader → Aha (Tessa, 2026-10-10).
 @Suite("Location failure wiring", .timeLimit(.minutes(1)))
 @MainActor
@@ -296,9 +296,9 @@ struct LocationFailureWiringTests {
         #expect(!sheet.showsUseMyLocation)
     }
 
-    // MARK: - Enter a city
+    // MARK: - Search for a city instead
 
-    @Test("Enter a city: the failure clears and the §12 place-change load-in plays; the old place stays out")
+    @Test("Search for a city instead: the failure clears and the §12 place-change load-in plays; the old place stays out")
     func enterCityLoadsIn() async {
         let (viewModel, _) = await Self.makeFailedViewModel(.denied)
         let generation = viewModel.loadInGeneration

@@ -11,7 +11,7 @@
 - Layout: **Option D**: no sentence, no card. Illustration, headline, body, buttons pinned to the bottom.
 - **The calico illustration replaces the dimmed moon** on every failure screen (the moon is inside each illustration).
 - Casting by cause: **No fix → calico "Huh?"** · **App permission off → telescope** · **Services off → map** · **Restricted → map with lock**. **Searching keeps today's loader**; the calico and the other illustrations appear on the failure screens only. (`searching.svg` is delivered but unused for now.)
-- **"Enter a city instead"** is always the secondary action (except Restricted, where **Search for a city** is the primary).
+- **"Search for a city instead"** is always the secondary action (except Restricted, where **Search for a city** is the primary).
 - **No playful line for now.** Parked; revisit later (placement options are on the canvas, "Where the playful line lives").
 - Illustration, headline and primary button sit at the **same height on every cause**.
 - Motion: approved direction is "Playful beats" at 0.85× (already baked into the numbers in ILLUSTRATIONS_MOTION.md).
@@ -30,10 +30,10 @@ Line breaks are fixed at default size (manual `\n`); fall back to natural wrappi
 
 | Cause | Detect | Art | Headline | Body | Path chip | Primary | Secondary |
 |---|---|---|---|---|---|---|---|
-| App permission off | `denied` | `permission-off` (telescope) | Moon Signal can't / see your location | Allow location access to see / where the moon is from here. | Settings › Moon Signal › / Location *(Chunk 2b; was “… › Location › While Using the App”)* | Open Settings | Enter a city instead |
-| Services off | `servicesOff` | `services-off` (map) | Location / Services are off | Turn them on to see where / the moon is from here. | Settings › Privacy & Security › / Location Services | Open Settings | Enter a city instead |
-| No fix | timeout (10 s), CoreLocation error, offline / reverse-geocode failure | `location-not-found` (calico) | Couldn't find / your location | Check your cellular or Wi-Fi / connection. We’ll look again / when you come back. *(Chunk 2b; was “Check your signal and try again, or search for a city.”)* | none | none: room kept; looks again on return to the app (Chunk 2b; was Try again) | Enter a city instead |
-| Restricted | `restricted` | `restricted` (map + lock) | Moon Signal can't / see your location | Location access is limited on / this iPhone. You can still / search for a city. | none | Search for a city | none (keep the 44 pt spacer so the primary doesn't move) |
+| App permission off | `denied` | `permission-off` (telescope) | Can't see / your location *(Chunk 2c)* | Allow location access to see / where the moon is from here. | Settings › Moon Signal › / Location *(Chunk 2b; was “… › Location › While Using the App”)* | Open Settings | Search for a city instead |
+| Services off | `servicesOff` | `services-off` (map) | Location / Services are off | Turn them on to see where / the moon is from here. | Settings › Privacy & Security › / Location Services | Open Settings | Search for a city instead |
+| No fix | timeout (10 s), CoreLocation error, offline / reverse-geocode failure | `location-not-found` (calico) | Couldn't find / your location | Check your cellular or Wi-Fi / connection. We’ll look again / when you come back. *(Chunk 2b; was “Check your signal and try again, or search for a city.”)* | none | none: room kept; looks again on return to the app (Chunk 2b; was Try again) | Search for a city instead |
+| Restricted | `restricted` | `restricted` (map + lock) | Can't see / your location *(Chunk 2c)* | Location access is limited on / this iPhone. You can still / search for a city. | none | Search for a city | none (keep the 44 pt spacer so the primary doesn't move) |
 
 ## Layout (default size, 393 pt wide)
 - Background `bg` with the top glow, as everywhere.
@@ -65,7 +65,7 @@ Build `LocationFailureView(failure:)` from the Layout and copy table above, usin
 
 Illustration: for now show the **still art only**, from `D2Illustrations.xcassets` (add it to the app target or copy its image sets into the app's asset catalog). Put a small `LocationIllustration(kind:)` view in front of the art so chunk 4 can swap the still for the animated version without touching the screen.
 
-Actions: Open Settings → `UIApplication.openSettingsURLString`; Try again → restart the search; Enter a city instead → open the search sheet with the field focused; Search for a city (restricted) → same sheet. Put the path chips and all copy in one place, with the app name in the existing constant.
+Actions: Open Settings → `UIApplication.openSettingsURLString`; Try again → restart the search; Search for a city instead → open the search sheet with the field focused; Search for a city (restricted) → same sheet. Put the path chips and all copy in one place, with the app name in the existing constant.
 
 Accessibility: headline and body each read as one sentence; the illustration is decorative (hidden from VoiceOver); focus moves to the headline when the screen appears; every control ≥ 44 pt; Dynamic Type per §10.5.
 Add DEBUG `-screenState locationFailed.<denied|servicesOff|noFix|restricted>` for screenshots. Shots at default, AX1, AX5, and iPhone SE 3 for each cause. Check that illustration frame, headline and primary button are at the same height across all four.
@@ -127,7 +127,7 @@ Tests: step order and start times use the existing constants; text blocks start 
 1. A ~0.5 s flash of the main screen with an empty sentence (no city) and the placeholder card, between the search sheet closing and the failure screen appearing (recordings 01 and 05).
 2. When the failure screen returns after a missed Try again, the loader moon fades out over the headline (~0.2 s, recording 04).
 3. A fast failure flashes the loader: there's no 1.2 s minimum search time before the failure screen yet.
-4. VoiceOver check: Restricted's hidden "Enter a city instead" (kept for its 44 pt room) must be skipped.
+4. VoiceOver check: Restricted's hidden "Search for a city instead" (kept for its 44 pt room) must be skipped.
 
 ---
 
@@ -139,7 +139,7 @@ Tests: step order and start times use the existing constants; text blocks start 
 
 ## Acceptance
 - [ ] Each of the four causes matches the canvas "Error states with the calico illustrations" on an iPhone 17 and SE 3 at default, AX1 and AX5
-- [ ] "Enter a city instead" works from every cause except Restricted, whose primary does the same
+- [ ] "Search for a city instead" works from every cause except Restricted, whose primary does the same
 - [ ] No sentence, card shimmer or "a city" token visible on the failure screen
 - [ ] Reduce Motion shows the still art, no loops
 - [ ] Animation stops when leaving the screen or backgrounding; nothing animates endlessly once the screen is gone

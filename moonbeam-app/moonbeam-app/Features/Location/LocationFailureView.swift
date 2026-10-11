@@ -19,7 +19,7 @@ import SwiftUI
 struct LocationFailureView: View {
 
     let failure: LocationFailure
-    /// Enter a city instead, and restricted's Search for a city: the
+    /// Search for a city instead, and restricted's Search for a city: the
     /// search sheet, field focused.
     let onSearch: () -> Void
 
