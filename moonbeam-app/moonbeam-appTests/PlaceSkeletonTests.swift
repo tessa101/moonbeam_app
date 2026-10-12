@@ -168,6 +168,12 @@ struct PlaceSkeletonTests {
         #expect(viewModel.moonTable == nil)
     }
 
+    @Test("The saved-city failure skeleton does not offer the removed Try again action")
+    func failedSkeletonCopy() {
+        #expect(MoonCardSkeletonCopy.failedText == "\(LocationFailure.noFix.copy.headline). \(LocationFailure.noFix.copy.body)")
+        #expect(!MoonCardSkeletonCopy.failedText.contains("Try again"))
+    }
+
     @Test("§12.2 step 5: Location Off ends the replacement as a failure, not an endless Finding")
     func blockedReplacementShowsFailure() async {
         let location = FakeLocationService(authorizationState: .denied)

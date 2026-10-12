@@ -101,6 +101,10 @@ struct PlaceCardRegion: View {
 /// a shimmer sweeping across them. No text while finding, so the real card's
 /// text never ghosts through the cross-fade. A failure keeps the blocks still
 /// and says so in the header's place.
+enum MoonCardSkeletonCopy {
+    static let failedText = "\(LocationFailure.noFix.copy.headline). \(LocationFailure.noFix.copy.body)"
+}
+
 private struct MoonCardSkeleton: View {
 
     let viewModel: LocationViewModel
@@ -130,7 +134,6 @@ private struct MoonCardSkeleton: View {
     private static let directionBarWidth: CGFloat = 48
     private static let directionBarHeight: CGFloat = 10
 
-    static let failedText = "Couldn't find your location. Try again, or search for a city."
     private static let findingAccessibilityText = "Finding your location"
 
     // MARK: - Body
@@ -143,7 +146,7 @@ private struct MoonCardSkeleton: View {
                 skeleton
             }
             .accessibilityElement(children: .ignore)
-            .accessibilityLabel(placeholder == .failed ? Self.failedText : Self.findingAccessibilityText)
+            .accessibilityLabel(placeholder == .failed ? MoonCardSkeletonCopy.failedText : Self.findingAccessibilityText)
     }
 
     private var isFinding: Bool { placeholder == .finding }
@@ -185,7 +188,7 @@ private struct MoonCardSkeleton: View {
                     skeletonBar(width: Self.phaseBarWidth, height: Self.phaseBarHeight)
                 }
             } else {
-                Text(Self.failedText)
+                Text(MoonCardSkeletonCopy.failedText)
                     .font(Theme.Fonts.label)
                     .foregroundStyle(Theme.Colors.textSecondary)
                     .fixedSize(horizontal: false, vertical: true)
@@ -271,7 +274,7 @@ private extension View {
 /// The failure line when there was no card to size the skeleton against.
 private struct LocationFailureCard: View {
     var body: some View {
-        Text(MoonCardSkeleton.failedText)
+        Text(MoonCardSkeletonCopy.failedText)
             .font(Theme.Fonts.body)
             .foregroundStyle(Theme.Colors.textPrimary)
             .frame(maxWidth: .infinity, alignment: .leading)

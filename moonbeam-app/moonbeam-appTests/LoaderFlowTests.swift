@@ -161,18 +161,45 @@ struct LoaderFlowTests {
     }
 
     @Test("A launch failure screen and an explicit request's are the same screen", arguments: [
-        LocationAuthState.denied, .servicesOff, .restricted,
+        (LocationAuthState.denied, LocationFailure.permissionDenied),
+        (.servicesOff, .servicesOff),
+        (.restricted, .restricted),
+        (.authorized, .noFix),
     ])
-    func launchAndExplicitMatch(state: LocationAuthState) async {
-        let launch = Self.makeHarness(state)
+    func launchAndExplicitMatch(state: LocationAuthState, failure: LocationFailure) async {
+        let result: Result<Place, any Error> = failure == .noFix
+            ? .failure(LocationError.locationUnavailable)
+            : .success(Self.detected)
+        let launch = Self.makeHarness(state, placeResult: result)
         await launch.viewModel.start()
-        let explicit = Self.makeHarness(state, lastViewed: Place.marVista)
+        let explicit = Self.makeHarness(state, lastViewed: Place.marVista, placeResult: result)
         await explicit.viewModel.start()
         await explicit.viewModel.useMyLocation()
 
-        #expect(launch.viewModel.failureScreen != nil)
+        #expect(launch.viewModel.failureScreen == failure)
         #expect(explicit.viewModel.failureScreen == launch.viewModel.failureScreen)
+        #expect(explicit.viewModel.failureScreen?.copy == launch.viewModel.failureScreen?.copy)
         #expect(explicit.viewModel.locationOffDialog == nil)
+    }
+
+    @Test(
+        "The search sheet's Use my location reaches each blocked cause without a dialog",
+        arguments: [
+            (LocationAuthState.denied, LocationFailure.permissionDenied),
+            (.servicesOff, .servicesOff),
+            (.restricted, .restricted),
+        ]
+    )
+    func searchRowBlockedDestinations(state: LocationAuthState, failure: LocationFailure) async {
+        let harness = Self.makeHarness(state)
+        await harness.viewModel.start()
+
+        harness.viewModel.presentSearch()
+        await harness.viewModel.useMyLocation()
+
+        #expect(harness.viewModel.failureScreen == failure)
+        #expect(harness.viewModel.locationOffDialog == nil)
+        #expect(harness.location.currentPlaceCount == 0)
     }
 
     @Test(
