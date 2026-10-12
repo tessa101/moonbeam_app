@@ -16,6 +16,15 @@ nonisolated struct MoonPosition: Equatable {
     /// Degrees clockwise from true north (not magnetic).
     let azimuth: Double
 
+    /// Degrees above the geometric horizon for the moon's centre.
+    let altitude: Double
+
     /// True when the moon is above the horizon, using the same definition as rise/set.
     let isUp: Bool
+
+    init(azimuth: Double, altitude: Double = 0, isUp: Bool) {
+        self.azimuth = azimuth
+        self.altitude = altitude
+        self.isUp = isUp
+    }
 }

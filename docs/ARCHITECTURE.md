@@ -85,6 +85,7 @@ struct MoonDay: Equatable {
 
 struct MoonPosition: Equatable {    // compass "Moon" target (COMPASS.md §4)
     let azimuth: Double         // degrees from true north
+    let altitude: Double        // geometric degrees above the horizon
     let isUp: Bool              // latest rise after latest set, same search as the table
 }
 

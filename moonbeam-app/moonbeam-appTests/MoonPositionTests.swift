@@ -114,6 +114,15 @@ nonisolated struct MoonPositionTests {
         #expect(position.azimuth >= 0 && position.azimuth < 360)
     }
 
+    @Test("Live position carries the engine's geometric altitude")
+    func altitudeIsComputed() throws {
+        let oneAM = service.moonPosition(for: place, at: try localDate(hour: 1, minute: 0))
+        let midday = service.moonPosition(for: place, at: try localDate(hour: 12, minute: 0))
+
+        #expect(oneAM.altitude > 0)
+        #expect(midday.altitude < 0)
+    }
+
     // MARK: - High latitude
 
     /// High latitudes are out of scope for V1 but must not crash or hang.

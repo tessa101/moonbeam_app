@@ -32,8 +32,8 @@ nonisolated struct UpNow: Equatable {
     }
 
     enum State: Equatable {
-        /// "266° W", and the pass, when it was found.
-        case up(bearing: String, pass: Pass?)
+        /// "266° W · 23° up", and the pass, when it was found.
+        case up(bearing: String, altitude: String, pass: Pass?)
         /// "in 34 min" before today's rise.
         case notUpYet(countdown: String)
         case setForToday(nextRise: String?)
@@ -44,7 +44,7 @@ nonisolated struct UpNow: Equatable {
     /// "Up now", "Not up yet", or "Set for today".
     let title: String
 
-    /// "Moon up now, west, 266 degrees. Rose 10:06 PM, sets 1:28 PM."
+    /// "Moon up now, west, 266 degrees, 23 degrees above the horizon."
     let accessibilityLabel: String
 
     var isUp: Bool {
@@ -54,7 +54,7 @@ nonisolated struct UpNow: Equatable {
 
     var detail: String? {
         switch state {
-        case let .up(bearing, _): bearing
+        case let .up(bearing, altitude, _): bearing + Self.separator + altitude
         case let .notUpYet(countdown): countdown
         case let .setForToday(nextRise): nextRise
         }

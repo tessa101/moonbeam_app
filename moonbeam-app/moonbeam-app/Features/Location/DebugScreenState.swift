@@ -229,7 +229,7 @@ struct DebugScreenState: View {
                 set: MoonEvent(date: time(2, 13, 28), azimuth: setAzimuth),
                 phaseAngle: phase.phaseAngle,
                 illumination: phase.illumination,
-                position: MoonPosition(azimuth: moonAzimuth, isUp: isUp),
+                position: MoonPosition(azimuth: moonAzimuth, altitude: 23, isUp: isUp),
                 pass: MoonPass(
                     rise: MoonEvent(date: time(1, 22, 6), azimuth: 56),
                     set: MoonEvent(date: time(2, 13, 28), azimuth: setAzimuth),

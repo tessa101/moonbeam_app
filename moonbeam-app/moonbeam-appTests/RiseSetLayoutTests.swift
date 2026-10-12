@@ -15,7 +15,7 @@ nonisolated struct RiseSetLayoutTests {
     // MARK: - Fixtures
 
     private static let up = UpNow(
-        state: .up(bearing: "266° W", pass: nil),
+        state: .up(bearing: "266° W", altitude: "23° up", pass: nil),
         title: UpNowFormatter.upTitle,
         accessibilityLabel: "Moon up now, west, 266 degrees."
     )

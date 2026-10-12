@@ -551,14 +551,15 @@ final class CompassViewModel {
                 rebuilt.append(CompassTarget(kind: .moonset, azimuth: set.azimuth))
             }
         }
-        let moon = liveMoonTarget(at: moment)
+        let moonPosition = liveMoonPosition(at: moment)
+        let moon = moonPosition.map { CompassTarget(kind: .moon, azimuth: $0.azimuth) }
         if let moon {
             rebuilt.append(moon)
         }
         pass = passToDraw(isMoonUp: moon != nil, at: moment)
         nextRise = nil
         updateArc(moon: moon, at: moment)
-        updateUpNow(moon: moon, at: moment)
+        updateUpNow(position: moonPosition, at: moment)
         setTargets(rebuilt)
     }
 
@@ -569,7 +570,8 @@ final class CompassViewModel {
         let moment = now()
         let wasMoonUp = targets.contains { $0.kind == .moon }
         var refreshed = targets.filter { $0.kind != .moon }
-        let moon = liveMoonTarget(at: moment)
+        let moonPosition = liveMoonPosition(at: moment)
+        let moon = moonPosition.map { CompassTarget(kind: .moon, azimuth: $0.azimuth) }
         if let moon {
             refreshed.append(moon)
         }
@@ -577,16 +579,16 @@ final class CompassViewModel {
             pass = passToDraw(isMoonUp: moon != nil, at: moment)
         }
         updateArc(moon: moon, at: moment)
-        updateUpNow(moon: moon, at: moment)
+        updateUpNow(position: moonPosition, at: moment)
         setTargets(refreshed)
     }
 
     /// Only on today, and only while it's up (COMPASS.md §1, §3).
-    private func liveMoonTarget(at moment: Date) -> CompassTarget? {
+    private func liveMoonPosition(at moment: Date) -> MoonPosition? {
         guard visibility.showsCompass, context.isToday, let place = context.place else { return nil }
         let position = moonService.moonPosition(for: place, at: moment)
         guard position.isUp else { return nil }
-        return CompassTarget(kind: .moon, azimuth: position.azimuth)
+        return position
     }
 
     // MARK: - Arc (DESIGN-1.1.md §3.3a)
@@ -624,12 +626,18 @@ final class CompassViewModel {
     /// Moon up: its bearing and the pass behind the arc. Down: the next
     /// rise, looked up again only once it's a minute past (the moon may
     /// read down for a moment at its rise, like the pass lookup).
-    private func updateUpNow(moon: CompassTarget?, at moment: Date) {
+    private func updateUpNow(position: MoonPosition?, at moment: Date) {
         var newUpNow: UpNow?
         if visibility.showsCompass, context.isToday, let place = context.place {
-            if let moon {
+            if let position {
                 nextRise = nil
-                newUpNow = upNowFormatter.up(azimuth: moon.azimuth, pass: pass, at: moment, in: place.timeZone)
+                newUpNow = upNowFormatter.up(
+                    azimuth: position.azimuth,
+                    altitude: position.altitude,
+                    pass: pass,
+                    at: moment,
+                    in: place.timeZone
+                )
             } else {
                 if nextRise.map({ moment > $0.date.addingTimeInterval(Self.passLookupDelayAfterRise) }) ?? true {
                     nextRise = moonService.nextMoonrise(for: place, after: moment)

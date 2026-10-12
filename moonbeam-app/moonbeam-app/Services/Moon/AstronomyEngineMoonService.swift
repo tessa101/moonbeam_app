@@ -124,6 +124,7 @@ nonisolated struct AstronomyEngineMoonService: MoonService {
 
         return MoonPosition(
             azimuth: horizontal?.azimuth.wrappedIntoDegreeCircle ?? 0,
+            altitude: horizontal?.altitude ?? 0,
             isUp: isUp
         )
     }

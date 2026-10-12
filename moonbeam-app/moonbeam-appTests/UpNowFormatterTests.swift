@@ -49,15 +49,16 @@ nonisolated struct UpNowFormatterTests {
 
     @Test("Up: bearing, last rise and next set, and how far along")
     func upShowsBearingAndPass() throws {
-        let upNow = formatter.up(azimuth: 266, pass: try Self.pass(), at: try Self.now(), in: Self.losAngelesZone)
+        let upNow = formatter.up(azimuth: 266, altitude: 22.6, pass: try Self.pass(), at: try Self.now(), in: Self.losAngelesZone)
 
         #expect(upNow.title == "Up now")
         #expect(upNow.isUp)
-        guard case let .up(bearing, pass?) = upNow.state else {
+        guard case let .up(bearing, altitude, pass?) = upNow.state else {
             Issue.record("Expected the moon up with its pass")
             return
         }
         #expect(bearing == "266° W")
+        #expect(altitude == "23° up")
         #expect(pass.riseTime.string == "10:06\(Self.nbsp)PM")
         #expect(pass.setTime.string == "1:28\(Self.nbsp)PM")
         #expect(pass.riseContext == "last night")
@@ -65,29 +66,52 @@ nonisolated struct UpNowFormatterTests {
         #expect(abs(pass.progress - Self.designProgress) < Self.progressTolerance)
     }
 
-    @Test("Up: VoiceOver says the direction, degrees, rise and set")
+    @Test("Up: VoiceOver says the direction, bearing and altitude")
     func upAccessibilityLabel() throws {
-        let upNow = formatter.up(azimuth: 266, pass: try Self.pass(), at: try Self.now(), in: Self.losAngelesZone)
+        let upNow = formatter.up(azimuth: 266, altitude: 22.6, pass: try Self.pass(), at: try Self.now(), in: Self.losAngelesZone)
 
         #expect(upNow.accessibilityLabel
-            == "Moon up now, west, 266 degrees. Rose 10:06\(Self.nbsp)PM, sets 1:28\(Self.nbsp)PM.")
+            == "Moon up now, west, 266 degrees, 23 degrees above the horizon.")
     }
 
     @Test("Up with no pass found: bearing only")
     func upWithoutPass() throws {
-        let upNow = formatter.up(azimuth: 266, pass: nil, at: try Self.now(), in: Self.losAngelesZone)
+        let upNow = formatter.up(azimuth: 266, altitude: 22.6, pass: nil, at: try Self.now(), in: Self.losAngelesZone)
 
-        #expect(upNow.state == .up(bearing: "266° W", pass: nil))
-        #expect(upNow.accessibilityLabel == "Moon up now, west, 266 degrees.")
+        #expect(upNow.state == .up(bearing: "266° W", altitude: "23° up", pass: nil))
+        #expect(upNow.accessibilityLabel == "Moon up now, west, 266 degrees, 23 degrees above the horizon.")
+    }
+
+    @Test("Altitude rounds to whole degrees and never displays below 1° while up", arguments: [
+        (-0.4, "1° up"),
+        (0.4, "1° up"),
+        (1.5, "2° up"),
+        (22.4, "22° up"),
+        (22.6, "23° up"),
+    ])
+    func altitudeFormatting(raw: Double, shown: String) throws {
+        let upNow = formatter.up(
+            azimuth: 266,
+            altitude: raw,
+            pass: nil,
+            at: try Self.now(),
+            in: Self.losAngelesZone
+        )
+
+        guard case let .up(_, altitude, _) = upNow.state else {
+            Issue.record("Expected the moon up")
+            return
+        }
+        #expect(altitude == shown)
     }
 
     @Test("Progress stays within the bar outside the pass")
     func progressClamps() throws {
         let pass = try Self.pass()
-        let before = formatter.up(azimuth: 57, pass: pass, at: pass.rise.date - Self.minutes(5), in: Self.losAngelesZone)
-        let after = formatter.up(azimuth: 304, pass: pass, at: pass.set.date + Self.minutes(5), in: Self.losAngelesZone)
+        let before = formatter.up(azimuth: 57, altitude: 1, pass: pass, at: pass.rise.date - Self.minutes(5), in: Self.losAngelesZone)
+        let after = formatter.up(azimuth: 304, altitude: 1, pass: pass, at: pass.set.date + Self.minutes(5), in: Self.losAngelesZone)
 
-        guard case let .up(_, beforePass?) = before.state, case let .up(_, afterPass?) = after.state else {
+        guard case let .up(_, _, beforePass?) = before.state, case let .up(_, _, afterPass?) = after.state else {
             Issue.record("Expected the moon up with its pass")
             return
         }
@@ -172,15 +196,17 @@ nonisolated struct UpNowFormatterTests {
 
     // MARK: - The AX fallback's pill (COMPASS-1.1.md §9.2, §9.14)
 
-    @Test("Up: the pill reads \"Up now · 266° W\"")
+    @Test("Up: the pill includes bearing and altitude")
     func upPillText() throws {
-        let upNow = formatter.up(azimuth: 266, pass: try Self.pass(), at: try Self.now(), in: Self.losAngelesZone)
-        guard case let .up(bearing, _) = upNow.state else {
+        let upNow = formatter.up(azimuth: 266, altitude: 22.6, pass: try Self.pass(), at: try Self.now(), in: Self.losAngelesZone)
+        guard case let .up(bearing, altitude, _) = upNow.state else {
             Issue.record("Expected the moon up")
             return
         }
 
-        #expect(upNow.pillText == "Up now · 266° W")
+        #expect(bearing == "266° W")
+        #expect(altitude == "23° up")
+        #expect(upNow.pillText == "Up now · 266° W · 23° up")
     }
 
     @Test("Today down keeps the middle column", arguments: [34.0, 853.0])

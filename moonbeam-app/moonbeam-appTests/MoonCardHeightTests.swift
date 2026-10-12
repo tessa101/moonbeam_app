@@ -47,7 +47,7 @@ struct MoonCardHeightTests {
             set: MoonEvent(date: time(2, 13, 28), azimuth: 304),
             phaseAngle: 270,
             illumination: 0.53,
-            position: MoonPosition(azimuth: 266, isUp: isMoonUp),
+            position: MoonPosition(azimuth: 266, altitude: 23, isUp: isMoonUp),
             pass: MoonPass(
                 rise: MoonEvent(date: time(1, 22, 6), azimuth: 56),
                 set: MoonEvent(date: time(2, 13, 28), azimuth: 304),

@@ -459,7 +459,7 @@ struct MoonCard: View {
     }
 
     private var displayedRise: MoonTableViewModel.Column {
-        guard case let .up(_, pass?) = viewModel.compass.upNow?.state else { return table.rise }
+        guard case let .up(_, _, pass?) = viewModel.compass.upNow?.state else { return table.rise }
         return MoonTableViewModel.Column(
             title: "↑ Rose",
             detail: .time(
@@ -472,7 +472,7 @@ struct MoonCard: View {
     }
 
     private var displayedSet: MoonTableViewModel.Column {
-        guard case let .up(_, pass?) = viewModel.compass.upNow?.state else { return table.set }
+        guard case let .up(_, _, pass?) = viewModel.compass.upNow?.state else { return table.set }
         return MoonTableViewModel.Column(
             title: "↓ Sets",
             detail: .time(pass.setTime, timeZone: nil, direction: pass.setDirection),
@@ -1070,7 +1070,7 @@ private struct UpNowPreview: View {
             set: MoonEvent(date: time(2, 13, 28), azimuth: 304),
             phaseAngle: 270,
             illumination: 0.53,
-            position: MoonPosition(azimuth: 266, isUp: isMoonUp),
+            position: MoonPosition(azimuth: 266, altitude: 23, isUp: isMoonUp),
             pass: MoonPass(
                 rise: MoonEvent(date: time(1, 22, 6), azimuth: 56),
                 set: MoonEvent(date: time(2, 13, 28), azimuth: 304),

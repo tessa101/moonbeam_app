@@ -50,8 +50,8 @@ nonisolated struct RiseSetLayout: Equatable {
     ///   without the compass.
     init(upNow: UpNow?) {
         switch upNow?.state {
-        case let .up(bearing, _):
-            self.init(bearing: bearing, connector: .travelled, reservesTwinHeight: false)
+        case let .up(bearing, altitude, _):
+            self.init(bearing: bearing + UpNow.separator + altitude, connector: .travelled, reservesTwinHeight: false)
         case let .notUpYet(countdown):
             self.init(bearing: countdown, connector: .dim, reservesTwinHeight: false)
         case let .setForToday(nextRise):

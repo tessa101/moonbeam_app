@@ -221,7 +221,7 @@ private struct CompassPreview: View {
             let viewModel = CompassViewModel(
                 headingService: heading,
                 moonService: FakeMoonService(
-                    position: MoonPosition(azimuth: moonAzimuth, isUp: isMoonUp),
+                    position: MoonPosition(azimuth: moonAzimuth, altitude: 23, isUp: isMoonUp),
                     pass: Self.pass
                 )
             )

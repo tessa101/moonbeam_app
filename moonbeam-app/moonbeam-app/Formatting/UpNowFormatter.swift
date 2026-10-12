@@ -39,12 +39,15 @@ nonisolated struct UpNowFormatter {
 
     // MARK: - Moon up
 
-    /// "266° W", and the bar from the pass's rise to its set.
+    /// "266° W · 23° up", and the bar from the pass's rise to its set.
     ///
     /// - Parameters:
     ///   - azimuth: the moon's direction now, the dial's Moon target.
+    ///   - altitude: the moon centre's geometric altitude; display stays at
+    ///     least 1° while the rise/set rule says it is up.
     ///   - pass: the pass it's on; `nil` draws no bar.
-    func up(azimuth: Double, pass: MoonPass?, at now: Date, in timeZone: TimeZone) -> UpNow {
+    func up(azimuth: Double, altitude: Double, pass: MoonPass?, at now: Date, in timeZone: TimeZone) -> UpNow {
+        let shownAltitude = max(1, Int(altitude.rounded()))
         let barPass = pass.map { pass in
             UpNow.Pass(
                 progress: Self.progress(of: now, from: pass.rise.date, to: pass.set.date),
@@ -57,14 +60,14 @@ nonisolated struct UpNowFormatter {
                 setAccessibilityLabel: "Moonset, \(times.time(pass.set.date, in: timeZone))."
             )
         }
-        var label = "Moon up now, \(compass.spokenName(for: azimuth)), \(compass.spokenDegrees(for: azimuth))."
-        if let barPass {
-            label += " Rose \(barPass.riseTime.string), sets \(barPass.setTime.string)."
-        }
         return UpNow(
-            state: .up(bearing: compass.bearing(for: azimuth), pass: barPass),
+            state: .up(
+                bearing: compass.bearing(for: azimuth),
+                altitude: "\(shownAltitude)° up",
+                pass: barPass
+            ),
             title: Self.upTitle,
-            accessibilityLabel: label
+            accessibilityLabel: "Moon up now, \(compass.spokenName(for: azimuth)), \(compass.spokenDegrees(for: azimuth)), \(shownAltitude) degrees above the horizon."
         )
     }
 

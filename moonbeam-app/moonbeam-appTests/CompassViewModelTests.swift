@@ -103,7 +103,7 @@ struct CompassViewModelTests {
     }
 
     private static let moonDown = MoonPosition(azimuth: moonAzimuth, isUp: false)
-    private static let moonUp = MoonPosition(azimuth: moonAzimuth, isUp: true)
+    private static let moonUp = MoonPosition(azimuth: moonAzimuth, altitude: 23, isUp: true)
 
     /// A stand-in for `Task.sleep` that the test fires by hand, so the 30 s
     /// refresh can be ticked without waiting.
@@ -1210,16 +1210,17 @@ struct CompassViewModelTests {
         harness.sleeper.cancelAll()
     }
 
-    @Test("A tick follows the moon's azimuth")
-    func tickMovesMoon() async {
+    @Test("A tick follows the moon's bearing and altitude")
+    func tickMovesMoonPosition() async {
         let harness = Self.makeRunningHarness(position: Self.moonUp)
 
-        harness.moon.position = MoonPosition(azimuth: 150, isUp: true)
+        harness.moon.position = MoonPosition(azimuth: 150, altitude: 31.6, isUp: true)
         await waitUntil { harness.sleeper.pendingCount == 1 }
         harness.sleeper.fire()
         await waitUntil { harness.viewModel.targets.last?.azimuth == 150 }
 
         #expect(harness.viewModel.targets.last == CompassTarget(kind: .moon, azimuth: 150))
+        #expect(harness.viewModel.upNow?.detail == "150° SSE · 32° up")
         harness.sleeper.cancelAll()
     }
 
@@ -1413,11 +1414,12 @@ struct CompassViewModelTests {
 
         harness.viewModel.update(Self.context())
 
-        guard case let .up(bearing, pass?) = harness.viewModel.upNow?.state else {
+        guard case let .up(bearing, altitude, pass?) = harness.viewModel.upNow?.state else {
             Issue.record("Expected Up now with the moon up and its pass")
             return
         }
         #expect(bearing == "140° SE")
+        #expect(altitude == "23° up")
         // The fixtures' clock is halfway through the scripted pass.
         #expect(pass.progress == 0.5)
         #expect(harness.moon.requestedNextRiseDates.isEmpty)
@@ -1466,7 +1468,7 @@ struct CompassViewModelTests {
         await waitUntil { harness.sleeper.pendingCount == 1 }
         harness.sleeper.fire()
         await waitUntil { harness.viewModel.upNow?.isUp == true }
-        #expect(harness.viewModel.upNow?.state == .up(bearing: "140° SE", pass: nil))
+        #expect(harness.viewModel.upNow?.state == .up(bearing: "140° SE", altitude: "23° up", pass: nil))
 
         harness.moon.position = Self.moonDown
         await waitUntil { harness.sleeper.pendingCount == 1 }
