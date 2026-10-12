@@ -352,12 +352,12 @@ struct MoonCard: View {
         if let bearing = layout.bearing {
             ViewThatFits(in: .horizontal) {
                 ForEach(threeColumnRungs, id: \.self) { rung in
-                    threeColumns(bearing: bearing, rung: rung)
+                    threeColumns(detail: bearing, connector: layout.connector, rung: rung)
                 }
                 if MadlibScale.shrinks(at: dynamicTypeSize) {
-                    threeColumns(bearing: bearing, rung: .wrapping)
+                    threeColumns(detail: bearing, connector: layout.connector, rung: .wrapping)
                 } else {
-                    fallbackRow(layout, bearing: bearing)
+                    fallbackRow(layout)
                 }
             }
         } else {
@@ -379,15 +379,15 @@ struct MoonCard: View {
     /// ↑ Moonrise · Up now · ↓ Moonset (7a, 7b). The outer cells hug their
     /// content; the connector, or the gap, takes what's left, so Up now sits
     /// centred between them.
-    private func threeColumns(bearing: String, rung: Rung) -> some View {
+    private func threeColumns(detail: String, connector: RiseSetLayout.Connector, rung: Rung) -> some View {
         HStack(alignment: .top, spacing: 0) {
-            column(table.rise, isHighlighted: viewModel.highlightedCardCell == .moonrise, rung: rung)
+            column(displayedRise, isHighlighted: viewModel.highlightedCardCell == .moonrise, rung: rung)
                 .layoutPriority(1)
-            joint(.travelled, shows: rung.showsConnector)
-            upNowColumn(bearing: bearing, rung: rung)
+            joint(connector == .travelled ? .travelled : .dim, shows: rung.showsConnector)
+            middleColumn(detail: detail, rung: rung)
                 .layoutPriority(1)
-            joint(.remaining, shows: rung.showsConnector)
-            column(table.set, isHighlighted: viewModel.highlightedCardCell == .moonset, rung: rung)
+            joint(connector == .travelled ? .remaining : .dim, shows: rung.showsConnector)
+            column(displayedSet, isHighlighted: viewModel.highlightedCardCell == .moonset, rung: rung)
                 .layoutPriority(1)
         }
         .fixedSize(horizontal: false, vertical: true)
@@ -397,10 +397,10 @@ struct MoonCard: View {
     /// dotted line between them. Set is where it is with the moon up.
     private var joinedColumns: some View {
         HStack(alignment: .top, spacing: 0) {
-            column(table.rise, isHighlighted: viewModel.highlightedCardCell == .moonrise)
+            column(displayedRise, isHighlighted: viewModel.highlightedCardCell == .moonrise)
                 .layoutPriority(1)
             joint(.dim, shows: true)
-            column(table.set, isHighlighted: viewModel.highlightedCardCell == .moonset)
+            column(displayedSet, isHighlighted: viewModel.highlightedCardCell == .moonset)
                 .layoutPriority(1)
         }
         .fixedSize(horizontal: false, vertical: true)
@@ -411,9 +411,9 @@ struct MoonCard: View {
     /// 5.4.6c row, for when the cells don't fit hugging their ends.
     private func halfColumns(sortsForVoiceOver: Bool = false) -> some View {
         HStack(alignment: .top, spacing: Self.columnGap) {
-            column(table.rise, isHighlighted: viewModel.highlightedCardCell == .moonrise, fills: true)
+            column(displayedRise, isHighlighted: viewModel.highlightedCardCell == .moonrise, fills: true)
                 .accessibilitySortPriority(sortsForVoiceOver ? Self.firstSortPriority : 0)
-            column(table.set, isHighlighted: viewModel.highlightedCardCell == .moonset, fills: true)
+            column(displayedSet, isHighlighted: viewModel.highlightedCardCell == .moonset, fills: true)
         }
         .fixedSize(horizontal: false, vertical: true)
     }
@@ -421,11 +421,11 @@ struct MoonCard: View {
     /// When three columns don't fit (AX sizes, §9.14): rise and set as built
     /// with the 5.4.6a pill under them, still read Moonrise → Up now →
     /// Moonset.
-    private func fallbackRow(_ layout: RiseSetLayout, bearing: String) -> some View {
+    private func fallbackRow(_ layout: RiseSetLayout) -> some View {
         VStack(alignment: .leading, spacing: Theme.Metrics.cardSpacing) {
             halfColumns(sortsForVoiceOver: true)
             if layout.fallback.showsPillRow {
-                upNowPill(bearing: bearing)
+                middlePill()
                     .accessibilitySortPriority(Self.secondSortPriority)
             }
         }
@@ -456,6 +456,28 @@ struct MoonCard: View {
             }
             .padding(.top, CellStyle.paddingVertical)
             .accessibilityHidden(true)
+    }
+
+    private var displayedRise: MoonTableViewModel.Column {
+        guard case let .up(_, pass?) = viewModel.compass.upNow?.state else { return table.rise }
+        return MoonTableViewModel.Column(
+            title: "↑ Rose",
+            detail: .time(
+                pass.riseTime,
+                timeZone: nil,
+                direction: pass.riseContext ?? pass.riseDirection
+            ),
+            accessibilityLabel: pass.riseAccessibilityLabel
+        )
+    }
+
+    private var displayedSet: MoonTableViewModel.Column {
+        guard case let .up(_, pass?) = viewModel.compass.upNow?.state else { return table.set }
+        return MoonTableViewModel.Column(
+            title: "↓ Sets",
+            detail: .time(pass.setTime, timeZone: nil, direction: pass.setDirection),
+            accessibilityLabel: pass.setAccessibilityLabel
+        )
     }
 
     /// Top-aligned in both states, so the labels share a baseline, and as
@@ -519,9 +541,9 @@ struct MoonCard: View {
     /// The middle column (7a): the phase glyph in the label's slot, on the
     /// connector; "Up now" a step under the times; the live bearing. Locked
     /// on the Moon, outlined like Moonrise and Moonset (7b).
-    private func upNowColumn(bearing: String, rung: Rung) -> some View {
+    private func middleColumn(detail: String, rung: Rung) -> some View {
         let isHighlighted = viewModel.highlightedCardCell == .upNow
-        let title = Text(UpNowFormatter.upTitle)
+        let title = Text(viewModel.compass.upNow?.title ?? "")
             .font(Theme.Fonts.display(scale: Self.upNowTitleScale * rung.scale))
         return VStack(alignment: .center, spacing: Self.labelToTimeSpacing) {
             Text(verbatim: " ")
@@ -539,14 +561,29 @@ struct MoonCard: View {
                     Text(verbatim: Self.timeSlotSample)
                         .font(Theme.Fonts.display(scale: rung.scale))
                         .hidden()
-                    title
+                    ZStack {
+                        Text(UpNowFormatter.setForTodayTitle)
+                            .font(Theme.Fonts.display(scale: Self.upNowTitleScale * rung.scale))
+                            .lineLimit(rung.oneLine ? 1 : nil)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .hidden()
+                        title
+                            .lineLimit(rung.oneLine ? 1 : nil)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+                ZStack {
+                    Text("Back late tonight, 12:20 AM")
+                        .font(Theme.Fonts.detail)
+                        .lineLimit(rung.oneLine ? 1 : nil)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .hidden()
+                    Text(detail)
+                        .font(Theme.Fonts.detail)
                         .lineLimit(rung.oneLine ? 1 : nil)
                         .fixedSize(horizontal: false, vertical: true)
                 }
-                Text(bearing)
-                    .font(Theme.Fonts.detail)
-                    .foregroundStyle(Theme.Colors.accent)
-                    .lineLimit(1)
+                .foregroundStyle(Theme.Colors.accent)
             }
         }
         .foregroundStyle(Theme.Colors.accent)
@@ -657,17 +694,23 @@ struct MoonCard: View {
     /// Moon. Only while the moon is up, and only where the three columns
     /// don't fit; one element for VoiceOver, with the formatter's sentence
     /// (§3).
-    private func upNowPill(bearing: String) -> some View {
+    private func middlePill() -> some View {
         let isHighlighted = viewModel.highlightedCardCell == .upNow
         let shape = RoundedRectangle(cornerRadius: Self.pillHeight / 2)
         return HStack(spacing: Self.upNowItemSpacing) {
             Circle()
                 .fill(Theme.Colors.moonLit)
                 .frame(width: Self.upNowDotSize, height: Self.upNowDotSize)
-            Text(UpNow.pillText(bearing: bearing))
-                .font(Theme.Fonts.label)
-                .foregroundStyle(Theme.Colors.accent)
-                .fixedSize(horizontal: false, vertical: true)
+            ZStack(alignment: .leading) {
+                Text("Set for today · Back late tonight, 12:20 AM")
+                    .font(Theme.Fonts.label)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .hidden()
+                Text(viewModel.compass.upNow?.pillText ?? "")
+                    .font(Theme.Fonts.label)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .foregroundStyle(Theme.Colors.accent)
         }
         .padding(.horizontal, Self.pillPaddingHorizontal)
         .padding(.vertical, Self.pillPaddingVertical)

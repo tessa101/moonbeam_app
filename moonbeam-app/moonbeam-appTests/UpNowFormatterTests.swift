@@ -58,8 +58,10 @@ nonisolated struct UpNowFormatterTests {
             return
         }
         #expect(bearing == "266° W")
-        #expect(pass.riseTime == "10:06\(Self.nbsp)PM")
-        #expect(pass.setTime == "1:28\(Self.nbsp)PM")
+        #expect(pass.riseTime.string == "10:06\(Self.nbsp)PM")
+        #expect(pass.setTime.string == "1:28\(Self.nbsp)PM")
+        #expect(pass.riseContext == "last night")
+        #expect(pass.riseAccessibilityLabel == "Moonrise, last night, 10:06\(Self.nbsp)PM.")
         #expect(abs(pass.progress - Self.designProgress) < Self.progressTolerance)
     }
 
@@ -95,44 +97,45 @@ nonisolated struct UpNowFormatterTests {
 
     // MARK: - Moon down
 
-    @Test("Down, under an hour: a countdown")
+    @Test("Not up yet counts down under an hour")
     func downCountdown() throws {
         let now = try Self.now()
         let upNow = formatter.down(nextRise: now + Self.minutes(34), at: now, in: Self.losAngelesZone)
 
-        #expect(upNow.title == "Below the horizon")
+        #expect(upNow.title == "Not up yet")
         #expect(!upNow.isUp)
-        #expect(upNow.state == .down(nextRise: "Rises in 34 min"))
-        #expect(upNow.accessibilityLabel == "Moon below the horizon, rises in 34 minutes.")
+        #expect(upNow.state == .notUpYet(countdown: "in 34 min"))
+        #expect(upNow.accessibilityLabel == "Moon not up yet, rising in 34 minutes.")
     }
 
-    @Test("Down: the countdown rounds up and never says 0", arguments: [
-        (0.5, "Rises in 1 min", "rises in 1 minute"),
-        (33.2, "Rises in 34 min", "rises in 34 minutes"),
-        (59.0, "Rises in 59 min", "rises in 59 minutes"),
+    @Test("Countdown boundary formatting", arguments: [
+        (0.5, "Rising now", "rising now"),
+        (33.2, "in 34 min", "rising in 34 minutes"),
+        (59.0, "in 59 min", "rising in 59 minutes"),
+        (60.0, "in 1h 0m", "rising in 1 hour and 0 minutes"),
+        (200.0, "in 3h 20m", "rising in 3 hours and 20 minutes"),
     ])
     func countdownRounding(minutesAway: Double, shown: String, spoken: String) throws {
         let now = try Self.now()
         let upNow = formatter.down(nextRise: now + Self.minutes(minutesAway), at: now, in: Self.losAngelesZone)
 
-        #expect(upNow.state == .down(nextRise: shown))
-        #expect(upNow.accessibilityLabel == "Moon below the horizon, \(spoken).")
+        #expect(upNow.state == .notUpYet(countdown: shown))
+        #expect(upNow.accessibilityLabel == "Moon not up yet, \(spoken).")
     }
 
-    @Test("Down, an hour or more away today: the time")
+    @Test("Not up yet uses a countdown beyond an hour")
     func downLaterToday() throws {
         let upNow = formatter.down(nextRise: try Self.date(10, 2, 22, 6), at: try Self.now(), in: Self.losAngelesZone)
 
-        #expect(upNow.state == .down(nextRise: "Rises 10:06\(Self.nbsp)PM"))
-        #expect(upNow.accessibilityLabel == "Moon below the horizon, rises at 10:06\(Self.nbsp)PM.")
+        #expect(upNow.state == .notUpYet(countdown: "in 14h 13m"))
     }
 
-    @Test("Down, rising tomorrow: \"tomorrow\" and the time")
+    @Test("Set for today uses the confirmed late-tonight wording after midnight")
     func downTomorrow() throws {
         let upNow = formatter.down(nextRise: try Self.date(10, 3, 9, 12), at: try Self.now(), in: Self.losAngelesZone)
 
-        #expect(upNow.state == .down(nextRise: "Rises tomorrow 9:12\(Self.nbsp)AM"))
-        #expect(upNow.accessibilityLabel == "Moon below the horizon, rises tomorrow at 9:12\(Self.nbsp)AM.")
+        #expect(upNow.state == .setForToday(nextRise: "Back late tonight, 9:12\(Self.nbsp)AM"))
+        #expect(upNow.accessibilityLabel == "Moon set for today. Back late tonight at 9:12\(Self.nbsp)AM.")
     }
 
     /// Tomorrow can have no moonrise; the next is then just after midnight.
@@ -140,16 +143,15 @@ nonisolated struct UpNowFormatterTests {
     func downLaterInTheWeek() throws {
         let upNow = formatter.down(nextRise: try Self.date(10, 4, 0, 5), at: try Self.now(), in: Self.losAngelesZone)
 
-        #expect(upNow.state == .down(nextRise: "Rises Sun 12:05\(Self.nbsp)AM"))
-        #expect(upNow.accessibilityLabel == "Moon below the horizon, rises Sunday at 12:05\(Self.nbsp)AM.")
+        #expect(upNow.state == .setForToday(nextRise: "Back late tonight, 12:05\(Self.nbsp)AM"))
     }
 
     @Test("Down with no rise in reach: no right side")
     func downWithoutRise() throws {
         let upNow = formatter.down(nextRise: nil, at: try Self.now(), in: Self.losAngelesZone)
 
-        #expect(upNow.state == .down(nextRise: nil))
-        #expect(upNow.accessibilityLabel == "Moon below the horizon.")
+        #expect(upNow.state == .setForToday(nextRise: nil))
+        #expect(upNow.accessibilityLabel == "Moon set for today.")
     }
 
     /// "Today" is the place's: at 12:10 AM in Sydney it's still Oct 2 in
@@ -165,7 +167,7 @@ nonisolated struct UpNowFormatterTests {
 
         let upNow = formatter.down(nextRise: rise, at: now, in: sydneyZone)
 
-        #expect(upNow.state == .down(nextRise: "Rises 9:12\(Self.nbsp)AM"))
+        #expect(upNow.state == .notUpYet(countdown: "in 9h 2m"))
     }
 
     // MARK: - The AX fallback's pill (COMPASS-1.1.md §9.2, §9.14)
@@ -178,16 +180,16 @@ nonisolated struct UpNowFormatterTests {
             return
         }
 
-        #expect(UpNow.pillText(bearing: bearing) == "Up now · 266° W")
+        #expect(upNow.pillText == "Up now · 266° W")
     }
 
-    @Test("Down: no pill and no down line (5.4.7 dropped \"Rises …\")", arguments: [34.0, 853.0, 1519.0])
-    func downHasNoPill(minutesAway: Double) throws {
+    @Test("Today down keeps the middle column", arguments: [34.0, 853.0])
+    func downHasMiddleColumn(minutesAway: Double) throws {
         let now = try Self.now()
         let upNow = formatter.down(nextRise: now + Self.minutes(minutesAway), at: now, in: Self.losAngelesZone)
         let layout = RiseSetLayout(upNow: upNow)
 
-        #expect(layout.cells == [.moonrise, .moonset])
-        #expect(!layout.fallback.showsPillRow)
+        #expect(layout.cells == [.moonrise, .upNow, .moonset])
+        #expect(layout.fallback.showsPillRow)
     }
 }

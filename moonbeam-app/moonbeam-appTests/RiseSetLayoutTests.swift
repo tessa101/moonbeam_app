@@ -21,9 +21,9 @@ nonisolated struct RiseSetLayoutTests {
     )
 
     private static let down = UpNow(
-        state: .down(nextRise: "Rises in 34 min"),
-        title: UpNowFormatter.downTitle,
-        accessibilityLabel: "Moon below the horizon, rises in 34 minutes."
+        state: .notUpYet(countdown: "in 34 min"),
+        title: UpNowFormatter.notUpYetTitle,
+        accessibilityLabel: "Moon not up yet, rising in 34 minutes."
     )
 
     // MARK: - Cells
@@ -37,14 +37,14 @@ nonisolated struct RiseSetLayoutTests {
         #expect(layout.connector == .travelled)
     }
 
-    @Test("Moon down: two cells, the dim line, no down line")
-    func downTwoCells() {
+    @Test("Moon down today: three cells with the dim line")
+    func downThreeCells() {
         let layout = RiseSetLayout(upNow: Self.down)
 
-        #expect(layout.cells == [.moonrise, .moonset])
-        #expect(layout.bearing == nil)
+        #expect(layout.cells == [.moonrise, .upNow, .moonset])
+        #expect(layout.bearing == "in 34 min")
         #expect(layout.connector == .dim)
-        #expect(!layout.fallback.showsPillRow)
+        #expect(layout.fallback.showsPillRow)
     }
 
     @Test("Other date (no Up now): two cells, nothing reserved")
@@ -58,17 +58,14 @@ nonisolated struct RiseSetLayoutTests {
 
     // MARK: - Equal height
 
-    @Test("Up and down each reserve the other's row")
-    func twinsReserveEachOther() {
+    @Test("All today's states use the same three-column structure")
+    func todayStatesUseThreeColumns() {
         let up = RiseSetLayout(upNow: Self.up)
         let down = RiseSetLayout(upNow: Self.down)
 
-        #expect(up.twin?.cells == [.moonrise, .moonset])
-        #expect(down.twin?.cells == [.moonrise, .upNow, .moonset])
-        #expect(down.twin?.bearing == RiseSetLayout.placeholderBearing)
-        // A twin doesn't reserve another twin.
-        #expect(up.twin?.twin == nil)
-        #expect(down.twin?.twin == nil)
+        #expect(up.cells == down.cells)
+        #expect(up.twin == nil)
+        #expect(down.twin == nil)
     }
 
     // MARK: - AX fallback

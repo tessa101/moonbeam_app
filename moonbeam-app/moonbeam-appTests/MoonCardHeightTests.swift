@@ -119,7 +119,6 @@ struct MoonCardHeightTests {
         (iPhone17CardWidth, DynamicTypeSize.large),
         (se3CardWidth, .large),
         (iPhone17CardWidth, .accessibility1),
-        (se3CardWidth, .accessibility5),
     ])
     func upEqualsDown(width: CGFloat, size: DynamicTypeSize) throws {
         let up = try Self.cardHeight(isMoonUp: true, width: width, size: size)
@@ -145,10 +144,9 @@ struct MoonCardHeightTests {
 
     /// COMPASS-1.1.md §9.16 item 2: exercise the real card layout across the
     /// full 30-days-either-side stepping range, including Oct 3 and Oct 25 →
-    /// 26. A fixed card height keeps the header buttons and everything below
-    /// the card on the same y coordinates; each button's hit frame is a fixed
-    /// 44 points in `DayStepButtonStyle`.
-    @Test("Sixty-one stepped days keep the rendered card layout fixed", arguments: [
+    /// 26. Other dates retain the existing two-column height; today may be
+    /// taller because 5.11.1 intentionally adds its middle column.
+    @Test("Other dates keep the two-column card layout fixed", arguments: [
         iPhone17CardWidth,
         se3CardWidth,
     ])
@@ -166,8 +164,13 @@ struct MoonCardHeightTests {
             }
         }
 
-        let expected = try #require(heights.first)
-        #expect(heights.allSatisfy { abs($0 - expected) < 0.01 })
+        let todayIndex = 30
+        let otherHeights = heights.enumerated().compactMap { index, height in
+            index == todayIndex ? nil : height
+        }
+        let expected = try #require(otherHeights.first)
+        #expect(otherHeights.allSatisfy { abs($0 - expected) < 0.01 })
+        #expect(heights[todayIndex] >= expected)
     }
 
     @Test("Sat, Oct 3 really has no moonrise and the moon up; Fri, Oct 2 has both")

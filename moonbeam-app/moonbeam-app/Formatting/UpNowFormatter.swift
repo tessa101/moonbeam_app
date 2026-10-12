@@ -19,27 +19,21 @@ nonisolated struct UpNowFormatter {
     // MARK: - Copy
 
     static let upTitle = "Up now"
-    static let downTitle = "Below the horizon"
+    static let notUpYetTitle = "Not up yet"
+    static let setForTodayTitle = "Set for today"
+    static let risingNowText = "Rising now"
 
     // MARK: - Constants
 
-    /// Under this many minutes away, the next rise is a countdown ("Rises
-    /// in 34 min"); from here on it's a time.
-    static let countdownLimitMinutes = 60
-
     private static let secondsPerMinute: TimeInterval = 60
-    private static let daysToTomorrow = 1
 
     // MARK: - Configuration
-
-    let locale: Locale
 
     private let times: MoonTableFormatter
     private let compass = CompassFormatter()
 
     /// - Parameter locale: injectable so tests can pin `en_US`.
     init(locale: Locale = .autoupdatingCurrent) {
-        self.locale = locale
         times = MoonTableFormatter(locale: locale)
     }
 
@@ -54,13 +48,18 @@ nonisolated struct UpNowFormatter {
         let barPass = pass.map { pass in
             UpNow.Pass(
                 progress: Self.progress(of: now, from: pass.rise.date, to: pass.set.date),
-                riseTime: times.time(pass.rise.date, in: timeZone),
-                setTime: times.time(pass.set.date, in: timeZone)
+                riseTime: times.timeText(pass.rise.date, in: timeZone),
+                setTime: times.timeText(pass.set.date, in: timeZone),
+                riseContext: Self.isPreviousDay(pass.rise.date, relativeTo: now, in: timeZone) ? "last night" : nil,
+                riseDirection: compass.bearing(for: pass.rise.azimuth),
+                setDirection: compass.bearing(for: pass.set.azimuth),
+                riseAccessibilityLabel: Self.riseAccessibilityLabel(pass.rise.date, relativeTo: now, times: times, in: timeZone),
+                setAccessibilityLabel: "Moonset, \(times.time(pass.set.date, in: timeZone))."
             )
         }
         var label = "Moon up now, \(compass.spokenName(for: azimuth)), \(compass.spokenDegrees(for: azimuth))."
         if let barPass {
-            label += " Rose \(barPass.riseTime), sets \(barPass.setTime)."
+            label += " Rose \(barPass.riseTime.string), sets \(barPass.setTime.string)."
         }
         return UpNow(
             state: .up(bearing: compass.bearing(for: azimuth), pass: barPass),
@@ -71,59 +70,69 @@ nonisolated struct UpNowFormatter {
 
     // MARK: - Moon down
 
-    /// "Rises in 34 min", "Rises 10:06 PM", "Rises tomorrow 9:12 AM", or
-    /// further out (a day with no moonrise in between) "Rises Sat 12:05 AM".
+    /// A minute-updated countdown before today's rise, or the confirmed
+    /// late-tonight return wording after today's set.
     ///
     /// - Parameter nextRise: the next moonrise after `now`; `nil` leaves the
     ///   right side empty.
     func down(nextRise: Date?, at now: Date, in timeZone: TimeZone) -> UpNow {
         guard let nextRise else {
             return UpNow(
-                state: .down(nextRise: nil),
-                title: Self.downTitle,
-                accessibilityLabel: "Moon below the horizon."
+                state: .setForToday(nextRise: nil),
+                title: Self.setForTodayTitle,
+                accessibilityLabel: "Moon set for today."
             )
         }
-        let (shown, spoken) = riseText(nextRise, at: now, in: timeZone)
-        return UpNow(
-            state: .down(nextRise: shown),
-            title: Self.downTitle,
-            accessibilityLabel: "Moon below the horizon, \(spoken)."
-        )
-    }
-
-    /// The shown and spoken forms of the next rise.
-    private func riseText(_ rise: Date, at now: Date, in timeZone: TimeZone) -> (shown: String, spoken: String) {
-        let minutes = Self.minutesUntil(rise, from: now)
-        if minutes < Self.countdownLimitMinutes {
-            let unit = minutes == 1 ? "minute" : "minutes"
-            return ("Rises in \(minutes) min", "rises in \(minutes) \(unit)")
-        }
-
-        let time = times.time(rise, in: timeZone)
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = timeZone
-        if calendar.isDate(rise, inSameDayAs: now) {
-            // COMPASS-1.1.md §9.2: no "at" on screen; VoiceOver keeps it.
-            return ("Rises \(time)", "rises at \(time)")
+        if calendar.isDate(nextRise, inSameDayAs: now) {
+            let countdown = Self.countdown(until: nextRise, from: now)
+            return UpNow(
+                state: .notUpYet(countdown: countdown.shown),
+                title: Self.notUpYetTitle,
+                accessibilityLabel: "Moon not up yet, \(countdown.spoken)."
+            )
         }
-        if let tomorrow = calendar.date(byAdding: .day, value: Self.daysToTomorrow, to: now),
-           calendar.isDate(rise, inSameDayAs: tomorrow) {
-            return ("Rises tomorrow \(time)", "rises tomorrow at \(time)")
-        }
-        let weekday = Date.FormatStyle(locale: locale, timeZone: timeZone)
-        let short = rise.formatted(weekday.weekday(.abbreviated))
-        let long = rise.formatted(weekday.weekday(.wide))
-        return ("Rises \(short) \(time)", "rises \(long) at \(time)")
+        let time = times.time(nextRise, in: timeZone)
+        let shown = "Back late tonight, \(time)"
+        return UpNow(
+            state: .setForToday(nextRise: shown),
+            title: Self.setForTodayTitle,
+            accessibilityLabel: "Moon set for today. Back late tonight at \(time)."
+        )
     }
 
     // MARK: - Helpers
 
     /// Whole minutes to go, rounded up and never below 1, so the countdown
     /// never says "0 min" while the moon is still down.
-    private static func minutesUntil(_ date: Date, from now: Date) -> Int {
-        let minutes = (date.timeIntervalSince(now) / secondsPerMinute).rounded(.up)
-        return max(1, Int(minutes))
+    private static func countdown(until date: Date, from now: Date) -> (shown: String, spoken: String) {
+        let interval = max(0, date.timeIntervalSince(now))
+        guard interval >= secondsPerMinute else { return (risingNowText, "rising now") }
+        let minutes = Int((interval / secondsPerMinute).rounded(.up))
+        guard minutes >= 60 else { return ("in \(minutes) min", "rising in \(minutes) minutes") }
+        let hours = minutes / 60
+        let remainder = minutes % 60
+        let hourWord = hours == 1 ? "hour" : "hours"
+        let minuteWord = remainder == 1 ? "minute" : "minutes"
+        return ("in \(hours)h \(remainder)m", "rising in \(hours) \(hourWord) and \(remainder) \(minuteWord)")
+    }
+
+    private static func isPreviousDay(_ date: Date, relativeTo now: Date, in timeZone: TimeZone) -> Bool {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = timeZone
+        guard let yesterday = calendar.date(byAdding: .day, value: -1, to: now) else { return false }
+        return calendar.isDate(date, inSameDayAs: yesterday)
+    }
+
+    private static func riseAccessibilityLabel(
+        _ date: Date,
+        relativeTo now: Date,
+        times: MoonTableFormatter,
+        in timeZone: TimeZone
+    ) -> String {
+        let context = isPreviousDay(date, relativeTo: now, in: timeZone) ? "last night, " : ""
+        return "Moonrise, \(context)\(times.time(date, in: timeZone))."
     }
 
     /// Where `now` sits from `start` to `end`, clamped to `0...1`.

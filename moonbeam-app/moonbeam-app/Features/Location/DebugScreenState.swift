@@ -21,7 +21,7 @@ import SwiftUI
 struct DebugScreenState: View {
 
     enum Kind: String, CaseIterable {
-        case moonUp, lockedOnMoon, lockedOnRise, lockedOnSet, moonDown, otherDate
+        case moonUp, lockedOnMoon, lockedOnRise, lockedOnSet, moonDown, moonSetForToday, otherDate
         case preciseOff, lowAccuracy, aha, nearby, locationOff, far, noMoonrise
         /// "Waning Crescent · 29% lit": the widest phase line, moon up.
         case longPhaseName
@@ -164,7 +164,13 @@ struct DebugScreenState: View {
                 isCurrentLocation: true
             )
             self.here = here
-            let now = state == .noMoonrise ? Self.time(3, 7, 53) : Self.time(2, 7, 53)
+            let now = if state == .noMoonrise {
+                Self.time(3, 7, 53)
+            } else if state == .moonSetForToday {
+                Self.time(2, 19, 0)
+            } else {
+                Self.time(2, 7, 53)
+            }
             let authState: LocationAuthState = switch state {
             case .locationOff, .messageDenied, .locationFailedDenied: .denied
             case .messageFirstAsk: .notDetermined
@@ -192,7 +198,12 @@ struct DebugScreenState: View {
             let moonService: any MoonService = if state == .noMoonrise {
                 AstronomyEngineMoonService()
             } else {
-                Self.fakeMoon(isUp: state != .moonDown, longPhaseName: state == .longPhaseName, now: now)
+                Self.fakeMoon(
+                    isUp: state != .moonDown && state != .moonSetForToday,
+                    setForToday: state == .moonSetForToday,
+                    longPhaseName: state == .longPhaseName,
+                    now: now
+                )
             }
             viewModel = LocationViewModel(
                 locationService: location,
@@ -211,10 +222,10 @@ struct DebugScreenState: View {
         private static let lastQuarter = (phaseAngle: 270.0, illumination: 0.53)
         private static let waningCrescent = (phaseAngle: 300.0, illumination: 0.29)
 
-        private static func fakeMoon(isUp: Bool, longPhaseName: Bool, now: Date) -> FakeMoonService {
+        private static func fakeMoon(isUp: Bool, setForToday: Bool, longPhaseName: Bool, now: Date) -> FakeMoonService {
             let phase = longPhaseName ? waningCrescent : lastQuarter
             let moon = FakeMoonService(
-                rise: MoonEvent(date: time(2, 23, 10), azimuth: riseAzimuth),
+                rise: MoonEvent(date: setForToday ? time(2, 0, 20) : time(2, 23, 10), azimuth: riseAzimuth),
                 set: MoonEvent(date: time(2, 13, 28), azimuth: setAzimuth),
                 phaseAngle: phase.phaseAngle,
                 illumination: phase.illumination,
@@ -225,7 +236,10 @@ struct DebugScreenState: View {
                     path: [56, 180, setAzimuth]
                 )
             )
-            moon.nextRise = MoonEvent(date: now.addingTimeInterval(minutesToRise * secondsPerMinute), azimuth: riseAzimuth)
+            moon.nextRise = MoonEvent(
+                date: setForToday ? time(3, 0, 20) : now.addingTimeInterval(minutesToRise * secondsPerMinute),
+                azimuth: riseAzimuth
+            )
             return moon
         }
 
@@ -321,7 +335,7 @@ struct DebugScreenState: View {
             case .lockedOnMoon: HeadingReading(trueHeading: moonAzimuth + lockOffset, accuracy: goodAccuracy)
             case .lockedOnRise: HeadingReading(trueHeading: riseAzimuth + lockOffset, accuracy: goodAccuracy)
             case .lockedOnSet: HeadingReading(trueHeading: setAzimuth + lockOffset, accuracy: goodAccuracy)
-            case .moonDown: HeadingReading(trueHeading: moonDownHeading, accuracy: goodAccuracy)
+            case .moonDown, .moonSetForToday: HeadingReading(trueHeading: moonDownHeading, accuracy: goodAccuracy)
             case .preciseOff, .lowAccuracy: HeadingReading(trueHeading: unlockedHeading, accuracy: poorAccuracy)
             default: HeadingReading(trueHeading: unlockedHeading, accuracy: goodAccuracy)
             }
@@ -336,7 +350,8 @@ struct DebugScreenState: View {
 #Preview("3 Locked on rise") { DebugScreenState(.lockedOnRise) }
 #Preview("4 Locked on set") { DebugScreenState(.lockedOnSet) }
 #Preview("5 Moon down") { DebugScreenState(.moonDown) }
-#Preview("6 Other date") { DebugScreenState(.otherDate) }
+#Preview("6 Set for today") { DebugScreenState(.moonSetForToday) }
+#Preview("7 Other date") { DebugScreenState(.otherDate) }
 #Preview("7 Precise off") { DebugScreenState(.preciseOff) }
 #Preview("8 Low accuracy") { DebugScreenState(.lowAccuracy) }
 #Preview("9 Aha") { DebugScreenState(.aha) }

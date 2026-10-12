@@ -1430,7 +1430,7 @@ struct CompassViewModelTests {
 
         harness.viewModel.update(Self.context())
 
-        #expect(harness.viewModel.upNow?.state == .down(nextRise: "Rises in 34 min"))
+        #expect(harness.viewModel.upNow?.state == .notUpYet(countdown: "in 34 min"))
         #expect(harness.moon.requestedNextRiseDates == [Self.referenceDate])
     }
 
@@ -1472,7 +1472,7 @@ struct CompassViewModelTests {
         await waitUntil { harness.sleeper.pendingCount == 1 }
         harness.sleeper.fire()
         await waitUntil { harness.viewModel.upNow?.isUp == false }
-        #expect(harness.viewModel.upNow?.state == .down(nextRise: "Rises in 34 min"))
+        #expect(harness.viewModel.upNow?.state == .notUpYet(countdown: "in 34 min"))
 
         harness.sleeper.cancelAll()
     }

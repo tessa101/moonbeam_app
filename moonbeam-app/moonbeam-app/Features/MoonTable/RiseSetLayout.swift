@@ -8,11 +8,10 @@ import Foundation
 /// The moon card's rise / set row (COMPASS-1.1.md §9.14): which cells it
 /// shows, in reading order, and how they're joined.
 ///
-/// Moon up (today, with the compass): three columns, ↑ Moonrise · Up now ·
-/// ↓ Moonset, the glyph on a line that's solid from rise to now and dotted
-/// from now to set, like the dial's arc. Moon down, or another date: rise
-/// and set joined by one dim dotted line. Where the three columns don't fit
-/// (AX sizes), `fallback`: rise and set, with the 5.4.6a pill row under them.
+/// Today always uses three columns: rise, the current moon state, and set.
+/// The connector shows travelled progress while up and stays dim while down.
+/// Other dates retain the two-column rise/set row. Where three columns don't
+/// fit (AX sizes), `fallback` keeps rise and set with a state pill underneath.
 ///
 /// Kept out of the view so the choice is testable; the view only lays it out.
 ///
@@ -27,7 +26,7 @@ nonisolated struct RiseSetLayout: Equatable {
     }
 
     /// When the three columns don't fit: rise and set as built, no
-    /// connector, and Up now as the pill row under them.
+    /// connector, and today's state as the pill row under them.
     struct Fallback: Equatable {
         let cells: [MoonCardCell]
         let showsPillRow: Bool
@@ -36,7 +35,7 @@ nonisolated struct RiseSetLayout: Equatable {
     /// The row's cells, left to right, which is also VoiceOver's order.
     let cells: [MoonCardCell]
     let connector: Connector
-    /// "266° W" under "Up now"; `nil` with no middle column.
+    /// The middle-column detail; `nil` only on another date.
     let bearing: String?
     /// Today with the compass, the row keeps room for the other state
     /// (`twin`), so the card's height doesn't change when the moon rises
@@ -52,23 +51,25 @@ nonisolated struct RiseSetLayout: Equatable {
     init(upNow: UpNow?) {
         switch upNow?.state {
         case let .up(bearing, _):
-            self.init(bearing: bearing, reservesTwinHeight: true)
-        case .down:
-            self.init(bearing: nil, reservesTwinHeight: true)
+            self.init(bearing: bearing, connector: .travelled, reservesTwinHeight: false)
+        case let .notUpYet(countdown):
+            self.init(bearing: countdown, connector: .dim, reservesTwinHeight: false)
+        case let .setForToday(nextRise):
+            self.init(bearing: nextRise ?? "", connector: .dim, reservesTwinHeight: false)
         case nil:
-            self.init(bearing: nil, reservesTwinHeight: false)
+            self.init(bearing: nil, connector: .dim, reservesTwinHeight: false)
         }
     }
 
-    private init(bearing: String?, reservesTwinHeight: Bool) {
+    private init(bearing: String?, connector: Connector, reservesTwinHeight: Bool) {
         self.bearing = bearing
         self.reservesTwinHeight = reservesTwinHeight
         if bearing != nil {
             cells = [.moonrise, .upNow, .moonset]
-            connector = .travelled
+            self.connector = connector
         } else {
             cells = [.moonrise, .moonset]
-            connector = .dim
+            self.connector = connector
         }
     }
 
@@ -77,8 +78,8 @@ nonisolated struct RiseSetLayout: Equatable {
     var twin: RiseSetLayout? {
         guard reservesTwinHeight else { return nil }
         return bearing == nil
-            ? RiseSetLayout(bearing: Self.placeholderBearing, reservesTwinHeight: false)
-            : RiseSetLayout(bearing: nil, reservesTwinHeight: false)
+            ? RiseSetLayout(bearing: Self.placeholderBearing, connector: .travelled, reservesTwinHeight: false)
+            : RiseSetLayout(bearing: nil, connector: .dim, reservesTwinHeight: false)
     }
 
     var fallback: Fallback {

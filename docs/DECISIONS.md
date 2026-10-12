@@ -76,6 +76,7 @@
 - **Date change (Tessa):** no load-in; the card's values cross-fade quickly in place, opacity only (LOADER.md §12.1).
 - **Full / new lines (proposed):** on the day of the exact phase only; voice copy stays draft.
 - **Morning rise (Tessa, option A):** while the moon is up today, the rise column shows this pass's rise (`Rose 10:06 PM` / `last night`), not tonight's calendar rise (MOON-STATE.md §1.1). Considered: B, calendar times without the solid line; C, leave it.
+- **As built (5.11.1, 2026-10-12):** all three today states use the existing three-column card; other dates remain two-column. The down-state choice is based on the place-local calendar day of the next rise, while the up-state choice continues to use the same `MoonPosition.isUp` result as the compass. The post-set copy is exactly **“Back late tonight, [time]”** for the next rise after midnight; do not substitute **“Back tomorrow.”** The pre-rise countdown rounds remaining time up to the minute and refreshes on the existing compass tick. While up, rise/set are the active pass rather than the calendar day pair.
 
 ### 2026-10-08 · One main-screen load-in, replayed on a place change; card skeleton; compass turns as one piece (LOADER.md §12)
 - **Decision (Tessa, after device videos of build 8):** `ContentLoadIn` is the only main-screen entrance and replays
