@@ -1,6 +1,6 @@
 # 5.10a telescope redraw — 2026-10-12
 
-Chunk 1/3 done (committed, not pushed): five `permissionOff_*` layers from `design/1.7-telescope-redraw/A-lit-left/`
+Chunks 1–3 done (committed, not pushed). Chunk 1: five `permissionOff_*` layers from `design/1.7-telescope-redraw/A-lit-left/`
 imported byte-identical (old four replaced, `permissionOff_lensGlint` added), all vector, no fallback needed.
 `IllustrationSpec.permissionOff`: lens glint layer + `Part.lensGlint` (opacity track, rides the tube), tube/glint
 pivot (204, 330), moon (190, 203), star (326, 150). App target builds; preview renders the new art.
@@ -11,7 +11,11 @@ stop sampling (10 offsets), eased midpoint + next loop, glint-rides-tube, and Re
 tube at rest, star hidden). build-for-testing succeeded; expected values checked against the live spec with
 a code snippet. Tests not run here (Terminal command below).
 
-Next: chunk 3 (screenshots of locationFailed.denied + motion frames).
+Chunk 3/3 done: screenshots of locationFailed.denied (iPhone 18 Pro previews default/AX1/AX5, SE 3 simulator
+via -screenState) and fixed-time motion frames (rest, hold, wobble at max tilt, star peak) in
+`.agent-reports/5.10a-telescope/`, with findings.md. Heights match the other causes; star clears crescent and tube.
+
+Next: Tessa runs the tests below, then a phone check of the telescope motion.
 
 Test (Tessa, Terminal):
   xcodebuild test -project moonbeam-app/moonbeam-app.xcodeproj -scheme moonbeam-app \

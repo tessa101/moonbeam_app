@@ -429,3 +429,7 @@
 16:16 5.10a telescope chunk 2/3 starting: update IllustrationSpecTests/IllustrationMotionTests, add glint + Reduce Motion tests
 16:17 chunk 2: tests edited; build-for-testing
 16:18 chunk 2: build-for-testing passed; committing 2/3
+16:18 committed ef0090b 5.10a telescope 2/3 (tests); chunk 3 screenshots starting
+16:21 chunk 3: iPhone default/AX1/AX5 via previews done; starting SE3 workspace session for -screenState locationFailed.denied
+16:23 chunk 3: captures + findings written; build-for-testing
+16:24 chunk 3: build-for-testing passed; committing 3/3

@@ -1,5 +1,7 @@
 # Status & Handoff
 
+_Step 5.10a telescope redraw, 2026-10-12 (`docs/STEP-5.10a-TELESCOPE-REDRAW.md`, Option A): permission-off art replaced with the D2-matched redraw, moon lit left for this illustration only, lens glint kept (DECISIONS.md). 1/3 `6bbdd9a`: five vector layers imported cleanly (no PDF/PNG fallback); spec pivots tube/glint (204, 330), moon (190, 203), star (326, 150); glint is an opacity-only part riding the tube. 2/3 `ef0090b`: spec/motion tests updated plus glint sampling and Reduce Motion still; build-for-testing succeeded; tests not run by the agent (Tessa to run in Terminal). 3/3: screenshots of `locationFailed.denied` (iPhone 18 Pro previews at default/AX1/AX5, SE 3 simulator with `-screenState`) and five fixed-time motion frames in `.agent-reports/5.10a-telescope/`. Art frame, headline and button positions match services off; AX4+ hides the art for every cause, as before; star clears the crescent and tube at max tilt. Phone check pending._
+
 _Step 5.10a.3, 2026-10-12: compass entrance on every reload (LOADER.md §12.11). Root cause of the launch bug: the low-accuracy fade animated each mark's position in a straight line through the centre as the first heading arrived. Now one entrance (`CompassEntrance`) for every sensor start and every place/day change: held out ≤ 0.5 s for the first heading, then in ~10° off and settling over 0.5 s as one piece, readout held until settled; no heading in time → no-heading look, short-way turn on arrival; Reduce Motion fades in aligned. §12.4.1: readout fades out for the lock pill; Now pulse runs until Now is locked; readout 14 pt closer (not half the gap; DECISIONS.md). Build-for-testing succeeded in Xcode; tests not run by the agent (no `xcodebuild test`/simctl): Tessa to run in Terminal. Phone check pending._
 
 _5.5 direction agreed, 2026-10-12: keep rise/set side by side while complete content fits; today's status
@@ -174,7 +176,7 @@ Rule: finish what changes the card before the AX reflow, or the reflow is done t
 8. [ ] **Design review + pre-1.0:** motion pass, voice A (always-on answer line), light mode, onboarding copy, Round 2
    screens, VoiceOver order at AX2, final name + persona; remove Show onboarding / Forget saved place / `BuildChannel`;
    replace `appStoreReceiptURL`; USNO rows (item 3 below).
-8a. [ ] **Design track (Tessa, 2026-10-12, not agent work until designed):** redo the location-settings bottom sheets (layout hard to parse); telescope illustration needs more work; 5.12 exploration.
+8a. [ ] **Design track (Tessa, 2026-10-12, not agent work until designed):** redo the location-settings bottom sheets (layout hard to parse); telescope illustration redrawn 2026-10-12 (5.10a telescope redraw); 5.12 exploration.
 9. Later: Daily Moon Report widget / push; sun / tide sister app.
 - OK for now: sentence tokens have no pressed state.
 
