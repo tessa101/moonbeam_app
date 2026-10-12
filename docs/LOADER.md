@@ -156,7 +156,7 @@ location work.
 
 ## 10. Location flow: messages, recovery and "Aha" (Tessa's handoff, 2026-10-05)
 
-> **Approved follow-up, October 10, implementation pending:** see `STEP-5.10a-LOCATION-CONSOLIDATION.md`. The four no-saved-city launch causes will share the illustrated destination and recovery used by explicit acquisition. Known blocked access skips searching; attempted failures reuse the existing searching minimum and Chunk 6 handoff. First ask retains its moon invitation. This supersedes the launch cause presentation rules below when the consolidation is implemented; preserve existing success timing and saved-city fallback.
+> **Implemented consolidation, October 12:** see `STEP-5.10a-LOCATION-CONSOLIDATION.md`. The four no-saved-city launch causes share the illustrated destination and recovery used by explicit acquisition. Known blocked access skips searching; attempted failures reuse the existing searching minimum and Chunk 6 handoff. First ask retains its moon invitation. This supersedes the historical launch cause presentation rules below; preserve existing success timing and saved-city fallback.
 
 **Source:** `design/1.4-location-flow/` (README.md, `Location Flow Prototype.dc.html`, `LocationFlowReference.swift`).
 The handoff is a **prototype**: follow its **flow, timing, copy and motion ideas**; where it differs from the built
@@ -302,7 +302,7 @@ the lines run edge to edge. Fix:
 | Services off | Location / Services are off | Turn them on to see where / the moon is from here. |
 | No fix | Couldn't find / your location | Check your cellular or Wi-Fi / connection. We’ll look again / when you come back. |
 
-- Restricted keeps the App-permission-off copy, Search only (as built).
+- Restricted shares the permission-off headline; its body is “Location access is limited on this iPhone. You can still search for a city.” Search is its only action when online or recents exist.
 - VoiceOver reads the headline and body as one sentence each, without the breaks.
 
 ### 11.2 Transitions (5.9.3b)

@@ -1,8 +1,72 @@
-# Chunk 2c test result confirmed; Chunk 3 in progress
+# 5.10a Consolidation Chunk 3 (2026-10-12)
 
-October 12, 2026. Tessa ran the full Chunk 2c suite in Terminal twice: **754 tests in 59 suites passed after 36.440 seconds**, second run **37.632 seconds**, **TEST SUCCEEDED**. These are user-reported executions, not agent runs. Chunk 3 will use build-for-testing only; new tests require Tessa's Terminal run. No simulator operations or test execution by the agent.
+## Result
 
-Next: audit the amended destination/entry matrices, extend missing behavior coverage, reconcile documentation, and provide a device-review checklist. Keep LocationIssue's four unused cause cases; defer compass offline Search instead and Restricted copy changes.
+The §2 destination table and §3 entry/recovery contract now match the implementation and deterministic coverage, with the 2b/2c amendments treated as authoritative. The only shipped stale copy found was the saved-city failure skeleton's “Try again” instruction; it now derives the shared No fix headline/body. The four unused `LocationIssue` cause cases were retained. No offline Search instead behavior was added to the compass dialog, and Restricted's offline variant remains deferred.
+
+The known First ask → Never in Settings → return case already worked: `sceneDidBecomeActive()` refreshes authorization, `loaderDidBecomeActive` maps `.denied` to `.permissionDenied`, and the telescope replaces First ask immediately. `forgetThenNeverIsTelescope` directly covers the transition, including zero location requests. No fix was necessary.
+
+Coverage added or strengthened:
+
+- all four causes pair the same launch and explicit destination/copy;
+- actual search-sheet row → dismissal covers denied, Services off, and authorized No fix; Restricted hides that row (existing coverage);
+- First ask → Settings → each blocked cause, including Never, switches without a tap, prompt, request, or additional wait; repeated activation keeps guidance;
+- search cancel and city pick now cover all four causes, retaining origin on cancel and using city load-in rather than GPS Aha on pick;
+- the saved-city skeleton cannot regress to the removed Try again wording.
+
+Codex independently compiled the expanded tests with build-for-testing: **TEST BUILD SUCCEEDED**, with no pseudo-terminal or CoreSimulator errors. No new screenshots or continuous captures were made. Existing Chunk 2c Services-off dialog still was visually inspected; it fits, but it does not establish paired screens or motion.
+
+Build-for-testing is the only build action used. It passed before documentation (13.382 seconds) and after all final matrix/doc changes (4.480 seconds, no errors). Tests were not run by the agent; Tessa's pre-Chunk-3 Chunk 2c suite passed twice (754 tests / 59 suites, 36.440 s and 37.632 s).
+
+## Physical-device review
+
+1. Services off: at launch and from both explicit Use my location routes, online and offline, verify the map screen. Open Settings must land on the app page; follow the chip's Back → Privacy & Security → Location Services route.
+2. Restricted: verify the locked-map screen and that Search for a city is the only action when search is available. Offline with no recents intentionally has no action even though the body mentions search.
+3. Saved city + Never, Services off, and offline/failing detection: the city remains usable; no full-screen failure; compass hint/hidden state is correct.
+4. Main Use my location with Never, Services off, Restricted, and authorized/offline, and the search-sheet row with Never, Services off, and authorized/offline: matching illustrated destination, no acquisition Location Off dialog. Restricted must hide the search-sheet row.
+5. Compass-only Turn On Location: verify the compact dialog's current headline/path, Open Settings behavior, and that the selected city is preserved. Do not expect an offline Search instead change in this pass.
+6. Telescope → Open Settings → While Using → return: exactly one automatic fix, Aha, and flight into the card. Repeat offline: it should end at No fix.
+7. No fix recovery: dismiss Control Center after restoring connectivity (inactive → active) and verify one loader/retry only; also background/return. A second miss must return to the same screen.
+8. Unanswered prompt: First ask → Use my location → background without answering; it stays First ask and never fabricates No fix.
+9. Real onboarding on a fresh install: Don't Allow → That’s okay → Got it → standard destination; separately verify Search for a city instead.
+10. Offline recent: with recents, pick one successfully; after an explicit offline miss, the search action remains available. With no recents it remains hidden and keeps its slot.
+11. Visual/accessibility: iPhone 17 default in light/dark, SE 3, large text, and Reduce Motion. Compare paired launch/main cause screens and watch continuous entrance/recovery for old-card flashes, loader/headline overlap, stagger, and illustration stopping after background/dismissal.
+12. First ask → set Never in Settings → return: verify the telescope replaces First ask automatically, without tapping. Also verify Never set before a no-saved-city launch opens the telescope directly.
+13. Saved-city failure skeleton: if visible during a failing replacement, confirm it uses the cellular/Wi-Fi No fix wording and never says Try again.
+
+Still explicitly deferred: full accessibility redesign; existing SE 3 AX2/AX3 scrolling; Restricted's accessibility-visible reserved secondary control; continuous motion proof beyond deterministic timing/layout tests.
+
+## Contract audit and Terminal handoff
+
+Source audit found no routing mismatch in §3. Coverage references below are deterministic tests; compilation passed, their post-Chunk-3 execution remains pending.
+
+| §3 row | Coverage / source path |
+|---|---|
+| 1 known blocked launch | `blockedLaunchOpensFailureScreen`, `neverThenForgetIsTelescope`; `start` skips the searching minimum |
+| 2 failed authorized launch | `noFix(error:)`, `timeoutIsNoFix`, `withdrawnMidFix`; `showFailureScreen(afterSearch:)` holds the minimum |
+| 3 explicit blocked | `launchAndExplicitMatch`, `searchRowBlockedDestinations`, restricted row-hidden tests; no acquisition dialog |
+| 4 explicit not determined | `searchRowFromFirstAsk`, `firstAskUnanswered`, `promptRefused`; prompt only on tap |
+| 5 automatic No fix retry | `foregroundRetryRecovers`, `foregroundRetryFailsAgain`, `foregroundRetryDoesNotStack`; loader/Aha or same failure |
+| 6 Settings newly authorized | `backFromSettingsAllowed`, `backFromSettingsAllowedThenMiss`, `backFromSettingsRecovers`; one fix |
+| 7 unchanged blocked | `backFromSettingsStillOff`; no request |
+| 8 changed blocked | `backFromSettingsDifferentReason`, `firstAskThenOffInSettings`; matching art/cause |
+| 9 not determined (2b override) | `askNextTimeGoesToFirstAsk`, `servicesOnGoesToFirstAsk`; immediate invitation, no automatic prompt |
+| 10 authorized No fix activation (2b override) | `foregroundRetryDoesNotStack`, `lookAgainDoesNotStack`; active after inactive/background uses same path |
+| 11 First ask primary | `firstAskAllow`, `firstAskDeny`, `firstAskUnanswered`, `firstAskAllowThenMiss` |
+| 12 city search | all-cause `searchThenCancel` / `searchThenPick`, `restrictedLaunchSearchHasNoRow`; existing offline-recents and search-error tests |
+
+§2: all four paired launch/main causes now share `LocationFailureView`, copy/art/actions/path definitions; No fix included. Shared copy/action/chip tests, `SearchActionOfflineTests`, and existing layout/motion suites cover default positions, large-text fallback, Reduce Motion and animation lifecycle. Runtime paired light/dark screenshots and continuous observation remain device review, not completed visual evidence.
+
+Concurrency, saved-city fallback, quiet compass failures and onboarding remain covered by `pickSupersedesFailure`, `foregroundRetryDoesNotCancelUseMyLocation`, `savedPlaceWins`, `savedPlaceWinsOverNoFix`, `LocationViewModelCompassTests`, `SearchSheetViewModelTests` and onboarding suites. Four unused LocationIssue causes remain; offline compass Search instead and Restricted variants were not changed.
+
+Run in Terminal (full suite; agent did not execute this):
+
+```sh
+xcodebuild test-without-building -project moonbeam-app/moonbeam-app.xcodeproj -scheme moonbeam-app \
+  -destination 'platform=iOS Simulator,name=iPhone 17' -derivedDataPath /tmp/mb-dd
+```
+
+Implementation and document reconciliation are committed. Full test execution and the 13 device checks above remain pending. Concurrent edits were observed during the handoff and retained; the final report reflects the resulting shared checkout.
 
 ---
 
@@ -1752,37 +1816,3 @@ Your `DESIGN-REVIEW.md` status-bar edit is in this commit.
 # Chunk 2c test confirmation (Tessa, 2026-10-12)
 
 Tessa ran the full suite twice in Terminal after Chunk 2c. Both runs passed: **754 tests in 59 suites**, `TEST SUCCEEDED`; the first took 36.440 seconds and the second 37.632 seconds.
-
-# 5.10a Consolidation Chunk 3 (2026-10-12)
-
-## Result
-
-The §2 destination table and §3 entry/recovery contract now match the implementation and deterministic coverage, with the 2b/2c amendments treated as authoritative. The only shipped stale copy found was the saved-city failure skeleton's “Try again” instruction; it now derives the shared No fix headline/body. The four unused `LocationIssue` cause cases were retained. No offline Search instead behavior was added to the compass dialog, and Restricted's offline variant remains deferred.
-
-The known First ask → Never in Settings → return case already worked: `sceneDidBecomeActive()` refreshes authorization, `loaderDidBecomeActive` maps `.denied` to `.permissionDenied`, and the telescope replaces First ask immediately. `forgetThenNeverIsTelescope` directly covers the transition, including zero location requests. No fix was necessary.
-
-Coverage added or strengthened:
-
-- all four causes pair the same launch and explicit destination/copy;
-- denied, Services off, and Restricted search-sheet Use my location routes settle on the matching illustrated destination without the compact dialog;
-- the saved-city skeleton cannot regress to the removed Try again wording.
-
-Build-for-testing is the only build action used. It passed before documentation (13.382 seconds) and after all final matrix/doc changes (4.480 seconds, no errors). Tests were not run by the agent; Tessa's pre-Chunk-3 Chunk 2c suite passed twice (754 tests / 59 suites, 36.440 s and 37.632 s).
-
-## Physical-device review
-
-1. Services off: at launch and from both explicit Use my location routes, online and offline, verify the map screen. Open Settings must land on the app page; follow the chip's Back → Privacy & Security → Location Services route.
-2. Restricted: verify the locked-map screen and that Search for a city is the only action when search is available. Offline with no recents intentionally has no action even though the body mentions search.
-3. Saved city + Never, Services off, and offline/failing detection: the city remains usable; no full-screen failure; compass hint/hidden state is correct.
-4. Main and search-sheet Use my location with Never, Services off, Restricted, and authorized/offline: verify the matching illustrated destination and no acquisition Location Off dialog.
-5. Compass-only Turn On Location: verify the compact dialog's current headline/path, Open Settings behavior, and that the selected city is preserved. Do not expect an offline Search instead change in this pass.
-6. Telescope → Open Settings → While Using → return: exactly one automatic fix, Aha, and flight into the card. Repeat offline: it should end at No fix.
-7. No fix recovery: dismiss Control Center after restoring connectivity (inactive → active) and verify one loader/retry only; also background/return. A second miss must return to the same screen.
-8. Unanswered prompt: First ask → Use my location → background without answering; it stays First ask and never fabricates No fix.
-9. Real onboarding on a fresh install: Don't Allow → That’s okay → Got it → standard destination; separately verify Search for a city instead.
-10. Offline recent: with recents, pick one successfully; after an explicit offline miss, the search action remains available. With no recents it remains hidden and keeps its slot.
-11. Visual/accessibility: iPhone 17 default in light/dark, SE 3, large text, and Reduce Motion. Compare paired launch/main cause screens and watch continuous entrance/recovery for old-card flashes, loader/headline overlap, stagger, and illustration stopping after background/dismissal.
-12. First ask → set Never in Settings → return: verify the telescope replaces First ask automatically, without tapping. Also verify Never set before a no-saved-city launch opens the telescope directly.
-13. Saved-city failure skeleton: if visible during a failing replacement, confirm it uses the cellular/Wi-Fi No fix wording and never says Try again.
-
-Still explicitly deferred: full accessibility redesign; existing SE 3 AX2/AX3 scrolling; Restricted's accessibility-visible reserved secondary control; continuous motion proof beyond deterministic timing/layout tests.

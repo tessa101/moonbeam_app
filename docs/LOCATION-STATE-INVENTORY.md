@@ -122,7 +122,7 @@ Suggested target: one permission invitation family, one searching/recovery famil
 
 ## 8. Evidence and limits
 
-Chunk 3 audit: paired launch/main destinations now cover all four causes, blocked search-row routes cover all three access causes, and the known First ask → Never → foreground transition has direct deterministic coverage. Build-for-testing succeeds. Tessa's pre-Chunk-3 Chunk 2c full suite passed twice: **754 tests in 59 suites** (36.440 s and 37.632 s). Tessa runs the post-Chunk-3 suite in Terminal.
+Chunk 3 audit: paired launch/main destinations now cover all four causes, actual search-row dismissal covers denied, Services off and authorized No fix; Restricted hides the row, and the known First ask → each blocked Settings state → foreground transition and all-cause search cancel/pick have direct deterministic coverage. Build-for-testing succeeds. Tessa's pre-Chunk-3 Chunk 2c full suite passed twice: **754 tests in 59 suites** (36.440 s and 37.632 s). Tessa runs the post-Chunk-3 suite in Terminal.
 
 Default-size simulator stills show settled screens and sampled entrance/retry handoffs. **Continuous motion capture was unavailable**, so smoothness and precise visible durations still need a running-app review. Additional accessibility checks remain deferred.
 
