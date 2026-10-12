@@ -1,7 +1,7 @@
 # Step 5.10a Consolidation Chunk 2b: device-test fixes
 
 > Decided with Tessa, October 10, 2026, after Chunk 2's full suite passed and she tested on a device.
-> **Approved scope; not yet implemented.** Runs before Consolidation Chunk 3. **Supersedes `STEP-5.10a-LOCATION-CONSOLIDATION.md` §3 rows 9 and 10** (see items 1 and 2) and the "Settings return, not determined" follow-up in §6.
+> **Implemented October 10, 2026.** **Supersedes `STEP-5.10a-LOCATION-CONSOLIDATION.md` §3 rows 9 and 10** (see items 1 and 2) and the "Settings return, not determined" follow-up in §6. Item 1's “no connectivity monitor” statement is subsequently superseded by Chunk 2c item 2.
 > Read the Chunk 2 entry in `.agent-reports/latest.md`, `STEP-5.10a-LOCATION-CONSOLIDATION.md` §3 and §6, and `design/1.6-location-error-illustrations/ILLUSTRATIONS_MOTION.md`.
 
 ## Environment
@@ -16,7 +16,7 @@ Four items, in order. One commit per item, a `.agent-reports/progress.log` line 
 
 Why: offline, both Try again and the city search depend on the same connection (GPS can work, but naming the city needs a network, so it ends as No fix). Try again only helps if the user fixes the connection without leaving the app. Fixing it means leaving the screen (or opening Control Center), and the app should just work when they come back. iOS can't deep-link to Wi-Fi or cellular settings, so there's no useful primary action.
 
-- **No primary button.** The only action is the secondary text link **"Enter a city instead"**. Keep the primary's 56 pt slot empty and hidden from VoiceOver, so the link sits at the same height as on the other causes' screens (the mirror image of Restricted, which keeps its secondary's spacer).
+- **No primary button.** The only action is the secondary text link **"Search for a city instead"** (renamed by Chunk 2c). Keep the primary's 56 pt slot empty and hidden from VoiceOver, so the link sits at the same height as on the other causes' screens (the mirror image of Restricted, which keeps its secondary's spacer).
 - **Body:** "Check your cellular or Wi-Fi connection. We'll look again when you come back." Set the default-size line breaks by hand; VoiceOver reads it as one sentence. Headline stays "Couldn't find your location".
 - **Replaces §3 row 10:** when the scene becomes active after being inactive or backgrounded, and the failure is still No fix with access authorized, run one automatic search through the existing path (searching loader, then Aha and flight on success, or the same No fix screen on another miss, respecting `LocationLoader.minimumSearchBeforeMessage`).
   - At most one automatic retry per activation, and none while a search is in flight.

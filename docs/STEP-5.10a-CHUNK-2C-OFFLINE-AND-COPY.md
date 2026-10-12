@@ -1,7 +1,7 @@
 # Step 5.10a Consolidation Chunk 2c: offline search, copy, and two checks
 
 > Decided with Tessa, October 11, 2026, from her device test of Chunk 2b (full suite passed on `e6d8ed5`).
-> **Approved scope; not yet implemented.** Runs before Consolidation Chunk 3. Amends `STEP-5.10a-CHUNK-2B-DEVICE-FIXES.md` item 1 (which said "no connectivity monitor"; item 2 below reverses that on purpose).
+> **Implemented October 11, 2026.** Amends `STEP-5.10a-CHUNK-2B-DEVICE-FIXES.md` item 1 (which said "no connectivity monitor"; item 2 below reverses that on purpose). Tessa ran the full suite twice on October 12: 754 tests in 59 suites passed (36.440 s and 37.632 s).
 > Read `STEP-5.10a-LOCATION-CONSOLIDATION.md` §3, the 2b doc, and the Chunk 2b entry in `.agent-reports/latest.md`.
 
 ## Environment and process

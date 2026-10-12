@@ -1,6 +1,6 @@
 # Step 5.10a: Fail search location (prompt chunks for Claude Code)
 
-> **October 10 follow-up approved, implementation pending:** `STEP-5.10a-LOCATION-CONSOLIDATION.md` defines the next three agent chunks. It supersedes instructions below to keep the four launch causes on the loader moon or retain an acquisition dialog over launch search. First ask/onboarding remain separate; existing art/layout/motion specifications below remain in force. Chunks 1–6 below describe the original completed work.
+> **Historical build plan, reconciled October 12, 2026:** `STEP-5.10a-LOCATION-CONSOLIDATION.md` and its 2b/2c amendments are implemented and supersede the original Try again flow, split launch-moon destinations, and acquisition Location Off dialog below. Current behavior uses one illustrated destination per cause, No fix retries once on foreground, not-determined Settings return goes to First ask, and the compact dialog remains compass-only. Chunks 1–6 below remain implementation history; existing art/layout/motion specifications remain in force.
 
 > Owner: Tessa · Drafted 2026-10-09, updated 2026-10-10 · Design: canvas "Location Failure States": **Option D (revised)** layout + **"Error states with the calico illustrations"** (final art) + "Illustration motion reference".
 > Read first: LOCATION.md §3–§4, LOADER.md §10 and §12, DESIGN-1.1.md §2 (tokens) and §3.1, and `design/1.6-location-error-illustrations/` (see "Handoff files" below). Behavior doesn't change unless this doc says so.

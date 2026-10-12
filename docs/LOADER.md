@@ -187,6 +187,8 @@ override the handoff README.
   from breathe to pulse (handoff timings).
 
 ### 10.3 Messages
+**Current behavior after 5.10a consolidation (October 12, 2026):** only First ask remains a stopped-moon message. Permission denied, Services off, Restricted, and No fix use their shared illustrated `LocationFailureView` destinations at launch and after explicit acquisition. Known blocked causes skip searching; an attempted No fix preserves `minimumSearchBeforeMessage`. No fix has no Try again button and automatically looks again once on foreground. A not-determined Settings return presents First ask immediately, without a prompt or searching label. Search actions read “Search for a city instead” and hide while offline with no recents. This paragraph supersedes the historical message details below wherever they conflict.
+
 Handoff copy and buttons (first ask / app permission off / services off / no fix), searching ≥ 1.2 s before any
 message, label out 0.3 s, then the message fades in and rises 16 pt (handoff "Search → message"). Return after a fix:
 message removed instantly, glow back to breathe, label back in 0.2 s later, cycle resumes. Don't Allow in the iOS
@@ -296,9 +298,9 @@ the lines run edge to edge. Fix:
 | Message | Headline | Body |
 |---|---|---|
 | First ask | Find the moon / from where you are | Moon Signal uses your location to show / when and where the moon rises and sets. |
-| App permission off | Moon Signal can't / see your location | Allow location access to see / where the moon is from here. |
+| App permission off | Can't see / your location | Allow location access to see / where the moon is from here. |
 | Services off | Location / Services are off | Turn them on to see where / the moon is from here. |
-| No fix | Couldn't find / your location | Check your signal and try / again, or search for a city. |
+| No fix | Couldn't find / your location | Check your cellular or Wi-Fi / connection. We’ll look again / when you come back. |
 
 - Restricted keeps the App-permission-off copy, Search only (as built).
 - VoiceOver reads the headline and body as one sentence each, without the breaks.
@@ -563,8 +565,7 @@ sharp). Report: `.agent-reports/5.9.3/findings.md`.
 4. **Over 400 ms** (GPS): **placeholder A**, the card skeleton (§12.3), until the fix lands; then the skeleton
    cross-fades into the real card (200 ms) and the compass loads in at its usual +300 ms. The sentence doesn't
    replay if it's already showing the new place.
-5. Fix fails: the skeleton's line reads "Couldn't find your location. Try again, or search for a city." (current
-   copy), in the card's place; the old place does not come back.
+5. Fix fails: the skeleton derives the shared No fix copy: "Couldn't find your location. Check your cellular or Wi-Fi connection. We'll look again when you come back." (updated by Consolidation Chunk 3), in the card's place; the old place does not come back.
    **Superseded by STEP-5.10a-LOCATION-FAILURE.md, Chunk 1 (2026-10-10):** a failed replacement ends cleanly: no
    skeleton or size template left, the sentence's place token back to "a city", the old place still gone. The view
    model sets `locationFailure` (`.permissionDenied` / `.servicesOff` / `.restricted` / `.noFix`); the failure

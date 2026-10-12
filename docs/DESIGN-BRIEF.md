@@ -78,7 +78,7 @@ Copy above is placeholder; tone is part of this pass. Never show a distance or c
 - **Calendar sheet:** month grid, Today, Cancel. Future idea: phase glyph per day
 - **Location Off dialog** (custom, not a system alert): Denied / Services off / Restricted variants, "Search for a city instead", "Open Settings"
 - **First launch:** empty field, prompt, "Use my location". Should it feel inviting or moon-y?
-- **Loading** (up to 10 s finding location) and **failed** ("Couldn't find your location. Try again, or search for a city.")
+- **Loading** (up to 10 s finding location) and **failed** ("Couldn't find your location. Check your cellular or Wi-Fi connection. We'll look again when you come back.")
 
 ## 6. Constraints (non-negotiable)
 

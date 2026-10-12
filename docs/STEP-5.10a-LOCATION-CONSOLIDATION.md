@@ -1,7 +1,7 @@
 # Step 5.10a follow-up: consolidate location guidance and failure flows
 
 > Agreed with Tessa, October 10, 2026. Implementation plan after the original failure work's Chunk 6.
-> **Approved scope. Chunks 1–2 implemented (October 10, 2026); Chunk 3 pending.** This document supersedes earlier instructions to keep the four launch failure causes on the loader moon and to keep the Location Off dialog for acquisition from the launch search row. First ask still uses its existing moon presentation.
+> **Implemented. Chunks 1, 2, 2b, 2c, and 3 completed October 10–12, 2026.** This document supersedes earlier instructions to keep the four launch failure causes on the loader moon and to keep the Location Off dialog for acquisition from the launch search row. First ask still uses its existing moon presentation. The 2b and 2c amendment documents override this plan where noted.
 > Read `LOCATION-STATE-INVENTORY.md`, `STEP-5.10a-LOCATION-FAILURE.md`, and `LOADER.md` §10–12. Existing illustration/layout/motion specifications remain authoritative.
 
 ## 1. Product model
@@ -68,6 +68,8 @@ Run sequentially, **one chunk per invocation and one commit per chunk**. Each ch
 
 ### Consolidation Chunk 1 — one source for cause presentation
 
+**Implemented October 10, 2026.**
+
 Agent prompt:
 
 > Implement Consolidation Chunk 1 from `docs/STEP-5.10a-LOCATION-CONSOLIDATION.md`. Read the contract and boundaries first. Make the four illustrated causes' copy, art, paths and action definitions the single source of truth. Remove duplicated cause strings in the launch-message definitions by delegating to the shared cause definition. Keep First ask independent. Preserve current routing and visuals in this chunk: legacy launch messages may still omit path chips until Chunk 2. Reuse existing types; avoid renaming the state model. Align the compact compass dialog's cause explanations and Settings instructions with the shared source where practical, preserving its existing actions, presentation and detection-only behavior. Build and run focused copy/action/dialog tests. Report which values are now shared and any remaining duplication. Commit, update reports/status, and stop. No push/upload.
@@ -76,6 +78,8 @@ Acceptance: four causes cannot drift in wording/actions; First ask unchanged; ex
 
 ### Consolidation Chunk 2 — unified destinations and functioning recovery
 
+**Implemented October 10, 2026; amended by Chunks 2b and 2c.**
+
 Agent prompt:
 
 > Implement Consolidation Chunk 2 from `docs/STEP-5.10a-LOCATION-CONSOLIDATION.md`. Route launch without a saved city and all explicit acquisition failures to the existing illustrated cause screen. Remove the stopped-moon cause destinations and the acquisition-only Location Off dialog branch; retain the moon for First ask and searching, and the compact dialog for compass-only requests. Implement the full entry/recovery contract in §3 in this chunk so no newly unified screen has broken actions. Reuse Chunk 6 transition sequencing and constants: known blocked states skip searching; attempted failures respect the existing minimum, with clean loader-to-illustration handoff. Preserve successful ordinary launch, loader/Aha recovery, Settings auto-fetch, city search/cancel/pick, saved-city fallback, and onboarding internals. Keep existing DEBUG route names but make messageDenied/messageServicesOff/messageRestricted/messageNoFix exercise the new launch destinations; preserve messageFirstAsk. Build and run focused launch, failure, recovery, search and compass regression suites. Record representative entrance/recovery evidence if available; state capture limits. Commit, update reports/status, and stop. No push/upload.
@@ -83,6 +87,8 @@ Agent prompt:
 Acceptance: both contexts settle on identical cause presentation including chips; every visible action works; retry and Settings recovery return to the same shared destination after another miss. No ready-screen placeholder flash, duplicate prompt, stuck skeleton or lost city pick. Invitation remains distinct.
 
 ### Consolidation Chunk 3 — regression matrix, visual review and final handoff
+
+**Implemented October 12, 2026.** The deterministic matrix audit found the known First ask → Never → foreground route already correct and directly tested. It added all-four-cause paired launch/explicit coverage, all blocked search-row destinations, and removed the last shipped “Try again” instruction from the saved-city failure skeleton by deriving it from the shared No fix copy. Build-for-testing passed; Tessa owns the full test run and physical-device checklist.
 
 Agent prompt:
 

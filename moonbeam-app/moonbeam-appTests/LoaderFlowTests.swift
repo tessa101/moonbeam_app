@@ -182,24 +182,26 @@ struct LoaderFlowTests {
         #expect(explicit.viewModel.locationOffDialog == nil)
     }
 
-    @Test(
-        "The search sheet's Use my location reaches each blocked cause without a dialog",
-        arguments: [
-            (LocationAuthState.denied, LocationFailure.permissionDenied),
-            (.servicesOff, .servicesOff),
-            (.restricted, .restricted),
-        ]
-    )
-    func searchRowBlockedDestinations(state: LocationAuthState, failure: LocationFailure) async {
-        let harness = Self.makeHarness(state)
+    @Test("Search row dismissal reaches the matching destination without a dialog", arguments: [
+        (LocationAuthState.denied, LocationFailure.permissionDenied),
+        (.servicesOff, .servicesOff),
+        (.authorized, .noFix),
+    ])
+    func searchRowBlockedDestinations(state: LocationAuthState, failure: LocationFailure) async throws {
+        let harness = Self.makeHarness(state, lastViewed: Place.marVista,
+            placeResult: .failure(LocationError.locationUnavailable))
         await harness.viewModel.start()
-
         harness.viewModel.presentSearch()
-        await harness.viewModel.useMyLocation()
+        let sheet = try #require(harness.viewModel.searchSheet)
+        #expect(sheet.showsUseMyLocation)
+        sheet.useMyLocation()
+        #expect(!harness.viewModel.isSearchPresented)
+        await harness.viewModel.searchDidDismiss()
 
         #expect(harness.viewModel.failureScreen == failure)
         #expect(harness.viewModel.locationOffDialog == nil)
-        #expect(harness.location.currentPlaceCount == 0)
+        #expect(harness.viewModel.place == nil)
+        #expect(harness.viewModel.loaderIssue == nil)
     }
 
     @Test(
@@ -404,17 +406,29 @@ struct LoaderFlowTests {
         #expect(harness.location.currentPlaceCount == 1)
     }
 
-    @Test("First ask, turned off in Settings meanwhile: that cause's failure screen")
-    func firstAskThenOffInSettings() async {
+    @Test("First ask → Settings → blocked: guidance without a tap or search", arguments: [
+        (LocationAuthState.denied, LocationFailure.permissionDenied),
+        (.servicesOff, .servicesOff),
+        (.restricted, .restricted),
+    ])
+    func firstAskThenOffInSettings(state: LocationAuthState, failure: LocationFailure) async {
         let harness = Self.makeHarness(.notDetermined)
         await harness.viewModel.start()
-        harness.location.authorizationState = .servicesOff
+        #expect(harness.viewModel.loaderIssue == .firstAsk)
+        let waitsBeforeReturn = harness.sleeper.durations
+        harness.viewModel.sceneDidEnterBackground()
+        harness.location.authorizationState = state
 
+        await harness.viewModel.sceneDidBecomeActive()
+        // Unchanged repeated activation keeps guidance without a request.
         await harness.viewModel.sceneDidBecomeActive()
 
         #expect(harness.viewModel.launchStage == .ready)
-        #expect(harness.viewModel.failureScreen == .servicesOff)
+        #expect(harness.viewModel.failureScreen == failure)
+        #expect(harness.viewModel.loaderIssue == nil)
         #expect(harness.location.currentPlaceCount == 0)
+        #expect(harness.location.requestAuthorizationCount == 0)
+        #expect(harness.sleeper.durations == waitsBeforeReturn)
     }
 
     // MARK: - Back from Settings (§3 rows 6–9)
@@ -602,9 +616,11 @@ struct LoaderFlowTests {
 
     // MARK: - Search for a city (§3 rows 3 and 12)
 
-    @Test("Search for a city instead, then a pick: the failure clears and the screen loads in for it")
-    func searchThenPick() async {
-        let harness = Self.makeHarness(.denied)
+    @Test("Search from each cause, then pick: city load-in without GPS Aha", arguments: [
+        LocationAuthState.denied, .servicesOff, .restricted, .authorized,
+    ])
+    func searchThenPick(state: LocationAuthState) async {
+        let harness = Self.makeHarness(state, placeResult: .failure(LocationError.locationUnavailable))
         await harness.viewModel.start()
         let loadIns = harness.viewModel.loadInGeneration
 
@@ -620,16 +636,20 @@ struct LoaderFlowTests {
         #expect(harness.viewModel.loader.flightStartedAt == nil)
     }
 
-    @Test("Search for a city instead, then cancel: the failure screen stays")
-    func searchThenCancel() async {
-        let harness = Self.makeHarness(.servicesOff)
+    @Test("Search from each cause, then cancel: the original guidance stays", arguments: [
+        LocationAuthState.denied, .servicesOff, .restricted, .authorized,
+    ])
+    func searchThenCancel(state: LocationAuthState) async {
+        let harness = Self.makeHarness(state, placeResult: .failure(LocationError.locationUnavailable))
         await harness.viewModel.start()
+        let origin = harness.viewModel.failureScreen
 
         harness.viewModel.presentSearch()
         harness.viewModel.isSearchPresented = false
         await harness.viewModel.searchDidDismiss()
 
-        #expect(harness.viewModel.failureScreen == .servicesOff)
+        #expect(origin != nil)
+        #expect(harness.viewModel.failureScreen == origin)
         #expect(harness.viewModel.place == nil)
     }
 
