@@ -1,3 +1,11 @@
+# Chunk 2c test result confirmed; Chunk 3 in progress
+
+October 12, 2026. Tessa ran the full Chunk 2c suite in Terminal twice: **754 tests in 59 suites passed after 36.440 seconds**, second run **37.632 seconds**, **TEST SUCCEEDED**. These are user-reported executions, not agent runs. Chunk 3 will use build-for-testing only; new tests require Tessa's Terminal run. No simulator operations or test execution by the agent.
+
+Next: audit the amended destination/entry matrices, extend missing behavior coverage, reconcile documentation, and provide a device-review checklist. Keep LocationIssue's four unused cause cases; defer compass offline Search instead and Restricted copy changes.
+
+---
+
 # Consolidation Chunk 2c: offline search, copy, two checks (done)
 
 Updated October 11, 2026. Step doc: `docs/STEP-5.10a-CHUNK-2C-OFFLINE-AND-COPY.md`. One commit per item; tests are run by Tessa outside the agent.
