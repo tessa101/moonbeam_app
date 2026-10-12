@@ -2,6 +2,8 @@
 
 ## Result
 
+Tessa’s post-Chunk-3 full-suite Terminal run reported **TEST EXECUTE SUCCEEDED** on 2026-10-12. Result bundle: `/tmp/mb-dd/Logs/Test/Test-moonbeam-app-2026.10.12_09-17-41--0700.xcresult`. Test count and duration were not supplied. Device/visual reviews remain pending.
+
 The §2 destination table and §3 entry/recovery contract now match the implementation and deterministic coverage, with the 2b/2c amendments treated as authoritative. The only shipped stale copy found was the saved-city failure skeleton's “Try again” instruction; it now derives the shared No fix headline/body. The four unused `LocationIssue` cause cases were retained. No offline Search instead behavior was added to the compass dialog, and Restricted's offline variant remains deferred.
 
 The known First ask → Never in Settings → return case already worked: `sceneDidBecomeActive()` refreshes authorization, `loaderDidBecomeActive` maps `.denied` to `.permissionDenied`, and the telescope replaces First ask immediately. `forgetThenNeverIsTelescope` directly covers the transition, including zero location requests. No fix was necessary.
@@ -38,7 +40,7 @@ Still explicitly deferred: full accessibility redesign; existing SE 3 AX2/AX3 sc
 
 ## Contract audit and Terminal handoff
 
-Source audit found no routing mismatch in §3. Coverage references below are deterministic tests; compilation passed, their post-Chunk-3 execution remains pending.
+Source audit found no routing mismatch in §3. Coverage references below are deterministic tests; compilation passed, Tessa’s post-Chunk-3 full-suite execution succeeded (result above).
 
 | §3 row | Coverage / source path |
 |---|---|
@@ -66,7 +68,7 @@ xcodebuild test-without-building -project moonbeam-app/moonbeam-app.xcodeproj -s
   -destination 'platform=iOS Simulator,name=iPhone 17' -derivedDataPath /tmp/mb-dd
 ```
 
-Implementation and document reconciliation are committed. Full test execution and the 13 device checks above remain pending. Concurrent edits were observed during the handoff and retained; the final report reflects the resulting shared checkout.
+Implementation and document reconciliation are committed. Full test execution succeeded in Tessa’s Terminal; the 13 device checks above remain pending. Concurrent edits were observed during the handoff and retained; the final report reflects the resulting shared checkout.
 
 ---
 
