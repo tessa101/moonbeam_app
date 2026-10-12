@@ -18,9 +18,10 @@ struct FailureLoadIn: ViewModifier {
     let isEnabled: Bool
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.failureFollowsLoader) private var followsLoader
     @State private var isIn = false
 
-    static func delay(for block: Block, hasPath: Bool) -> TimeInterval {
+    static func delay(for block: Block, hasPath: Bool, followsLoader: Bool = false) -> TimeInterval {
         let index: Int = switch block {
         case .illustration: 0
         case .headline: 1
@@ -29,7 +30,12 @@ struct FailureLoadIn: ViewModifier {
         case .primary: hasPath ? 4 : 3
         case .secondary: hasPath ? 5 : 4
         }
-        return Double(index) * ContentLoadIn.stagger
+        // The illustration can crossfade with the moon, but the headline
+        // occupies the outgoing moon's frame. Wait for that fade to finish,
+        // preserving the existing stagger between all message blocks.
+        let messageWait = followsLoader && block != .illustration
+            ? max(0, ContentLoadIn.duration - ContentLoadIn.stagger) : 0
+        return Double(index) * ContentLoadIn.stagger + messageWait
     }
 
     static func startOffset(reduceMotion: Bool) -> CGFloat {
@@ -52,7 +58,7 @@ struct FailureLoadIn: ViewModifier {
                 await Task.yield()
                 withAnimation(
                     .easeOut(duration: ContentLoadIn.duration)
-                        .delay(Self.delay(for: block, hasPath: hasPath))
+                        .delay(Self.delay(for: block, hasPath: hasPath, followsLoader: followsLoader))
                 ) {
                     isIn = true
                 }
@@ -64,4 +70,8 @@ extension View {
     func failureLoadIn(_ block: FailureLoadIn.Block, hasPath: Bool, isEnabled: Bool) -> some View {
         modifier(FailureLoadIn(block: block, hasPath: hasPath, isEnabled: isEnabled))
     }
+}
+
+extension EnvironmentValues {
+    @Entry var failureFollowsLoader = false
 }

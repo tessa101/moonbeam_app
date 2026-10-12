@@ -158,6 +158,7 @@ struct LoaderFlowTests {
         #expect(harness.viewModel.loaderIssue == nil)
         #expect(harness.sleeper.durations.contains(Self.searchMinimum))
         #expect(harness.viewModel.loader.appearedAt == Self.reference)
+        #expect(harness.viewModel.failureFollowsLoader)
     }
 
     @Test("A launch failure screen and an explicit request's are the same screen", arguments: [
@@ -298,6 +299,7 @@ struct LoaderFlowTests {
         // The loader never stopped on a message on the way.
         #expect(harness.viewModel.loader.content == .searching)
         #expect(!harness.sleeper.durations.contains(Self.searchMinimum))
+        #expect(!harness.viewModel.failureFollowsLoader)
     }
 
     /// 3b order 2: First ask is up (Ask Next Time, or an expired Allow

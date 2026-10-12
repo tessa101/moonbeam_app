@@ -390,3 +390,7 @@
 2026-10-12 5.10a Chunk 3 final validation: Xcode build-for-testing succeeded in 4.480 s with no errors after all matrix coverage and documentation changes. No tests, simctl, or device capture run.
 2026-10-12 Chunk 3 Codex handoff: expanded real sheet-dismissal/all-cause search/blocked First ask tests compile (TEST BUILD SUCCEEDED; no PTY/CoreSimulator errors); concurrent commits include these tests; promoted current report, added §3 row audit and Terminal command; device/runtime checks pending
 2026-10-12 recorded Tessa’s post-Chunk-3 Terminal TEST EXECUTE SUCCEEDED; xcresult Test-moonbeam-app-2026.10.12_09-17-41--0700; count/duration not supplied; device reviews pending; no agent test execution
+2026-10-12 09:57:12 PDT user authorized simulator execution, overriding build-for-testing-only; checking simulator availability first; stop immediately on PTY/CoreSimulator error
+2026-10-12 simulator review: genuine movie capture found outgoing loader overlapping No fix headline; reserve the loader fade before text starts while illustration crossfades; direct blocked entrance unchanged; temporal regression tests added
+2026-10-12 simulator review: build-for-testing passes; after normal/Reduce Motion videos show moon removed before headline; settings restored; report prepared; proceeding to guarded post-fix full tests
+2026-10-12 simulator review full suite PASS: 757 tests / 59 suites in 115.934 s, TEST EXECUTE SUCCEEDED; no PTY/CoreSimulator errors; preparing separate handoff-fix and repeatable-review commits

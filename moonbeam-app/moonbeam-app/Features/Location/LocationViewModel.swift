@@ -491,7 +491,11 @@ final class LocationViewModel {
     }
 
     /// The real screen, and the loader's waits stop.
+    /// The incoming text must wait until the departing moon has faded.
+    private(set) var failureFollowsLoader = false
+
     private func finishLoader() {
+        failureFollowsLoader = locationFailure != nil && launchStage == .phaseCycle
         loader.end()
         launchStage = .ready
     }

@@ -152,3 +152,7 @@ Tests: step order and start times use the existing constants; text blocks start 
 ## Still open
 - Failure with a saved place on a user-started search (e.g. Use my location): show this screen, or reopen the saved place with the small note? This doc assumes this screen; LOADER.md §12.2 step 5 assumed the card-slot line.
 - Exact built positions: the mocks approximate them (art top 90 pt, 240 × 312 frame). If the built screens differ, send a screenshot and the numbers get matched.
+
+## Simulator review amendment (2026-10-12)
+
+Real recovery recording exposed loader/headline overlap during the outgoing loader’s 0.3 s fade. After a visible loader, failure text/actions now start one existing stagger beat later: illustration at 0, headline at `ContentLoadIn.duration` (0.3 s), remaining message blocks keep 0.15 s spacing. Without a departing loader, the existing 0 / 0.15 / 0.30 … entrance is unchanged. Curves, fade duration and Reduce Motion’s opacity-only behavior are preserved. Before/after evidence and remaining physical checks: `STEP-5.10a-SIMULATOR-REVIEW.md`.

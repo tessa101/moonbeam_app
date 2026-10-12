@@ -51,6 +51,17 @@ struct FailureLoadInTests {
         )
     }
 
+    @Test("A loader handoff finishes its fade before any failure text starts", arguments: [true, false])
+    func loaderDoesNotOverlapText(hasPath: Bool) {
+        let headline = FailureLoadIn.delay(for: .headline, hasPath: hasPath, followsLoader: true)
+        #expect(headline >= ContentLoadIn.duration)
+        #expect(FailureLoadIn.delay(for: .illustration, hasPath: hasPath, followsLoader: true) == 0)
+        #expect(FailureLoadIn.delay(for: .body, hasPath: hasPath, followsLoader: true)
+            == headline + ContentLoadIn.stagger)
+        // Direct blocked screens retain the original entrance.
+        #expect(FailureLoadIn.delay(for: .headline, hasPath: hasPath) == ContentLoadIn.stagger)
+    }
+
     @Test("Searching failures reuse the message minimum; instant failures need no loader wait")
     func searchMinimumAndInstantFailure() async {
         let waits = WaitRecorder()

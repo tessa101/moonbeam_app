@@ -1,3 +1,13 @@
+# Simulator review and handoff correction — October 12, 2026
+
+Simulator execution is authorized. Real boot/install/launch/capture works. Automated visual review covers paired iPhone 17 destinations, light system appearance (app remains forced dark), iPhone 17 AX3, SE default/AX3, and normal/Reduce Motion continuous recovery. Native UI checked telescope search/location row and No fix search/cancel.
+
+**Found and fixed:** outgoing loader moon briefly overlapped incoming failure headline. Text/actions now wait for the existing loader fade only after a loader; direct blocked entrance timing is preserved. Build-for-testing passed; after-recordings checked at 10 fps show no moon/headline overlap. Post-fix full suite passed in the agent’s simulator run: **757 tests in 59 suites, 115.934 seconds, TEST EXECUTE SUCCEEDED**. No pseudo-terminal or CoreSimulator errors. Run used `test-without-building` with parallel testing disabled; no further Terminal run is needed for this change. Existing SE AX scrolling remains deferred.
+
+Details, local artifact paths and the shortened five-check phone session: `docs/STEP-5.10a-SIMULATOR-REVIEW.md`. Device review is not declared complete. Reduce Motion, appearance and text size were restored.
+
+---
+
 # 5.10a Consolidation Chunk 3 (2026-10-12)
 
 ## Result

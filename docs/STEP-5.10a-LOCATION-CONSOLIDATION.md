@@ -88,6 +88,8 @@ Acceptance: both contexts settle on identical cause presentation including chips
 
 ### Consolidation Chunk 3 — regression matrix, visual review and final handoff
 
+**Simulator follow-up, October 12:** Tessa authorized execution. Paired/default/AX layouts and normal/Reduce Motion continuous recovery are now captured. The review found and fixed departing-loader/headline overlap by delaying text until the existing loader fade ends; direct blocked entrances retain their timing. Evidence and five prioritized phone checks: `STEP-5.10a-SIMULATOR-REVIEW.md`.
+
 **Implemented October 12, 2026.** The deterministic matrix audit found the known First ask → Never → foreground route already correct and directly tested. It added all-four-cause paired launch/explicit coverage, all blocked search-row destinations, and removed the last shipped “Try again” instruction from the saved-city failure skeleton by deriving it from the shared No fix copy. Build-for-testing passed; Tessa owns the full test run and physical-device checklist.
 
 Agent prompt:

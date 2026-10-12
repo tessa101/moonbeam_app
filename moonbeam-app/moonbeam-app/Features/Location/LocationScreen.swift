@@ -67,6 +67,7 @@ struct LocationScreen: View {
                         onSearch: viewModel.presentSearch,
                         searchAvailable: viewModel.offersCitySearch
                     )
+                    .environment(\.failureFollowsLoader, viewModel.failureFollowsLoader)
                     .transition(.identity)
                 } else {
                     // §2.1: no whole-screen fade. The screen arrives at once
