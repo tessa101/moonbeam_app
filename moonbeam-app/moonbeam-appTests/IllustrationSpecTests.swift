@@ -22,20 +22,33 @@ struct IllustrationSpecTests {
         #expect(lock == UnitPoint(x: 175.0 / 400, y: 298.0 / 520))
     }
 
+    @Test("The redrawn telescope's mount head becomes the tube's and glint's anchor")
+    func telescopePivotConversion() {
+        let mount = UnitPoint(x: 204.0 / 400, y: 330.0 / 520)
+        #expect(IllustrationSpec.permissionOff.anchor(for: .tube) == mount)
+        #expect(IllustrationSpec.permissionOff.anchor(for: .lensGlint) == mount)
+    }
+
     @Test("The motion doc's pivots, in viewBox coordinates")
     func pivots() {
         #expect(IllustrationSpec.locationNotFound.pivots[.head] == CGPoint(x: 170, y: 280))
         #expect(IllustrationSpec.locationNotFound.pivots[.question] == CGPoint(x: 255, y: 193))
         #expect(IllustrationSpec.locationNotFound.pivots[.tail] == CGPoint(x: 230, y: 455))
         #expect(IllustrationSpec.locationNotFound.pivots[.moonRing] == CGPoint(x: 173, y: 202))
-        #expect(IllustrationSpec.permissionOff.pivots[.tube] == CGPoint(x: 155, y: 335))
-        // Chunk 2b: the crescent moon is mirrored about x 200 (was 150, 212),
-        // and the permission-off star with it (was 272, 122).
-        for spec in [IllustrationSpec.permissionOff, .servicesOff, .restricted] {
+        // Telescope redraw (Tessa, 2026-10-12): the mount head's centre (was
+        // 155, 335); the glint rides the tube about the same point.
+        #expect(IllustrationSpec.permissionOff.pivots[.tube] == CGPoint(x: 204, y: 330))
+        #expect(IllustrationSpec.permissionOff.pivots[.lensGlint] == CGPoint(x: 204, y: 330))
+        // Chunk 2b: the crescent moon is mirrored about x 200 (was 150, 212).
+        for spec in [IllustrationSpec.servicesOff, .restricted] {
             #expect(spec.pivots[.moonHalo] == CGPoint(x: 250, y: 212))
             #expect(spec.pivots[.moonDisc] == CGPoint(x: 250, y: 212))
         }
-        #expect(IllustrationSpec.permissionOff.star?.centre == CGPoint(x: 128, y: 122))
+        // The redrawn telescope keeps the D2 moon, lit on the left, and its
+        // star sits top right (was 128, 122).
+        #expect(IllustrationSpec.permissionOff.pivots[.moonHalo] == CGPoint(x: 190, y: 203))
+        #expect(IllustrationSpec.permissionOff.pivots[.moonDisc] == CGPoint(x: 190, y: 203))
+        #expect(IllustrationSpec.permissionOff.star?.centre == CGPoint(x: 326, y: 150))
     }
 
     @Test("Every part that rotates or scales has a pivot", arguments: LocationIllustration.Kind.allCases)
@@ -60,6 +73,7 @@ struct IllustrationSpecTests {
         ])
         #expect(IllustrationSpec.permissionOff.layers.map(\.asset) == [
             "permissionOff_moonHalo", "permissionOff_moonDisc", "permissionOff_stand", "permissionOff_tube",
+            "permissionOff_lensGlint",
         ])
         #expect(IllustrationSpec.servicesOff.layers.map(\.asset) == [
             "servicesOff_moonHalo", "servicesOff_moonDisc", "servicesOff_map", "servicesOff_route",
@@ -77,5 +91,9 @@ struct IllustrationSpecTests {
         #expect(restricted.first { $0.asset == "restricted_route" }?.parts == [.map, .route])
         #expect(restricted.first { $0.asset == "restricted_lock" }?.parts == [.map, .lock])
         #expect(IllustrationSpec.permissionOff.layers.first { $0.asset == "permissionOff_stand" }?.parts == [])
+        #expect(
+            IllustrationSpec.permissionOff.layers.first { $0.asset == "permissionOff_lensGlint" }?.parts
+                == [.tube, .lensGlint]
+        )
     }
 }

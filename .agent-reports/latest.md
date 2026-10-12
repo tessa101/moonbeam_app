@@ -5,11 +5,19 @@ imported byte-identical (old four replaced, `permissionOff_lensGlint` added), al
 `IllustrationSpec.permissionOff`: lens glint layer + `Part.lensGlint` (opacity track, rides the tube), tube/glint
 pivot (204, 330), moon (190, 203), star (326, 150). App target builds; preview renders the new art.
 
-Next: chunk 2 (tests), chunk 3 (screenshots). Paused for Tessa's review after chunk 1, as asked.
+Chunk 2/3 done: IllustrationSpecTests updated (tube/glint pivot 204,330, permission-off moon 190,203, star
+326,150, five layers, glint rides the tube) plus new pivot-conversion test; IllustrationMotionTests gains glint
+stop sampling (10 offsets), eased midpoint + next loop, glint-rides-tube, and Reduce Motion still (no glint,
+tube at rest, star hidden). build-for-testing succeeded; expected values checked against the live spec with
+a code snippet. Tests not run here (Terminal command below).
 
-Blocked/flags: `build-for-testing` fails in the test target on untracked 5.12 WIP
-(`CompassTeaserTests.swift`: main-actor calls from nonisolated tests), not in this change. The old
-`IllustrationSpecTests` expectations (tube pivot, star centre, layer list) are stale until chunk 2.
+Next: chunk 3 (screenshots of locationFailed.denied + motion frames).
+
+Test (Tessa, Terminal):
+  xcodebuild test -project moonbeam-app/moonbeam-app.xcodeproj -scheme moonbeam-app \
+    -destination 'platform=iOS Simulator,name=iPhone 17' \
+    -only-testing:moonbeam-appTests/IllustrationSpecTests \
+    -only-testing:moonbeam-appTests/IllustrationMotionTests
 
 ---
 
