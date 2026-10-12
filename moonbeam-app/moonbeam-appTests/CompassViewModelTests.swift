@@ -18,6 +18,18 @@ import Testing
 @MainActor
 struct CompassViewModelTests {
 
+    @Test("Guidance follows today and remains available without compass access")
+    func guidanceTodayOnly() {
+        let harness = Self.makeHarness()
+        harness.viewModel.update(Self.context(auth: .denied))
+        #expect(harness.viewModel.guidance != nil)
+        #expect(harness.viewModel.targets.isEmpty)
+        #expect(!harness.viewModel.isSensing)
+        harness.viewModel.update(Self.context(auth: .denied, isToday: false))
+        #expect(harness.viewModel.guidance == nil)
+        harness.viewModel.sceneDidEnterBackground()
+    }
+
     // MARK: - Fixtures
 
     private static let losAngelesZone = TimeZone(identifier: "America/Los_Angeles") ?? .gmt
@@ -350,6 +362,7 @@ struct CompassViewModelTests {
             CompassTarget(kind: .moonset, azimuth: Self.setAzimuth),
         ])
         #expect(harness.moon.requestedPositionDates.isEmpty)
+        #expect(harness.viewModel.guidance == nil)
     }
 
     @Test("Today with the moon up: moonrise, moonset and the moon")
@@ -414,7 +427,8 @@ struct CompassViewModelTests {
         harness.viewModel.update(context)
 
         #expect(harness.viewModel.targets.isEmpty)
-        #expect(harness.moon.requestedPositionDates.isEmpty)
+        #expect(harness.viewModel.guidance != nil)
+        #expect(!harness.viewModel.isSensing)
     }
 
     // MARK: - Sensor lifecycle (§1)
@@ -543,6 +557,22 @@ struct CompassViewModelTests {
     ])
     func pinnedBarRule(centre: CGFloat, fold: CGFloat, below: Bool) {
         #expect(CompassViewModel.isBelowFold(dialCentreY: centre, foldY: fold) == below)
+    }
+
+    @Test("Pinned bar waits until the full compass readout is below the fold", arguments: [
+        (CGFloat(700), CGFloat(640), CGFloat(667), false),
+        (CGFloat(700), CGFloat(667), CGFloat(667), true),
+        (CGFloat(700), CGFloat(700), CGFloat(667), true),
+        (CGFloat(640), CGFloat(700), CGFloat(667), false),
+    ])
+    func pinnedBarDoesNotCoverReadout(centre: CGFloat, readoutTop: CGFloat, fold: CGFloat, shows: Bool) {
+        #expect(
+            LocationScreen.shouldShowPinnedBar(
+                dialCentreY: centre,
+                readoutTopY: readoutTop,
+                foldY: fold
+            ) == shows
+        )
     }
 
     @Test("Shows while the dial's centre is below the fold; hides once it's on screen")
@@ -1337,7 +1367,7 @@ struct CompassViewModelTests {
         harness.viewModel.update(Self.context(moonDay: Self.moonDay(rise: nil)))
 
         #expect(harness.viewModel.arc == nil)
-        #expect(harness.moon.requestedPassDates.isEmpty)
+        #expect(harness.viewModel.guidance != nil)
     }
 
     @Test("No compass (Far): no arc")
@@ -1348,7 +1378,8 @@ struct CompassViewModelTests {
         harness.viewModel.update(Self.context(place: Self.sydney))
 
         #expect(harness.viewModel.arc == nil)
-        #expect(harness.moon.requestedPassDates.isEmpty)
+        #expect(harness.viewModel.guidance != nil)
+        #expect(!harness.viewModel.isSensing)
     }
 
     @Test("The moon's place on the arc is unwrapped onto the pass")

@@ -151,6 +151,14 @@ final class CompassViewModel {
     /// wherever there's no compass.
     private(set) var upNow: UpNow?
 
+    /// Guidance describes the selected city's today even without a local compass.
+    private(set) var guidance: String?
+    @ObservationIgnored private var guidanceCachePlace: Place?
+    @ObservationIgnored private var guidanceCacheDay: Date?
+    @ObservationIgnored private var guidancePhase: MoonPhase?
+    @ObservationIgnored private var guidanceNextSet: MoonEvent?
+    private let moonVoice = MoonVoice()
+
     /// The latest reading, or `nil` while the sensors are off.
     private(set) var reading: HeadingReading?
 
@@ -223,6 +231,7 @@ final class CompassViewModel {
     @ObservationIgnored private var headingTask: Task<Void, Never>?
 
     /// Ticks the "Moon" target refresh while the sensors run.
+    @ObservationIgnored private var guidanceRefreshTask: Task<Void, Never>?
     @ObservationIgnored private var moonRefreshTask: Task<Void, Never>?
 
     /// Clears `preciseConfirmation` after its few seconds.
@@ -542,6 +551,25 @@ final class CompassViewModel {
 
     private func rebuildTargets() {
         let moment = now()
+        if context.isToday, let place = context.place {
+            var calendar = Calendar(identifier: .gregorian)
+            calendar.timeZone = place.timeZone
+            let day = calendar.startOfDay(for: moment)
+            if guidanceCachePlace != place || guidanceCacheDay != day {
+                guidanceCachePlace = place
+                guidanceCacheDay = day
+                guidancePhase = moonService.exactPrincipalPhase(on: moment, in: place.timeZone)
+                guidanceNextSet = context.moonDay?.set == nil
+                    ? calendar.date(byAdding: .day, value: 1, to: moment)
+                        .flatMap { moonService.moonDay(for: place, on: $0).set }
+                    : nil
+            }
+        } else {
+            guidanceCachePlace = nil
+            guidanceCacheDay = nil
+            guidancePhase = nil
+            guidanceNextSet = nil
+        }
         var rebuilt: [CompassTarget] = []
         if visibility.showsCompass, let moonDay = context.moonDay {
             if let rise = moonDay.rise {
@@ -648,6 +676,13 @@ final class CompassViewModel {
             nextRise = nil
         }
         if newUpNow != upNow { upNow = newUpNow }
+        if context.isToday, let place = context.place, let day = context.moonDay {
+            let actual = position ?? moonService.moonPosition(for: place, at: moment)
+            let activePass = actual.isUp ? (pass ?? moonService.moonPass(for: place, containing: moment)) : nil
+            let rise = actual.isUp ? nil : (nextRise ?? moonService.nextMoonrise(for: place, after: moment))
+            guidance = moonVoice.message(day: day, position: actual, pass: activePass,
+                nextRise: rise, nextSet: guidanceNextSet, exactPhase: guidancePhase, at: moment)
+        } else { guidance = nil }
     }
 
     private func setTargets(_ newTargets: [CompassTarget]) {
@@ -687,6 +722,22 @@ final class CompassViewModel {
     }
 
     private func updateSensors() {
+        // Guidance needs a clock even for searched cities with no compass;
+        // it must not start heading/location sensors just to refresh text.
+        if context.isToday, context.place != nil, isInForeground, !shouldSense {
+            if guidanceRefreshTask == nil {
+                guidanceRefreshTask = Task { [weak self] in
+                    while !Task.isCancelled {
+                        do { try await Task.sleep(for: .seconds(60)) } catch { return }
+                        guard let self else { return }
+                        self.rebuildTargets()
+                    }
+                }
+            }
+        } else {
+            guidanceRefreshTask?.cancel()
+            guidanceRefreshTask = nil
+        }
         if shouldSense {
             startSensorsIfNeeded()
         } else {

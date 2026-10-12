@@ -41,6 +41,21 @@ nonisolated struct AstronomyEngineMoonService: MoonService {
 
     // MARK: - MoonService
 
+    func exactPrincipalPhase(on date: Date, in timeZone: TimeZone) -> MoonPhase? {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = timeZone
+        let start = calendar.startOfDay(for: date)
+        guard let end = calendar.date(byAdding: .day, value: 1, to: start) else { return nil }
+        for (angle, phase) in [(0.0, MoonPhase.new), (180.0, MoonPhase.full)] {
+            let result = Astronomy_SearchMoonPhase(angle, Self.astroTime(from: start), 2)
+            if result.status == ASTRO_SUCCESS {
+                let event = Self.date(from: result.time)
+                if event >= start && event < end { return phase }
+            }
+        }
+        return nil
+    }
+
     func moonDay(for place: Place, on date: Date) -> MoonDay {
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = place.timeZone

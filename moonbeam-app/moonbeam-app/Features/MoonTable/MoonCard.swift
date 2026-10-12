@@ -135,6 +135,7 @@ struct MoonCard: View {
             header
             hairline
             riseSetArea
+            guidanceLine
         }
         .padding(.vertical, Theme.Metrics.cardPaddingVertical)
         .padding(.horizontal, Theme.Metrics.cardPaddingHorizontal)
@@ -143,6 +144,32 @@ struct MoonCard: View {
         .overlay {
             cardShape.strokeBorder(Theme.Colors.stroke, lineWidth: Theme.Metrics.hairline)
         }
+    }
+
+    /// Reserve a font-scaled line on other dates. Today's text may wrap,
+    /// rather than hiding the useful end of a sentence at narrow/AX sizes.
+    private static let guidanceBulletSpacing: CGFloat = 6
+
+    private var guidanceLine: some View {
+        ZStack(alignment: .topLeading) {
+            Text(dynamicTypeSize.isAccessibilitySize ? " \n " : " ")
+                .font(Theme.Fonts.label).hidden()
+            if let guidance = viewModel.compass.guidance {
+                HStack(alignment: .firstTextBaseline, spacing: Self.guidanceBulletSpacing) {
+                    Text("•")
+                        .foregroundStyle(Theme.Colors.accent)
+                        .accessibilityHidden(true)
+                    Text(guidance)
+                        .foregroundStyle(Theme.Colors.textSecondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                .font(Theme.Fonts.label)
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel(guidance)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .accessibilityHidden(viewModel.compass.guidance == nil)
     }
 
     private var cardShape: RoundedRectangle {
@@ -331,15 +358,60 @@ struct MoonCard: View {
     /// it moves when the moon rises or sets.
     private var riseSetArea: some View {
         let layout = RiseSetLayout(upNow: viewModel.compass.upNow)
-        return ZStack(alignment: .top) {
-            if let twin = layout.twin {
-                riseSetRow(twin)
-                    .hidden()
-                    .accessibilityHidden(true)
+        return Group {
+            if dynamicTypeSize.isAccessibilitySize {
+                accessibilityRiseSetArea(layout)
+            } else {
+                ZStack(alignment: .top) {
+                    if let twin = layout.twin {
+                        riseSetRow(twin)
+                            .hidden()
+                            .accessibilityHidden(true)
+                    }
+                    riseSetRow(layout)
+                }
             }
-            riseSetRow(layout)
         }
         .padding(.horizontal, -Self.cellOutset)
+    }
+
+    /// At accessibility sizes, rise and set remain a pair while their ideal
+    /// widths fit. The status is always a separate full-width section, so its
+    /// title, countdown or return time never competes with the event cells.
+    /// `ViewThatFits` makes the pair respond to actual strings and width — AX
+    /// size alone does not force the vertical layout.
+    private func accessibilityRiseSetArea(_ layout: RiseSetLayout) -> some View {
+        VStack(alignment: .leading, spacing: Theme.Metrics.cardSpacing) {
+            ViewThatFits(in: .horizontal) {
+                idealWidthEventPair
+                stackedEventPair
+            }
+
+            if layout.fallback.showsPillRow {
+                middlePill()
+            }
+        }
+        .accessibilityElement(children: .contain)
+    }
+
+    /// The preferred AX pair. Fixing only its horizontal ideal size gives
+    /// `ViewThatFits` a meaningful fit test while text can still grow freely
+    /// in height.
+    private var idealWidthEventPair: some View {
+        HStack(alignment: .top, spacing: Self.columnGap) {
+            column(displayedRise, isHighlighted: viewModel.highlightedCardCell == .moonrise)
+            column(displayedSet, isHighlighted: viewModel.highlightedCardCell == .moonset)
+        }
+        .fixedSize(horizontal: true, vertical: false)
+    }
+
+    /// Narrow-width fallback. Each complete event gets the card's full width.
+    private var stackedEventPair: some View {
+        VStack(alignment: .leading, spacing: Self.columnGap) {
+            column(displayedRise, isHighlighted: viewModel.highlightedCardCell == .moonrise, fills: true)
+            column(displayedSet, isHighlighted: viewModel.highlightedCardCell == .moonset, fills: true)
+        }
+        .fixedSize(horizontal: false, vertical: true)
     }
 
     /// Moon up: three columns, the widest that fits of `threeColumnRungs`
@@ -561,7 +633,7 @@ struct MoonCard: View {
                     Text(verbatim: Self.timeSlotSample)
                         .font(Theme.Fonts.display(scale: rung.scale))
                         .hidden()
-                    ZStack {
+                    ZStack(alignment: Alignment(horizontal: .center, vertical: .firstTextBaseline)) {
                         Text(UpNowFormatter.setForTodayTitle)
                             .font(Theme.Fonts.display(scale: Self.upNowTitleScale * rung.scale))
                             .lineLimit(rung.oneLine ? 1 : nil)
@@ -572,8 +644,10 @@ struct MoonCard: View {
                             .fixedSize(horizontal: false, vertical: true)
                     }
                 }
-                ZStack {
-                    Text("Back late tonight, 12:20 AM")
+                // Keep the direction baseline aligned without reserving a
+                // second line beneath short details at standard text sizes.
+                ZStack(alignment: .top) {
+                    Text(dynamicTypeSize.isAccessibilitySize ? "Back late tonight, 12:20 AM" : " ")
                         .font(Theme.Fonts.detail)
                         .lineLimit(rung.oneLine ? 1 : nil)
                         .fixedSize(horizontal: false, vertical: true)

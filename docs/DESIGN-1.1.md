@@ -276,7 +276,12 @@ The screen scrolls; containers reflow:
 - Sentence wraps freely (rule in §3.1).
 - ‹ › leave the header row and become their **own full-width row** of two equal buttons, 60 pt tall.
 - Phase stacks: glyph (64 pt) above the text.
-- Moonrise and Moonset **stack**, divided by hairlines (since 5.4.1: boxed cells, so 5.5 stacks the boxes).
+- **Agreed 2026-10-12 (5.5):** Moonrise and Moonset stay side by side while their complete content fits,
+  including at AX2/AX3. Today's status (Up now / Not up yet / Set for today) moves into a full-width
+  section below the pair, followed by full-width guidance that wraps freely. Stack rise/set vertically
+  when available width requires it; verify smaller phones, longer times, "last night", missing events,
+  and AX4/AX5. The page scrolls rather than clipping content. This supersedes unconditional AX stacking.
+- Review the pinned compass bar covering or duplicating the compass readout as part of 5.5.
 - Dial is a fixed **260 pt**; letters capped at 17 pt and expose the **Large Content Viewer**. Only
   the heading readout scales.
 

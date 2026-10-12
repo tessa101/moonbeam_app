@@ -5,6 +5,16 @@
 
 ---
 
+### 2026-10-12 · 5.5: keep the rise/set pair when it fits; status and guidance below
+- **Decision (Tessa):** keep rise and set side by side while complete content fits. Today's status occupies
+  a full-width section below, with wrapping guidance beneath it. Stack rise/set only when needed for
+  available width and content, including smaller phones and AX4/AX5.
+- **Why:** Tessa's AX2/3 screenshot (`IMG_3113.PNG`) shows a readable pair with status and guidance below.
+  This replaces the earlier recommendation to stack all columns from AX1.
+- **Review:** longer times, prior-day context, missing events, countdowns, and the pinned bar covering or
+  duplicating the compass readout. Fresh default/AX1/AX2/AX3/AX5 comparisons on iPhone 17 and SE,
+  including scrolled content. Implementation and verification remain pending under 5.5.
+
 ### 2026-10-09 · Place change: the sentence stays and only the city cross-fades; hold the slot; skeleton minimum (LOADER.md §12.9)
 - **Finding (Tessa's video of 5.10a.2, frame by frame):** the pending sentence says "today" instead of the selected
   date, fades out to a blank frame and loads in again; the content below jumps ~100 pt while the card slot is empty;
@@ -1483,3 +1493,23 @@ Post-fix validation: full simulator suite **757 tests / 59 suites passed in 115.
 ### 2026-10-12 · Prepare interim TestFlight 0.1 (9)
 
 Tessa requested release preparation after the prioritized phone checks. Apply the October 8 version decision to both app configurations: 0.1 (9). Ship completed consolidation and transition work for another TestFlight round while 5.11, 5.5 and 5.12 remain deferred. Existing 1.0 (8) archives retain their original metadata; create a fresh signed archive rather than altering an archive. Release archive and strict signature verification passed. Upload/Apple acceptance remain pending; tester notes are in TESTFLIGHT-BUILD-9.md.
+
+
+### 2026-10-12 — Align today’s middle-column bearing
+
+Phone review showed the Up now bearing below the rise/set bearings. Keep the reserved space for longer down-state text, but align the detail to the top and the title by its first baseline so the three direction lines align.
+
+
+### 2026-10-12 — Today-only guidance, 5.11.3
+
+Tessa approved guidance beneath the card columns for today only, with ordinary altitude descriptions rather than fists. Use full direction names and explicit event wording (“Rises after midnight”), not “Back” or “No rise”. Missing-event explanations take priority. Exact phase-event dates are local to the selected city. Reserve two scaled lines so complete copy fits small screens without ellipses; accessibility can wrap further. Other dates keep the empty slot. Guidance does not require compass/location access.
+
+
+### 2026-10-12 — Tighten guidance bottom space
+
+Phone review found excessive blank space beneath single-line guidance. Reserve one scaled line rather than two; let longer text grow naturally. Keep the normal card bottom padding.
+
+
+### 2026-10-12 — Match guidance mock spacing and bullet
+
+Remove the standard-size hidden second detail line under the bearing so guidance sits closer to the columns. Include the mock’s amber bullet and 6 pt gap before text. Bullet is decorative for VoiceOver. Preserve extra wrapping room at accessibility sizes.

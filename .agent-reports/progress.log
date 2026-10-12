@@ -399,3 +399,14 @@
 2026-10-12 Tessa phone results recorded: telescope on Never return, main recovery on While Using, Control Center connectivity recovery, moon flight/haptic all successful; Services off opens app Settings as designed; back-navigation path not reported; no code change
 2026-10-12T11:42:22.633992-07:00 release prep: confirmed both new Organizer archives are 1.0 (8); app Debug/Release now 0.1 (9); initial prep assertion failed before edits, stopped prematurely launched archive; preparing corrected archive
 2026-10-12T11:43:38.025740-07:00 release prep: ARCHIVE SUCCEEDED; verified 0.1 (9), release contents and strict signature (trust access required); tester notes ready; committing; upload pending
+2026-10-12T11:45:41.652557-07:00 committed d9eba76; opened and selected verified 0.1 (9) in Xcode Organizer; Distribute App available; upload not performed by agent
+2026-10-12 12:14 PDT committed 810bc6e: Step 5.11.1 today-state middle column, countdown, active-pass rise/set and confirmed late-tonight wording; build-for-testing succeeded; focused checks 39/39; default-text iPhone 17 and SE simulator reviews passed
+2026-10-12 12:33 PDT committed 75cba2c: Step 5.11.2 live altitude; build-for-testing succeeded; focused checks 19/19 plus final smoke 3/3; iPhone 17 and SE default/XXXL simulator reviews passed; sessions closed
+
+2026-10-12 12:22 PDT Up now bearing alignment corrected; build-for-testing and focused layout/height tests succeeded; phone confirmation pending
+
+2026-10-12 5.11.3 completed: build succeeds; full regression exposed one stale altitude expectation, corrected; final guidance/compass/height/layout run succeeds; default-screen previews reviewed; phone review pending
+
+2026-10-12 guidance bottom spacing tightened: standard sizes reserve one line, AX retains two; build and 5 card-height tests passed; SE preview reviewed
+
+2026-10-12 guidance mock spacing corrected: amber bullet + 6 pt gap, no standard-size hidden detail reservation; build and 11 layout/height checks pass; SE locked tile reviewed

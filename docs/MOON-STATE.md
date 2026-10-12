@@ -51,25 +51,47 @@ e.g. 11:10 PM) left of "Up now", and the line from it reads as "rose at 11:10 PM
 - Wraps under the bearing at AX sizes (5.5 reflow) rather than truncating.
 - VoiceOver: "Moon up now, west, 266 degrees, 23 degrees above the horizon."
 
-## 4. Voice: edge cases only (B now; A, an always-on answer line under the sentence, after the design review)
-One quiet line under the card's columns, **only** in the confusing states. Facts first, at most one wry aside. Plain
-text for VoiceOver (it reads the line as written).
+## 4. Today’s guidance (5.11.3, revised 2026-10-12)
 
-| Case | Line (proposed, Tessa to edit) |
+One quiet guidance message inside the card beneath its columns, throughout today.
+Other dates retain an empty reserved slot, with no accessibility element. Direction
+names are spelled out. The exact bearing/altitude remain in the middle column.
+
+| Scenario | Message |
 |---|---|
-| Set for today | "It set at 2:23 PM, so tonight's a moonless sky. Good night for stars." |
-| No moonrise on this date (any date) | "No moonrise today. It rose late last night and slips past midnight." |
-| No moonset on this date (any date) | "No moonset today. It stays up past midnight and sets tomorrow." |
-| Full moon (illumination ≥ 99%) | "Full moon. It rises around sunset and stays up all night." |
-| New moon (illumination ≤ 1%) | "New moon. It's up, but lost in the sun's glare." |
+| Up below 10° | Low on the horizon. Find a clear view {direction}. |
+| Up 10–29° | Low in the sky. Look {direction}. |
+| Up 30–59° | Partway up the sky. Look {direction}. |
+| Up 60–79° | High in the sky. Look {direction}. |
+| Up 80°+ | Nearly overhead. Look up. |
+| Down, rise later today | Up at {time}. Look {direction}. |
+| Down, less than a minute to rise | Rising now. Look {direction}. |
+| Down, next rise tomorrow | Rises after midnight at {time}. |
+| No rise today, up since yesterday, sets today | Rose last night. Sets today at {time}. |
+| No rise today, down | Rises after midnight at {time}. (when tomorrow’s rise is confirmed) |
+| No set today, up, confirmed set tomorrow | Stays up past midnight. Sets {time}. |
+| No set today, down, rise today and set tomorrow | Up at {time}, until after midnight. |
+| Exact full-moon day, up | Full moon. A bright night for moonwatching. |
+| Exact full-moon day, down | Full moon. Up at {time}. |
+| Exact new-moon day | New moon. Close to the sun, hard to spot. |
 
-- One line at most; priority top to bottom if more than one applies.
-- Copy lives in one table (`MoonVoice`, proposed) so A can reuse it later.
-- No line in ordinary states.
+Priority: missing rise/set explanation → next rise after midnight → exact new/full
+phase → altitude guidance → ordinary next rise. Use only confirmed event context;
+otherwise fall back to “No moonrise today.” / “No moonset today.” or
+“The moon is below the horizon.” Never imply tomorrow for an event several days away.
+
+`MoonVoice` owns the copy. Exact full/new phases use the event’s local calendar day,
+not the broad phase-name or illumination windows. Times use the selected city’s zone.
+Guidance remains available for searched cities without an active compass and refreshes
+without starting heading/location sensors. Ordinary updates do not replay the card entrance.
+
+Layout: Nunito label text, secondary colour, preceded by an amber bullet with a 6 pt gap as in the approved mock. Reserve one font-scaled line at standard sizes; longer guidance grows naturally
+without ellipses. Accessibility sizes retain two reserved lines and can wrap further. Phone review rejected reserving a second blank line
+below short guidance because it created excessive bottom space. Other dates keep a
+one-line empty slot.
 
 ## 5. Open
-- ~~"Tomorrow night" wording~~ → **"Back late tonight, 12:20 AM"** (Tessa, 2026-10-08). If the next rise is later
-  than ~4 AM, say "Back tomorrow, 4:35 AM" instead (proposed).
+- ~~"Tomorrow night" wording~~ → **"Back late tonight, 12:20 AM"** (Tessa, 2026-10-08). The middle column retains this confirmed wording; the guidance below it says “Rises after midnight at {time}.”
 - **Full / new moon lines (proposed default):** only on the **calendar day of the exact full or new moon** in the
   place's time zone, not an illumination threshold (≥ 98% lasts two to three days). Voice copy stays draft until a
   device read-through.

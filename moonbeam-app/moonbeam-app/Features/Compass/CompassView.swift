@@ -25,6 +25,11 @@ struct CompassView: View {
     /// pinned bar's rule (COMPASS-1.1.md §9.6) is `LocationScreen`'s.
     var onDialCentreChange: (CGFloat) -> Void = { _ in }
 
+    /// The readout's top edge in global coordinates. The pinned summary must
+    /// not appear while this full readout is still visible, or the two copies
+    /// compete and the overlay can cover the original at large text sizes.
+    var onReadoutTopChange: (CGFloat) -> Void = { _ in }
+
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     /// The readout's slot, so the dial doesn't move when the pill appears.
@@ -92,6 +97,11 @@ struct CompassView: View {
             readout
                 .fixedSize(horizontal: false, vertical: true)
                 .frame(height: readoutHeight)
+                .onGeometryChange(for: CGFloat.self) { proxy in
+                    proxy.frame(in: .global).minY
+                } action: { minY in
+                    onReadoutTopChange(minY)
+                }
 
             CompassDial(
                 faceDiameter: CompassDial.faceDiameter(forWidth: availableWidth),

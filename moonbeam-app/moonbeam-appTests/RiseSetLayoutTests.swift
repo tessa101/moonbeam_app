@@ -17,7 +17,7 @@ nonisolated struct RiseSetLayoutTests {
     private static let up = UpNow(
         state: .up(bearing: "266° W", altitude: "23° up", pass: nil),
         title: UpNowFormatter.upTitle,
-        accessibilityLabel: "Moon up now, west, 266 degrees."
+        accessibilityLabel: "Moon up now, west, 266 degrees, 23 degrees above the horizon."
     )
 
     private static let down = UpNow(
@@ -33,7 +33,7 @@ nonisolated struct RiseSetLayoutTests {
         let layout = RiseSetLayout(upNow: Self.up)
 
         #expect(layout.cells == [.moonrise, .upNow, .moonset])
-        #expect(layout.bearing == "266° W")
+        #expect(layout.bearing == "266° W · 23° up")
         #expect(layout.connector == .travelled)
     }
 

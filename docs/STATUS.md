@@ -1,9 +1,16 @@
 # Status & Handoff
 
+_5.5 direction agreed, 2026-10-12: keep rise/set side by side while complete content fits; today's status
+and wrapping guidance go below at full width. Stack rise/set only when needed. Include pinned-bar/readout
+overlap in review. See DESIGN-1.1.md §4 and DECISIONS.md. Documentation only; implementation and fresh
+AX screenshot verification remain pending._
+
 > A living note on where things stand. Update it at the end of each work session
 > so the next session (you, or Claude) can pick up cold.
 
 _Release preparation, 2026-10-12: app Debug/Release updated to **0.1 (9)** per the October 8 naming decision. Fresh signed Release archive succeeded and version/signature/release contents were verified: `build/releases/Moonbeam-0.1-build-9.xcarchive`. Release assessment and tester notes: `docs/TESTFLIGHT-BUILD-9.md`. Interim release of completed work; 5.11/5.5/5.12 remain deferred. Upload and App Store Connect acceptance are pending. Tessa’s two earlier October 12 Organizer archives remain 1.0 (8); use the fresh 0.1 (9) archive._
+
+_Step 5.11.3, 2026-10-12: today-only guidance added inside the card beneath the columns. Ordinary messages describe altitude in plain language (no fists); unusual messages use confirmed rise/set context and exact local full/new-moon event days. Other dates retain an empty slot. Guidance works without compass access and does not start location/heading sensors. Build-for-testing passed. Full regression run: 765 tests, one stale pre-altitude expectation failed; corrected that expectation, then guidance/compass/card-height/rise-set focused rerun passed. Default-size iPhone 17 and SE previews reviewed. Large-text accessibility exposes the complete guidance; broader existing AX layout issues remain deferred to 5.5 and a complete scrolled visual review was not obtained. Phone-review follow-up: reduced the guidance reservation to one scaled line to remove the extra blank space beneath short messages; longer messages still wrap. Phone review pending. Evidence: `.agent-reports/5.11.3/`._
 
 _Step 5.11.1, 2026-10-12: today’s moon card now keeps its middle column in all three states: **Up now**, **Not up yet** with a minute-updated countdown, and **Set for today** with the confirmed **“Back late tonight, [time]”** wording. While up, the outside columns show the active pass’s rise and set, including **last night** for a prior-day rise. Other dates retain two columns, and card state continues to use the compass’s existing up/down result. Focused rise/set, midnight, countdown, layout, card-height and compass-tick checks pass: **39 tests, 0 failures**. Default-text simulator review passed without clipping or overlap on iPhone 17 and iPhone SE (3rd generation). Altitude (5.11.2), edge-case voice copy (5.11.3), and broader accessibility reflow (5.5) remain deferred._
 
@@ -38,6 +45,8 @@ _Build 5.10a.2 completed 2026-10-09 (continued from Codex's uncommitted work): c
 _Build 5.10c completed 2026-10-09: ‹ › use 0.88 scale, 10% white fill, ≥ 90 ms hold, 0.15 s spring release, and a soft 0.5 haptic per enabled step; extended frame sampling and all 974 cases pass. Report: `.agent-reports/5.10c/`._
 
 _Build 5.10b completed 2026-10-09: reproduced first; exact madlib line slot fixes the cause; the 0.5 s frame-sampling regression and all 973 cases pass. Report: `.agent-reports/5.10b/`._
+
+_5.11.1 phone-review follow-up, 2026-10-12: middle-column detail now aligns to the top of its reserved text slot, and the title shares its reserved title baseline. Removes the extra Up now/bearing gap seen on the phone while retaining space for longer down-state copy. Build-for-testing passed; existing MoonCardHeightTests and RiseSetLayoutTests passed. Phone visual confirmation remains pending._
 
 ## Where things live
 - **Local repo:** `~/app-ideas/moonbeam` (the one true folder)
@@ -642,3 +651,6 @@ Design-pass items (visuals, copy, a11y) are tracked in **[DESIGN-REVIEW.md](DESI
   local midnight, i.e. the end of the selected day. See DECISIONS.md and PRODUCT FR5
 - Primary persona (confirm with design partner)
 - Display name "Moon Signal" for now, was "Moonbeam" (project name stays `moonbeam-app`). `AppInfo.name` and home-screen name updated (8ed1750)
+
+
+_5.11.3 mock spacing follow-up, 2026-10-12: removed the standard-size hidden second middle-column detail line; guidance now sits closer to the bearing row. Amber bullet with 6 pt gap added to match the mock. Actual long copy may grow the card. Build and 11 layout/height checks passed; SE highlighted tile preview reviewed; phone check pending._

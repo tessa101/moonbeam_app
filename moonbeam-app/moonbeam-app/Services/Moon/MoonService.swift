@@ -16,6 +16,9 @@ import Foundation
 /// would be main-actor isolated and every caller, tests included, would have
 /// to hop to the main actor to ask for a moon table.
 nonisolated protocol MoonService {
+    /// Exact new/full phase occurring on this local calendar day, not a phase-name window.
+    func exactPrincipalPhase(on date: Date, in timeZone: TimeZone) -> MoonPhase?
+
     func moonDay(for place: Place, on date: Date) -> MoonDay
 
     /// The moon's direction, and whether it's up, at one instant. Unlike
@@ -32,4 +35,9 @@ nonisolated protocol MoonService {
     /// for the card's "Rises in 34 min" (COMPASS-1.1.md §3). `nil` when
     /// none falls within the search's reach.
     func nextMoonrise(for place: Place, after date: Date) -> MoonEvent?
+}
+
+// Services without phase-event support omit the special phase guidance.
+extension MoonService {
+    nonisolated func exactPrincipalPhase(on date: Date, in timeZone: TimeZone) -> MoonPhase? { nil }
 }

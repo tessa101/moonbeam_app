@@ -1,6 +1,54 @@
+# Guidance mock alignment follow-up — 2026-10-12
+
+Removed standard-size hidden detail reservation beneath the bearing, tightening the gap above guidance and shrinking the highlighted tile. Added the mock’s amber bullet with a 6 pt text gap; VoiceOver reads only the message. Longer actual text can grow naturally, so height tests now permit explanatory copy to grow the card. Build-for-testing and 11 card-height/rise-set checks passed. SE locked-on-Moon screenshot reviewed: `.agent-reports/5.11.3/se-mock-spacing.png`. Phone confirmation pending.
+
+---
+
+# Guidance bottom spacing follow-up — 2026-10-12
+
+Removed the second reserved guidance line after phone review. Short messages now use one line plus normal card bottom padding. Longer messages still wrap naturally. Build-for-testing succeeded; all 5 card-height tests passed. Default-size SE preview confirms tighter bottom space. Accessibility sizes retain the two-line reservation.
+
+---
+
+# 5.11.3 today guidance — 2026-10-12
+
+Implemented today-only guidance beneath the card columns. Revised messages remove fists and use full direction names; “Rises after midnight” replaces vague return wording in the guidance. Missing-event explanations have priority, then after-midnight rise, exact new/full phase, ordinary altitude/next rise. Event claims are conditional on actual dates, in the selected city’s zone. No guidance on other dates; empty slot retained. Two scaled lines reserve room for complete copy on small screens; AX can wrap further. No new dependencies or Vendor edits.
+
+Build-for-testing passed. Full run: 765 tests with one stale RiseSetLayoutTests expectation left over from 5.11.2 (bearing expected without altitude). Corrected that expectation; final guidance/compass/card-height/rise-set run passed. Daily phase/next-set context is cached; guidance refreshes for hidden compasses without starting heading or location sensors.
+
+Default-text iPhone 17 and SE reviews: ordinary up, next rise, after-midnight rise and other-date empty slot have no guidance truncation. Evidence here: `.agent-reports/5.11.3/`. AX guidance is present in the accessibility tree; complete scrolled visual review could not be obtained (Device Hub scroll action failed). Existing AX sentence/header issues remain 5.5. SE text restored to default.
+
+Phone review: check the new line’s spacing, direction wording, and date stepping; compare today against another date; check wrapping at your preferred larger text size. These changes remain in the working tree, with earlier uncommitted alignment/document changes preserved. No upload or release archive performed.
+
+---
+
+# 5.11.1 bearing alignment follow-up — 2026-10-12
+
+Fixed the Up now gap reported on the phone: middle-column detail uses top alignment within its reserved space; title uses first-baseline alignment. Build-for-testing and existing MoonCardHeightTests / RiseSetLayoutTests succeeded. Phone visual confirmation remains pending.
+
+---
+
+# Step 5.11.2 moon altitude — 2026-10-12
+
+Implemented and committed as `75cba2c`. The live astronomy position now carries geometric altitude through `MoonPosition` to the same compass refresh that updates bearing. Up now displays `266° W · 23° up`, rounded to whole degrees and clamped to at least `1° up` while the existing rise/set rule says the moon is up. Its VoiceOver label is exactly “Moon up now, west, 266 degrees, 23 degrees above the horizon.” Number changes have no numeric transition; the existing large-text fallback remains vertically flexible so the added altitude is not truncated. 5.11.3 and 5.5 remain deferred.
+
+Final Xcode build-for-testing succeeded in 6.582 s. The focused altitude/service/position-update/spoken-label/layout run passed 19/19; a final renamed-test smoke run passed 3/3. iPhone 17 and iPhone SE (3rd generation) simulator reviews passed at default and XXXL text. At default size, `266° W · 23° up` shares the exact baseline row with `last night` and `304° NW`; at XXXL the existing full-width status row kept the entire phrase visible without clipping or overlap. Both simulator sessions were closed.
+
+---
+
+# Step 5.11.1 moon states — 2026-10-12
+
+Implemented and committed as `810bc6e`. Today always has the existing card’s middle column: Up now, Not up yet with a minute-updated countdown, or Set for today with the confirmed “Back late tonight, [time]” wording. The up state uses this pass’s rise/set and says “last night” for a prior-day rise; other dates stay two-column. The card continues to consume the compass model’s existing `isUp` result. Altitude, edge-case voice copy, and broader accessibility reflow remain deferred.
+
+Final Xcode build-for-testing succeeded in 6.739 s. The focused rise/set, midnight, countdown, layout, card-height, and compass-tick run passed 39/39. At default text size, iPhone 17 and iPhone SE (3rd generation) simulator reviews found no overlap, clipping, or truncation in Up now, Not up yet, or Set for today; accessibility labels exposed the intended state and active-pass times. Physical-phone review remains for Tessa.
+
+---
+
 # TestFlight build 9 preparation — 2026-10-12
 
 Done: changed app Debug/Release to 0.1 (9); fresh signed Release archive succeeded; bundle contents and strict signature verified. Notes: docs/TESTFLIGHT-BUILD-9.md. Archive: build/releases/Moonbeam-0.1-build-9.xcarchive. Latest app-code suite remains 757 tests / 59 suites passing; version-only change requires no new behavioral tests.
+
+Committed release prep: `d9eba76`. Xcode Organizer visibly confirms the fresh 0.1 (9) archive and it is selected, ready for Distribute App.
 
 Next: distribute the fresh 0.1 (9) archive to TestFlight and paste tester notes. Upload and Apple acceptance pending. Old October 12 Organizer archives are 1.0 (8). No PTY/CoreSimulator errors. Broader deferred reviews remain documented.
 

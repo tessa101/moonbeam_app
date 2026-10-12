@@ -38,6 +38,9 @@ struct LocationScreen: View {
     /// visible content: the screen's, or the bottom bar's top).
     @State private var dialCentreY: CGFloat?
     @State private var foldY: CGFloat?
+    /// The pinned summary is redundant while the compass's own readout is
+    /// still in the viewport, and at AX sizes the overlay can cover it.
+    @State private var compassReadoutTopY: CGFloat?
 
     /// LOADER.md §2.1, Reduce Motion included (opacity only): the phase
     /// cycle fades in, and fades out faster as the content loads in.
@@ -330,6 +333,10 @@ struct LocationScreen: View {
             onDialCentreChange: { centreY in
                 dialCentreY = centreY
                 updatePinnedBar()
+            },
+            onReadoutTopChange: { topY in
+                compassReadoutTopY = topY
+                updatePinnedBar()
             }
         )
         .onScrollVisibilityChange(threshold: Self.compassVisibilityThreshold) { isVisible in
@@ -338,6 +345,7 @@ struct LocationScreen: View {
         .onDisappear {
             viewModel.compass.setOnScreen(false)
             dialCentreY = nil
+            compassReadoutTopY = nil
             updatePinnedBar()
         }
     }
@@ -345,11 +353,24 @@ struct LocationScreen: View {
     /// Tells the compass whether its dial's centre is below the fold
     /// (COMPASS-1.1.md §9.6). No dial, no bar.
     private func updatePinnedBar() {
-        guard let dialCentreY, let foldY else {
+        guard let dialCentreY, let compassReadoutTopY, let foldY else {
             viewModel.compass.setDialCentreBelowFold(false)
             return
         }
-        viewModel.compass.setDialCentreBelowFold(CompassViewModel.isBelowFold(dialCentreY: dialCentreY, foldY: foldY))
+        viewModel.compass.setDialCentreBelowFold(
+            Self.shouldShowPinnedBar(
+                dialCentreY: dialCentreY,
+                readoutTopY: compassReadoutTopY,
+                foldY: foldY
+            )
+        )
+    }
+
+    /// The existing centre rule plus the 5.5 de-duplication gate: while the
+    /// screen's full readout is visible, the pinned copy stays out of its way.
+    static func shouldShowPinnedBar(dialCentreY: CGFloat, readoutTopY: CGFloat, foldY: CGFloat) -> Bool {
+        CompassViewModel.isBelowFold(dialCentreY: dialCentreY, foldY: foldY)
+            && readoutTopY >= foldY
     }
 
     // MARK: - Aha (LOADER.md §10.4)
