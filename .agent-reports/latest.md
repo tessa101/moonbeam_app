@@ -1741,3 +1741,6 @@ Your `DESIGN-REVIEW.md` status-bar edit is in this commit.
 - `moonbeam-app.xcodeproj/xcshareddata/xcodecloud/` is still untracked. It isn't mine, so I left it out.
 
 **Next:** 5.2 moon card.
+# Chunk 2c test confirmation (Tessa, 2026-10-12)
+
+Tessa ran the full suite twice in Terminal after Chunk 2c. Both runs passed: **754 tests in 59 suites**, `TEST SUCCEEDED`; the first took 36.440 seconds and the second 37.632 seconds.
