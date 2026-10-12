@@ -32,6 +32,14 @@ struct CompassView: View {
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
+    /// When the block this compass loads in with starts to show, if it's
+    /// loading in (LOADER.md §12.4): the settle waits for it.
+    @Environment(\.contentRevealsAt) private var revealsAt
+
+    /// The entrance's settle as drawn: snapped to the view model's start
+    /// offset, then animated to 0 (§12.4).
+    @State private var settleOffset = 0.0
+
     /// The readout's slot, so the dial doesn't move when the pill appears.
     /// The pill is taller than the slot and overflows it, as in the HTML;
     /// the slot grows with the readout's text style.
@@ -61,6 +69,38 @@ struct CompassView: View {
     /// and fade back in when it recovers.
     private static let lowAccuracyOpacity = 0.5
     private static let accuracyAnimation = Animation.easeInOut(duration: 0.3)
+
+    // MARK: - Entrance (LOADER.md §12.4, §12.4.1)
+
+    /// The compass fades in as the screen's blocks do.
+    private static let entranceFade = Animation.easeOut(duration: ContentLoadIn.duration)
+    private static func settleAnimation(delay: TimeInterval) -> Animation {
+        .spring(duration: CompassEntrance.settleSeconds, bounce: 0).delay(delay)
+    }
+
+    /// The readout and the lock pill take turns (§12.4.1): one fades out,
+    /// 150 ms, then the other fades in, so they never overlap.
+    private static let readoutFadeDuration: TimeInterval = 0.15
+    private static let readoutFadeOut = Animation.easeOut(duration: readoutFadeDuration)
+    private static let readoutFadeIn = readoutFadeOut.delay(readoutFadeDuration)
+
+    /// §12.4.1: the readout sits closer to the top tick. Tessa's start is
+    /// half the gap, but at half a pill would cover the top of a Moon locked
+    /// at 12 o'clock, so it stops this short of that mark (DECISIONS.md
+    /// 2026-10-12). Tune on the device.
+    private static let readoutGapShare: CGFloat = 0.5
+    private static let pillOverflowAllowance: CGFloat = 6
+    private static let readoutPull = min(
+        CompassDial.readoutSlotToRimGap * readoutGapShare,
+        CompassDial.readoutSlotToRimGap - CompassDial.lockedMarkReach - pillOverflowAllowance
+    )
+
+    /// What restarts the drawn settle: a new entrance, or this one starting
+    /// to settle.
+    private struct SettleTrigger: Equatable {
+        let generation: Int
+        let isSettling: Bool
+    }
 
     // MARK: - Body
 
@@ -102,6 +142,9 @@ struct CompassView: View {
                 } action: { minY in
                     onReadoutTopChange(minY)
                 }
+                // Over the dial's frame, now that it reaches up under the
+                // slot (§12.4.1).
+                .zIndex(1)
 
             CompassDial(
                 faceDiameter: CompassDial.faceDiameter(forWidth: availableWidth),
@@ -111,18 +154,32 @@ struct CompassView: View {
                 accessibilityTargets: viewModel.targetsAccessibilityLabel,
                 moonGlyph: viewModel.moonGlyph,
                 arc: viewModel.arc,
-                showsMoonPulse: viewModel.showsMoonPulse
+                showsMoonPulse: viewModel.showsMoonPulse,
+                settleOffset: reduceMotion ? 0 : settleOffset
             )
             // The dial's frame is symmetric about the face's centre.
             .onGeometryChange(for: CGFloat.self) { $0.frame(in: .global).midY } action: { centreY in
                 onDialCentreChange(centreY)
             }
+            // After the centre is read, so it stays the face's (§12.4.1).
+            .padding(.top, -Self.readoutPull)
 
             // No target rows (4.7): rise/set bearings are in the moon card
             // above, and VoiceOver reads every target from the dial.
         }
         .opacity(viewModel.isLowAccuracy && viewModel.reading != nil ? Self.lowAccuracyOpacity : 1)
         .animation(reduceMotion ? nil : Self.accuracyAnimation, value: viewModel.isLowAccuracy)
+        // §12.4: out until the first heading (or its wait) is over, so the
+        // dial never shows north-up first. Reduce Motion fades too.
+        .opacity(viewModel.entrance.showsCompass ? 1 : 0)
+        .animation(Self.entranceFade, value: viewModel.entrance.showsCompass)
+        .accessibilityHidden(!viewModel.entrance.showsCompass)
+        .task(id: SettleTrigger(
+            generation: viewModel.entrance.generation,
+            isSettling: viewModel.entrance.phase == .settling
+        )) {
+            await runSettle()
+        }
         .animation(reduceMotion ? nil : Self.lockAnimation, value: viewModel.lockedKind)
         .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { width in
             availableWidth = width
@@ -138,28 +195,57 @@ struct CompassView: View {
         }
     }
 
+    /// The settle as drawn (§12.4): snap to the view model's start offset,
+    /// then ease to 0 once the block is showing. Reduce Motion: none.
+    private func runSettle() async {
+        guard viewModel.entrance.phase == .settling, !reduceMotion else { return }
+        var snap = Transaction()
+        snap.disablesAnimations = true
+        withTransaction(snap) {
+            settleOffset = viewModel.entrance.startOffset
+        }
+        // Let the snap land before animating away from it.
+        await Task.yield()
+        let delay = max(revealsAt?.timeIntervalSinceNow ?? 0, 0)
+        withAnimation(Self.settleAnimation(delay: delay)) {
+            settleOffset = 0
+        }
+    }
+
     /// The heading ("72° ENE"), or locked, the amber pill ("Moonrise · 58°
     /// ENE", §3.3). One VoiceOver element either way: the heading, or
     /// "Compass accuracy is low" plus why when it can't be trusted (an
     /// untrustworthy number isn't read out), or "Pointing at moonrise, …".
+    ///
+    /// §12.4.1: the heading stays in its slot and fades out as a lock
+    /// engages, then the pill fades in alone; on release the pill goes and
+    /// the heading fades back. The entrance holds the heading out too.
     @ViewBuilder
     private var readout: some View {
-        if let lockText = viewModel.lockText, let lockReadout = viewModel.lockReadout {
-            Self.text(for: lockReadout)
-                .foregroundStyle(Theme.Colors.onAccent)
-                .padding(.vertical, Self.pillPaddingVertical)
-                .padding(.horizontal, Self.pillPaddingHorizontal)
-                .background(Theme.Colors.accent, in: Capsule())
-                .shadow(color: Theme.Colors.accent.opacity(Self.pillGlowOpacity), radius: Self.pillGlowRadius)
-                .transition(.opacity)
-                .accessibilityLabel(viewModel.lockAccessibilityLabel ?? lockText)
-        } else {
+        ZStack {
+            let showsHeading = viewModel.readoutOpacity > 0
             Self.text(for: viewModel.headingReadout)
                 .monospacedDigit()
                 .foregroundStyle(Theme.Colors.textPrimary)
+                .opacity(viewModel.readoutOpacity)
+                .animation(showsHeading ? Self.readoutFadeIn : Self.readoutFadeOut, value: showsHeading)
                 .accessibilityElement(children: .ignore)
                 .accessibilityLabel(viewModel.headingAccessibilityLabel)
                 .accessibilityAddTraits(.updatesFrequently)
+                .accessibilityHidden(viewModel.lockText != nil)
+            if let lockText = viewModel.lockText, let lockReadout = viewModel.lockReadout {
+                Self.text(for: lockReadout)
+                    .foregroundStyle(Theme.Colors.onAccent)
+                    .padding(.vertical, Self.pillPaddingVertical)
+                    .padding(.horizontal, Self.pillPaddingHorizontal)
+                    .background(Theme.Colors.accent, in: Capsule())
+                    .shadow(color: Theme.Colors.accent.opacity(Self.pillGlowOpacity), radius: Self.pillGlowRadius)
+                    .transition(.asymmetric(
+                        insertion: .opacity.animation(Self.readoutFadeIn),
+                        removal: .opacity.animation(Self.readoutFadeOut)
+                    ))
+                    .accessibilityLabel(viewModel.lockAccessibilityLabel ?? lockText)
+            }
         }
     }
 

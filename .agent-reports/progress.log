@@ -410,3 +410,11 @@
 2026-10-12 guidance bottom spacing tightened: standard sizes reserve one line, AX retains two; build and 5 card-height tests passed; SE preview reviewed
 
 2026-10-12 guidance mock spacing corrected: amber bullet + 6 pt gap, no standard-size hidden detail reservation; build and 11 layout/height checks pass; SE locked tile reviewed
+15:39 reading STEP-5.10a.3 doc + LOADER §12.4
+15:39 surveying compass code for reload triggers
+15:46 trigger inventory done; designing CompassEntrance
+15:48 code written (entrance model, VM, dial, view); checking diagnostics
+15:49 writing tests (entrance VM, triggers, frame sampling, 12.4.1)
+15:52 build-for-testing (Xcode BuildProject)
+15:53 build-for-testing passed; updating docs (LOADER §12.11, COMPASS-1.1 pulse, DECISIONS, STATUS)
+15:53 docs + reports written; committing

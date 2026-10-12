@@ -201,10 +201,14 @@ final class CompassViewModel {
     /// it changes (COMPASS.md §1, 4.5), so release and holding stay silent.
     private(set) var lockAcquisitionCount = 0
 
-    /// Some target has been locked since launch. The Moon's pulse
-    /// (COMPASS-1.1.md §5) stops then and doesn't return until the app
-    /// relaunches; this view model lives as long as the app does.
-    private(set) var hasLockedThisLaunch = false
+    /// The Moon has been locked since launch. Its pulse (COMPASS-1.1.md
+    /// §5) stops then and doesn't return until the app relaunches; this view
+    /// model lives as long as the app does. Locking on rise or set doesn't
+    /// count (LOADER.md §12.4.1).
+    private(set) var hasLockedMoonThisLaunch = false
+
+    /// The compass's entrance on its latest reload (LOADER.md §12.4).
+    private(set) var entrance = CompassEntrance.idle
 
     /// The dial's centre is below the fold (the screen's bottom, or a
     /// bottom bar's top), as the screen last reported it.
@@ -217,6 +221,8 @@ final class CompassViewModel {
     private let now: () -> Date
     private let moonRefreshInterval: Duration
     private let sleep: @Sendable (Duration) async throws -> Void
+    private let entranceSleep: @Sendable (Duration) async throws -> Void
+    private let reducesMotion: () -> Bool
     private let formatter = CompassFormatter()
     private let upNowFormatter = UpNowFormatter()
 
@@ -245,24 +251,39 @@ final class CompassViewModel {
     /// tick only looks it up again once it has passed.
     @ObservationIgnored private var nextRise: MoonEvent?
 
+    /// Waits out the entrance's heading wait, then its settle.
+    @ObservationIgnored private var entranceTask: Task<Void, Never>?
+
+    /// The signed turn between the last two headings, kept across sensor
+    /// sessions: the settle's direction (§12.4).
+    @ObservationIgnored private var lastHeadingChange: Double?
+
     // MARK: - Init
 
     /// - Parameters:
     ///   - now: the clock the "Moon" target is computed for.
     ///   - sleep: the wait between "Moon" refreshes, and before the aha line
     ///     clears; injectable so tests can tick it by hand.
+    ///   - entranceSleep: the entrance's heading wait and settle (§12.4),
+    ///     apart from `sleep` so tests can drive the two separately.
+    ///   - reducesMotion: the Reduce Motion setting: the entrance fades in
+    ///     already aligned, with no settle.
     init(
         headingService: any HeadingService,
         moonService: any MoonService,
         now: @escaping () -> Date = Date.init,
         moonRefreshInterval: Duration = CompassViewModel.defaultMoonRefreshInterval,
-        sleep: @escaping @Sendable (Duration) async throws -> Void = { try await Task.sleep(for: $0) }
+        sleep: @escaping @Sendable (Duration) async throws -> Void = { try await Task.sleep(for: $0) },
+        entranceSleep: @escaping @Sendable (Duration) async throws -> Void = { try await Task.sleep(for: $0) },
+        reducesMotion: @escaping () -> Bool = { false }
     ) {
         self.headingService = headingService
         self.moonService = moonService
         self.now = now
         self.moonRefreshInterval = moonRefreshInterval
         self.sleep = sleep
+        self.entranceSleep = entranceSleep
+        self.reducesMotion = reducesMotion
     }
 
     // MARK: - Derived state
@@ -270,9 +291,16 @@ final class CompassViewModel {
     var heading: Double? { reading?.trueHeading }
 
     /// The ring pulsing from the live Moon (COMPASS-1.1.md §5): while the
-    /// moon is up (so today) and nothing has been locked yet this launch.
+    /// moon is up (so today) and the Moon hasn't been locked yet this
+    /// launch (LOADER.md §12.4.1).
     var showsMoonPulse: Bool {
-        !hasLockedThisLaunch && targets.contains { $0.kind == .moon }
+        !hasLockedMoonThisLaunch && targets.contains { $0.kind == .moon }
+    }
+
+    /// The heading readout's opacity (LOADER.md §12.4.1): out while locked,
+    /// so the lock pill shows alone, and while the entrance holds it.
+    var readoutOpacity: Double {
+        lockedKind == nil && !entrance.holdsReadout ? 1 : 0
     }
 
     var lockedTarget: CompassTarget? {
@@ -430,6 +458,11 @@ final class CompassViewModel {
     /// that becomes today gets its "Moon" target straight away.
     func update(_ context: CompassContext) {
         let wasPreciseLocationOff = isPreciseLocationOff
+        // §12.4: new information for the dial is a reload; a permission or
+        // Precise Location refresh with the same place and day isn't.
+        let reloads = context.place != self.context.place
+            || context.moonDay != self.context.moonDay
+            || context.isToday != self.context.isToday
         self.context = context
         let glyph = context.moonDay.map {
             PhaseGlyphGeometry(illumination: $0.illumination, phaseAngle: $0.phaseAngle)
@@ -458,7 +491,12 @@ final class CompassViewModel {
             }
         }
         rebuildTargets()
+        let wasSensing = isSensing
         updateSensors()
+        // Starting the sensors begins its own entrance.
+        if reloads, wasSensing, isSensing {
+            beginEntrance()
+        }
     }
 
     /// The compass scrolled into or out of view, or was inserted or removed.
@@ -702,17 +740,80 @@ final class CompassViewModel {
         guard next != lockedKind else { return }
         if next != nil {
             lockAcquisitionCount += 1
-            if !hasLockedThisLaunch { hasLockedThisLaunch = true }
         }
+        if next == .moon, !hasLockedMoonThisLaunch { hasLockedMoonThisLaunch = true }
         lockedKind = next
     }
 
     private func apply(_ newReading: HeadingReading) {
+        if let previous = reading?.trueHeading, let next = newReading.trueHeading {
+            let change = CompassEntrance.shortestTurn(from: previous, to: next)
+            if change != 0 { lastHeadingChange = change }
+        }
         reading = newReading
         if heldBottomNote != nil { heldBottomNote = nil }
         let low = CompassAccuracy.isLow(after: newReading, wasLow: isLowAccuracy)
         if low != isLowAccuracy { isLowAccuracy = low }
         updateLock()
+        if let heading = newReading.trueHeading {
+            switch entrance.phase {
+            case .waitingForHeading:
+                settle(by: CompassEntrance.settleOffset(lastHeadingChange: lastHeadingChange))
+            case .noHeading:
+                settle(by: CompassEntrance.turnOffset(fromNorthUpTo: heading))
+            case .settling, .settled:
+                break
+            }
+        }
+    }
+
+    // MARK: - Entrance (LOADER.md §12.4)
+
+    /// A reload: with a heading already in hand (a place or date change
+    /// while sensing), straight to the settle; otherwise wait for one, up
+    /// to `CompassEntrance.headingWait`.
+    private func beginEntrance() {
+        entranceTask?.cancel()
+        let generation = entrance.generation + 1
+        if heading != nil {
+            settle(by: CompassEntrance.settleOffset(lastHeadingChange: lastHeadingChange), generation: generation)
+            return
+        }
+        entrance = CompassEntrance(generation: generation, phase: .waitingForHeading, startOffset: 0)
+        let entranceSleep = entranceSleep
+        entranceTask = Task { [weak self] in
+            do {
+                try await entranceSleep(CompassEntrance.headingWait)
+            } catch {
+                return
+            }
+            guard !Task.isCancelled, let self,
+                  entrance.generation == generation, entrance.phase == .waitingForHeading else { return }
+            entrance = CompassEntrance(generation: generation, phase: .noHeading, startOffset: 0)
+        }
+    }
+
+    /// Into the heading from `offset` off it, then live. Reduce Motion:
+    /// live at once, already aligned.
+    private func settle(by offset: Double, generation: Int? = nil) {
+        entranceTask?.cancel()
+        let generation = generation ?? entrance.generation
+        guard !reducesMotion() else {
+            entrance = CompassEntrance(generation: generation, phase: .settled, startOffset: 0)
+            return
+        }
+        entrance = CompassEntrance(generation: generation, phase: .settling, startOffset: offset)
+        let entranceSleep = entranceSleep
+        entranceTask = Task { [weak self] in
+            do {
+                try await entranceSleep(CompassEntrance.settleDuration)
+            } catch {
+                return
+            }
+            guard !Task.isCancelled, let self,
+                  entrance.generation == generation, entrance.phase == .settling else { return }
+            entrance = CompassEntrance(generation: generation, phase: .settled, startOffset: 0)
+        }
     }
 
     // MARK: - Sensors (COMPASS.md §1 Sensor lifecycle)
@@ -750,6 +851,10 @@ final class CompassViewModel {
 
         let stream = headingService.start()
         isSensing = true
+        // A new session has no heading yet: launch, foreground, back on
+        // screen, a late location, or the compass coming back after a place
+        // replacement or a failure screen (§12.4).
+        beginEntrance()
         headingTask = Task { [weak self] in
             for await reading in stream {
                 self?.apply(reading)
@@ -782,6 +887,9 @@ final class CompassViewModel {
         isSensing = false
         moonRefreshTask?.cancel()
         moonRefreshTask = nil
+        // The next start begins a new entrance.
+        entranceTask?.cancel()
+        entranceTask = nil
 
         // The aha line is a moment, not a state, so it isn't kept.
         heldBottomNote = liveBottomNote.flatMap { $0.kind == .aha ? nil : $0 }

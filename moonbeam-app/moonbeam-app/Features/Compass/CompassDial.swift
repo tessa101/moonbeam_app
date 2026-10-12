@@ -10,7 +10,7 @@ import SwiftUI
 /// 30°), degree numbers every 30°, N/E/S/W in Young Serif and a fixed
 /// crosshair; just outside the rim, the moon arc, the moon's pass from rise
 /// to set, with `moonLit` dots at moonrise and moonset and the live Moon as
-/// a phase glyph riding on it (pulsing until the first lock), their labels
+/// a phase glyph riding on it (pulsing until it's locked), their labels
 /// beyond; and a short fixed needle at 12 o'clock, 28 pt down to the inner
 /// end of the heavy ticks. Locked, the target's mark grows and
 /// glows and the dial gets a soft amber halo; locked on the Moon, the glyph
@@ -24,15 +24,18 @@ import SwiftUI
 /// The face itself doesn't turn: everything is placed at its on-screen
 /// angle (azimuth − heading), so letters, labels and the Moon's phase are
 /// always upright and the face's light stays at the top. Turning the phone
-/// right still moves the marks left, as in Compass. Not animated: a turn
-/// from 359° to 0° would otherwise spin the long way, and the Moon steps
-/// along its arc with the 30 s refresh. Only the lock change animates, and
-/// not with Reduce Motion.
+/// right still moves the marks left, as in Compass. The live heading isn't
+/// animated, and no mark's position is either (an ambient animation used to
+/// move each one in a straight line, through the centre: LOADER.md §12.4).
+/// The one motion is `settleOffset`, the entrance's settle: animatable, so
+/// every frame places everything at its angle and the dial turns as one
+/// piece, by the short way the offset already encodes. Otherwise only the
+/// lock change animates, and not with Reduce Motion.
 ///
 /// For VoiceOver it's one element that reads its targets ("Targets:
 /// moonrise, 72 degrees east-northeast; …"); with no targets it's hidden.
 /// The arc adds nothing to it (§3.3a).
-struct CompassDial: View {
+struct CompassDial: View, Animatable {
 
     /// The face's diameter; see `faceDiameter(forWidth:)`.
     let faceDiameter: CGFloat
@@ -57,6 +60,15 @@ struct CompassDial: View {
 
     /// `CompassViewModel.showsMoonPulse`: the ring pulsing from the Moon.
     var showsMoonPulse = false
+
+    /// Degrees added to the heading while the entrance settles (§12.4);
+    /// animated to 0 by `CompassView`.
+    var settleOffset = 0.0
+
+    var animatableData: Double {
+        get { settleOffset }
+        set { settleOffset = newValue }
+    }
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -98,6 +110,15 @@ struct CompassDial: View {
         let verticalReach = arcRadius + Self.labelRoom
         return CGSize(width: sideReach * 2, height: verticalReach * 2)
     }
+
+    /// LOADER.md §12.4.1: the readout's slot sits on the dial's frame, whose
+    /// top is this far above the top tick (the arc's track and a label's
+    /// room).
+    static let readoutSlotToRimGap = arcGap + labelRoom
+
+    /// How far above the rim a locked Moon reaches (its mark and ring): the
+    /// readout's pill must stay clear of it at 12 o'clock.
+    static let lockedMarkReach = arcGap + lockedMoonMarkerSize / 2 + lockedRingWidth
 
     private var centre: CGPoint {
         CGPoint(x: frameSize.width / 2, y: frameSize.height / 2)
@@ -238,6 +259,25 @@ struct CompassDial: View {
         heading == nil ? Self.noHeadingOpacity : 1
     }
 
+    /// The heading the marks are drawn for: the live one, plus the settle.
+    private var displayHeading: Double? {
+        heading.map { $0 + settleOffset }
+    }
+
+    /// What every mark's position is computed from. When it changes, the
+    /// marks move to their new places with no animation of their own: a
+    /// rotation is only ever `settleOffset` frames.
+    private struct MarksGeometry: Equatable {
+        let heading: Double?
+        let targets: [CompassTarget]
+        let lockedKind: CompassTarget.Kind?
+        let arc: CompassArc?
+    }
+
+    private var marksGeometry: MarksGeometry {
+        MarksGeometry(heading: displayHeading, targets: targets, lockedKind: lockedKind, arc: arc)
+    }
+
     // MARK: - Body
 
     var body: some View {
@@ -360,6 +400,7 @@ struct CompassDial: View {
             arcTrack
         }
         .frame(width: frameSize.width, height: frameSize.height)
+        .transaction(value: marksGeometry) { $0.animation = nil }
     }
 
     /// One path per weight, so 180 ticks are four shapes, not 180 views.
@@ -497,19 +538,20 @@ struct CompassDial: View {
             }
         }
         .frame(width: frameSize.width, height: frameSize.height)
+        .transaction(value: marksGeometry) { $0.animation = nil }
     }
 
     /// Where a target is drawn: its azimuth, except the Moon while locked,
     /// which sits at 12 o'clock over the needle (§9.3), within the lock's
     /// few degrees of where it really is.
     private func displayAzimuth(of target: CompassTarget) -> Double {
-        if target.kind == .moon, lockedKind == .moon, let heading {
-            return heading
+        if target.kind == .moon, lockedKind == .moon, let displayHeading {
+            return displayHeading
         }
         return target.azimuth
     }
 
-    /// The ring round the Moon until the first lock this launch; hidden from
+    /// The ring round the Moon until it's locked this launch; hidden from
     /// VoiceOver.
     private struct MoonPulse: View {
 
@@ -606,7 +648,7 @@ struct CompassDial: View {
 
     /// On screen, clockwise from 12 o'clock: the azimuth less the heading.
     private func screenAngle(of azimuth: Double) -> Double {
-        azimuth - (heading ?? 0)
+        azimuth - (displayHeading ?? 0)
     }
 
     /// Where something at `azimuth` sits on screen, `distance` from the

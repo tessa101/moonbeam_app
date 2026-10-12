@@ -120,6 +120,9 @@ struct ContentLoadIn: ViewModifier {
     /// The first load-in uses the launch stagger (or "Aha"'s); later ones
     /// are place-change replays.
     @State private var hasLoadedIn = false
+    /// When the latest load-in starts to show, after its delay; `nil` until
+    /// one runs. The compass starts its settle then (LOADER.md §12.4).
+    @State private var revealsAt: Date?
 
     func body(content: Content) -> some View {
         content
@@ -134,6 +137,7 @@ struct ContentLoadIn: ViewModifier {
             .geometryGroup()
             .opacity(isIn ? 1 : 0)
             .offset(y: isIn ? 0 : Self.startOffset(reduceMotion: reduceMotion))
+            .environment(\.contentRevealsAt, revealsAt)
             .task(id: Trigger(generation: generation, isActive: isActive)) {
                 let isReplay = hasLoadedIn
                 if isReplay, !Self.replaysOnPlaceChange(block) { return }
@@ -150,11 +154,22 @@ struct ContentLoadIn: ViewModifier {
                 let animation = isReplay
                     ? Self.replayAnimation(for: block)
                     : Self.animation(for: block, afterAha: afterAha)
+                let delay = isReplay
+                    ? Self.replayDelay(for: block)
+                    : (afterAha ? Self.afterAhaDelay(for: block) : Self.delay(for: block))
+                revealsAt = Date.now.addingTimeInterval(delay)
                 withAnimation(animation) {
                     isIn = true
                 }
             }
     }
+}
+
+extension EnvironmentValues {
+    /// When the enclosing `ContentLoadIn` block starts to show, or `nil`
+    /// outside one. A reload that coincides with a load-in times its own
+    /// motion from here, so it isn't spent while the block is still out.
+    @Entry var contentRevealsAt: Date?
 }
 
 extension View {

@@ -740,6 +740,30 @@ frame. Timeline and frames: `design/bugs/place-change-2.md`, `design/bugs/place-
   control), date unchanged, content below unmoved, skeleton ≥ 350 ms. Findings:
   `.agent-reports/5.10a/5.10a.2b-findings.md`.
 
+### 12.11 As built — 5.10a.3 (2026-10-12)
+- **Cause of the launch bug:** `CompassView` animated `isLowAccuracy` over the whole block. The first reading sets
+  the heading (nil → 179°) and clears low accuracy in the same update, so every mark's `.position` was lerped in a
+  straight line from north-up to its new place: through the centre for a ~180° turn.
+- **Reload triggers found** (all now begin `CompassViewModel`'s entrance): sensors starting (launch, Use my
+  location / Forget saved place, foreground, scrolling back on screen or the pinned bar, a late location, failure
+  recovery → Aha) and a place / day / today change while sensing (search pick, recent, date arrows, calendar,
+  midnight). Before: only the block load-in was shared (launch, both place changes, recovery); the
+  heading-from-nil path (the bug) was shared by every sensor start; a pick and a date step had neither.
+- **Entrance** (`CompassEntrance`): `waitingForHeading` (compass out, ≤ 0.5 s) → `settling` (in, dial
+  `startOffset` off, readout held 0.5 s) → `settled`. Heading in hand at the reload: straight to settling. No
+  heading in 0.5 s: `noHeading` (in, no-heading look), then a turn from north-up the short way when it comes.
+  Offset 10°, against the last heading change (clockwise of true when none is known). Reduce Motion: straight to
+  settled, no offset; the compass still fades in.
+- **One piece:** `CompassDial` is `Animatable` on `settleOffset` only; every mark is placed from heading + offset
+  each frame, and `.transaction(value:)` clears any ambient animation of positions. The live heading is never
+  animated. The settle waits for the block's own load-in to start (`contentRevealsAt` from `ContentLoadIn`).
+- **§12.4.1:** readout opacity 0 while locked (150 ms out, then the pill 150 ms in; the reverse on release); the
+  Now pulse stops only on a Now lock. The readout moved 14 pt closer to the dial, not half the gap (27 pt): at
+  half, the pill covers the top of a Moon locked at 12 o'clock (DECISIONS.md 2026-10-12). Tune on the device.
+- Tests: `CompassEntranceTests` (rules, phases, Reduce Motion, readout, one per trigger) and
+  `CompassEntranceFrameTests` (16 ms window sampling through 179 → 185 → 190°). Findings:
+  `.agent-reports/5.10a.3/compass-entrance-findings.md`.
+
 ## Decision log
 
 - **2026-10-08 (Tessa, device videos of a place change):** the old place mustn't show after a change; placeholder A

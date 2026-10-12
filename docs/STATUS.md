@@ -1,5 +1,7 @@
 # Status & Handoff
 
+_Step 5.10a.3, 2026-10-12: compass entrance on every reload (LOADER.md §12.11). Root cause of the launch bug: the low-accuracy fade animated each mark's position in a straight line through the centre as the first heading arrived. Now one entrance (`CompassEntrance`) for every sensor start and every place/day change: held out ≤ 0.5 s for the first heading, then in ~10° off and settling over 0.5 s as one piece, readout held until settled; no heading in time → no-heading look, short-way turn on arrival; Reduce Motion fades in aligned. §12.4.1: readout fades out for the lock pill; Now pulse runs until Now is locked; readout 14 pt closer (not half the gap; DECISIONS.md). Build-for-testing succeeded in Xcode; tests not run by the agent (no `xcodebuild test`/simctl): Tessa to run in Terminal. Phone check pending._
+
 _5.5 direction agreed, 2026-10-12: keep rise/set side by side while complete content fits; today's status
 and wrapping guidance go below at full width. Stack rise/set only when needed. Include pinned-bar/readout
 overlap in review. See DESIGN-1.1.md §4 and DECISIONS.md. Documentation only; implementation and fresh

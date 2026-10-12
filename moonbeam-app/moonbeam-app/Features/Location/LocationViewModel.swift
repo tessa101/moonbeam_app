@@ -313,7 +313,12 @@ final class LocationViewModel {
         // `start()` reads the real state, off the main actor where it can
         // block; nothing reads this before then (LOADER.md §9).
         lastSeenAuthState = .notDetermined
-        compass = CompassViewModel(headingService: headingService, moonService: moonService, now: now)
+        compass = CompassViewModel(
+            headingService: headingService,
+            moonService: moonService,
+            now: now,
+            reducesMotion: reducesMotion
+        )
         loader = LocationLoader(now: loaderNow, sleep: sleep)
     }
 

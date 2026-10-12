@@ -1519,6 +1519,22 @@ Remove the standard-size hidden second detail line under the bearing so guidance
 
 Tessa's launch recording shows the compass fading in north-up with a stale readout, markers collapsing to the dial centre, then spinning to the real heading (~0.7 s). The city-change case is confirmed fixed on the phone. Decision: LOADER.md §12.4 (wait for heading, rotate as one piece, settle) applies to every compass reload with new information: launch, place change, date step, foreground, late heading or location, failure recovery. Spec `docs/STEP-5.10a.3-COMPASS-ENTRANCE.md`; evidence `.agent-reports/5.10a.3/compass_on_launch_bug.mov` (local, gitignored).
 
+### 2026-10-12 — Compass entrance as built (5.10a.3)
+
+- **Settle direction:** the start offset is against the last heading change (turning clockwise → the dial starts
+  10° anticlockwise of true and eases on). No change seen yet (first launch): starts clockwise of true. Proposed;
+  tune on device.
+- **Readout gap:** 14 pt closer, not §12.4.1's starting half (27 pt). At half, the lock pill would cover the top of
+  a Moon locked at 12 o'clock. Derived from the dial's constants (`CompassView.readoutPull`). Labels of targets
+  5–15° from 12 o'clock may now touch the readout's digits; check on the device.
+- **Readout hold:** the heading text stays out until the dial has settled (0.5 s), so readings on the way in are
+  never shown. On a place change the dial's settle waits for the block's load-in (+0.25 s), so the readout can
+  appear ~0.25 s before the dial finishes its last degrees.
+- **Date step gets the compass entrance** (Tessa's widening) but not a block load-in: §12.1's "no load-in on a date
+  change" still holds for the card and the compass block; only the dial settles (heading already in hand).
+- **Ambient animations no longer move marks.** Side effect: the arc's travelled part switches between dots and a
+  hairline without a fade on lock.
+
 ### 2026-10-12 — 5.11 approved; design track opened
 
 Tessa approved 5.11.3 (committed `be6bbeb`), closing 5.11. Order set: 5.10a.3, then 5.5 AX reflow (to be finished), with 5.12 (needs design exploration), the location-settings bottom sheets (layout hard to parse, redo) and the telescope illustration (needs more work) as a design track before any agent build.

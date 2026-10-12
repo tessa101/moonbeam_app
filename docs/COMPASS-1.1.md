@@ -112,6 +112,7 @@ resolved.
 - **Pulse:** with the moon up, a ring expands from the Moon glyph (radius 10 → 24 pt beyond the glyph edge,
   `accent` 2 pt, opacity 0.8 → 0, 1.8 s, repeating).
   - Stops at the **first lock on any target**; doesn't return until the app relaunches.
+    **Superseded by LOADER.md §12.4.1 (built in 5.10a.3, 2026-10-12):** stops only once **Now** is locked; a rise or set lock doesn't stop it.
   - **Reduce Motion:** a static 2 pt `accent` ring instead, same stop rule.
   - None when the moon is down or on other dates. Hidden from VoiceOver.
 
@@ -149,7 +150,7 @@ set / locked on moon / moon down / low accuracy / Precise off / Nearby.
 - Lock highlight: rise → Moonrise cell, set → Moonset cell, moon → Up now; none unlocked
 - Accuracy note placement: low accuracy / Precise off / aha → under the readout; Nearby → below the dial
 - Label collision: within the threshold, "Now" keeps its label
-- Pulse: on with the moon up and no lock yet this launch; off after the first lock and stays off; off when down
+- Pulse: on with the moon up and no lock yet this launch; off after the first lock and stays off; off when down (5.10a.3: off after the first **Now** lock; a rise/set lock keeps it)
 
 ## 9. 5.4.6 Layout pass (Tessa, 2026-10-02 evening)
 

@@ -1,3 +1,26 @@
+# 5.10a.3 compass entrance — 2026-10-12
+
+Done (one commit, not pushed): one compass entrance for every reload (launch, place change, date step,
+foreground, late heading/location, failure recovery, back on screen). Root cause of the launch bug: the
+low-accuracy fade lerped each mark's position through the centre as the first heading arrived. Dial now turns
+as one piece (animatable settle offset, no implicit position animation); readout held until settled; Reduce
+Motion fades in aligned. §12.4.1: readout fades out for the lock pill, Now pulse until Now is locked, readout
+14 pt closer (not half; see findings). Build-for-testing succeeded in Xcode.
+
+Next (Tessa, Terminal):
+  xcodebuild test -project moonbeam-app/moonbeam-app.xcodeproj -scheme moonbeam-app \
+    -destination 'platform=iOS Simulator,name=iPhone 17' \
+    -only-testing:moonbeam-appTests/CompassEntranceTests \
+    -only-testing:moonbeam-appTests/CompassEntranceFrameTests \
+    -only-testing:moonbeam-appTests/CompassViewModelTests
+then the full suite (same command without -only-testing). Then a phone check of launch, foreground, date
+step and Use my location.
+
+Blocked: tests and the phone check (agent environment can't run them). Findings and flags:
+`.agent-reports/5.10a.3/compass-entrance-findings.md`.
+
+---
+
 # Guidance mock alignment follow-up — 2026-10-12
 
 Removed standard-size hidden detail reservation beneath the bearing, tightening the gap above guidance and shrinking the highlighted tile. Added the mock’s amber bullet with a 6 pt text gap; VoiceOver reads only the message. Longer actual text can grow naturally, so height tests now permit explanatory copy to grow the card. Build-for-testing and 11 card-height/rise-set checks passed. SE locked-on-Moon screenshot reviewed: `.agent-reports/5.11.3/se-mock-spacing.png`. Phone confirmation pending.
