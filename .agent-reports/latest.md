@@ -1,3 +1,11 @@
+# TestFlight build 9 preparation — 2026-10-12
+
+Done: changed app Debug/Release to 0.1 (9); fresh signed Release archive succeeded; bundle contents and strict signature verified. Notes: docs/TESTFLIGHT-BUILD-9.md. Archive: build/releases/Moonbeam-0.1-build-9.xcarchive. Latest app-code suite remains 757 tests / 59 suites passing; version-only change requires no new behavioral tests.
+
+Next: distribute the fresh 0.1 (9) archive to TestFlight and paste tester notes. Upload and Apple acceptance pending. Old October 12 Organizer archives are 1.0 (8). No PTY/CoreSimulator errors. Broader deferred reviews remain documented.
+
+---
+
 # Simulator review and handoff correction — October 12, 2026
 
 Simulator execution is authorized. Real boot/install/launch/capture works. Automated visual review covers paired iPhone 17 destinations, light system appearance (app remains forced dark), iPhone 17 AX3, SE default/AX3, and normal/Reduce Motion continuous recovery. Native UI checked telescope search/location row and No fix search/cancel.

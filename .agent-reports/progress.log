@@ -397,3 +397,5 @@
 2026-10-12 committed ca1b6b3: loader/headline handoff fix + regression tests; full suite passes; committing repeatable simulator review tools and evidence report next
 2026-10-12 committed f69ff6a: repeatable simulator capture + guarded test runner + completed review report; 757 tests / 59 suites pass; settings restored; no PTY/CoreSimulator errors; simulator review complete, five prioritized phone checks remain; no push/upload
 2026-10-12 Tessa phone results recorded: telescope on Never return, main recovery on While Using, Control Center connectivity recovery, moon flight/haptic all successful; Services off opens app Settings as designed; back-navigation path not reported; no code change
+2026-10-12T11:42:22.633992-07:00 release prep: confirmed both new Organizer archives are 1.0 (8); app Debug/Release now 0.1 (9); initial prep assertion failed before edits, stopped prematurely launched archive; preparing corrected archive
+2026-10-12T11:43:38.025740-07:00 release prep: ARCHIVE SUCCEEDED; verified 0.1 (9), release contents and strict signature (trust access required); tester notes ready; committing; upload pending
