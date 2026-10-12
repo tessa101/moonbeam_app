@@ -1513,3 +1513,13 @@ Phone review found excessive blank space beneath single-line guidance. Reserve o
 ### 2026-10-12 — Match guidance mock spacing and bullet
 
 Remove the standard-size hidden second detail line under the bearing so guidance sits closer to the columns. Include the mock’s amber bullet and 6 pt gap before text. Bullet is decorative for VoiceOver. Preserve extra wrapping room at accessibility sizes.
+
+
+### 2026-10-12 — Compass entrance applies to every reload (5.10a.3)
+
+Tessa's launch recording shows the compass fading in north-up with a stale readout, markers collapsing to the dial centre, then spinning to the real heading (~0.7 s). The city-change case is confirmed fixed on the phone. Decision: LOADER.md §12.4 (wait for heading, rotate as one piece, settle) applies to every compass reload with new information: launch, place change, date step, foreground, late heading or location, failure recovery. Spec `docs/STEP-5.10a.3-COMPASS-ENTRANCE.md`; evidence `.agent-reports/5.10a.3/compass_on_launch_bug.mov` (local, gitignored).
+
+### 2026-10-12 — 5.11 approved; design track opened
+
+Tessa approved 5.11.3 (committed `be6bbeb`), closing 5.11. Order set: 5.10a.3, then 5.5 AX reflow (to be finished), with 5.12 (needs design exploration), the location-settings bottom sheets (layout hard to parse, redo) and the telescope illustration (needs more work) as a design track before any agent build.
+

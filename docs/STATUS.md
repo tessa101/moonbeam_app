@@ -159,19 +159,20 @@ Rule: finish what changes the card before the AX reflow, or the reflow is done t
    - [x] **5.10a.2:** card skeleton past 400 ms, failure in its frame, no compass until the card lands (§12.8);
      device check pending.
    - [x] **5.10a.2b** (built 2026-10-09, 988 cases pass; device check pending; LOADER.md §12.10): device-check fixes from Tessa's 2026-10-09 video: the sentence stays and keeps its date (only the city cross-fades), hold the card slot, skeleton shown ≥ 350 ms (LOADER.md §12.9, DECISIONS.md 2026-10-09)
-   - [ ] **5.10a.3:** compass entrance + readout fade + Now pulse (§12.4, §12.4.1).
+   - [ ] **5.10a.3:** compass entrance + readout fade + Now pulse (§12.4, §12.4.1). **Next up.** Widened 2026-10-12: the entrance runs on every compass reload, not only a city change (city change confirmed fixed on phone; launch still shows north-up fade-in, centre collapse, late spin). Spec: `docs/STEP-5.10a.3-COMPASS-ENTRANCE.md`; evidence video `.agent-reports/5.10a.3/compass_on_launch_bug.mov`.
    - [x] **5.10a location-failure Chunk 6** (built 2026-10-10, 1099 cases pass): loader → failure crossfade, ordered `ContentLoadIn` entrance, 1.2 s shared search minimum, instant-failure path, Reduce Motion zero-rise; Chunk 3 flash/overlap findings resolved. Continuous simulator recording unavailable; representative device captures retained locally.
-4. [ ] **5.11 moon state** (MOON-STATE.md): 5.11.1 middle column on today (Up now / Not up yet / Set for today),
+4. [x] **5.11 moon state** (MOON-STATE.md; 5.11.1/.2 `810bc6e`/`75cba2c`, 5.11.3 `be6bbeb`, Tessa approved 2026-10-12): 5.11.1 middle column on today (Up now / Not up yet / Set for today),
    countdown, this pass's rise while up → 5.11.2 `23° up` → 5.11.3 edge-case voice line (draft copy).
 5. [ ] **5.5 AX reflow** incl. the always-three-column card on today and the SE 3 connector; loader VoiceOver /
    Reduce Motion review (LOADER.md §10.6).
-6. [ ] **5.12 location off:** dimmed compass preview instead of a bare CTA (to spec).
-7. [ ] **TestFlight 0.1 (9)**: set `MARKETING_VERSION` 1.0 → **0.1** and `CURRENT_PROJECT_VERSION` 8 → 9
+6. [ ] **5.12 location off:** dimmed compass preview instead of a bare CTA. **Needs design exploration first** (Tessa, 2026-10-12); do not send to the agent yet.
+7. [ ] **TestFlight 0.1 (9)** (archive built and verified 2026-10-12, `d9eba76`; upload to App Store Connect pending, Tessa's): set `MARKETING_VERSION` 1.0 → **0.1** and `CURRENT_PROJECT_VERSION` 8 → 9
    (DECISIONS.md 2026-10-08, version naming); if App Store Connect rejects the version, go back to 1.0. Then device QA at default / AX1 / AX5; check the 5.8 arc after midnight (draws from the
    evening's rise; rise/set dots on the arc ends).
 8. [ ] **Design review + pre-1.0:** motion pass, voice A (always-on answer line), light mode, onboarding copy, Round 2
    screens, VoiceOver order at AX2, final name + persona; remove Show onboarding / Forget saved place / `BuildChannel`;
    replace `appStoreReceiptURL`; USNO rows (item 3 below).
+8a. [ ] **Design track (Tessa, 2026-10-12, not agent work until designed):** redo the location-settings bottom sheets (layout hard to parse); telescope illustration needs more work; 5.12 exploration.
 9. Later: Daily Moon Report widget / push; sun / tide sister app.
 - OK for now: sentence tokens have no pressed state.
 
