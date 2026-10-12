@@ -394,3 +394,4 @@
 2026-10-12 simulator review: genuine movie capture found outgoing loader overlapping No fix headline; reserve the loader fade before text starts while illustration crossfades; direct blocked entrance unchanged; temporal regression tests added
 2026-10-12 simulator review: build-for-testing passes; after normal/Reduce Motion videos show moon removed before headline; settings restored; report prepared; proceeding to guarded post-fix full tests
 2026-10-12 simulator review full suite PASS: 757 tests / 59 suites in 115.934 s, TEST EXECUTE SUCCEEDED; no PTY/CoreSimulator errors; preparing separate handoff-fix and repeatable-review commits
+2026-10-12 committed ca1b6b3: loader/headline handoff fix + regression tests; full suite passes; committing repeatable simulator review tools and evidence report next

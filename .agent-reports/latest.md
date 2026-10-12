@@ -4,6 +4,8 @@ Simulator execution is authorized. Real boot/install/launch/capture works. Autom
 
 **Found and fixed:** outgoing loader moon briefly overlapped incoming failure headline. Text/actions now wait for the existing loader fade only after a loader; direct blocked entrance timing is preserved. Build-for-testing passed; after-recordings checked at 10 fps show no moon/headline overlap. Post-fix full suite passed in the agent’s simulator run: **757 tests in 59 suites, 115.934 seconds, TEST EXECUTE SUCCEEDED**. No pseudo-terminal or CoreSimulator errors. Run used `test-without-building` with parallel testing disabled; no further Terminal run is needed for this change. Existing SE AX scrolling remains deferred.
 
+Handoff fix committed as `ca1b6b3`. Repeatable capture/test automation and the consolidated evidence report are being committed separately.
+
 Details, local artifact paths and the shortened five-check phone session: `docs/STEP-5.10a-SIMULATOR-REVIEW.md`. Device review is not declared complete. Reduce Motion, appearance and text size were restored.
 
 ---
