@@ -395,3 +395,4 @@
 2026-10-12 simulator review: build-for-testing passes; after normal/Reduce Motion videos show moon removed before headline; settings restored; report prepared; proceeding to guarded post-fix full tests
 2026-10-12 simulator review full suite PASS: 757 tests / 59 suites in 115.934 s, TEST EXECUTE SUCCEEDED; no PTY/CoreSimulator errors; preparing separate handoff-fix and repeatable-review commits
 2026-10-12 committed ca1b6b3: loader/headline handoff fix + regression tests; full suite passes; committing repeatable simulator review tools and evidence report next
+2026-10-12 committed f69ff6a: repeatable simulator capture + guarded test runner + completed review report; 757 tests / 59 suites pass; settings restored; no PTY/CoreSimulator errors; simulator review complete, five prioritized phone checks remain; no push/upload
