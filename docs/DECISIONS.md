@@ -1539,3 +1539,11 @@ Tessa's launch recording shows the compass fading in north-up with a stale reado
 
 Tessa approved 5.11.3 (committed `be6bbeb`), closing 5.11. Order set: 5.10a.3, then 5.5 AX reflow (to be finished), with 5.12 (needs design exploration), the location-settings bottom sheets (layout hard to parse, redo) and the telescope illustration (needs more work) as a design track before any agent build.
 
+
+### 2026-10-12 — 5.10a telescope redrawn (Tessa)
+
+The shipped telescope (`permissionOff_*`) was sliced faithfully from a flat vector reconstruction that didn't match the approved D2 art. Tessa chose **Option A**: the telescope is redrawn to match the D2 original (`design/1.7-telescope-redraw/A-lit-left/`, used as-is), with the **moon lit on the left for this illustration**. This replaces the Chunk 2b mirror for the permission-off art only; services off and restricted keep `crescentMoonCentre` (250, 212). **Lens glint kept** as a fifth layer on top of the tube. Spec: `docs/STEP-5.10a-TELESCOPE-REDRAW.md`.
+
+- **Import:** all five SVGs imported cleanly (Preserve Vector Data, Single Scale, Original). Gradients survive CoreSVG, so no PDF or PNG fallback was needed. These files are hand-supplied, not cut by `scripts/slice_illustrations.py`, so re-running the script would bring back the old telescope.
+- **Pivots:** tube and glint (155, 335) → (204, 330), the mount head's centre (circle (380, 540) through the art's group transform = (204.0, 330.4)). Halo/disc (190, 203) (crescent (352, 287) → (190.0, 203.4)). Star (128, 122) → (326, 150).
+- **Glint motion:** an opacity-only part (`Part.lensGlint`) whose layer moves with `[.tube, .lensGlint]`, so it inherits the tube's pivot and rotation with no view code. Its opacity is 0 at offset 0, so the Reduce Motion still shows no glint.

@@ -1,3 +1,18 @@
+# 5.10a telescope redraw — 2026-10-12
+
+Chunk 1/3 done (committed, not pushed): five `permissionOff_*` layers from `design/1.7-telescope-redraw/A-lit-left/`
+imported byte-identical (old four replaced, `permissionOff_lensGlint` added), all vector, no fallback needed.
+`IllustrationSpec.permissionOff`: lens glint layer + `Part.lensGlint` (opacity track, rides the tube), tube/glint
+pivot (204, 330), moon (190, 203), star (326, 150). App target builds; preview renders the new art.
+
+Next: chunk 2 (tests), chunk 3 (screenshots). Paused for Tessa's review after chunk 1, as asked.
+
+Blocked/flags: `build-for-testing` fails in the test target on untracked 5.12 WIP
+(`CompassTeaserTests.swift`: main-actor calls from nonisolated tests), not in this change. The old
+`IllustrationSpecTests` expectations (tube pivot, star centre, layer list) are stale until chunk 2.
+
+---
+
 # 5.10a.3 compass entrance — 2026-10-12
 
 Done (one commit, not pushed): one compass entrance for every reload (launch, place change, date step,

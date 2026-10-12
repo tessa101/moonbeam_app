@@ -418,3 +418,8 @@
 15:52 build-for-testing (Xcode BuildProject)
 15:53 build-for-testing passed; updating docs (LOADER §12.11, COMPASS-1.1 pulse, DECISIONS, STATUS)
 15:53 docs + reports written; committing
+15:53 committed 07008d7 5.10a.3; tests pending in Terminal
+16:12 5.10a telescope redraw: read spec; chunk 1/3 starting (import 5 layers, update IllustrationSpec.permissionOff)
+16:12 chunk 1: spec + assets edited; build-for-testing
+16:14 5.12 teaser: read spec + uncommitted code; checking symbols, then build
+16:14 5.12: build-for-testing (xcodebuild, own DerivedData)

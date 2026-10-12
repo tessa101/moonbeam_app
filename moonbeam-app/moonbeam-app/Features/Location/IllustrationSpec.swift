@@ -29,6 +29,8 @@ nonisolated struct IllustrationSpec: Equatable, Sendable {
         case tail
         case question
         case tube
+        /// The telescope's lens glint: rides on the tube and flickers.
+        case lensGlint = "lens-glint"
         case map
         case route
         case waypoint1 = "waypoint-1"
@@ -134,11 +136,21 @@ nonisolated struct IllustrationSpec: Equatable, Sendable {
         brightness: IllustrationKeyframes(duration: breathDuration, values: [1, 1.06, 1])
     )
 
-    /// The moon's centre on the permission, services and restricted art:
+    /// The moon's centre on the services and restricted art:
     /// the halo and disc breathe around it. Chunk 2b (Tessa, 2026-10-10):
     /// the moon is mirrored about the art's centre line (x 200) so the
     /// crescent is lit on the right, the app's waxing side; was (150, 212).
     private static let crescentMoonCentre = CGPoint(x: 250, y: 212)
+    /// The telescope art's own moon (STEP-5.10a telescope redraw, Tessa,
+    /// 2026-10-12): redrawn to match the D2 original, lit on the left, so
+    /// it doesn't share the mirrored `crescentMoonCentre`.
+    private static let telescopeMoonCentre = CGPoint(x: 190, y: 203)
+    /// The redrawn mount head's centre: the tube, and the glint riding on
+    /// it, tilt about it. Was (155, 335).
+    private static let telescopeMountCentre = CGPoint(x: 204, y: 330)
+    /// The tube's tilt loop, which the glint's flicker shares.
+    private static let telescopeDuration: TimeInterval = 6.59
+
     /// Not found's empty moon: the ring turns around it.
     private static let emptyMoonCentre = CGPoint(x: 173, y: 202)
 
@@ -219,41 +231,53 @@ nonisolated struct IllustrationSpec: Equatable, Sendable {
     )
 
     /// 1h "Almost a star": the telescope tilts up on its mount, holds,
-    /// wobbles and drops back; a star sparkles. The stand stays.
+    /// wobbles and drops back; its lens glint warms up as it rises,
+    /// flickers with the wobble and fades on the way down; a star
+    /// sparkles. The stand stays.
     static let permissionOff = IllustrationSpec(
         layers: [
             Layer("permissionOff_moonHalo", moves: [.moonHalo]),
             Layer("permissionOff_moonDisc", moves: [.moonDisc]),
             Layer("permissionOff_stand"),
             Layer("permissionOff_tube", moves: [.tube]),
+            Layer("permissionOff_lensGlint", moves: [.tube, .lensGlint]),
         ],
         pivots: [
-            .moonHalo: crescentMoonCentre,
-            .moonDisc: crescentMoonCentre,
-            .tube: CGPoint(x: 155, y: 335),
+            .moonHalo: telescopeMoonCentre,
+            .moonDisc: telescopeMoonCentre,
+            .tube: telescopeMountCentre,
+            .lensGlint: telescopeMountCentre,
         ],
         motions: [
             .moonHalo: haloBreath,
             .moonDisc: discBreath,
             .tube: IllustrationMotion(
-                rotation: IllustrationKeyframes(duration: 6.59, [
+                rotation: IllustrationKeyframes(duration: telescopeDuration, [
                     (0, 0), (0.22, -7), (0.50, -7), (0.56, -5.5), (0.62, -7.5),
                     (0.68, -6.5), (0.72, -7), (0.90, 0), (1, 0),
                 ])
             ),
+            // Opacity only: the tilt comes from the tube it rides on. 0 at
+            // offset 0, so the Reduce Motion still shows no glint.
+            .lensGlint: IllustrationMotion(
+                opacity: IllustrationKeyframes(duration: telescopeDuration, [
+                    (0, 0), (0.18, 0.10), (0.28, 0.85), (0.50, 0.80), (0.56, 0.55),
+                    (0.62, 0.95), (0.68, 0.70), (0.74, 0.60), (0.90, 0), (1, 0),
+                ])
+            ),
         ],
         star: Star(
-            // Mirrored with the moon (Chunk 2b), clear of its crescent; was
-            // (272, 122).
-            centre: CGPoint(x: 128, y: 122),
+            // Top right of the redrawn art, clear of the left-lit crescent
+            // and the tube at full tilt; was (128, 122).
+            centre: CGPoint(x: 326, y: 150),
             motion: IllustrationMotion(
-                rotation: IllustrationKeyframes(duration: 6.59, [
+                rotation: IllustrationKeyframes(duration: telescopeDuration, [
                     (0, 0), (0.26, 0), (0.36, 45), (0.46, 60), (0.54, 90), (0.66, 135), (1, 135),
                 ]),
-                scale: IllustrationKeyframes(duration: 6.59, [
+                scale: IllustrationKeyframes(duration: telescopeDuration, [
                     (0, 0), (0.26, 0), (0.36, 1), (0.46, 0.7), (0.54, 1), (0.66, 0), (1, 0),
                 ]),
-                opacity: IllustrationKeyframes(duration: 6.59, [
+                opacity: IllustrationKeyframes(duration: telescopeDuration, [
                     (0, 0), (0.26, 0), (0.36, 1), (0.46, 0.8), (0.54, 1), (0.66, 0), (1, 0),
                 ])
             )
