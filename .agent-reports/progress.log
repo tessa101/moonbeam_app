@@ -385,3 +385,6 @@
 2026-10-12 5.10a Chunk 3 start: record Tessa's two successful Chunk 2c full-suite runs (754 tests / 59 suites; 36.440 s and 37.632 s), then audit the consolidation matrices and reconcile docs. Build-for-testing only; Tessa runs tests in Terminal.
 2026-10-12 09:10 PDT Chunk 3 start: recorded Tessa’s Chunk 2c full-suite passes (754 tests / 59 suites, 36.440 s and 37.632 s); reviewing amended matrices; build-for-testing only
 2026-10-12 5.10a Chunk 3 matrix audit: known First ask → Never → foreground path is correct and already has direct coverage. Fixing the stale saved-city skeleton “Try again” copy; expanding paired destination/search-route coverage for all four causes.
+2026-10-12 5.10a Chunk 3 documentation reconciliation: code/test change committed as 38ed014 after successful build-for-testing (13.382 s). Updating inventory, loader/failure amendments, decisions, plan checklist, status, and final device-review handoff.
+2026-10-12 Chunk 3 audit: First ask→Never automatic path already correct; extended all blocked return cases and actual search-row dismissal, all-cause search cancel/pick; preserving concurrent skeleton-copy edit
+2026-10-12 5.10a Chunk 3 final validation: Xcode build-for-testing succeeded in 4.480 s with no errors after all matrix coverage and documentation changes. No tests, simctl, or device capture run.
