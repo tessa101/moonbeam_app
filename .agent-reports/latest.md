@@ -6,7 +6,9 @@ Simulator execution is authorized. Real boot/install/launch/capture works. Autom
 
 Handoff fix committed as `ca1b6b3`. Repeatable capture/test automation and the consolidated evidence report committed as `f69ff6a`. Working tree verified clean before this final report update; no push/upload.
 
-Details, local artifact paths and the shortened five-check phone session: `docs/STEP-5.10a-SIMULATOR-REVIEW.md`. Device review is not declared complete. Reduce Motion, appearance and text size were restored.
+Tessa’s phone review (2026-10-12): First ask → Never returned to the telescope; telescope → While Using returned successfully to main with a location; restoring connectivity via Control Center recovered successfully; moon flight/haptic felt successful. Services-off Open Settings reached the app’s Settings page, as designed. Following the chip’s Back → Privacy & Security → Location Services path was not reported; no new routing bug established.
+
+Details and local artifact paths: `docs/STEP-5.10a-SIMULATOR-REVIEW.md`. The prioritized phone results are recorded; broader deferred review remains open. Reduce Motion, appearance and text size were restored.
 
 ---
 

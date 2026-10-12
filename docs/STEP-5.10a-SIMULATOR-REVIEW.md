@@ -54,13 +54,17 @@ python3 scripts/run_xcodebuild_guarded.py --log TEST_LOG -- test-without-buildin
 
 These commands are recorded for repeatability; Tessa does not need to run them for this completed review. Reduce Motion was toggled through the simulator Settings UI; the capture script does not toggle it itself.
 
-## Remaining human review: one short phone session
+## Prioritized phone review: results reported October 12
 
-1. First ask → Never in real Settings → return: telescope without a tap.
-2. Telescope → While Using in real Settings → return: one fix, then success or the cat offline.
-3. Services off: Open Settings reaches the app page; the Back → Privacy & Security → Location Services instruction works on your phone.
-4. Cat → restore connectivity in Control Center → dismiss: one automatic retry. Real radios and path reporting cannot be faithfully validated with fakes.
-5. Watch one successful ride/flight on your phone, including its haptic, for feel. Structural transitions are now captured in the simulator.
+| Check | Tessa’s result | Assessment |
+|---|---|---|
+| First ask → Never → return | Telescope | Pass: automatic guidance |
+| Telescope → While Using → return | Main screen with saved location; success | Pass: recovery destination; request count was not separately measured |
+| Services-off Open Settings | Opens app Settings, not global Location Services | Expected landing. The chip explains Back → Privacy & Security → Location Services; walking that remaining path was not reported |
+| Cat → restore connectivity in Control Center → dismiss | Success | Pass: device recovery; exact retry count was not separately measured |
+| Moon flight/haptic feel | Success | Pass: subjective device review |
+
+These results complete the four reported pass checks and confirm the expected Services-off Settings landing. They do not assert completion of the broader original device checklist. No new code change is required by the reported outcomes.
 
 Fresh-install onboarding and real Screen Time Restricted controls can be deferred to a separate session. Their deterministic behavior remains covered by the existing suite. Full VoiceOver focus/scrolling review, SE AX2/AX3 scrolling, and the previously recorded Restricted reserved-control concern are not declared resolved. Hardware GPS, native unanswered-prompt/background behavior, and physical offline-recents behavior are also not proven by fake routes; revisit if the short phone checks reveal a discrepancy.
 
