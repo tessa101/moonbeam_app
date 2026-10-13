@@ -1558,3 +1558,26 @@ The shipped telescope (`permissionOff_*`) was sliced faithfully from a flat vect
 - **Import:** all five SVGs imported cleanly (Preserve Vector Data, Single Scale, Original). Gradients survive CoreSVG, so no PDF or PNG fallback was needed. These files are hand-supplied, not cut by `scripts/slice_illustrations.py`, so re-running the script would bring back the old telescope.
 - **Pivots:** tube and glint (155, 335) → (204, 330), the mount head's centre (circle (380, 540) through the art's group transform = (204.0, 330.4)). Halo/disc (190, 203) (crescent (352, 287) → (190.0, 203.4)). Star (128, 122) → (326, 150).
 - **Glint motion:** an opacity-only part (`Part.lensGlint`) whose layer moves with `[.tube, .lensGlint]`, so it inherits the tube's pivot and rotation with no view code. Its opacity is 0 at offset 0, so the Reduce Motion still shows no glint.
+
+### 2026-10-13 — 5.12a Location Off sheet restyle (LOCATION-SHEET.md)
+
+`LocationOffDialog` restyled per the "Moon Signal Location Sheet v2" artboard: Young Serif title, path in a `surface`
+inset group, filled primary pill and outlined secondary, close button, one detent fitted to the measured content
+height. Words and actions are still all `LocationFailure`'s. The one copy change: the secondary is now the shared
+`LocationFailure.searchInsteadTitle` ("Search for a city instead"), not the dialog's own "Search instead". No test
+asserted the old title.
+
+- **System sheet kept, not hand-drawn (§4):** on iOS 27 it already floats with an 8 pt inset, a ~50% scrim and its
+  concentric corners (~35–40 pt by scan). Only `presentationBackground(surfaceRaised)` is set.
+- **Buttons:** primary reuses `.primary` (56 pt; within 4 pt of the mock's 52). Secondary is a new `.outlined` style
+  (48 pt, accent at 40% border, accent text). `.secondary` is a filled `surfaceRaised` pill, not this look.
+- **Home indicator clearance counts the sheet's safe area:** the floating sheet adds ~30 pt of bottom safe area on
+  Face ID iPhones and none on the SE. So the bottom pad is `max(0, 34 − safe area)`, which leaves 34 pt under the last
+  action everywhere rather than ~66 pt on iPhone 17.
+- **Buttons scale with Dynamic Type** (the failure screens pin theirs at `.large`). At AX sizes the sheet reaches its
+  largest detent and scrolls, per §4.
+- **DEBUG screen states** `locationOffDialog.denied | .servicesOff | .restricted` open the sheet directly, so all three
+  variants can be captured; restricted can't be set on the simulator any other way.
+- New tokens: `Theme.Fonts.sheetPath` (Nunito Sans Bold 15) and the sheet's line-height multiples (30/24, 24/17, 20/15).
+- §6 open items not decided here: Close kept, 56/48 heights, search not promoted.
+- Evidence: `.agent-reports/5.12a-location-sheet/` (before/after on iPhone 17 + SE 3, default + AX3; interactions).

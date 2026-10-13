@@ -52,6 +52,12 @@ struct DebugScreenState: View {
         /// No fix whose look on return fails too (`locationFailed.noFix`'s
         /// succeeds).
         case locationFailedNoFixAgain = "locationFailed.noFixAgain"
+        /// The compass's Location Off dialog (LOCATION-SHEET.md, 5.12a) over
+        /// the saved Irvine, opened straight away: restricted can't be set
+        /// on the simulator, and the dialog only opens from a tap.
+        case locationOffDialogDenied = "locationOffDialog.denied"
+        case locationOffDialogServicesOff = "locationOffDialog.servicesOff"
+        case locationOffDialogRestricted = "locationOffDialog.restricted"
 
         var locationFailure: LocationFailure? {
             switch self {
@@ -59,6 +65,15 @@ struct DebugScreenState: View {
             case .locationFailedServicesOff: .servicesOff
             case .locationFailedNoFix, .locationFailedNoFixAgain: .noFix
             case .locationFailedRestricted: .restricted
+            default: nil
+            }
+        }
+
+        var locationOffVariant: LocationViewModel.LocationOffVariant? {
+            switch self {
+            case .locationOffDialogDenied: .denied
+            case .locationOffDialogServicesOff: .servicesOff
+            case .locationOffDialogRestricted: .restricted
             default: nil
             }
         }
@@ -172,10 +187,10 @@ struct DebugScreenState: View {
                 Self.time(2, 7, 53)
             }
             let authState: LocationAuthState = switch state {
-            case .locationOff, .messageDenied, .locationFailedDenied: .denied
+            case .locationOff, .messageDenied, .locationFailedDenied, .locationOffDialogDenied: .denied
             case .messageFirstAsk: .notDetermined
-            case .messageServicesOff, .locationFailedServicesOff: .servicesOff
-            case .messageRestricted, .locationFailedRestricted: .restricted
+            case .messageServicesOff, .locationFailedServicesOff, .locationOffDialogServicesOff: .servicesOff
+            case .messageRestricted, .locationFailedRestricted, .locationOffDialogRestricted: .restricted
             default: .authorized
             }
             let placeResult: Result<Place, any Error> = switch state {
@@ -209,7 +224,8 @@ struct DebugScreenState: View {
                 locationService: location,
                 placeSearch: FakePlaceSearchService(),
                 placeStore: InMemoryPlaceStore(
-                    lastViewed: state == .locationOff || state.locationFailure != nil ? Place.irvine : nil
+                    lastViewed: state == .locationOff || state.locationFailure != nil || state.locationOffVariant != nil
+                        ? Place.irvine : nil
                 ),
                 moonService: moonService,
                 headingService: heading,
@@ -303,6 +319,10 @@ struct DebugScreenState: View {
                 default:
                     break
                 }
+                return
+            }
+            if let variant = state.locationOffVariant {
+                viewModel.locationOffDialog = variant
                 return
             }
             switch state {

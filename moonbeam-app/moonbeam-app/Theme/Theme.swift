@@ -219,6 +219,13 @@ nonisolated enum Theme {
         static let teaserTitleLineHeightMultiple: CGFloat = 1.3
         static let teaserBody = Font.custom(FontName.nunitoSansRegular, size: 15, relativeTo: .subheadline)
         static let teaserBodyLineHeightMultiple: CGFloat = 1.45
+        /// The Location Off sheet (LOCATION-SHEET.md §3): title `display`
+        /// at 24/30, body `body` at 17/24, and the Settings path in Nunito
+        /// Sans Bold 15/20.
+        static let sheetTitleLineHeightMultiple: CGFloat = 30.0 / 24.0
+        static let sheetBodyLineHeightMultiple: CGFloat = 24.0 / 17.0
+        static let sheetPath = Font.custom(FontName.nunitoSansBold, size: 15, relativeTo: .subheadline)
+        static let sheetPathLineHeightMultiple: CGFloat = 20.0 / 15.0
         /// Notes under the dial.
         static let note = Font.custom(FontName.nunitoSansRegular, size: 13, relativeTo: .footnote)
         /// The "!" in a note's amber circle (Nunito 700).

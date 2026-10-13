@@ -444,3 +444,17 @@
 18:56 5.12: AX3 ok (title 2 lines, body 4, no clipping); restoring sim settings
 18:56 5.12: sim restored; incremental build-for-testing after preview add
 18:58 5.12: findings + latest.md written; committing
+18:58 5.12: committed f52cd00; installing Debug on T2 iPhone
+19:00 5.12: T2 iPhone unavailable (devicectl 4016); device build ready at /tmp/mb-device; stopped
+08:15 continue: T2 iPhone now available; retrying 5.12 device install
+08:16 5.12: installed f52cd00 Debug on T2 iPhone (2nd try; 1st was connection reset); latest.md updated. 5.10a telescope still waiting on Tessa's art choice (a/b/c)
+10:15 5.12a: started location sheet restyle; reading spec + LocationOffDialog
+10:16 5.12a: added DEBUG locationOffDialog.* screen states for baseline captures; building sim
+10:18 5.12a: baseline captured (iPhone 17 + SE3 default, iPhone 17 AX3)
+10:19 5.12a: system sheet matches §3 (8 pt inset, ~50% scrim, ~35-40 pt corners); restyling dialog
+10:21 5.12a: dialog restyled; building sim
+10:27 5.12a: bottom clearance counts sheet safe area; rebuild + default/AX3 captures
+10:29 5.12a: captures done; checking dismiss paths (close/outside/grabber) on iPhone 17 sim
+10:32 5.12a: interactions pass (close/outside/grabber/search, VO order); running focused tests in Xcode
+10:33 5.12a: focused tests 216/216 pass (Xcode, iPhone 17); writing findings, DECISIONS, STATUS, latest
+10:35 5.12a: findings, DECISIONS, STATUS, LOCATION.md + inventory updated; writing latest.md

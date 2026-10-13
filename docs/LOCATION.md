@@ -107,13 +107,14 @@ while denied / restricted / services off shows the **location failure screen** i
 search row over a launch loader message.
 
 ### Custom "Location Off" dialog
-A custom in-app sheet or dialog, **not** a system alert.
+A custom in-app sheet or dialog, **not** a system alert. Layout and style: LOCATION-SHEET.md (5.12a). Its words now
+come from the shared `LocationFailure` copy; the variant copy below is the original spec.
 
 **Denied variant**
 - Title: Location is off for Moonbeam
 - Body: To find the moon where you are, turn on location in **Settings › Moonbeam › Location** and choose **While Using the App**. You can also just search for a city.
 - Primary: **Open Settings** (deep-links to the app's settings page via `UIApplication.openSettingsURLString`)
-- Secondary: **Search instead** (dismisses the dialog ~~and focuses the search field~~, then opens the search sheet once the dialog has gone: SEARCH-RECENTS.md §2, Decision A)
+- Secondary: **Search for a city instead** (the shared `LocationFailure.searchInsteadTitle` since 5.12a; was "Search instead") (dismisses the dialog ~~and focuses the search field~~, then opens the search sheet once the dialog has gone: SEARCH-RECENTS.md §2, Decision A)
 
 **Services-off variant** (Location Services disabled for the whole device)
 - Body: Location Services are off on this device. Turn them on in **Settings › Privacy & Security › Location Services**, or search for a city.

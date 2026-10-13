@@ -64,9 +64,9 @@ DEBUG routes are launch arguments: `-screenState <route>` or the corresponding X
 
 | State | Scenario | Current text / art | How to test |
 |---|---|---|---|
-| Location Off dialog: denied | Compass Turn On Location only | Compact dialog using shared “Can’t see your location” explanation and Settings path; Open Settings / Search instead | `locationOff` → Turn On Location; verify the selected city stays |
-| Location Off dialog: services off | Compass Turn On Location, device switch off | Compact dialog using the shared Services-off copy and “Back to Settings” path; same compact actions | Fake service or real device switch; verify returning from Settings preserves selected city |
-| Location Off dialog: restricted | Compass attempt with restricted access | Compact dialog using shared restricted copy; Search instead only | Fake restricted compass context. Search row is hidden when restricted |
+| Location Off dialog: denied | Compass Turn On Location only | Compact dialog using shared “Can’t see your location” explanation and Settings path; Open Settings / Search for a city instead (5.12a sheet) | `locationOff` → Turn On Location, or `locationOffDialog.denied`; verify the selected city stays |
+| Location Off dialog: services off | Compass Turn On Location, device switch off | Compact dialog using the shared Services-off copy and “Back to Settings” path; same compact actions | `locationOffDialog.servicesOff`, fake service or real device switch; verify returning from Settings preserves selected city |
+| Location Off dialog: restricted | Compass attempt with restricted access | Compact dialog using shared restricted copy; Search for a city only | `locationOffDialog.restricted` (fake restricted compass context). Search row is hidden when restricted |
 | Search empty | Sheet opens with keyboard, empty query | Search field/Cancel; Use my location when eligible; Recent rows if any; no illustration | Open from main, onboarding, launch message, each failure. Row hidden for restricted or already-detected selected location |
 | Search one character | Local recent filtering only | Matching Recent rows, or blank list; no error | Type one character with matching and nonmatching recents |
 | Search suggestions / waiting for batch | Query has 2+ characters | Suggestions; prior list remains while batch arrives; no separate illustrated loading state | Type 2+ characters using fake delayed batches; rapid edits must not deliver stale results |

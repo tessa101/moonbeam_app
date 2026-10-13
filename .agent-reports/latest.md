@@ -1,6 +1,27 @@
+# 5.12a location sheet restyle — 2026-10-13
+
+Done (one commit, not pushed): `LocationOffDialog` restyled per `docs/LOCATION-SHEET.md` §1–§5. It keeps the system
+floating sheet (it already matches §3: 8 pt inset, ~50% scrim, ~35–40 pt corners), with a `surfaceRaised` fill and one
+detent fitted to the content. Young Serif title, path in a `surface` group, `.primary` pill plus a new `.outlined`
+secondary, and Close. Secondary now "Search for a city instead" (shared title). Copy, actions and
+`LocationFailure+Copy.swift` unchanged; teaser and telescope untouched. New DEBUG `-screenState locationOffDialog.*`
+routes, added before the baseline capture so restricted could be shown.
+
+Checked: before/after on iPhone 17 + SE 3 at default and AX3 (no clipping or overlap). Close, outside tap and grabber
+each dismiss; search opens after the sheet closes. VoiceOver order matches §5. Focused tests (LocationViewModel*,
+OnboardingMainScreen, CompassViewModel) **216/216 pass** in Xcode. Full suite not run. Evidence + findings:
+`.agent-reports/5.12a-location-sheet/`.
+
+Device: see the install line below.
+
+Next: Tessa checks the sheet on the phone (VoiceOver on the path, Open Settings → return), decides §6 open items
+(Close, 56 vs 52 pt primary, promoting search), and runs the full suite in Terminal.
+
+---
+
 # 5.12 location-off teaser (option 1b) — 2026-10-12
 
-Done (one commit, not pushed): the uncommitted teaser code is built and checked on the simulator. Only fix: `@MainActor` on
+Done (`f52cd00`, not pushed): the uncommitted teaser code is built and checked on the simulator. Only fix: `@MainActor` on
 `CompassTeaserTests` (main-actor statics). Added a "Location off, restricted" `CompassView` preview, because no
 `-screenState` reaches the home screen with restricted access. Docs: DECISIONS/STATUS/COMPASS updated; design/1.8 added.
 
@@ -8,6 +29,10 @@ Tests: CompassTeaserTests 10/10, CompassViewModelTests 112/112 pass. **Full suit
 because the sandbox blocked the runner's pseudo terminal; Xcode RunAllTests ran ~16:16–17:50, then failed (incomplete
 result bundle). Simulator: teaser, Reduce Motion (settled, still) and AX3 (wraps, no clipping) on iPhone 17; restricted
 chip in a preview. Screenshots + findings: `.agent-reports/5.12-teaser/`.
+
+**T2 iPhone install: done (2026-10-13).** The phone showed as available again. The first install attempt failed with
+"connection reset by peer" (the wireless link dropped); the retry worked. The Debug build of `f52cd00` (with the teaser) is on the phone.
+Xcode's run destination was left on "iPhone 17" (the T2 iPhone wasn't in the list to switch back to).
 
 Next: Tessa runs the full suite in Terminal, checks the teaser on the phone (motion, VoiceOver), and confirms with design
 that restricted keeps the chip.
