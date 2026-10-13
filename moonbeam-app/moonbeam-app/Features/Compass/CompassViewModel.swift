@@ -85,6 +85,11 @@ final class CompassViewModel {
     /// In place of the compass when location is off (COMPASS.md §2).
     static let locationOffHint = "Turn on location to use the compass."
 
+    /// The location-off teaser's copy (design handoff, Location Off Teaser,
+    /// option 1b): shows what location unlocks, instead of the warning chip.
+    static let locationOffTeaserTitle = "Point your phone at the moon"
+    static let locationOffTeaserBody = "With location on, this becomes a live compass that turns you toward it."
+
     /// Leads into the existing Location Off flow.
     static let turnOnLocationTitle = "Turn On Location"
 
@@ -126,6 +131,12 @@ final class CompassViewModel {
     // MARK: - Observed state
 
     private(set) var visibility: Visibility = .hidden
+
+    /// Location is off and the user can turn it on: the animated teaser
+    /// replaces the warning chip. Restricted (Screen Time, MDM) keeps the
+    /// chip, since "turn it on" can't help there. Stored, since `context`
+    /// isn't observed.
+    private(set) var showsLocationOffTeaser = false
 
     /// `nearbyText` in the Nearby state, else `nil`. Never a distance: with
     /// the city names, that would reveal roughly where someone is. Stored
@@ -471,6 +482,7 @@ final class CompassViewModel {
         isPreciseLocationOff = context.isPreciseLocationOff
         hasDetectedPlace = context.detectedPlace != nil
         visibility = Self.visibility(for: context)
+        showsLocationOffTeaser = Self.showsLocationOffTeaser(for: context)
         // Foreground isn't required: coming back from Settings, the context
         // arrives before the scene counts as active again.
         if wasPreciseLocationOff, !isPreciseLocationOff, visibility.showsCompass, isOnScreen {
@@ -583,6 +595,13 @@ final class CompassViewModel {
         guard let detected = context.detectedPlace else { return .hidden }
         if place.isSameCity(as: detected) { return .here }
         return place.distanceMeters(to: detected) <= nearbyRadiusMeters ? .nearby : .far
+    }
+
+    /// The teaser applies wherever the location-off note would, except when
+    /// the user can't change it (`.restricted`). Assumption from the handoff,
+    /// to confirm with design.
+    static func showsLocationOffTeaser(for context: CompassContext) -> Bool {
+        visibility(for: context) == .locationOff && context.authState != .restricted
     }
 
     // MARK: - Targets

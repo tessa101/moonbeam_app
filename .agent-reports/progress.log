@@ -433,3 +433,14 @@
 16:21 chunk 3: iPhone default/AX1/AX5 via previews done; starting SE3 workspace session for -screenState locationFailed.denied
 16:23 chunk 3: captures + findings written; build-for-testing
 16:24 chunk 3: build-for-testing passed; committing 3/3
+16:24 committed 763fe7c 5.10a telescope 3/3; tests pending in Terminal
+16:26 5.12: xcodebuild test hung (sandbox blocked pty, runner never launched); killed at 10 min, switching to Xcode RunAllTests
+17:52 5.12: Xcode RunAllTests ran ~16:16-17:50 then failed (incomplete result bundle; Xcode shared with telescope agent); MCP call couldn't be stopped at 10 min. Not retrying full suite.
+17:52 5.12: CompassTeaserTests 10/10 pass (Xcode, iPhone 17); running CompassViewModelTests
+18:00 5.12: sim screenshots (teaser)
+18:26 5.12: teaser screenshot ok on iPhone 17; restricted next
+18:47 5.12: restricted home unreachable via -screenState (opens failure screen; fake search empty); added 'Location off, restricted' preview, rendered
+18:55 5.12: reduce motion ok (settled, static 3.3 s; toggled via Settings UI, defaults write didn't take); AX3 next
+18:56 5.12: AX3 ok (title 2 lines, body 4, no clipping); restoring sim settings
+18:56 5.12: sim restored; incremental build-for-testing after preview add
+18:58 5.12: findings + latest.md written; committing

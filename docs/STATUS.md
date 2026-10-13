@@ -169,7 +169,7 @@ Rule: finish what changes the card before the AX reflow, or the reflow is done t
    countdown, this pass's rise while up → 5.11.2 `23° up` → 5.11.3 edge-case voice line (draft copy).
 5. [ ] **5.5 AX reflow** incl. the always-three-column card on today and the SE 3 connector; loader VoiceOver /
    Reduce Motion review (LOADER.md §10.6).
-6. [ ] **5.12 location off:** dimmed compass preview instead of a bare CTA. **Needs design exploration first** (Tessa, 2026-10-12); do not send to the agent yet.
+6. [~] **5.12 location off:** the dimmed-compass idea became the animated cartoon-compass teaser (design handoff, option 1b). Built and simulator-checked 2026-10-12 (teaser, restricted chip, Reduce Motion, AX3); awaiting Tessa's phone check, a full test run and confirmation of the restricted assumption. See DECISIONS 2026-10-12 "5.12 location-off teaser".
 7. [ ] **TestFlight 0.1 (9)** (archive built and verified 2026-10-12, `d9eba76`; upload to App Store Connect pending, Tessa's): set `MARKETING_VERSION` 1.0 → **0.1** and `CURRENT_PROJECT_VERSION` 8 → 9
    (DECISIONS.md 2026-10-08, version naming); if App Store Connect rejects the version, go back to 1.0. Then device QA at default / AX1 / AX5; check the 5.8 arc after midnight (draws from the
    evening's rise; rise/set dots on the arc ends).

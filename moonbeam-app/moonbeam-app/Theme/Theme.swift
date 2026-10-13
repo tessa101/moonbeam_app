@@ -40,6 +40,9 @@ nonisolated enum Theme {
         static let textSecondary = Color(hex: 0xC9B7A6)
         /// Onboarding body copy.
         static let textBody = Color(hex: 0xE4D6C6)
+        /// The location-off teaser's body (design handoff, Location Off
+        /// Teaser): a step quieter than `textSecondary`.
+        static let teaserBody = Color(hex: 0xB9A898)
         /// Tokens, directions, N, ↑/↓, primary buttons, the lock pill. Kept
         /// in step with the `AccentColor` asset, which is the same amber so
         /// system controls pick it up too.
@@ -210,6 +213,12 @@ nonisolated enum Theme {
         static let detail = Font.custom(FontName.nunitoSansRegular, size: 14, relativeTo: .subheadline)
         /// The card's date label and the "↑ Moonrise" labels.
         static let label = Font.custom(FontName.nunitoSansSemiBold, size: 13, relativeTo: .footnote)
+        /// The location-off teaser's title (Young Serif 20, line height 26)
+        /// and body (Nunito Sans 15, line height 1.45).
+        static let teaserTitle = Font.custom(FontName.youngSerif, size: 20, relativeTo: .title3)
+        static let teaserTitleLineHeightMultiple: CGFloat = 1.3
+        static let teaserBody = Font.custom(FontName.nunitoSansRegular, size: 15, relativeTo: .subheadline)
+        static let teaserBodyLineHeightMultiple: CGFloat = 1.45
         /// Notes under the dial.
         static let note = Font.custom(FontName.nunitoSansRegular, size: 13, relativeTo: .footnote)
         /// The "!" in a note's amber circle (Nunito 700).

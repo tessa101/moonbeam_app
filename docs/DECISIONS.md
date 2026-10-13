@@ -1540,6 +1540,17 @@ Tessa's launch recording shows the compass fading in north-up with a stale reado
 Tessa approved 5.11.3 (committed `be6bbeb`), closing 5.11. Order set: 5.10a.3, then 5.5 AX reflow (to be finished), with 5.12 (needs design exploration), the location-settings bottom sheets (layout hard to parse, redo) and the telescope illustration (needs more work) as a design track before any agent build.
 
 
+### 2026-10-12 — 5.12 location-off teaser (design handoff, option 1b)
+
+The warning chip read as nagging because users couldn't see what location would give them. Replaced, where the user can turn location on (not determined, denied, services off), with a 180 pt animated cartoon compass, the title "Point your phone at the moon" and one line of body copy. The needle hunts, finds the moon and the moon glows, in a 5 s loop (handoff motion table, `CompassTeaserMotion`). The button, card and header are unchanged. Options 1a, 1c, 1d, 1e are not built; 1c (calico cat) is parked as a possible later swap-in.
+
+- **Restricted keeps the chip** and the existing restricted dialog (handoff assumption, **to confirm**): the button can't enable anything there.
+- **Reduce Motion, background, scrolled away:** settled frame (needle 62°, glow .55, r 19) instead of a paused timeline, as `LocationIllustration` does.
+- **Layers:** six full-canvas SVGs in `Illustrations.xcassets/compassTeaser` (Preserves Vector Data, Original). The handoff's flattened `compass-settled.svg` isn't shipped: the settled frame is the same layers at the settled values (checked equal to it within antialiasing).
+- **Spacing:** teaser to button 22 pt (the mock's gap; the old chip-to-button gap was 10). Card to teaser stays the screen's 32 pt.
+- **Type:** Young Serif 20 / 26 and Nunito Sans 15 / 1.45 scale with Dynamic Type (title3, subheadline) rather than fixed sizes; both wrap at large sizes.
+- Built and checked 2026-10-12 (agent): the only fix needed was `@MainActor` on `CompassTeaserTests` (it reads the view model's main-actor statics). `CompassTeaserTests` 10/10 and `CompassViewModelTests` 112/112 pass; the full suite didn't complete in this session (see `.agent-reports/5.12-teaser/findings.md`). Simulator: teaser, Reduce Motion (settled, still) and AX3 (wraps, no clipping) checked. Restricted is checked in a new `CompassView` preview, since no `-screenState` reaches the home screen with restricted access.
+
 ### 2026-10-12 — 5.10a telescope redrawn (Tessa)
 
 The shipped telescope (`permissionOff_*`) was sliced faithfully from a flat vector reconstruction that didn't match the approved D2 art. Tessa chose **Option A**: the telescope is redrawn to match the D2 original (`design/1.7-telescope-redraw/A-lit-left/`, used as-is), with the **moon lit on the left for this illustration**. This replaces the Chunk 2b mirror for the permission-off art only; services off and restricted keep `crescentMoonCentre` (250, 212). **Lens glint kept** as a fifth layer on top of the tube. Spec: `docs/STEP-5.10a-TELESCOPE-REDRAW.md`.

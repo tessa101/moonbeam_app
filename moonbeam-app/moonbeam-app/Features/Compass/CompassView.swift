@@ -53,6 +53,8 @@ struct CompassView: View {
     private static let readoutBaseHeight: CGFloat = 40
     /// Between the location-off note and its button.
     private static let notesSpacing: CGFloat = 10
+    /// Between the location-off teaser and its button (the handoff's 22).
+    private static let teaserToButton: CGFloat = 22
     /// Buttons under a note are no wider than the widest note.
     private static let noteMaxWidth: CGFloat = 330
 
@@ -278,9 +280,19 @@ struct CompassView: View {
 
     // MARK: - Location off (§2)
 
+    /// Where the user can turn location on, a teaser of the compass it
+    /// unlocks; where they can't (restricted), the plain note, since there's
+    /// nothing to show off that they could reach.
     private var locationOffNote: some View {
-        VStack(spacing: Self.notesSpacing) {
-            CompassNote(text: CompassViewModel.locationOffHint)
+        VStack(spacing: viewModel.showsLocationOffTeaser ? Self.teaserToButton : Self.notesSpacing) {
+            if viewModel.showsLocationOffTeaser {
+                CompassTeaser(
+                    title: CompassViewModel.locationOffTeaserTitle,
+                    message: CompassViewModel.locationOffTeaserBody
+                )
+            } else {
+                CompassNote(text: CompassViewModel.locationOffHint)
+            }
             Button(CompassViewModel.turnOnLocationTitle, action: onTurnOnLocation)
                 .buttonStyle(.secondary)
                 .frame(maxWidth: Self.noteMaxWidth)
@@ -456,4 +468,8 @@ private let waningGibbous = CompassPreview.context(phase: .waningGibbous, phaseA
 
 #Preview("Location off") {
     CompassPreview(context: CompassPreview.context(auth: .denied), reading: nil)
+}
+
+#Preview("Location off, restricted") {
+    CompassPreview(context: CompassPreview.context(auth: .restricted), reading: nil)
 }

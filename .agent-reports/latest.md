@@ -1,3 +1,23 @@
+# 5.12 location-off teaser (option 1b) — 2026-10-12
+
+Done (one commit, not pushed): the uncommitted teaser code is built and checked on the simulator. Only fix: `@MainActor` on
+`CompassTeaserTests` (main-actor statics). Added a "Location off, restricted" `CompassView` preview, because no
+`-screenState` reaches the home screen with restricted access. Docs: DECISIONS/STATUS/COMPASS updated; design/1.8 added.
+
+Tests: CompassTeaserTests 10/10, CompassViewModelTests 112/112 pass. **Full suite not completed**: `xcodebuild test` hung
+because the sandbox blocked the runner's pseudo terminal; Xcode RunAllTests ran ~16:16–17:50, then failed (incomplete
+result bundle). Simulator: teaser, Reduce Motion (settled, still) and AX3 (wraps, no clipping) on iPhone 17; restricted
+chip in a preview. Screenshots + findings: `.agent-reports/5.12-teaser/`.
+
+Next: Tessa runs the full suite in Terminal, checks the teaser on the phone (motion, VoiceOver), and confirms with design
+that restricted keeps the chip.
+
+Test (Tessa, Terminal):
+  xcodebuild test -project moonbeam-app/moonbeam-app.xcodeproj -scheme moonbeam-app \
+    -destination 'platform=iOS Simulator,name=iPhone 17'
+
+---
+
 # 5.10a telescope redraw — 2026-10-12
 
 Chunks 1–3 done (committed, not pushed). Chunk 1: five `permissionOff_*` layers from `design/1.7-telescope-redraw/A-lit-left/`

@@ -85,7 +85,7 @@ The rule is **near**, not **same city** (4.6): moonrise/moonset bearings depend 
 
 | State | When | Compass | Message (placeholder copy) |
 |---|---|---|---|
-| **Location off** | Off / denied / not determined | Hidden | "Turn on location to use the compass" + **Turn On Location** button |
+| **Location off** | Off / denied / not determined | Hidden | Animated compass teaser (5.12) + **Turn On Location** button; restricted keeps the note "Turn on location to use the compass" |
 | **Here** | Selected place is the detected city (`isSameCity`) | **Shown** | none |
 | **Nearby** | Different city, within **60 mi (~97 km)** of the detected location | **Shown** | "You're in {Detected city} but {City} is nearby" (4.11; was "Directions for {City}") |
 | **Far** | More than 60 mi from the detected location | Hidden | "You're a bit too far from {City} to view the compass accurately" (4.11; was "Compass is only available near this location") |
