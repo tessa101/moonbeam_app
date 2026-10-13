@@ -260,6 +260,8 @@ final class OnboardingViewModel {
         isForced = true
         // The next "Aha" is a first one again (LOADER.md §11.2.2).
         onboardingStore.hasSeenFirstFindPass = false
+        // And the location-off prompt shows again (LOCATION-OFF-FLOW.md §4).
+        onboardingStore.locationPromptDismissed = false
         isRequestingPermission = false
         isAwaitingSettingsFromUpsell = false
         step = page

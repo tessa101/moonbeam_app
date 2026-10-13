@@ -1,0 +1,170 @@
+# Step 5.12b Spec: Location off, prompt + moon guide (and the swap polish)
+
+> Owner: Tessa · _Decided 2026-10-13_ · Source: `design/1.9-location-off-flow/README.md` (the design handoff, which
+> **replaces** `design/1.8-location-off-teaser/` and its option 1b) + Tessa's notes of 2026-10-13 + the video
+> `location_on_off.mov` (local; measurements in §5).
+> **Problem:** 5.12 (cartoon compass) is better than the warning chip but still reads as one fixed ask. Once someone
+> says no, there's nothing left to bring them back, and the swap between the location-off block and the live compass
+> hard-cuts.
+> Supersedes: 5.12's cartoon compass (`CompassTeaser`, `CompassTeaserMotion`, `compassTeaser_*` assets). The 5.12
+> decisions that still hold: restricted keeps the chip; Reduce Motion / background / off-screen show a still frame
+> instead of a paused timeline; `showsLocationOffTeaser` gating.
+
+## 1. What changes (summary)
+
+| # | Change | Where |
+|---|---|---|
+| 1 | The prompt's art becomes a **ghosted real compass** that slowly turns (S1) | 5.12b.1 |
+| 2 | New copy: title + Tessa's subhead | 5.12b.1 |
+| 3 | **Maybe later**: a text button under Turn On Location; sets a persisted dismissed flag | 5.12b.1 |
+| 4 | **Dismissed row** (S2 to S6): the moon guide, in a waiting state or an active moon-clock state | 5.12b.2 |
+| 5 | Transitions: S1 ⇄ row, and location-off block ⇄ live compass, on the app's standard timing | 5.12b.3 |
+
+Header, phase/rise-set card and the Turn On Location button are **unchanged**. Restricted keeps the existing chip and
+dialog (no prompt, no row, no Maybe later): the CTA can't help there (the handoff's and 5.12's assumption; still to confirm).
+
+## 2. S1: the prompt (5.12b.1)
+
+Order under the card: ghosted compass, title, body, Turn On Location, Maybe later.
+
+- **Ghosted compass:** exactly the handoff README ("S1: Prompt"): 210 pt, 260-unit space, ring r 104 / #5E4D57 2 pt,
+  today's rise-to-set arc (#F2C27B, 4 pt, round caps, 6 pt end dots), moon marker, "N"; whole layer opacity 0.42, blur
+  1.2 pt; static north tick; "PREVIEW" pill. Build it from the live ring/arc drawing with today's real rise and set
+  azimuths (`CompassArc` / `CompassDial` pieces), not a new drawing.
+- **Motion:** the ring group turns on a 12 s loop, ease-in-out cubic-bezier(.45, 0, .55, 1) per move:
+  0° at 0 s, -70° at 3 s, hold to 4.8 s, 40° at 7.8 s, hold to 9.6 s, 0° at 12 s. The tick and pill don't turn.
+- **Reduce Motion:** static at 0°. **Background / scrolled out of view:** the still 0° frame (same rule as
+  `LocationIllustration.shouldAnimate`), not a paused timeline.
+- **No rise or set today** (high latitude, or a day with none): draw the ring, N and tick, plus whichever of the two
+  dots exists; no arc. (Proposed default; the handoff doesn't cover it.)
+- **Copy:**
+  - Title: **"Your moon compass is ready"** (handoff). Young Serif 20, #F5EADB.
+  - Body (Tessa, 2026-10-13, replaces the handoff's): **"With location on, you'll see the live compass to point your way"**.
+    Nunito Sans 15 / 1.45, #B9A898, max width 300. No final period (as written); Tessa to confirm.
+  - All strings live in `CompassViewModel` next to the existing placeholder copy.
+- **Buttons:** Turn On Location is the existing button and flow (system prompt, or Settings if already denied). **Maybe
+  later** is text-only: 44 pt tall, full width, Nunito Sans SemiBold 16, #B9A898, no background or border, 4 pt below
+  the CTA. It sets `locationPromptDismissed = true` and swaps S1 for the row (§4).
+- **Dynamic Type:** title and body wrap; the art stays 210 pt. Maybe later keeps its 44 pt minimum.
+- **VoiceOver:** the compass art and PREVIEW pill are hidden. Title is a header; title + body read as one element;
+  then the two buttons. Maybe later: hint "Hides this. You can bring it back from the compass guide."
+
+### 2.1 As built (5.12b.1, 2026-10-13)
+
+- The ghost is `CompassGhost`: the live `CompassDial` at its 196 pt face (a 260 pt frame) scaled to 210 pt, so it
+  carries the real face, ticks, numbers and dotted arc rather than the handoff's plain ring. Its fixed needle is the
+  north tick. Labels are off. Rise/set are the **selected** day's (the card's), plus the moon if today and up.
+- PREVIEW is in the system monospaced font: IBM Plex Mono isn't bundled (adding it needs an OK).
+- `showsLocationOffPrompt` (renamed) gates it. After Maybe later a placeholder S2 row (`CompassGuideRow`, no avatar)
+  stands in until 5.12b.2.
+
+## 3. S2 to S6: the dismissed row (5.12b.2)
+
+A single tappable row where S1 was. Layout and tokens per the handoff README ("S2 to S6"): padding 12/16/12/12, radius
+20, 14 pt gaps, 52 pt avatar (no fill, no border, clipped to the circle), two-line text, chevron.
+
+### 3.1 Which state
+
+Computed from "now", the place and the selected day. **Today only**: on any other date the row is S2 (a countdown
+means nothing on another day). It reuses the 5.11 rules, so the row, the card and the compass always agree on up/down.
+
+| State | When (today, moon state from 5.11) | Avatar | Title | Subtitle |
+|---|---|---|---|---|
+| S2 | Moon down, next moonrise **more than 3 h** away (or none); and after moonset | sleeping | Compass guide is waiting | Tap whenever you want directions |
+| S3 | Moon down, next moonrise 1 h to 3 h away | searching | Moonrise in 2 hr 15 min | Want her to show you where? |
+| S4 | Moon down, next moonrise 1 to 59 min away | searching | Moonrise in 40 min | same |
+| S5 | From moonrise until 15 min after | searching | The moon is rising now | same |
+| S6 | 15 min after moonrise until moonset | searching | The moon is up now | same |
+
+- The next moonrise can be **after midnight**: at 10:30 PM with a 12:20 AM rise the row reads "Moonrise in 1 hr 50 min"
+  (proposed; the card's own "Set for today" wording is unchanged).
+- "Rise" for S5/S6 is this pass's rise (`UpNow.Pass.riseTime`, 5.11 §1.1), so a moon that rose last night is S6, not S5.
+- "Under a minute away" counts as S5.
+- Styling: S2 border #3A2E35, no fill, chevron #6E5C66, subtitle Regular 13 #B9A898. S3 to S6 border #4A3A2E, fill
+  #211A1F, chevron #F2C27B, subtitle SemiBold 13 #F2C27B. Titles Nunito Sans SemiBold 16, #F5EADB.
+- Countdown format (handoff): "X hr Y min" from 1 hr; drop "0 min" ("Moonrise in 2 hr"); "X min" under 1 hr. Same
+  once-a-minute tick as the card's countdown, and the same rounding, so the two never disagree by a minute.
+  **Open (§7):** the card's own countdown reads "in 1h 39m".
+- Pure logic goes in a value type (`LocationOffGuide`, proposed) with the formatter apart from it (CLAUDE.md); no
+  logic in the view.
+
+### 3.2 Avatars
+
+Prepared in `design/1.9-location-off-flow/avatars/` (`avatar_sleeping@1x/2x/3x.png`, `avatar_searching@1x/2x/3x.png`):
+the handoff's crops, rendered from `sleeping.svg` / `searching.svg` at 52 pt. Use these, in a catalog imageset
+(Original rendering), not the 650 KB vector: it would be re-rasterised on every scroll for a 52 pt picture.
+`moon-glow` / `moon-halo` stay hidden. The sleeping art is already in `design/d2-luminous-calico/sleeping/`; its
+separate tail layer is for a later wag and is **not** part of this work.
+
+### 3.3 Behavior
+
+- **Tap the row** (any state): shows S1 again, with the same transition as §5. Maybe later again: back to the row.
+  Re-opening S1 is **not** persisted: a relaunch with the flag set shows the row.
+- **Accessibility:** the whole row is one button. Label = title + subtitle. Hint "Shows the moon compass preview."
+  At AX sizes the text wraps (no truncation); the avatar stays 52 pt; the chevron stays centred.
+- VoiceOver focus: Maybe later moves focus to the row; tapping the row moves it to S1's title.
+
+## 4. State and persistence
+
+- `locationPromptDismissed` (per install, persisted): lives in `OnboardingStore` (it already holds first-run flags),
+  with the in-memory fake and the DEBUG reset (Show onboarding / Forget saved place clear it, as they clear
+  `hasSeenFirstFindPass`). If the agent finds a better home, say so in the report.
+- **Cleared when location is granted** (handoff recommendation, adopted): if they grant, then revoke later, they see
+  S1 once more.
+- Shows only where `showsLocationOffPrompt` (renamed from `showsLocationOffTeaser` in 5.12b.1) is true (not determined, denied, services off); rename it to what
+  it now gates (`showsLocationOffPrompt`) and keep restricted on the chip.
+- Location granted: prompt/row go; the live compass takes over (§5).
+
+## 5. Transitions (5.12b.3)
+
+### 5.1 What the video shows (`location_on_off.mov`, 60 fps, iPhone, 2026-10-13)
+
+| Moment | What happens | Time |
+|---|---|---|
+| Turn on in Settings, return | the hint block **vanishes in one frame**; the dial then fades in after a short empty gap | cut at 4.48 s; dial rising from ~4.53 s |
+| Turn off in Settings, return | the dial fades out (about 0.25 s), then the hint block **appears in one frame**, full opacity | dial 14.20 to 14.45 s |
+| Turn on again | same as the first | cut at 24.35 s |
+
+Cause (to confirm by a reproduce-and-diff step before any fix): the location-off block is a plain `switch` on
+`visibility` with no transition, so it cuts; the dial is held out until the first heading (`CompassEntrance`
+`.waitingForHeading`, up to 0.5 s), which is the empty gap. The dial's own fade-in is the standard one.
+
+### 5.2 Target
+
+Everything on the app's existing timings, not new ones:
+
+- **Block in:** fade + 8 pt rise, 300 ms ease-out (`ContentLoadIn.duration`, `.rise`). **Block out:** 200 ms fade,
+  no rise (`LaunchStage.phaseCycleFadeOutDuration`). Reduce Motion: the fades, no rise.
+- **Location off to on:** the prompt/row stays (non-interactive) until the dial's entrance leaves
+  `.waitingForHeading`, then one crossfade: prompt/row out 200 ms while the dial comes in 300 ms (readout and settle
+  as `CompassEntrance` already does). No blank gap, and the height change eases with the fade rather than jumping.
+- **On to off:** the dial out 200 ms, then the prompt/row in 300 ms with the rise, never both at full opacity.
+  Sensors stop as now (visibility, not the animation, decides that).
+- **S1 to row, row to S1:** crossfade with a height collapse/expand, about 250 ms (handoff), ease-in-out. The block
+  below (none today, then the DEBUG readout) moves with it, so nothing pops. Reduce Motion: crossfade only.
+- **Launch / place change / date step** keep their current load-ins (LOADER.md §12); only the swap changes.
+- Fade and height share one animation so the scroll content never jumps under the user's finger.
+
+### 5.3 Tests / evidence
+
+- Pure timing constants and the state machine (which block is shown, when) in unit tests.
+- Frame evidence: a screen recording of the three moments in §5.1 before and after, extracted at 60 fps (frame
+  tracking, as in HANDOFF "Device videos"); the report says how many frames each swap takes.
+
+## 6. Build order (one commit each, small runs)
+
+- **5.12b.1** S1: ghosted compass, new copy, Maybe later, `locationPromptDismissed` (store, reset on grant, DEBUG
+  reset), replace the cartoon compass (delete `CompassTeaser*` and `compassTeaser_*`). Row not yet built: Maybe later
+  swaps to a placeholder S2 row without the countdown, to be completed next.
+- **5.12b.2** The row: S2 to S6, state logic + formatter + tests, avatars, tap to reopen S1.
+- **5.12b.3** Transitions per §5, with the before/after frame report.
+
+## 7. Open
+
+- **Title:** the handoff's "Your moon compass is ready" with Tessa's new subhead (default), or keep 5.12's "Point your
+  phone at the moon" (it pairs closely with "With location on, you'll see…"). One line to change.
+- **Countdown wording:** the handoff's "Moonrise in 2 hr 15 min" sits a few points from the card's "in 1h 39m".
+  Default is the handoff's; the alternative is the card's `1h 39m` form for one voice.
+- Body copy has no final period (as given).
+- After-midnight rises counted in S3/S4 (§3.1), and the no-rise/no-set ghost (§2): proposed defaults.
+- The optional tail wag on the sleeping cat: later.

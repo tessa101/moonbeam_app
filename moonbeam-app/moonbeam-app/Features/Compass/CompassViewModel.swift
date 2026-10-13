@@ -85,10 +85,20 @@ final class CompassViewModel {
     /// In place of the compass when location is off (COMPASS.md §2).
     static let locationOffHint = "Turn on location to use the compass."
 
-    /// The location-off teaser's copy (design handoff, Location Off Teaser,
-    /// option 1b): shows what location unlocks, instead of the warning chip.
-    static let locationOffTeaserTitle = "Point your phone at the moon"
-    static let locationOffTeaserBody = "With location on, this becomes a live compass that turns you toward it."
+    /// The location-off prompt's copy (LOCATION-OFF-FLOW.md §2, S1): the
+    /// handoff's title and Tessa's body, which has no final period.
+    static let locationPromptTitle = "Your moon compass is ready"
+    static let locationPromptBody = "With location on, you'll see the live compass to point your way"
+
+    /// Under Turn On Location: swaps the prompt for the compass guide row.
+    static let maybeLaterTitle = "Maybe later"
+    static let maybeLaterHint = "Hides this. You can bring it back from the compass guide."
+
+    /// The compass guide row after Maybe later (§3, S2). 5.12b.2 adds the
+    /// moonrise states; this is the waiting one.
+    static let guideRowTitle = "Compass guide is waiting"
+    static let guideRowSubtitle = "Tap whenever you want directions"
+    static let guideRowHint = "Shows the moon compass preview."
 
     /// Leads into the existing Location Off flow.
     static let turnOnLocationTitle = "Turn On Location"
@@ -132,11 +142,25 @@ final class CompassViewModel {
 
     private(set) var visibility: Visibility = .hidden
 
-    /// Location is off and the user can turn it on: the animated teaser
-    /// replaces the warning chip. Restricted (Screen Time, MDM) keeps the
-    /// chip, since "turn it on" can't help there. Stored, since `context`
-    /// isn't observed.
-    private(set) var showsLocationOffTeaser = false
+    /// Location is off and the user can turn it on: the prompt (or, after
+    /// Maybe later, the guide row) replaces the warning chip. Restricted
+    /// (Screen Time, MDM) keeps the chip, since "turn it on" can't help
+    /// there. Stored, since `context` isn't observed.
+    private(set) var showsLocationOffPrompt = false
+
+    /// `OnboardingStore.locationPromptDismissed`, as last read: re-read on
+    /// every `update`, so the DEBUG resets show the prompt again.
+    private(set) var isLocationPromptDismissed = false
+
+    /// The guide row was tapped this launch: the prompt again, until Maybe
+    /// later. Not persisted (§3.3).
+    private(set) var isLocationPromptReopened = false
+
+    /// The ghosted compass in the prompt (§2): the selected day's rise and
+    /// set, and the moon if it's today and up, on the live dial's arc.
+    /// Empty and `nil` wherever the prompt doesn't show.
+    private(set) var ghostTargets: [CompassTarget] = []
+    private(set) var ghostArc: CompassArc?
 
     /// `nearbyText` in the Nearby state, else `nil`. Never a distance: with
     /// the city names, that would reveal roughly where someone is. Stored
@@ -229,6 +253,7 @@ final class CompassViewModel {
 
     private let headingService: any HeadingService
     private let moonService: any MoonService
+    private let onboardingStore: any OnboardingStore
     private let now: () -> Date
     private let moonRefreshInterval: Duration
     private let sleep: @Sendable (Duration) async throws -> Void
@@ -282,6 +307,7 @@ final class CompassViewModel {
     init(
         headingService: any HeadingService,
         moonService: any MoonService,
+        onboardingStore: any OnboardingStore = InMemoryOnboardingStore(),
         now: @escaping () -> Date = Date.init,
         moonRefreshInterval: Duration = CompassViewModel.defaultMoonRefreshInterval,
         sleep: @escaping @Sendable (Duration) async throws -> Void = { try await Task.sleep(for: $0) },
@@ -290,6 +316,7 @@ final class CompassViewModel {
     ) {
         self.headingService = headingService
         self.moonService = moonService
+        self.onboardingStore = onboardingStore
         self.now = now
         self.moonRefreshInterval = moonRefreshInterval
         self.sleep = sleep
@@ -300,6 +327,12 @@ final class CompassViewModel {
     // MARK: - Derived state
 
     var heading: Double? { reading?.trueHeading }
+
+    /// After Maybe later, the guide row stands in for the prompt (§3), until
+    /// it's tapped.
+    var showsLocationGuideRow: Bool {
+        showsLocationOffPrompt && isLocationPromptDismissed && !isLocationPromptReopened
+    }
 
     /// The ring pulsing from the live Moon (COMPASS-1.1.md §5): while the
     /// moon is up (so today) and the Moon hasn't been locked yet this
@@ -482,7 +515,13 @@ final class CompassViewModel {
         isPreciseLocationOff = context.isPreciseLocationOff
         hasDetectedPlace = context.detectedPlace != nil
         visibility = Self.visibility(for: context)
-        showsLocationOffTeaser = Self.showsLocationOffTeaser(for: context)
+        showsLocationOffPrompt = Self.showsLocationOffPrompt(for: context)
+        // Granted: a later revoke shows the prompt once more (§4).
+        if context.authState.isAuthorized, onboardingStore.locationPromptDismissed {
+            onboardingStore.locationPromptDismissed = false
+        }
+        let dismissed = onboardingStore.locationPromptDismissed
+        if dismissed != isLocationPromptDismissed { isLocationPromptDismissed = dismissed }
         // Foreground isn't required: coming back from Settings, the context
         // arrives before the scene counts as active again.
         if wasPreciseLocationOff, !isPreciseLocationOff, visibility.showsCompass, isOnScreen {
@@ -509,6 +548,19 @@ final class CompassViewModel {
         if reloads, wasSensing, isSensing {
             beginEntrance()
         }
+    }
+
+    /// Maybe later (§2): the guide row in place of the prompt, kept across
+    /// launches.
+    func dismissLocationPrompt() {
+        onboardingStore.locationPromptDismissed = true
+        isLocationPromptDismissed = true
+        isLocationPromptReopened = false
+    }
+
+    /// The guide row was tapped (§3.3): the prompt again, for this launch.
+    func reopenLocationPrompt() {
+        isLocationPromptReopened = true
     }
 
     /// The compass scrolled into or out of view, or was inserted or removed.
@@ -597,10 +649,10 @@ final class CompassViewModel {
         return place.distanceMeters(to: detected) <= nearbyRadiusMeters ? .nearby : .far
     }
 
-    /// The teaser applies wherever the location-off note would, except when
+    /// The prompt applies wherever the location-off note would, except when
     /// the user can't change it (`.restricted`). Assumption from the handoff,
     /// to confirm with design.
-    static func showsLocationOffTeaser(for context: CompassContext) -> Bool {
+    static func showsLocationOffPrompt(for context: CompassContext) -> Bool {
         visibility(for: context) == .locationOff && context.authState != .restricted
     }
 
@@ -646,6 +698,7 @@ final class CompassViewModel {
         updateArc(moon: moon, at: moment)
         updateUpNow(position: moonPosition, at: moment)
         setTargets(rebuilt)
+        updateGhost(at: moment)
     }
 
     /// A tick: only the moon moves, so only its target is recomputed. This
@@ -703,6 +756,49 @@ final class CompassViewModel {
             )
         }
         if newArc != arc { arc = newArc }
+    }
+
+    // MARK: - Ghost (LOCATION-OFF-FLOW.md §2)
+
+    /// The prompt's ghosted compass: the same targets and arc the live dial
+    /// would draw, with no heading behind them. No rise or no set: only the
+    /// dot that exists, and no arc. Refreshed with the targets (the minute
+    /// tick while the sensors are off), so the moon moves on.
+    private func updateGhost(at moment: Date) {
+        var newTargets: [CompassTarget] = []
+        var newArc: CompassArc?
+        if showsLocationOffPrompt, let place = context.place, let moonDay = context.moonDay {
+            if let rise = moonDay.rise {
+                newTargets.append(CompassTarget(kind: .moonrise, azimuth: rise.azimuth))
+            }
+            if let set = moonDay.set {
+                newTargets.append(CompassTarget(kind: .moonset, azimuth: set.azimuth))
+            }
+            var moon: CompassTarget?
+            if context.isToday {
+                let position = moonService.moonPosition(for: place, at: moment)
+                if position.isUp {
+                    moon = CompassTarget(kind: .moon, azimuth: position.azimuth)
+                }
+            }
+            if let moon { newTargets.append(moon) }
+            if let rise = moonDay.rise, moonDay.set != nil {
+                // The pass from this day's moonrise, unwrapped, so the arc
+                // runs the way the moon goes; or the one under way.
+                let pass = moon != nil
+                    ? moonService.moonPass(for: place, containing: moment)
+                    : moonService.moonPass(for: place, containing: rise.date.addingTimeInterval(Self.passLookupDelayAfterRise))
+                if let pass, let start = pass.path.first, let end = pass.path.last {
+                    newArc = CompassArc(
+                        startAzimuth: start,
+                        endAzimuth: end,
+                        moonAzimuth: moon.map { pass.pathAzimuth(for: $0.azimuth, at: moment) }
+                    )
+                }
+            }
+        }
+        if newTargets != ghostTargets { ghostTargets = newTargets }
+        if newArc != ghostArc { ghostArc = newArc }
     }
 
     // MARK: - Up now (COMPASS-1.1.md §3)

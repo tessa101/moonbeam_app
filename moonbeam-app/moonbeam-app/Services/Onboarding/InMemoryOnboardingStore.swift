@@ -11,9 +11,15 @@ final class InMemoryOnboardingStore: OnboardingStore {
 
     var isOnboardingCompleted: Bool
     var hasSeenFirstFindPass: Bool
+    var locationPromptDismissed: Bool
 
-    init(isOnboardingCompleted: Bool = false, hasSeenFirstFindPass: Bool = false) {
+    init(
+        isOnboardingCompleted: Bool = false,
+        hasSeenFirstFindPass: Bool = false,
+        locationPromptDismissed: Bool = false
+    ) {
         self.isOnboardingCompleted = isOnboardingCompleted
         self.hasSeenFirstFindPass = hasSeenFirstFindPass
+        self.locationPromptDismissed = locationPromptDismissed
     }
 }

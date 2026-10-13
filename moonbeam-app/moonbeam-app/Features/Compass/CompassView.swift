@@ -53,8 +53,13 @@ struct CompassView: View {
     private static let readoutBaseHeight: CGFloat = 40
     /// Between the location-off note and its button.
     private static let notesSpacing: CGFloat = 10
-    /// Between the location-off teaser and its button (the handoff's 22).
-    private static let teaserToButton: CGFloat = 22
+    /// The location-off prompt (LOCATION-OFF-FLOW.md §2): art, title and
+    /// body 10 apart, 22 down to Turn On Location (5.12's gaps), Maybe later
+    /// 4 under it (design 1.9), the body no wider than 300.
+    private static let promptStackSpacing: CGFloat = 10
+    private static let promptToButton: CGFloat = 22
+    private static let buttonToMaybeLater: CGFloat = 4
+    private static let promptBodyMaxWidth: CGFloat = 300
     /// Buttons under a note are no wider than the widest note.
     private static let noteMaxWidth: CGFloat = 330
 
@@ -280,23 +285,69 @@ struct CompassView: View {
 
     // MARK: - Location off (§2)
 
-    /// Where the user can turn location on, a teaser of the compass it
-    /// unlocks; where they can't (restricted), the plain note, since there's
-    /// nothing to show off that they could reach.
+    /// Where the user can turn location on, the prompt (LOCATION-OFF-FLOW.md
+    /// §2), or after Maybe later the guide row (§3); where they can't
+    /// (restricted), the plain note, since there's nothing to show off that
+    /// they could reach. A plain swap for now; 5.12b.3 adds the fades.
+    @ViewBuilder
     private var locationOffNote: some View {
-        VStack(spacing: viewModel.showsLocationOffTeaser ? Self.teaserToButton : Self.notesSpacing) {
-            if viewModel.showsLocationOffTeaser {
-                CompassTeaser(
-                    title: CompassViewModel.locationOffTeaserTitle,
-                    message: CompassViewModel.locationOffTeaserBody
-                )
-            } else {
+        if viewModel.showsLocationGuideRow {
+            CompassGuideRow(
+                title: CompassViewModel.guideRowTitle,
+                subtitle: CompassViewModel.guideRowSubtitle,
+                hint: CompassViewModel.guideRowHint,
+                action: viewModel.reopenLocationPrompt
+            )
+        } else if viewModel.showsLocationOffPrompt {
+            locationPrompt
+        } else {
+            VStack(spacing: Self.notesSpacing) {
                 CompassNote(text: CompassViewModel.locationOffHint)
+                turnOnLocationButton
             }
-            Button(CompassViewModel.turnOnLocationTitle, action: onTurnOnLocation)
-                .buttonStyle(.secondary)
-                .frame(maxWidth: Self.noteMaxWidth)
         }
+    }
+
+    /// S1: the ghosted compass, the title and body (one VoiceOver element,
+    /// the title a header), Turn On Location, then Maybe later.
+    private var locationPrompt: some View {
+        VStack(spacing: Self.promptStackSpacing) {
+            CompassGhost(
+                targets: viewModel.ghostTargets,
+                arc: viewModel.ghostArc,
+                moonGlyph: viewModel.moonGlyph
+            )
+            VStack(spacing: Self.promptStackSpacing) {
+                Text(CompassViewModel.locationPromptTitle)
+                    .font(Theme.Fonts.teaserTitle)
+                    .foregroundStyle(Theme.Colors.textPrimary)
+                    .themeLineHeight(Theme.Fonts.teaserTitleLineHeightMultiple)
+                    .accessibilityAddTraits(.isHeader)
+                Text(CompassViewModel.locationPromptBody)
+                    .font(Theme.Fonts.teaserBody)
+                    .foregroundStyle(Theme.Colors.teaserBody)
+                    .themeLineHeight(Theme.Fonts.teaserBodyLineHeightMultiple)
+                    .frame(maxWidth: Self.promptBodyMaxWidth)
+            }
+            .multilineTextAlignment(.center)
+            .fixedSize(horizontal: false, vertical: true)
+            .accessibilityElement(children: .combine)
+            .padding(.bottom, Self.promptToButton - Self.promptStackSpacing)
+
+            VStack(spacing: Self.buttonToMaybeLater) {
+                turnOnLocationButton
+                Button(CompassViewModel.maybeLaterTitle, action: viewModel.dismissLocationPrompt)
+                    .buttonStyle(.textLink(color: Theme.Colors.teaserBody))
+                    .accessibilityHint(CompassViewModel.maybeLaterHint)
+            }
+        }
+    }
+
+    /// The existing Location Off flow's button, under the note or the prompt.
+    private var turnOnLocationButton: some View {
+        Button(CompassViewModel.turnOnLocationTitle, action: onTurnOnLocation)
+            .buttonStyle(.secondary)
+            .frame(maxWidth: Self.noteMaxWidth)
     }
 }
 

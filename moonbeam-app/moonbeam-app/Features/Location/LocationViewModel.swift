@@ -316,6 +316,7 @@ final class LocationViewModel {
         compass = CompassViewModel(
             headingService: headingService,
             moonService: moonService,
+            onboardingStore: onboardingStore,
             now: now,
             reducesMotion: reducesMotion
         )
@@ -453,9 +454,11 @@ final class LocationViewModel {
     /// removed with Show onboarding before 1.0 (DECISIONS.md 2026-10-06).
     /// Clears the last-viewed place and recents, then runs the launch flow
     /// again, so the no-saved-place loader and its messages can be tried
-    /// without reinstalling. Permission and onboarding are left alone.
+    /// without reinstalling. Permission and onboarding are left alone; the
+    /// location-off prompt shows again (LOCATION-OFF-FLOW.md §4).
     func forgetSavedPlace() async {
         stopLocating()
+        onboardingStore.locationPromptDismissed = false
         placeStore.lastViewed = nil
         placeStore.recents = []
         lastViewed = nil

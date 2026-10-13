@@ -65,6 +65,10 @@ struct CompassDial: View, Animatable {
     /// animated to 0 by `CompassView`.
     var settleOffset = 0.0
 
+    /// "↑ Rise", "↓ Set", "Now". Off for the location-off prompt's ghost
+    /// (LOCATION-OFF-FLOW.md §2), whose handoff drawing has none.
+    var showsTargetLabels = true
+
     var animatableData: Double {
         get { settleOffset }
         set { settleOffset = newValue }
@@ -498,7 +502,7 @@ struct CompassDial: View, Animatable {
     /// go without). Rise and set dim with the arc while the moon is down; a
     /// locked target never does.
     private var targetMarks: some View {
-        let labels = CompassTargetLabels.labels(for: targets, lockedKind: lockedKind)
+        let labels = showsTargetLabels ? CompassTargetLabels.labels(for: targets, lockedKind: lockedKind) : [:]
         return ZStack {
             ForEach(targets, id: \.kind) { target in
                 let isLocked = target.kind == lockedKind

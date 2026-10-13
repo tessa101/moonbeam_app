@@ -1581,3 +1581,29 @@ asserted the old title.
 - New tokens: `Theme.Fonts.sheetPath` (Nunito Sans Bold 15) and the sheet's line-height multiples (30/24, 24/17, 20/15).
 - §6 open items not decided here: Close kept, 56/48 heights, search not promoted.
 - Evidence: `.agent-reports/5.12a-location-sheet/` (before/after on iPhone 17 + SE 3, default + AX3; interactions).
+
+### 2026-10-13 — 5.12b: location off becomes a ghosted compass prompt + a dismissible moon-guide row
+
+Tessa's device check of 5.12 plus the new design handoff (`design/1.9-location-off-flow/`, which replaces 1.8 and option 1b). Decisions, all in `docs/LOCATION-OFF-FLOW.md`:
+- **Prompt (S1):** a ghosted, slowly turning copy of the real compass ring, with new copy. Title "Your moon compass is ready" (handoff); subhead is Tessa's: "With location on, you'll see the live compass to point your way". The cartoon compass (`CompassTeaser*`, `compassTeaser_*`) is removed.
+- **Maybe later** (text button) sets a persisted `locationPromptDismissed`, cleared when location is granted so a later revoke shows S1 again. It swaps S1 for a row: S2 waiting (sleeping cat), or S3 to S6 when a moonrise is within 3 h, rising, or the moon is up (awake cat). Tapping the row reopens S1 (not persisted).
+- **Transitions:** the video shows the location-off block hard-cutting in and out (one frame) and the dial arriving after an empty gap (the heading wait). All swaps move to the standard timings: 300 ms fade + 8 pt rise in, 200 ms fade out, one crossfade into the dial once its entrance is ready.
+- Restricted keeps the chip (assumption, still to confirm). Avatars ship as pre-rendered PNGs, not the 650 KB vector.
+- Open: title wording; countdown wording ("2 hr 15 min" vs the card's "2h 15m").
+
+### 2026-10-13 — 5.12b.1 S1 prompt built (LOCATION-OFF-FLOW.md §2, §4)
+
+- **Ghost = the live `CompassDial`**, at its 196 pt design face (a 260 pt frame, the handoff's 260-unit space) scaled
+  to 210 pt, opacity 0.42, blur 1.2 pt. The ring turns by passing heading = −rotation (`CompassGhostMotion`, the
+  12 s table). So the ghost shows the real face, ticks, numbers and dotted arc, not the handoff's simplified ring. The
+  dial's fixed needle stands in for the static north tick. Target labels are off for it (`CompassDial.showsTargetLabels`).
+- **Ghost data** comes from the selected day's `MoonDay` (rise, set) plus the moon if today and up, on the live pass
+  lookup (`ghostTargets` / `ghostArc`). The live `targets`/`arc` stay empty with location off.
+- **PREVIEW** uses the system monospaced font: IBM Plex Mono isn't bundled, and adding a font needs Tessa's OK.
+- **`locationPromptDismissed` lives in `OnboardingStore`**, injected into `CompassViewModel`. It's read back on every
+  `update`, cleared on the first authorized update, and cleared by Show onboarding, Forget saved place and
+  `-resetOnboarding`. If more non-onboarding flags arrive, rename the store rather than add a second one.
+- `showsLocationOffTeaser` → `showsLocationOffPrompt`. The cartoon compass and its assets and tests are deleted.
+- DEBUG `-screenState locationOff.dismissed` (row) and `locationOff.restricted` (chip on the real home screen).
+- Evidence: `.agent-reports/5.12b.1-prompt/`.
+

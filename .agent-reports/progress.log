@@ -458,3 +458,16 @@
 10:32 5.12a: interactions pass (close/outside/grabber/search, VO order); running focused tests in Xcode
 10:33 5.12a: focused tests 216/216 pass (Xcode, iPhone 17); writing findings, DECISIONS, STATUS, latest
 10:35 5.12a: findings, DECISIONS, STATUS, LOCATION.md + inventory updated; writing latest.md
+10:36 5.12a: committed f52cd00; building Debug for T2 iPhone
+10:37 5.12a: committed bcff3ac; building Debug for T2 iPhone
+10:39 5.12a: installed bcff3ac Debug on T2 iPhone; latest.md updated; stopped
+11:57 5.12b.1: reading LOCATION-OFF-FLOW, design README, compass/teaser code
+13:29 5.12b.1: spec + code read; plan: ghost = CompassDial at 196 (260 frame) scaled to 210, store flag in OnboardingStore via CompassViewModel; writing code
+13:30 5.12b.1: store, VM, tokens done; writing CompassGhost + CompassGuideRow views
+13:32 5.12b.1: code + tests written; build-for-testing (iPhone 17)
+13:33 5.12b.1: build-for-testing passes; running focused tests
+13:43 5.12b.1: xcodebuild focused test run passed 10 min, stopped; checking log
+13:43 5.12b.1: focused tests 223/223 pass (Xcode RunSomeTests, iPhone 17); screenshots next
+13:46 5.12b.1: S1 default/RM, row, restricted captured; AX3 + tap round trip via device-interaction
+13:49 5.12b.1: AX3 + round trip checked, row a11y fixed + rebuilt; sim restored; writing docs
+13:50 5.12b.1: docs + latest.md written; committing

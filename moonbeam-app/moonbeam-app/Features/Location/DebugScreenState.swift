@@ -58,6 +58,11 @@ struct DebugScreenState: View {
         case locationOffDialogDenied = "locationOffDialog.denied"
         case locationOffDialogServicesOff = "locationOffDialog.servicesOff"
         case locationOffDialogRestricted = "locationOffDialog.restricted"
+        /// Location off over the saved Irvine (LOCATION-OFF-FLOW.md, 5.12b):
+        /// after Maybe later, so the compass guide row shows; and restricted,
+        /// which keeps the chip and can't be set on the simulator.
+        case locationOffDismissed = "locationOff.dismissed"
+        case locationOffRestricted = "locationOff.restricted"
 
         var locationFailure: LocationFailure? {
             switch self {
@@ -76,6 +81,11 @@ struct DebugScreenState: View {
             case .locationOffDialogRestricted: .restricted
             default: nil
             }
+        }
+
+        /// The home screen with location off, over the saved Irvine.
+        var isLocationOff: Bool {
+            [.locationOff, .locationOffDismissed, .locationOffRestricted].contains(self)
         }
 
         /// Leaving the app stands for a trip to Settings that turns access
@@ -187,10 +197,11 @@ struct DebugScreenState: View {
                 Self.time(2, 7, 53)
             }
             let authState: LocationAuthState = switch state {
-            case .locationOff, .messageDenied, .locationFailedDenied, .locationOffDialogDenied: .denied
+            case .locationOff, .locationOffDismissed, .messageDenied, .locationFailedDenied, .locationOffDialogDenied: .denied
             case .messageFirstAsk: .notDetermined
             case .messageServicesOff, .locationFailedServicesOff, .locationOffDialogServicesOff: .servicesOff
-            case .messageRestricted, .locationFailedRestricted, .locationOffDialogRestricted: .restricted
+            case .messageRestricted, .locationFailedRestricted, .locationOffDialogRestricted, .locationOffRestricted:
+                .restricted
             default: .authorized
             }
             let placeResult: Result<Place, any Error> = switch state {
@@ -224,11 +235,12 @@ struct DebugScreenState: View {
                 locationService: location,
                 placeSearch: FakePlaceSearchService(),
                 placeStore: InMemoryPlaceStore(
-                    lastViewed: state == .locationOff || state.locationFailure != nil || state.locationOffVariant != nil
+                    lastViewed: state.isLocationOff || state.locationFailure != nil || state.locationOffVariant != nil
                         ? Place.irvine : nil
                 ),
                 moonService: moonService,
                 headingService: heading,
+                onboardingStore: InMemoryOnboardingStore(locationPromptDismissed: state == .locationOffDismissed),
                 deviceTimeZone: Self.zone,
                 now: { now }
             )
@@ -332,7 +344,7 @@ struct DebugScreenState: View {
             case .aha: await viewModel.usePreciseLocationForCompass()
             default: break
             }
-            guard state != .locationOff, state != .far else { return }
+            guard !state.isLocationOff, state != .far else { return }
             viewModel.compass.setOnScreen(true)
             // Let the compass's stream task start before sending.
             await Task.yield()
@@ -377,6 +389,8 @@ struct DebugScreenState: View {
 #Preview("9 Aha") { DebugScreenState(.aha) }
 #Preview("10 Nearby") { DebugScreenState(.nearby) }
 #Preview("11 Location off") { DebugScreenState(.locationOff) }
+#Preview("11a Location off, Maybe later") { DebugScreenState(.locationOffDismissed) }
+#Preview("11b Location off, restricted") { DebugScreenState(.locationOffRestricted) }
 #Preview("12 Far") { DebugScreenState(.far) }
 #Preview("13 No moonrise, Sat Oct 3") { DebugScreenState(.noMoonrise) }
 #Preview("14 Long phase name") { DebugScreenState(.longPhaseName) }

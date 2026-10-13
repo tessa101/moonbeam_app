@@ -5,13 +5,14 @@
 
 import Foundation
 
-/// `OnboardingStore` backed by `UserDefaults`: one Bool, read once at launch.
+/// `OnboardingStore` backed by `UserDefaults`: a few Bools.
 final class UserDefaultsOnboardingStore: OnboardingStore {
 
     // MARK: - Constants
 
     private static let completedKey = "onboardingCompleted"
     private static let firstFindPassKey = "hasSeenFirstFindPass"
+    private static let locationPromptDismissedKey = "locationPromptDismissed"
 
     // MARK: - State
 
@@ -37,6 +38,12 @@ final class UserDefaultsOnboardingStore: OnboardingStore {
         set { defaults.set(newValue, forKey: Self.firstFindPassKey) }
     }
 
+    /// Absent reads as `false`: a new install sees the prompt.
+    var locationPromptDismissed: Bool {
+        get { defaults.bool(forKey: Self.locationPromptDismissedKey) }
+        set { defaults.set(newValue, forKey: Self.locationPromptDismissedKey) }
+    }
+
     // MARK: - DEBUG reset (DESIGN-1.1.md §5)
 
     #if DEBUG
@@ -50,6 +57,7 @@ final class UserDefaultsOnboardingStore: OnboardingStore {
         guard arguments.contains(Self.resetLaunchArgument) else { return }
         isOnboardingCompleted = false
         hasSeenFirstFindPass = false
+        locationPromptDismissed = false
     }
     #endif
 }

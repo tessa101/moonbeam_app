@@ -44,7 +44,24 @@ final class OnboardingStoreTests {
         #expect(UserDefaultsOnboardingStore(defaults: defaults).hasSeenFirstFindPass)
     }
 
+    @Test("Maybe later starts unset and survives a relaunch (LOCATION-OFF-FLOW.md §4)")
+    func locationPromptDismissedSurvivesRelaunch() {
+        #expect(!UserDefaultsOnboardingStore(defaults: defaults).locationPromptDismissed)
+        UserDefaultsOnboardingStore(defaults: defaults).locationPromptDismissed = true
+        #expect(UserDefaultsOnboardingStore(defaults: defaults).locationPromptDismissed)
+        UserDefaultsOnboardingStore(defaults: defaults).locationPromptDismissed = false
+        #expect(!UserDefaultsOnboardingStore(defaults: defaults).locationPromptDismissed)
+    }
+
     #if DEBUG
+    @Test("The DEBUG reset clears Maybe later too")
+    func debugResetClearsLocationPromptDismissed() {
+        let store = UserDefaultsOnboardingStore(defaults: defaults)
+        store.locationPromptDismissed = true
+        store.resetIfRequested(by: ["moonbeam-app", UserDefaultsOnboardingStore.resetLaunchArgument])
+        #expect(!store.locationPromptDismissed)
+    }
+
     @Test("The DEBUG reset clears the first-find pass too")
     func debugResetClearsFirstFindPass() {
         let store = UserDefaultsOnboardingStore(defaults: defaults)

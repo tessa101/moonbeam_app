@@ -1,6 +1,35 @@
+# Build 5.12b.1 location-off prompt (S1): 2026-10-13
+
+Done (COMMIT, not pushed): location off now shows S1. That's a ghosted copy of the **live dial** (210 pt, opacity
+0.42, blur 1.2) carrying the day's real rise/set/arc and the moon if it's up, turning on the 12 s loop under its fixed
+needle, with a PREVIEW pill over it. Then "Your moon compass is ready", "With location on, you'll see the live compass
+to point your way", Turn On Location and **Maybe later**. Reduce Motion, the background and off screen show the still
+0° frame. Maybe later sets `locationPromptDismissed` (OnboardingStore + fake; cleared on grant, by Show onboarding,
+Forget saved place and `-resetOnboarding`) and shows a placeholder "Compass guide is waiting" row. Tapping the row
+reopens S1 for this launch. `showsLocationOffTeaser` → `showsLocationOffPrompt`. Restricted keeps the chip. Cartoon
+compass, its 6 imagesets and tests are deleted. New DEBUG `-screenState locationOff.dismissed | locationOff.restricted`.
+OnboardingStore is a fine home (see findings).
+
+Checked: focused tests **223/223 pass** in Xcode (prompt, store, onboarding triggers, loader flow, compass VM).
+**Full suite not run**: `xcodebuild test` is still blocked by the sandbox PTY; I stopped it at 10 min. Simulator
+(iPhone 17): S1 default, Reduce Motion (still, byte-identical frames), AX3 (no clipping), placeholder row, restricted
+chip; Maybe later → row → S1 round trip works. Fixed a doubled VoiceOver button on the row. Evidence + findings:
+`.agent-reports/5.12b.1-prompt/`.
+
+**Please look:** because the ghost reuses the real dial, it shows the face, ticks, numbers and dotted arc, not the
+handoff's plain ring with a solid arc. With the moon down, the arc is very faint. PREVIEW uses system mono because IBM
+Plex Mono isn't bundled (adding it would need your OK).
+
+Device: INSTALL.
+
+Next: Tessa checks S1 on the phone (motion, VoiceOver on the row and Maybe later), decides on the ghost look and Plex
+Mono, and runs the full suite in Terminal. Then 5.12b.2 (row states S2–S6, avatars).
+
+---
+
 # 5.12a location sheet restyle — 2026-10-13
 
-Done (one commit, not pushed): `LocationOffDialog` restyled per `docs/LOCATION-SHEET.md` §1–§5. It keeps the system
+Done (`bcff3ac`, not pushed): `LocationOffDialog` restyled per `docs/LOCATION-SHEET.md` §1–§5. It keeps the system
 floating sheet (it already matches §3: 8 pt inset, ~50% scrim, ~35–40 pt corners), with a `surfaceRaised` fill and one
 detent fitted to the content. Young Serif title, path in a `surface` group, `.primary` pill plus a new `.outlined`
 secondary, and Close. Secondary now "Search for a city instead" (shared title). Copy, actions and
@@ -12,7 +41,7 @@ each dismiss; search opens after the sheet closes. VoiceOver order matches §5. 
 OnboardingMainScreen, CompassViewModel) **216/216 pass** in Xcode. Full suite not run. Evidence + findings:
 `.agent-reports/5.12a-location-sheet/`.
 
-Device: see the install line below.
+Device: Debug build of `bcff3ac` installed on the T2 iPhone (devicectl, first try). Xcode run destination switched back to T2 iPhone.
 
 Next: Tessa checks the sheet on the phone (VoiceOver on the path, Open Settings → return), decides §6 open items
 (Close, 56 vs 52 pt primary, promoting search), and runs the full suite in Terminal.

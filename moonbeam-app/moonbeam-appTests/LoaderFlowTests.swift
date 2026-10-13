@@ -239,8 +239,12 @@ struct LoaderFlowTests {
         harness.store.addRecent(Place.marVista)
         await harness.viewModel.start()
         #expect(harness.viewModel.launchStage == .ready)
+        harness.onboardingStore.locationPromptDismissed = true
 
         await harness.viewModel.forgetSavedPlace()
+
+        // The location-off prompt shows again (LOCATION-OFF-FLOW.md §4).
+        #expect(!harness.onboardingStore.locationPromptDismissed)
 
         #expect(harness.store.lastViewed == nil)
         #expect(harness.store.recents.isEmpty)

@@ -43,6 +43,12 @@ nonisolated enum Theme {
         /// The location-off teaser's body (design handoff, Location Off
         /// Teaser): a step quieter than `textSecondary`.
         static let teaserBody = Color(hex: 0xB9A898)
+        /// The location-off prompt's PREVIEW pill border (design 1.9).
+        static let previewPillBorder = Color(hex: 0x4A3A2E)
+        /// The compass guide row's waiting border and chevron (design 1.9,
+        /// S2). Decorative: the row's text carries it.
+        static let guideRowBorder = Color(hex: 0x3A2E35)
+        static let guideRowChevron = Color(hex: 0x6E5C66)
         /// Tokens, directions, N, ↑/↓, primary buttons, the lock pill. Kept
         /// in step with the `AccentColor` asset, which is the same amber so
         /// system controls pick it up too.
@@ -219,6 +225,16 @@ nonisolated enum Theme {
         static let teaserTitleLineHeightMultiple: CGFloat = 1.3
         static let teaserBody = Font.custom(FontName.nunitoSansRegular, size: 15, relativeTo: .subheadline)
         static let teaserBodyLineHeightMultiple: CGFloat = 1.45
+        /// The ghosted compass's PREVIEW pill: IBM Plex Mono 500 11 in the
+        /// handoff, which the app doesn't bundle, so the system monospaced
+        /// face in `.caption2` (11 pt at the default size), weight 500.
+        static let previewPill = Font.system(.caption2, design: .monospaced, weight: .medium)
+        static let previewPillTracking: CGFloat = 0.12 * 11
+        /// The compass guide row (design 1.9, S2): Nunito Sans SemiBold 16
+        /// title, Regular 13 subtitle, a 24 pt "›".
+        static let guideRowTitle = Font.custom(FontName.nunitoSansSemiBold, size: 16, relativeTo: .callout)
+        static let guideRowSubtitle = Font.custom(FontName.nunitoSansRegular, size: 13, relativeTo: .footnote)
+        static let guideRowChevron = Font.custom(FontName.nunitoSansRegular, size: 24, relativeTo: .title2)
         /// The Location Off sheet (LOCATION-SHEET.md §3): title `display`
         /// at 24/30, body `body` at 17/24, and the Settings path in Nunito
         /// Sans Bold 15/20.
