@@ -1,6 +1,6 @@
 # Location Sheet: restyle of the compact Location Off dialog
 
-**Status:** Ready for the build agent · **Decided:** 2026-10-13 · **Owner:** Tessa
+**Status:** Built (`bcff3ac`) and accepted 2026-10-13 · **Decided:** 2026-10-13 · **Owner:** Tessa
 **Item:** 5.12a
 **Design reference:** Claude Design artboard "Moon Signal Location Sheet v2" (three causes, specs card)
 
@@ -34,8 +34,8 @@ The path stays one pointer, not numbered steps. Chunk 2b decided any choice but 
 ## 3. Layout (per artboard)
 
 - Floating sheet, 8 pt inset, 40 pt corners, height fits content, nothing empty below the actions. Scrim 50% black.
-- Grabber 36×5 pt, 6 pt from top. Close button 30 pt visual, 44 pt target (`Theme.Layout.minimumHitTarget`), top-right, label "Close".
-- 24 pt side padding, 8 pt grid. Title Young Serif 24/30 (`Theme.Typography.display`, 24 pt), body 17/24, path 15/20 Nunito Sans Bold.
+- Grabber 36×5 pt, 6 pt from top. Close button 30 pt visual, 44 pt target (`Theme.Metrics.minimumHitTarget`), top-right, label "Close".
+- 24 pt side padding, 8 pt grid. Title Young Serif 24/30 (`Theme.Fonts.display`, 24 pt), body 17/24, path 15/20 Nunito Sans Bold.
 - Path sits in an inset group: 20 pt radius, 16 pt padding, 52 pt min height. It should read as a pointer, not a third action. Restricted has no path, so no group.
 - Primary: 52 pt filled pill, full width. Secondary: 48 pt outlined pill (1 pt accent at 40%, accent text), 8 pt below. 24 pt above the primary. Both clear the home indicator by 34 pt.
 - Tokens, not hexes: sheet `surfaceRaised`, path group `surface`, primary `accent` on `onAccent`, title `textPrimary`, body `textSecondary`, path `textBody`. Reuse the accent pill style from the failure screens if it is within 4 pt of these sizes.
@@ -59,11 +59,13 @@ The path stays one pointer, not numbered steps. Chunk 2b decided any choice but 
 - [ ] VoiceOver order: title, body, path, primary, secondary, Close (path keeps `pathChipAccessibilityLabel`)
 - [ ] Screenshots of the three variants (default type, AX3) in `.agent-reports/5.12a-location-sheet/`
 
-## 6. Open items
+## 6. Resolved items (2026-10-13)
 
-- Close button: the grabber and outside tap already dismiss. Kept because the mock has it. Cheap to drop.
-- Button heights: the mock uses 52 / 48; `Theme.Layout` has `primaryButtonHeight` 56 and `secondaryButtonHeight` 52. If the sheet should match the failure screens exactly, switch to the tokens.
-- Promote "Search for a city instead" to equal weight with Open Settings? It works with no permission.
+- Close button: kept, as in the mock.
+- Button heights: primary uses the failure screens' 56 pt `.primary` style (within the 4 pt allowance); secondary is a new 48 pt `.outlined` style (`Theme/OutlinedButtonStyle.swift`).
+- "Search for a city instead" stays secondary; not promoted to equal weight.
+
+Follow-ups outside this item: the full test suite is still to run in Terminal; at AX3 the madlib sentence behind the sheet overlaps itself (5.5 AX reflow).
 
 ## 7. Agent prompt
 
