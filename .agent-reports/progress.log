@@ -527,3 +527,5 @@
 2026-10-14 10:24 deflake committed 060523f; latest.md/STATUS/DECISIONS updated; committing reports
 2026-10-14 10:24 reports committed dcf5773; STATUS.md line missed, committing it; stopping
 2026-10-14 14:06 CLAUDE.md test count 622/923 -> 862/1287; committing; LOCATION-SHEET index left (question to Tessa timed out)
+2026-10-14 14:17 build 10 prep: start; unstaged LOCATION-SHEET.md (worktree == HEAD); CLAUDE.md count already 862/1287 (9db2b21), no commit needed
+2026-10-14 14:17 build 10 prep: bumped build 9 -> 10 (app Debug+Release), committed c205672; updating latest.md

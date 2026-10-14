@@ -1,3 +1,17 @@
+# TestFlight build 10 preparation: 2026-10-14 (in progress)
+
+Done: `docs/LOCATION-SHEET.md` unstaged (working copy == HEAD, nothing lost). CLAUDE.md already says "862 tests /
+1287 cases" (`9db2b21`), so no new Docs commit was needed. `c205672` Release: bump build to 10 (app target Debug +
+Release; tests target unchanged at 1; MARKETING_VERSION stays 0.1).
+
+Next: full suite in Xcode (iPhone 17), Release build, Release/plist checks, then docs (TESTFLIGHT-BUILD-10.md,
+STATUS, DECISIONS).
+
+Open: untracked `design/d2-luminous-calico/sleeping/` waiting on Tessa (not committed, not deleted).
+`docs/STEP-5.10a-TELESCOPE-REDRAW.md` left as a working-tree change, as asked. Nothing pushed, no archive.
+
+---
+
 # Test: deflake compass entrance timing tests: 2026-10-14
 
 Done (`060523f`, not pushed, test-only): `EntranceSleeper` (private to `CompassEntranceTests.swift`, test target)
