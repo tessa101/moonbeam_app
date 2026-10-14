@@ -1,3 +1,23 @@
+# Build 5.12b.3b part 1, location swap reproduce-and-diff: 2026-10-14
+
+Done (part 1 commit, not pushed): recorded both swaps on the iPhone 17 simulator through Settings (`before.mov`, real
+capture timestamps). **Off to on:** the prompt leaves at frame 918, then **13 frames of empty slot**, dial first
+visible at frame 939, fully in about frame 955. **On to off:** a **13-frame crossfade** (frames 380–394), dial and
+prompt at part opacity together, no gap.
+
+Cause: §5.1 confirmed (plain `switch`, no transition; dial held out by `.waitingForHeading`), **with one correction**:
+the bottom bar's `.animation(value: bottomNote)` on the whole scroll view catches the swap whenever a note changes in
+the same update, turning the cut into a 0.3 s fade. The fix must run the swap on its own transaction. The phone
+video's on-to-off order (dial fades, then the block cuts in) isn't reproduced here. No code changed. Findings:
+`.agent-reports/5.12b.3b-swap/findings.md`.
+
+The simulator recorder was stuck ("Host recording is already in progress", from the 3a run); rebooting the iPhone 17
+simulator fixed it.
+
+Next: part 2 (the swap + VoiceOver focus).
+
+---
+
 # Build 5.12b.3a part 2, one-container transition: 2026-10-14
 
 Done (part 2 commit, not pushed): a single 740 ms timing table/evaluator and TimelineView drive the S1 ↔ row transition;

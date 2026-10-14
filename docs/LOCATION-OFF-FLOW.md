@@ -141,6 +141,12 @@ Cause (to confirm by a reproduce-and-diff step before any fix): the location-off
 `visibility` with no transition, so it cuts; the dial is held out until the first heading (`CompassEntrance`
 `.waitingForHeading`, up to 0.5 s), which is the empty gap. The dial's own fade-in is the standard one.
 
+**Confirmed (5.12b.3b part 1, simulator, 2026-10-14), with one correction:** `LocationScreen`'s
+`.animation(value: bottomNote)` covers the whole scroll view. When a note comes or goes in the same update as the
+swap, its 0.3 s ease-in-out catches the `switch` too: on to off becomes a crossfade with both at part opacity, and
+off to on fades the prompt out with the slot still empty (13 frames on the simulator, which never gets a heading).
+With no note, it's the cut above. Frame counts: `.agent-reports/5.12b.3b-swap/findings.md`.
+
 ### 5.2 Target
 
 Everything on the app's existing timings, not new ones:

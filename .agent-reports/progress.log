@@ -505,3 +505,8 @@
 2026-10-14 08:39 part 2: build passes; motion/phase tests 14/14
 2026-10-14 08:40 part 2: simulator hierarchy/interaction verification complete; recorder blocked by CoreSimulator sandbox
 2026-10-14 08:41 part 2 committed; installing Debug build on T2 iPhone
+16:14 debug panel + dial height edits done, uncommitted, not built (no Xcode in this VM)
+2026-10-14 09:14 5.12b.3b: start; reading DECISIONS 5.12b.3, LOCATION-OFF-FLOW §5.1/5.2/3.3; checking dirty tree
+2026-10-14 09:15 part 1: building Debug for iPhone 17 simulator (C86BA1FD) to reproduce both swaps
+2026-10-14 09:16 part 1: recording before.mov (revoke then grant via Settings)
+2026-10-14 09:23 part 1: before.mov analysed; §5.1 confirmed + bottom-note animation leak; committing 1/2
