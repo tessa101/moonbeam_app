@@ -1,5 +1,7 @@
 # Status & Handoff
 
+_TestFlight 0.1 (10) prepared, 2026-10-14 (`c205672`, `docs/TESTFLIGHT-BUILD-10.md`): build 9 → 10, version stays 0.1. Full suite in Xcode (iPhone 17) 1287/1287; Release build succeeds with one new warning vs build 9 (`LocationScreen.swift:348`, from `45c2717`); bundle checks pass (Moon Signal, iOS 26.0, privacy manifest, encryption false, DEBUG code out, TestFlight tools in). Not archived or uploaded (Tessa's). Compass simplification and dynamic sizing done; telescope correction and 5.5 still pending._
+
 _Test deflake, 2026-10-14 (`060523f`): the 3 flaky `CompassEntranceTests` (the "already failing" note below) are fixed in the tests only: `EntranceSleeper.isWaiting`, and the `settle` helper no longer fires the stale heading wait. Full suite 3x in Xcode: 1287/1287 each. No app code changed._
 
 _Build 5.12b.3b, 2026-10-14 (LOCATION-OFF-FLOW.md §5.1, §5.2, §3.3): location off ↔ on swap. Part 1 confirmed §5.1's cause, plus one correction: the bottom bar's animation leaked into the swap. Part 2: off to on, the block is held (not interactive) until the dial's entrance is past waiting, then one crossfade, with 0 empty frames (was 13). On to off: the dial out 200 ms, then the block in 300 ms with its rise (was a 13-frame crossfade). VoiceOver focus moves: Maybe later → row, row → S1 body, location on → dial. Focused tests 212/212 pass in Xcode; full suite not run; 3 CompassEntranceTests were already failing (a test race). Evidence: `.agent-reports/5.12b.3b-swap/`. Open for Tessa: phone check of both swaps and the three VoiceOver moves; the phone's on-to-off order in `location_on_off.mov`, which isn't reproduced here._
@@ -187,9 +189,18 @@ Rule: finish what changes the card before the AX reflow, or the reflow is done t
    Reduce Motion review (LOADER.md §10.6).
 6a. [~] **5.12b location off, prompt + moon guide** (5.12b.1/.1a/.1b, 5.12b.2 and 5.12b.3a done 2026-10-13; 5.12b.3b 2026-10-14) (Tessa, 2026-10-13; `docs/LOCATION-OFF-FLOW.md`): ghosted compass prompt, new subhead, Maybe later, dismissed row (S2–S6), swap polish. Replaces the 5.12 cartoon compass. Three small runs: 5.12b.1 → .2 → .3.
 6. [x] **5.12 location off:** the cartoon-compass teaser (option 1b, 2026-10-12) is superseded by 5.12b and removed in 5.12b.1. Still open from it: confirming that restricted keeps the chip (carried into 5.12b). See DECISIONS 2026-10-12 "5.12 location-off teaser" and 2026-10-13 "5.12b".
-7. [ ] **TestFlight 0.1 (9)** (archive built and verified 2026-10-12, `d9eba76`; upload to App Store Connect pending, Tessa's): set `MARKETING_VERSION` 1.0 → **0.1** and `CURRENT_PROJECT_VERSION` 8 → 9
-   (DECISIONS.md 2026-10-08, version naming); if App Store Connect rejects the version, go back to 1.0. Then device QA at default / AX1 / AX5; check the 5.8 arc after midnight (draws from the
-   evening's rise; rise/set dots on the arc ends).
+7. [~] **TestFlight 0.1 (10) prepared** (2026-10-14, `c205672`; `docs/TESTFLIGHT-BUILD-10.md`): `CURRENT_PROJECT_VERSION`
+   9 → 10, `MARKETING_VERSION` stays 0.1. 1287/1287 pass; Release build succeeds (one new warning, see the doc).
+   Archive + upload are Tessa's. Ships: 5.11, 5.10a.3, 5.12a, 5.12b, debug tools panel, telescope redraw (phone check
+   pending; correction not in), and:
+   - [x] **Dynamic compass sizing** (`45c2717`, confirmed on device): the dial fits the screen height.
+   - [x] **Compass simplification** (closed, confirmed on device): 5° minor ticks only; mid ticks, numbers and
+     crosshair stay.
+   - [ ] **Telescope redraw:** correction pending (`docs/STEP-5.10a-TELESCOPE-REDRAW.md`).
+   - [ ] **A11y / 5.5 reflow:** not in build 10 (item 5).
+   Before: 0.1 (9) (archive built and verified 2026-10-12, `d9eba76`; upload pending). If App Store Connect rejects
+   0.1, go back to 1.0 (DECISIONS.md 2026-10-08, version naming). Then device QA at default / AX1 / AX5; check the
+   5.8 arc after midnight (draws from the evening's rise; rise/set dots on the arc ends).
 8. [ ] **Design review + pre-1.0:** motion pass, voice A (always-on answer line), light mode, onboarding copy, Round 2
    screens, VoiceOver order at AX2, final name + persona; remove Show onboarding / Forget saved place / `BuildChannel`;
    replace `appStoreReceiptURL`; USNO rows (item 3 below).

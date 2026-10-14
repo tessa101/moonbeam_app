@@ -1700,3 +1700,8 @@ shared `settle(_:at:)` helper: `CompassEntrance.headingWait` and `settleDuration
 sleeper's continuations ignore cancellation, so the superseded heading wait stays pending. `fire()` could end only
 that stale wait before the settle's own had started. The helper now waits for the heading wait, notes the request
 count, and fires only after one more request. No tolerances or timings changed. Full suite 3x: 1287/1287.
+
+## 2026-10-14: Compass simplification closed at 5° minor ticks
+
+- **Closed (Tessa, on device):** the dial's simplification ends at step 1, minor ticks every 5°. Mid ticks, degree
+  numbers and the crosshair stay as they are. Ships in TestFlight 0.1 (10).
