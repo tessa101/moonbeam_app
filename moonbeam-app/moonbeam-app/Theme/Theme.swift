@@ -25,7 +25,7 @@ nonisolated enum Theme {
         /// The Up now row's fill, a step up from `surface` (COMPASS-1.1.md §3).
         static let surfaceInset = Color(hex: 0x251C22)
         /// Decorative marks only, under 3:1: the moon-down dot (§3), the
-        /// dial's 2° ticks and its crosshair (COMPASS-1.1.md §4).
+        /// dial's ticks and its crosshair (COMPASS-1.1.md §4).
         static let faint = Color(hex: 0x5E4D57)
         /// The dial's 10° ticks and degree numbers (COMPASS-1.1.md §4):
         /// 5.1:1 on `dialTop`, 5.9:1 on `dialBottom`.

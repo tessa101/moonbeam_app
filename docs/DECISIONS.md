@@ -1657,3 +1657,17 @@ border, warm fill and corners (24/20); `CompassGuideRow` is content only. Measur
 (spec estimate about 386; our CTA and the body's line height are a little shorter than the mock's) and 78 pt
 collapsed. Still a plain swap. The before-recording shows it as a 1-frame cut each way.
 
+## 2026-10-14: Debug tools in one hideable block; the dial fits the screen's height
+
+- **Debug tools (Tessa):** Show onboarding, Forget saved place and the compass readout are now one `DebugPanel` at the
+  very bottom of the main screen, buttons first, readout under them. Testers (DEBUG and TestFlight) get the readout
+  too (it was DEBUG-only), and a "Hide debug tools" / "Show debug tools" button hides or shows all of it, remembered
+  (`debugToolsHidden`). Still temporary, removed with the buttons before 1.0. The compass block no longer stays in
+  the hidden state just to hold the readout.
+- **Dial height (Tessa):** the dial was sized by the screen's width only (260 pt on 402 pt). It now also fits the
+  height: the face is the smaller of the width's size and what leaves `bottomPaddingFraction` (4%) of the screen's
+  height under the dial's frame, measured from where the compass starts. Floor stays 196 pt (SE-size screens use the
+  pinned bar), ceiling 300 pt. Fraction is a first guess; tune on device.
+- **Dial simplified, step 1 (Tessa):** minor ticks every 5° instead of every 2° (180 ticks down to 72); mid (10°) and
+  heavy (30°) unchanged. This is COMPASS-1.1.md §4's own fallback for shimmer. Numbers, crosshair and the rest wait
+  for the device look; next candidates are fewer degree numbers and dropping the crosshair or mid ticks.

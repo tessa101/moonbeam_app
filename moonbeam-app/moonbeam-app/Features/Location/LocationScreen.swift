@@ -32,6 +32,7 @@ struct LocationScreen: View {
     private static let scrollToCompassAnimation = Animation.easeInOut(duration: 0.4)
     /// The compass block's scroll target for the pinned bar's Compass ↓.
     private static let compassScrollID = "compass"
+    private static let contentSpace = "locationContent"
 
     /// For the pinned bar's rule (COMPASS-1.1.md §9.6), both in global
     /// coordinates: the dial's centre, and the fold (the bottom of the
@@ -41,6 +42,13 @@ struct LocationScreen: View {
     /// The pinned summary is redundant while the compass's own readout is
     /// still in the viewport, and at AX sizes the overlay can cover it.
     @State private var compassReadoutTopY: CGFloat?
+
+    /// What sizes the dial to the screen's height (`CompassDial.faceDiameter`):
+    /// the visible height (screen less the system's safe areas, so the same
+    /// whether or not a bottom note shows), and where the compass starts in
+    /// the content, below the status bar gap.
+    @State private var viewportHeight: CGFloat?
+    @State private var compassTopInContent: CGFloat?
 
     /// LOADER.md §2.1, Reduce Motion included (opacity only): the phase
     /// cycle fades in, and fades out faster as the content loads in.
@@ -134,6 +142,9 @@ struct LocationScreen: View {
             }
         }
         .background { ScreenBackground() }
+        .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { height in
+            viewportHeight = height
+        }
         .onAppear {
             LaunchSignposts.signposter.emitEvent("LocationScreen.onAppear")
         }
@@ -204,35 +215,36 @@ struct LocationScreen: View {
                 // A stack that's always there, so the load-in runs once when
                 // the screen arrives, not again when the compass comes later.
                 VStack(alignment: .leading, spacing: 0) {
-                    // COMPASS.md §1: at the bottom, below the moon card. DEBUG
-                    // builds keep it in every state for its diagnostic readout;
-                    // the sensors still only run when it's shown.
-                    if !viewModel.isReplacingPlace,
-                       viewModel.compass.visibility != .hidden || Self.showsDebugReadout {
+                    // COMPASS.md §1: at the bottom, below the moon card.
+                    if !viewModel.isReplacingPlace, viewModel.compass.visibility != .hidden {
                         compass
                             .id(Self.compassScrollID)
                             .padding(.top, Theme.Metrics.cardToCompass)
                     }
 
-                    // At the very bottom, under the compass (and its DEBUG
-                    // readout): out of the design's way.
+                    // At the very bottom, under the compass: Show onboarding,
+                    // Forget saved place and the compass readout, which
+                    // testers can hide together. Out of the design's way.
                     if onShowOnboarding != nil || onForgetSavedPlace != nil {
-                        // Side by side while they fit, stacked at large sizes.
-                        ViewThatFits(in: .horizontal) {
-                            HStack(spacing: Theme.Metrics.screenMargin) { debugButtons }
-                            VStack(alignment: .leading, spacing: 0) { debugButtons }
-                        }
+                        DebugPanel(
+                            readoutLines: viewModel.compass.debugReadout,
+                            onShowOnboarding: onShowOnboarding,
+                            onForgetSavedPlace: onForgetSavedPlace
+                        )
                         .padding(.top)
                     }
                 }
                 // Held out while a replacement is pending, so nothing in it
-                // (the DEBUG buttons included) shows under an empty slot.
+                // (the debug panel included) shows under an empty slot.
                 .contentLoadIn(
                     .compass,
                     generation: viewModel.loadInGeneration,
                     isActive: !viewModel.isReplacingPlace
                 )
             }
+            // Where the compass starts, measured in the content's own space so
+            // scrolling doesn't change it (the dial's height budget).
+            .coordinateSpace(.named(Self.contentSpace))
             .padding(.horizontal, Theme.Metrics.screenMargin)
             .padding(.top, Theme.Metrics.contentTopSpacing)
             .padding(.bottom, Theme.Metrics.screenMargin)
@@ -300,31 +312,11 @@ struct LocationScreen: View {
         .modifier(StatusBarBackdrop())
     }
 
-    /// Show onboarding and Forget saved place, in the text-link style
-    /// (amber, 44 pt targets). Temporary, both.
-    @ViewBuilder
-    private var debugButtons: some View {
-        if let onShowOnboarding {
-            Button("Show onboarding", action: onShowOnboarding)
-                .buttonStyle(.textLink)
-        }
-        if let onForgetSavedPlace {
-            Button("Forget saved place", action: onForgetSavedPlace)
-                .buttonStyle(.textLink)
-        }
-    }
-
     // MARK: - Compass
 
     /// The fraction of the compass that must be visible for its sensors to
     /// run: a sliver counts (COMPASS.md §1 "on screen" = any part visible).
     private static let compassVisibilityThreshold = 0.1
-
-    #if DEBUG
-    private static let showsDebugReadout = true
-    #else
-    private static let showsDebugReadout = false
-    #endif
 
     /// Reports whether the compass is on screen, which (with foreground and
     /// visibility) decides whether its sensors run (COMPASS.md §1).
@@ -341,6 +333,7 @@ struct LocationScreen: View {
     private var compass: some View {
         CompassView(
             viewModel: viewModel.compass,
+            heightBudget: compassHeightBudget,
             onTurnOnLocation: { Task { await viewModel.turnOnLocationForCompass() } },
             onDialCentreChange: { centreY in
                 dialCentreY = centreY
@@ -351,6 +344,12 @@ struct LocationScreen: View {
                 updatePinnedBar()
             }
         )
+        .onGeometryChange(for: CGFloat.self) { proxy in
+            proxy.frame(in: .named(Self.contentSpace)).minY
+        } action: { minY in
+            // Whole points, so a sub-point wobble can't resize the dial.
+            compassTopInContent = minY.rounded()
+        }
         .onScrollVisibilityChange(threshold: Self.compassVisibilityThreshold) { isVisible in
             viewModel.compass.setOnScreen(isVisible)
         }
@@ -360,6 +359,16 @@ struct LocationScreen: View {
             compassReadoutTopY = nil
             updatePinnedBar()
         }
+    }
+
+    /// The height from the compass's top to the bottom of the screen, less
+    /// the breathing room kept under it (`CompassDial.bottomPaddingFraction`
+    /// of the screen's height). `nil` until both are measured: the dial is
+    /// then sized by the width alone.
+    private var compassHeightBudget: CGFloat? {
+        guard let viewportHeight, let compassTopInContent else { return nil }
+        let top = Theme.Metrics.contentTopSpacing + compassTopInContent
+        return CompassDial.heightBudget(viewportHeight: viewportHeight, compassTop: top)
     }
 
     /// Tells the compass whether its dial's centre is below the fold

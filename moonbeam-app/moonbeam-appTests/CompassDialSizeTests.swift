@@ -28,4 +28,31 @@ struct CompassDialSizeTests {
         #expect(diameter >= CompassDial.minFaceDiameter)
         #expect(diameter <= CompassDial.maxFaceDiameter)
     }
+
+    // MARK: - Height (DECISIONS.md 2026-10-14)
+
+    @Test("No height budget: the width alone sizes the dial")
+    func noBudget() {
+        #expect(CompassDial.faceDiameter(forWidth: 362, dialHeightBudget: nil) == 260)
+    }
+
+    @Test("A roomy budget leaves the width's size; a tight one shrinks the dial to fit")
+    func budgetShrinksTheDial() {
+        #expect(CompassDial.faceDiameter(forWidth: 362, dialHeightBudget: 1_000) == 260)
+
+        // 108 pt of arc and label room beyond the face: 240 + 108 = 348 pt.
+        #expect(CompassDial.faceDiameter(forWidth: 362, dialHeightBudget: 348) == 240)
+    }
+
+    @Test("The height never takes the dial under 196 pt")
+    func budgetFloor() {
+        #expect(CompassDial.faceDiameter(forWidth: 362, dialHeightBudget: 100) == CompassDial.minFaceDiameter)
+    }
+
+    @Test("The budget is the screen less its bottom padding, less where the compass starts")
+    func budget() {
+        let budget = CompassDial.heightBudget(viewportHeight: 800, compassTop: 400)
+
+        #expect(budget == 800 * (1 - CompassDial.bottomPaddingFraction) - 400)
+    }
 }

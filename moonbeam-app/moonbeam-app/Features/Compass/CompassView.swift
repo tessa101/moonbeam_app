@@ -17,6 +17,11 @@ struct CompassView: View {
 
     let viewModel: CompassViewModel
 
+    /// The height the whole compass block (readout slot and dial) may use,
+    /// from its top to the bottom padding kept under it; `nil` sizes the dial
+    /// by the width alone (previews, before the screen has measured).
+    var heightBudget: CGFloat?
+
     /// The hint's button: the existing Location Off flow (the system prompt
     /// if not yet asked, otherwise the Location Off dialog).
     let onTurnOnLocation: () -> Void
@@ -118,17 +123,21 @@ struct CompassView: View {
             case .hidden:
                 EmptyView()
             }
-
-            // In every state, including hidden: "the compass is gone" is
-            // one of the things it has to diagnose (4.8).
-            #if DEBUG
-            debugReadout
-            #endif
         }
         .frame(maxWidth: .infinity)
     }
 
     // MARK: - Compass
+
+    /// The width's size (§9.3), pulled in on shorter screens so the dial,
+    /// its arc and labels end above the bottom padding. The readout slot
+    /// takes its height from the budget first.
+    private var faceDiameter: CGFloat {
+        CompassDial.faceDiameter(
+            forWidth: availableWidth,
+            dialHeightBudget: heightBudget.map { $0 - readoutHeight + Self.readoutPull }
+        )
+    }
 
     private var compass: some View {
         // The dial's frame keeps room for a label above the arc, so it sits
@@ -147,7 +156,7 @@ struct CompassView: View {
                 .zIndex(1)
 
             CompassDial(
-                faceDiameter: CompassDial.faceDiameter(forWidth: availableWidth),
+                faceDiameter: faceDiameter,
                 heading: viewModel.heading,
                 targets: viewModel.targets,
                 lockedKind: viewModel.lockedKind,
@@ -258,23 +267,6 @@ struct CompassView: View {
         let direction = Text(verbatim: readout.direction).font(Theme.Fonts.readoutDirection)
         return Text("\(lead)\(direction)")
     }
-
-    // MARK: - DEBUG readout
-
-    #if DEBUG
-    /// Device diagnosis only (4.8/4.9); compiled out of release builds.
-    private var debugReadout: some View {
-        VStack(alignment: .leading, spacing: 2) {
-            ForEach(viewModel.debugReadout, id: \.self) { line in
-                Text(line)
-            }
-        }
-        .font(.caption.monospaced())
-        .foregroundStyle(.secondary)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.top)
-    }
-    #endif
 
     // MARK: - Location off (§2)
 

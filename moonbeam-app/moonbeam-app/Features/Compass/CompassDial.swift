@@ -6,7 +6,7 @@
 import SwiftUI
 
 /// The compass dial (DESIGN-1.1.md §3.3, §3.3a, COMPASS-1.1.md §4, §9.3,
-/// COMPASS.md §1): a lit face with tick lines every 2° (longer every 10° and
+/// COMPASS.md §1): a lit face with tick lines every 5° (longer every 10° and
 /// 30°), degree numbers every 30°, N/E/S/W in Young Serif and a fixed
 /// crosshair; just outside the rim, the moon arc, the moon's pass from rise
 /// to set, with `moonLit` dots at moonrise and moonset and the live Moon as
@@ -97,6 +97,32 @@ struct CompassDial: View, Animatable {
         return min(max(width - 2 * sideReach, minFaceDiameter), maxFaceDiameter)
     }
 
+    /// Space kept under the dial's frame, as a share of the screen's height,
+    /// so the compass never feels about to slide off the bottom. 4% is ~34 pt
+    /// on a 852 pt screen, on top of the frame's own room for a label.
+    static let bottomPaddingFraction: CGFloat = 0.04
+
+    /// What the whole compass block may take: from its top to the bottom of
+    /// the screen less the padding above.
+    static func heightBudget(viewportHeight: CGFloat, compassTop: CGFloat) -> CGFloat {
+        viewportHeight * (1 - bottomPaddingFraction) - compassTop
+    }
+
+    /// The frame's height beyond the face: the arc's gap and a label's room,
+    /// above and below.
+    private static let frameChrome = 2 * (arcGap + labelRoom)
+
+    /// `faceDiameter(forWidth:)`, but no taller than the dial's frame can be
+    /// in `dialHeightBudget` (nil: no limit). Never under the 196 pt dial:
+    /// on a screen too short for it (the SE), the pinned bar covers what
+    /// scrolls off (§9.6).
+    static func faceDiameter(forWidth width: CGFloat, dialHeightBudget: CGFloat?) -> CGFloat {
+        let byWidth = faceDiameter(forWidth: width)
+        guard let dialHeightBudget else { return byWidth }
+        let byHeight = max(dialHeightBudget - frameChrome, minFaceDiameter)
+        return min(byWidth, byHeight).rounded(.down)
+    }
+
     private var radius: CGFloat { faceDiameter / 2 }
     private var scale: CGFloat { faceDiameter / Self.designDiameter }
     private var arcRadius: CGFloat { radius + Self.arcGap }
@@ -130,10 +156,10 @@ struct CompassDial: View, Animatable {
     private static let cardinalStepDegrees = 90
 
     /// Ticks (COMPASS-1.1.md §4, the HTML's 104 pt dial scaled to 98 pt):
-    /// every 2° minor, every 10° mid, every 30° heavy, from just inside the
+    /// every 5° minor, every 10° mid, every 30° heavy, from just inside the
     /// rim inwards. Minor ticks are under 3:1 and decorative; mid and heavy
     /// carry the reading. Lengths scale with the dial, widths don't.
-    private static let minorTickStepDegrees = 2
+    private static let minorTickStepDegrees = 5
     private static let midTickStepDegrees = 10
     private static let heavyTickStepDegrees = 30
     private static let tickOuterInset: CGFloat = 1
@@ -422,7 +448,7 @@ struct CompassDial: View, Animatable {
         .accessibilityHidden(true)
     }
 
-    /// Ticks at every 2° that `include` keeps, from just inside the rim
+    /// Ticks at every 5° that `include` keeps, from just inside the rim
     /// inwards by `length` (on the 196 pt dial).
     private func tickPath(where include: (Int) -> Bool, length: CGFloat) -> Path {
         let outer = radius - Self.tickOuterInset

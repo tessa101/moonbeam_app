@@ -618,11 +618,12 @@ final class CompassViewModel {
         }
     }
 
-    // MARK: - DEBUG readout (device diagnosis, 4.8/4.9)
+    // MARK: - Debug readout (device diagnosis, 4.8/4.9)
 
-    #if DEBUG
-    /// Plain lines for the DEBUG-only readout under the compass, so a device
-    /// test shows why it's in the state it's in. Never in release builds.
+    /// Plain lines for the readout in `DebugPanel`, so a device test shows
+    /// why the compass is in the state it's in. Built in every build, since
+    /// TestFlight testers see it too; the screen only shows it when the
+    /// debug tools are passed in (`BuildChannel`).
     var debugReadout: [String] {
         let heading = reading?.trueHeading.map { String(format: "%.1f° true", $0) } ?? "none"
         let accuracy = reading?.accuracy.map { String(format: "±%.1f°", $0) } ?? "unknown"
@@ -642,7 +643,6 @@ final class CompassViewModel {
             "sensors: \(isSensing ? "running" : "stopped")",
         ]
     }
-    #endif
 
     // MARK: - Visibility (COMPASS.md §2)
 
