@@ -526,3 +526,4 @@
 2026-10-14 10:23 deflake: run 3/3 1287/1287 pass; cleanup survey
 2026-10-14 10:24 deflake committed 060523f; latest.md/STATUS/DECISIONS updated; committing reports
 2026-10-14 10:24 reports committed dcf5773; STATUS.md line missed, committing it; stopping
+2026-10-14 14:06 CLAUDE.md test count 622/923 -> 862/1287; committing; LOCATION-SHEET index left (question to Tessa timed out)
