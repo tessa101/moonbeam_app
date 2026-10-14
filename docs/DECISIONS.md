@@ -1624,3 +1624,14 @@ Tessa checked 5.12b.1 on the phone: the ring turns calmly, Maybe later survives 
   - the pill scales with Dynamic Type and covers the ring at AX3
   - should the moon marker show when the moon is up on a day with no rise or set (it does now)?
 
+
+### 2026-10-13 — 5.12b.1b: S1 polish after the plain ring
+
+Tessa: PREVIEW is a gray word with no pill (it looked like a button); the "Your moon compass is ready" title is removed, so S1 is the compass, the subhead and the buttons. The agent's three flags are settled: the arc goes the way the moon crosses the sky (via south in the northern hemisphere, via north in the southern); PREVIEW stops scaling with Dynamic Type at `.xxxLarge`; no rise and no set means no moon marker. Spec: `docs/LOCATION-OFF-FLOW.md` §8. The Maybe later row still shows without the cats until 5.12b.2.
+
+### 2026-10-13 — 5.12b.1b built
+
+PREVIEW is a plain `dialNumber` word capped at `.xxxLarge`, and the S1 title and its tokens are gone. The ghost arc
+uses `CompassGhostGeometry(crossesSouth:)`, with `latitude >= 0` going via south and anything else via north. No rise
+and no set: no marker. Evidence: `.agent-reports/5.12b.2-row/` (part 1).
+

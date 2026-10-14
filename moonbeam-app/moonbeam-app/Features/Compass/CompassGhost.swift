@@ -8,7 +8,7 @@ import SwiftUI
 /// The location-off prompt's art (LOCATION-OFF-FLOW.md §2, design 1.9
 /// "S1: Prompt"): a plain ring with the day's real rise-to-set arc, its end
 /// dots, the moon marker and "N", ghosted to 42% and blurred, turning slowly
-/// under a fixed north tick with a PREVIEW pill over it. Drawn for this, not
+/// under a fixed north tick with the word PREVIEW over it. Drawn for this, not
 /// the live dial, whose ticks and numbers made the ghost muddy (DECISIONS.md
 /// 2026-10-13, 5.12b.1 follow-up).
 ///
@@ -52,10 +52,11 @@ struct CompassGhost: View {
     private static let tickWidth: CGFloat = 4
     private static let tickBottom: CGFloat = 34
 
-    /// PREVIEW: padding 7 × 11, 1 pt border, fully rounded (points).
-    private static let pillPaddingVertical: CGFloat = 7
-    private static let pillPaddingHorizontal: CGFloat = 11
-    static let pillText = "PREVIEW"
+    /// PREVIEW, a plain gray word (no fill or border, so it can't read as a
+    /// button: LOCATION-OFF-FLOW.md §8). It stops growing at `.xxxLarge`, so
+    /// it never covers the 210 pt ring at AX sizes.
+    static let previewText = "PREVIEW"
+    private static let previewMaxTypeSize = DynamicTypeSize.xxxLarge
 
     /// A sliver counts as visible, like the compass's own sensors.
     private static let visibilityThreshold = 0.1
@@ -79,7 +80,7 @@ struct CompassGhost: View {
             .opacity(Self.layerOpacity)
             .blur(radius: Self.layerBlur)
 
-            pill
+            preview
         }
         .frame(width: Self.artSize, height: Self.artSize)
         .accessibilityHidden(true)
@@ -152,17 +153,12 @@ struct CompassGhost: View {
     }
 
     /// Doesn't turn, isn't ghosted.
-    private var pill: some View {
-        Text(verbatim: Self.pillText)
-            .font(Theme.Fonts.previewPill)
-            .tracking(Theme.Fonts.previewPillTracking)
-            .foregroundStyle(Theme.Colors.accent)
-            .padding(.vertical, Self.pillPaddingVertical)
-            .padding(.horizontal, Self.pillPaddingHorizontal)
-            .background(Theme.Colors.bg, in: Capsule())
-            .overlay {
-                Capsule().strokeBorder(Theme.Colors.previewPillBorder, lineWidth: Theme.Metrics.hairline)
-            }
+    private var preview: some View {
+        Text(verbatim: Self.previewText)
+            .font(Theme.Fonts.previewWord)
+            .tracking(Theme.Fonts.previewWordTracking)
+            .foregroundStyle(Theme.Colors.dialNumber)
+            .dynamicTypeSize(...Self.previewMaxTypeSize)
             .fixedSize()
     }
 }
@@ -188,19 +184,26 @@ private struct CompassGhostTimeline<Art: View>: View {
 
 /// The mock's sample: rise 115°, set 243°, the moon at 200°.
 #Preview("Ghost, moon up") {
-    CompassGhost(geometry: CompassGhostGeometry(rise: 115, set: 243, moonAzimuth: 200))
+    CompassGhost(geometry: CompassGhostGeometry(rise: 115, set: 243, moonAzimuth: 200, crossesSouth: true))
         .padding(40)
         .background { ScreenBackground() }
 }
 
 #Preview("Ghost, moon down") {
-    CompassGhost(geometry: CompassGhostGeometry(rise: 57, set: 304, moonAzimuth: nil))
+    CompassGhost(geometry: CompassGhostGeometry(rise: 57, set: 304, moonAzimuth: nil, crossesSouth: true))
         .padding(40)
         .background { ScreenBackground() }
 }
 
 #Preview("Ghost, no moonset") {
-    CompassGhost(geometry: CompassGhostGeometry(rise: 72, set: nil, moonAzimuth: nil))
+    CompassGhost(geometry: CompassGhostGeometry(rise: 72, set: nil, moonAzimuth: nil, crossesSouth: true))
+        .padding(40)
+        .background { ScreenBackground() }
+}
+
+/// Sydney: the moon crosses the north, so the arc runs anticlockwise.
+#Preview("Ghost, southern hemisphere") {
+    CompassGhost(geometry: CompassGhostGeometry(rise: 60, set: 300, moonAzimuth: 20, crossesSouth: false))
         .padding(40)
         .background { ScreenBackground() }
 }

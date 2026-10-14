@@ -43,8 +43,6 @@ nonisolated enum Theme {
         /// The location-off teaser's body (design handoff, Location Off
         /// Teaser): a step quieter than `textSecondary`.
         static let teaserBody = Color(hex: 0xB9A898)
-        /// The location-off prompt's PREVIEW pill border (design 1.9).
-        static let previewPillBorder = Color(hex: 0x4A3A2E)
         /// The compass guide row's waiting border and chevron (design 1.9,
         /// S2). Decorative: the row's text carries it.
         static let guideRowBorder = Color(hex: 0x3A2E35)
@@ -221,16 +219,13 @@ nonisolated enum Theme {
         static let detail = Font.custom(FontName.nunitoSansRegular, size: 14, relativeTo: .subheadline)
         /// The card's date label and the "↑ Moonrise" labels.
         static let label = Font.custom(FontName.nunitoSansSemiBold, size: 13, relativeTo: .footnote)
-        /// The location-off teaser's title (Young Serif 20, line height 26)
-        /// and body (Nunito Sans 15, line height 1.45).
-        static let teaserTitle = Font.custom(FontName.youngSerif, size: 20, relativeTo: .title3)
-        static let teaserTitleLineHeightMultiple: CGFloat = 1.3
+        /// The location-off prompt's body (Nunito Sans 15, line height 1.45).
         static let teaserBody = Font.custom(FontName.nunitoSansRegular, size: 15, relativeTo: .subheadline)
         static let teaserBodyLineHeightMultiple: CGFloat = 1.45
-        /// The ghosted compass's PREVIEW pill: Nunito Sans SemiBold 11, all
-        /// caps (Tessa, 2026-10-13; the handoff's IBM Plex Mono isn't bundled).
-        static let previewPill = Font.custom(FontName.nunitoSansSemiBold, size: 11, relativeTo: .caption2)
-        static let previewPillTracking: CGFloat = 0.12 * 11
+        /// The ghosted compass's PREVIEW word: Nunito Sans SemiBold 11, all
+        /// caps, 0.12 em (LOCATION-OFF-FLOW.md §8).
+        static let previewWord = Font.custom(FontName.nunitoSansSemiBold, size: 11, relativeTo: .caption2)
+        static let previewWordTracking: CGFloat = 0.12 * 11
         /// The compass guide row (design 1.9, S2): Nunito Sans SemiBold 16
         /// title, Regular 13 subtitle, a 24 pt "›".
         static let guideRowTitle = Font.custom(FontName.nunitoSansSemiBold, size: 16, relativeTo: .callout)

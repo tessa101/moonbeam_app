@@ -33,24 +33,30 @@ nonisolated struct CompassGhostGeometry: Equatable, Sendable {
     /// Moonset's dot, or `nil` with no moonset.
     let setDot: CGPoint?
 
-    /// Rise to set, clockwise, as points along the ring; empty unless the
-    /// day has both.
+    /// Rise to set the way the moon crosses the sky (§8), as points along
+    /// the ring; empty unless the day has both.
     let arcPoints: [CGPoint]
 
-    /// The live moon if it's up; otherwise the arc's midpoint; `nil` with
-    /// neither.
+    /// The live moon if it's up; otherwise the arc's midpoint. `nil` with
+    /// neither, and always on a day with no rise and no set (§8): a marker
+    /// with nothing to anchor it reads as a stray dot.
     let moonMarker: CGPoint?
 
     /// - Parameters:
     ///   - rise, set: the selected day's azimuths, if it has them.
     ///   - moonAzimuth: the live moon's, only while it's up.
-    init(rise: Double?, set: Double?, moonAzimuth: Double?) {
+    ///   - crossesSouth: the place is at or north of the equator, so the
+    ///     moon crosses the southern sky: rise to set clockwise on the ring.
+    ///     South of it, via the north: anticlockwise.
+    init(rise: Double?, set: Double?, moonAzimuth: Double?, crossesSouth: Bool) {
         riseDot = rise.map(Self.point(atAzimuth:))
         setDot = set.map(Self.point(atAzimuth:))
         var midpoint: CGPoint?
         if let rise, let set {
-            let sweep = Self.clockwiseSweep(from: rise, to: set)
-            let steps = max(Int((sweep / Self.arcStepDegrees).rounded(.up)), 1)
+            let sweep = crossesSouth
+                ? Self.clockwiseSweep(from: rise, to: set)
+                : -Self.clockwiseSweep(from: set, to: rise)
+            let steps = max(Int((abs(sweep) / Self.arcStepDegrees).rounded(.up)), 1)
             arcPoints = (0...steps).map { step in
                 Self.point(atAzimuth: rise + sweep * Double(step) / Double(steps))
             }
@@ -58,7 +64,17 @@ nonisolated struct CompassGhostGeometry: Equatable, Sendable {
         } else {
             arcPoints = []
         }
-        moonMarker = moonAzimuth.map(Self.point(atAzimuth:)) ?? midpoint
+        moonMarker = rise == nil && set == nil
+            ? nil
+            : moonAzimuth.map(Self.point(atAzimuth:)) ?? midpoint
+    }
+
+    /// Nothing to draw but the ring, N and tick.
+    static let empty = CompassGhostGeometry(rise: nil, set: nil, moonAzimuth: nil, crossesSouth: true)
+
+    /// At or north of the equator the moon crosses the southern sky.
+    static func crossesSouth(latitude: Double) -> Bool {
+        latitude >= 0
     }
 
     // MARK: - Math

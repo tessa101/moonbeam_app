@@ -53,8 +53,8 @@ struct CompassView: View {
     private static let readoutBaseHeight: CGFloat = 40
     /// Between the location-off note and its button.
     private static let notesSpacing: CGFloat = 10
-    /// The location-off prompt (LOCATION-OFF-FLOW.md §2): art, title and
-    /// body 10 apart, 22 down to Turn On Location (5.12's gaps), Maybe later
+    /// The location-off prompt (LOCATION-OFF-FLOW.md §2): art and body 10
+    /// apart, 22 down to Turn On Location (5.12's gaps), Maybe later
     /// 4 under it (design 1.9), the body no wider than 300.
     private static let promptStackSpacing: CGFloat = 10
     private static let promptToButton: CGFloat = 22
@@ -308,27 +308,19 @@ struct CompassView: View {
         }
     }
 
-    /// S1: the ghosted compass, the title and body (one VoiceOver element,
-    /// the title a header), Turn On Location, then Maybe later.
+    /// S1: the ghosted compass, the body (no title, §8; VoiceOver reads it
+    /// first, the art being hidden), Turn On Location, then Maybe later.
     private var locationPrompt: some View {
         VStack(spacing: Self.promptStackSpacing) {
             CompassGhost(geometry: viewModel.ghostGeometry)
-            VStack(spacing: Self.promptStackSpacing) {
-                Text(CompassViewModel.locationPromptTitle)
-                    .font(Theme.Fonts.teaserTitle)
-                    .foregroundStyle(Theme.Colors.textPrimary)
-                    .themeLineHeight(Theme.Fonts.teaserTitleLineHeightMultiple)
-                    .accessibilityAddTraits(.isHeader)
-                Text(CompassViewModel.locationPromptBody)
-                    .font(Theme.Fonts.teaserBody)
-                    .foregroundStyle(Theme.Colors.teaserBody)
-                    .themeLineHeight(Theme.Fonts.teaserBodyLineHeightMultiple)
-                    .frame(maxWidth: Self.promptBodyMaxWidth)
-            }
-            .multilineTextAlignment(.center)
-            .fixedSize(horizontal: false, vertical: true)
-            .accessibilityElement(children: .combine)
-            .padding(.bottom, Self.promptToButton - Self.promptStackSpacing)
+            Text(CompassViewModel.locationPromptBody)
+                .font(Theme.Fonts.teaserBody)
+                .foregroundStyle(Theme.Colors.teaserBody)
+                .themeLineHeight(Theme.Fonts.teaserBodyLineHeightMultiple)
+                .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: Self.promptBodyMaxWidth)
+                .padding(.bottom, Self.promptToButton - Self.promptStackSpacing)
 
             VStack(spacing: Self.buttonToMaybeLater) {
                 turnOnLocationButton

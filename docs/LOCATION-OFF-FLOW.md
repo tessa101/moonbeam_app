@@ -15,7 +15,7 @@
 | # | Change | Where |
 |---|---|---|
 | 1 | The prompt's art becomes a **ghosted real compass** that slowly turns (S1) | 5.12b.1 |
-| 2 | New copy: title + Tessa's subhead | 5.12b.1 |
+| 2 | New copy: Tessa's subhead only, no title | 5.12b.1 |
 | 3 | **Maybe later**: a text button under Turn On Location; sets a persisted dismissed flag | 5.12b.1 |
 | 4 | **Dismissed row** (S2 to S6): the moon guide, in a waiting state or an active moon-clock state | 5.12b.2 |
 | 5 | Transitions: S1 ⇄ row, and location-off block ⇄ live compass, on the app's standard timing | 5.12b.3 |
@@ -25,7 +25,7 @@ dialog (no prompt, no row, no Maybe later): the CTA can't help there (the handof
 
 ## 2. S1: the prompt (5.12b.1)
 
-Order under the card: ghosted compass, title, body, Turn On Location, Maybe later.
+Order under the card: ghosted compass, body, Turn On Location, Maybe later. **No title** (Tessa, 2026-10-13).
 
 - **Ghosted compass:** exactly the handoff README ("S1: Prompt"): 210 pt, 260-unit space, ring r 104 / #5E4D57 2 pt,
   today's rise-to-set arc (#F2C27B, 4 pt, round caps, 6 pt end dots), moon marker, "N"; whole layer opacity 0.42, blur
@@ -43,15 +43,15 @@ Order under the card: ghosted compass, title, body, Turn On Location, Maybe late
 - **No rise or set today** (high latitude, or a day with none): draw the ring, N and tick, plus whichever of the two
   dots exists; no arc. (Proposed default; the handoff doesn't cover it.)
 - **Copy:**
-  - Title: **"Your moon compass is ready"** (handoff). Young Serif 20, #F5EADB.
+  - ~~Title~~ removed (Tessa, 2026-10-13): S1 has no heading, just the compass and the line below it.
   - Body (Tessa, 2026-10-13, replaces the handoff's): **"With location on, you'll see the live compass to point your way"**.
     Nunito Sans 15 / 1.45, #B9A898, max width 300. No final period (as written); Tessa to confirm.
   - All strings live in `CompassViewModel` next to the existing placeholder copy.
 - **Buttons:** Turn On Location is the existing button and flow (system prompt, or Settings if already denied). **Maybe
   later** is text-only: 44 pt tall, full width, Nunito Sans SemiBold 16, #B9A898, no background or border, 4 pt below
   the CTA. It sets `locationPromptDismissed = true` and swaps S1 for the row (§4).
-- **Dynamic Type:** title and body wrap; the art stays 210 pt. Maybe later keeps its 44 pt minimum.
-- **VoiceOver:** the compass art and PREVIEW pill are hidden. Title is a header; title + body read as one element;
+- **Dynamic Type:** the body wraps; the art stays 210 pt. Maybe later keeps its 44 pt minimum.
+- **VoiceOver:** the compass art and PREVIEW pill are hidden. The body is read first (no title);
   then the two buttons. Maybe later: hint "Hides this. You can bring it back from the compass guide."
 
 ### 2.1 As built (5.12b.1, 2026-10-13)
@@ -110,7 +110,7 @@ separate tail layer is for a later wag and is **not** part of this work.
   Re-opening S1 is **not** persisted: a relaunch with the flag set shows the row.
 - **Accessibility:** the whole row is one button. Label = title + subtitle. Hint "Shows the moon compass preview."
   At AX sizes the text wraps (no truncation); the avatar stays 52 pt; the chevron stays centred.
-- VoiceOver focus: Maybe later moves focus to the row; tapping the row moves it to S1's title.
+- VoiceOver focus: Maybe later moves focus to the row; tapping the row moves it to S1's body.
 
 ## 4. State and persistence
 
@@ -169,10 +169,20 @@ Everything on the app's existing timings, not new ones:
 
 ## 7. Open
 
-- **Title:** the handoff's "Your moon compass is ready" with Tessa's new subhead (default), or keep 5.12's "Point your
-  phone at the moon" (it pairs closely with "With location on, you'll see…"). One line to change.
 - **Countdown wording:** the handoff's "Moonrise in 2 hr 15 min" sits a few points from the card's "in 1h 39m".
   Default is the handoff's; the alternative is the card's `1h 39m` form for one voice.
 - Body copy has no final period (as given).
 - After-midnight rises counted in S3/S4 (§3.1), and the no-rise/no-set ghost (§2): proposed defaults.
 - The optional tail wag on the sleeping cat: later.
+
+## 8. 5.12b.1b polish (Tessa, 2026-10-13, after the ghost ring)
+
+- **PREVIEW is a plain word, not a pill:** no fill, no border, so it can't read as a button. Nunito Sans SemiBold 11,
+  all caps, tracking 0.12 em, gray (`Theme.Colors.dialNumber`, #A8939C). Centred over the ring. Decorative: hidden from
+  VoiceOver. Stops scaling with Dynamic Type at `.xxxLarge`, so it never covers the ring at AX sizes.
+- **No title** on S1 (see §2).
+- **Arc direction follows the sky, not always clockwise:** the arc runs rise to set through the side of the sky the moon
+  crosses: via south (clockwise on the ring) for a place at or north of the equator, via north (anticlockwise) south of
+  it. Fixes southern-hemisphere places.
+- **No rise and no set today: no moon marker either** (ring, N and tick only). A marker with nothing to anchor it
+  read as a stray dot.

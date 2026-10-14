@@ -85,9 +85,8 @@ final class CompassViewModel {
     /// In place of the compass when location is off (COMPASS.md §2).
     static let locationOffHint = "Turn on location to use the compass."
 
-    /// The location-off prompt's copy (LOCATION-OFF-FLOW.md §2, S1): the
-    /// handoff's title and Tessa's body, which has no final period.
-    static let locationPromptTitle = "Your moon compass is ready"
+    /// The location-off prompt's one line (LOCATION-OFF-FLOW.md §2, S1:
+    /// Tessa's, with no title above it and no final period).
     static let locationPromptBody = "With location on, you'll see the live compass to point your way"
 
     /// Under Turn On Location: swaps the prompt for the compass guide row.
@@ -158,7 +157,7 @@ final class CompassViewModel {
 
     /// The prompt's plain ring (§2): the selected day's rise and set, and the
     /// moon if it's today and up. Empty wherever the prompt doesn't show.
-    private(set) var ghostGeometry = CompassGhostGeometry(rise: nil, set: nil, moonAzimuth: nil)
+    private(set) var ghostGeometry = CompassGhostGeometry.empty
 
     /// `nearbyText` in the Nearby state, else `nil`. Never a distance: with
     /// the city names, that would reveal roughly where someone is. Stored
@@ -766,7 +765,9 @@ final class CompassViewModel {
         var rise: Double?
         var set: Double?
         var moonAzimuth: Double?
+        var crossesSouth = true
         if showsLocationOffPrompt, let place = context.place, let moonDay = context.moonDay {
+            crossesSouth = CompassGhostGeometry.crossesSouth(latitude: place.latitude)
             rise = moonDay.rise?.azimuth
             set = moonDay.set?.azimuth
             if context.isToday {
@@ -774,7 +775,7 @@ final class CompassViewModel {
                 if position.isUp { moonAzimuth = position.azimuth }
             }
         }
-        let geometry = CompassGhostGeometry(rise: rise, set: set, moonAzimuth: moonAzimuth)
+        let geometry = CompassGhostGeometry(rise: rise, set: set, moonAzimuth: moonAzimuth, crossesSouth: crossesSouth)
         if geometry != ghostGeometry { ghostGeometry = geometry }
     }
 

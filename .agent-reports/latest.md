@@ -1,6 +1,17 @@
+# Build 5.12b.1b S1 polish: 2026-10-13
+
+Done (COMMIT, not pushed): PREVIEW is a plain gray word (no pill, capped at `.xxxLarge`); S1 title removed; the ghost
+arc follows the sky (via south at or north of the equator, via north south of it; tested with Sydney); no rise and no
+set means no moon marker. Focused tests 136/136 pass in Xcode; full suite not run. Evidence:
+`.agent-reports/5.12b.2-row/` (part 1).
+
+Next: 5.12b.2 part 2 (LocationOffGuide logic), then part 3 (row UI), then install.
+
+---
+
 # Build 5.12b.1a plain ghost ring: 2026-10-13
 
-Done (COMMIT, not pushed): the S1 ghost is now the handoff's **plain ring**, drawn for this. That's the ring, a solid
+Done (`893d25b`, not pushed): the S1 ghost is now the handoff's **plain ring**, drawn for this. That's the ring, a solid
 clockwise rise→set arc with 6-unit end dots, the moon marker (live moon if it's up, otherwise the arc's midpoint), the
 "N", and a fixed north tick, at 0.42 opacity with a 1.2 blur, turning on the same 12 s loop. It no longer uses
 `CompassDial` (whose temporary label flag is removed). The placement is pure and tested (`CompassGhostGeometry`, which
@@ -15,7 +26,7 @@ Reduce Motion (still, identical frames), AX3 (no clipping). Evidence + findings:
 - the PREVIEW pill grows with Dynamic Type and covers the ring at AX3
 - the live moon marker shows on a day with no rise or set
 
-Device: INSTALL.
+Device: Debug build of `893d25b` installed on the T2 iPhone (devicectl, first try). Xcode run destination back on T2 iPhone.
 
 Next: Tessa checks the ring on the phone and decides the three open items, then 5.12b.2 (row states, avatars).
 
