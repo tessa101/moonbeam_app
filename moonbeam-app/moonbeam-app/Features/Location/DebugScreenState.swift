@@ -63,6 +63,9 @@ struct DebugScreenState: View {
         /// which keeps the chip and can't be set on the simulator.
         case locationOffDismissed = "locationOff.dismissed"
         case locationOffRestricted = "locationOff.restricted"
+        /// Location off with the moon down, so the prompt's ring puts its
+        /// moon marker at the arc's midpoint (5.12b.1a).
+        case locationOffMoonDown = "locationOff.moonDown"
 
         var locationFailure: LocationFailure? {
             switch self {
@@ -85,7 +88,7 @@ struct DebugScreenState: View {
 
         /// The home screen with location off, over the saved Irvine.
         var isLocationOff: Bool {
-            [.locationOff, .locationOffDismissed, .locationOffRestricted].contains(self)
+            [.locationOff, .locationOffDismissed, .locationOffRestricted, .locationOffMoonDown].contains(self)
         }
 
         /// Leaving the app stands for a trip to Settings that turns access
@@ -197,7 +200,7 @@ struct DebugScreenState: View {
                 Self.time(2, 7, 53)
             }
             let authState: LocationAuthState = switch state {
-            case .locationOff, .locationOffDismissed, .messageDenied, .locationFailedDenied, .locationOffDialogDenied: .denied
+            case .locationOff, .locationOffDismissed, .locationOffMoonDown, .messageDenied, .locationFailedDenied, .locationOffDialogDenied: .denied
             case .messageFirstAsk: .notDetermined
             case .messageServicesOff, .locationFailedServicesOff, .locationOffDialogServicesOff: .servicesOff
             case .messageRestricted, .locationFailedRestricted, .locationOffDialogRestricted, .locationOffRestricted:
@@ -225,7 +228,7 @@ struct DebugScreenState: View {
                 AstronomyEngineMoonService()
             } else {
                 Self.fakeMoon(
-                    isUp: state != .moonDown && state != .moonSetForToday,
+                    isUp: state != .moonDown && state != .moonSetForToday && state != .locationOffMoonDown,
                     setForToday: state == .moonSetForToday,
                     longPhaseName: state == .longPhaseName,
                     now: now
@@ -391,6 +394,7 @@ struct DebugScreenState: View {
 #Preview("11 Location off") { DebugScreenState(.locationOff) }
 #Preview("11a Location off, Maybe later") { DebugScreenState(.locationOffDismissed) }
 #Preview("11b Location off, restricted") { DebugScreenState(.locationOffRestricted) }
+#Preview("11c Location off, moon down") { DebugScreenState(.locationOffMoonDown) }
 #Preview("12 Far") { DebugScreenState(.far) }
 #Preview("13 No moonrise, Sat Oct 3") { DebugScreenState(.noMoonrise) }
 #Preview("14 Long phase name") { DebugScreenState(.longPhaseName) }

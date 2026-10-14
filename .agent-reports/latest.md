@@ -1,6 +1,29 @@
+# Build 5.12b.1a plain ghost ring: 2026-10-13
+
+Done (COMMIT, not pushed): the S1 ghost is now the handoff's **plain ring**, drawn for this. That's the ring, a solid
+clockwise rise→set arc with 6-unit end dots, the moon marker (live moon if it's up, otherwise the arc's midpoint), the
+"N", and a fixed north tick, at 0.42 opacity with a 1.2 blur, turning on the same 12 s loop. It no longer uses
+`CompassDial` (whose temporary label flag is removed). The placement is pure and tested (`CompassGhostGeometry`, which
+matches the mock's 115°/243° sample). PREVIEW is Nunito Sans SemiBold 11, caps, 0.12 em. New DEBUG
+`-screenState locationOff.moonDown`.
+
+Checked: focused tests **172/172 pass** in Xcode. Full suite not run (sandbox PTY). Simulator: S1 moon down, moon up,
+Reduce Motion (still, identical frames), AX3 (no clipping). Evidence + findings: `.agent-reports/5.12b.1a-ghost/`.
+
+**Please look:**
+- the clockwise arc goes the wrong way for southern-hemisphere passes
+- the PREVIEW pill grows with Dynamic Type and covers the ring at AX3
+- the live moon marker shows on a day with no rise or set
+
+Device: INSTALL.
+
+Next: Tessa checks the ring on the phone and decides the three open items, then 5.12b.2 (row states, avatars).
+
+---
+
 # Build 5.12b.1 location-off prompt (S1): 2026-10-13
 
-Done (COMMIT, not pushed): location off now shows S1. That's a ghosted copy of the **live dial** (210 pt, opacity
+Done (`f6743b3`, not pushed): location off now shows S1. That's a ghosted copy of the **live dial** (210 pt, opacity
 0.42, blur 1.2) carrying the day's real rise/set/arc and the moon if it's up, turning on the 12 s loop under its fixed
 needle, with a PREVIEW pill over it. Then "Your moon compass is ready", "With location on, you'll see the live compass
 to point your way", Turn On Location and **Maybe later**. Reduce Motion, the background and off screen show the still
@@ -20,7 +43,7 @@ chip; Maybe later → row → S1 round trip works. Fixed a doubled VoiceOver but
 handoff's plain ring with a solid arc. With the moon down, the arc is very faint. PREVIEW uses system mono because IBM
 Plex Mono isn't bundled (adding it would need your OK).
 
-Device: INSTALL.
+Device: Debug build of `f6743b3` installed on the T2 iPhone (devicectl, first try). Xcode run destination back on T2 iPhone.
 
 Next: Tessa checks S1 on the phone (motion, VoiceOver on the row and Maybe later), decides on the ghost look and Plex
 Mono, and runs the full suite in Terminal. Then 5.12b.2 (row states S2–S6, avatars).

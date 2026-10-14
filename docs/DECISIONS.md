@@ -1607,3 +1607,20 @@ Tessa's device check of 5.12 plus the new design handoff (`design/1.9-location-o
 - DEBUG `-screenState locationOff.dismissed` (row) and `locationOff.restricted` (chip on the real home screen).
 - Evidence: `.agent-reports/5.12b.1-prompt/`.
 
+
+### 2026-10-13 — 5.12b.1 follow-up: plain ghost ring, Nunito PREVIEW pill (5.12b.1a)
+
+Tessa checked 5.12b.1 on the phone: the ring turns calmly, Maybe later survives a relaunch. The ghost reused the live dial, so its numbers, ticks and dotted arc made it muddy and the arc nearly invisible with the moon down. Decision (Tessa): draw the **plain ring per the handoff** (ring, solid arc with end dots, moon marker, N) with the real rise/set azimuths; the live dial is no longer reused for the ghost. The PREVIEW pill uses **Nunito Sans SemiBold, all caps**, instead of IBM Plex Mono (which isn't bundled and won't be). Spec: `docs/LOCATION-OFF-FLOW.md` §2. VoiceOver check on the row and Maybe later still to do.
+
+### 2026-10-13 — 5.12b.1a plain ghost ring built
+
+- `CompassGhost` is a plain ring drawn in the 260-unit space (`CompassGhostGeometry`: point = (130 + 104 sin a,
+  130 − 104 cos a), checked against the mock's 115° / 243°). It no longer uses `CompassDial`;
+  `CompassDial.showsTargetLabels` is removed again. The view model publishes one `ghostGeometry` (selected day's
+  rise/set plus the live moon if up). The marker sits at the live moon, else at the arc's midpoint.
+- PREVIEW: Nunito Sans SemiBold 11 (`.caption2`), caps, 0.12 em.
+- Open (see `.agent-reports/5.12b.1a-ghost/findings.md`):
+  - the clockwise arc is wrong for southern-hemisphere passes (they go through the north)
+  - the pill scales with Dynamic Type and covers the ring at AX3
+  - should the moon marker show when the moon is up on a day with no rise or set (it does now)?
+

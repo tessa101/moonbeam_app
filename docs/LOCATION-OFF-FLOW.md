@@ -29,8 +29,13 @@ Order under the card: ghosted compass, title, body, Turn On Location, Maybe late
 
 - **Ghosted compass:** exactly the handoff README ("S1: Prompt"): 210 pt, 260-unit space, ring r 104 / #5E4D57 2 pt,
   today's rise-to-set arc (#F2C27B, 4 pt, round caps, 6 pt end dots), moon marker, "N"; whole layer opacity 0.42, blur
-  1.2 pt; static north tick; "PREVIEW" pill. Build it from the live ring/arc drawing with today's real rise and set
-  azimuths (`CompassArc` / `CompassDial` pieces), not a new drawing.
+  1.2 pt; static north tick; "PREVIEW" pill. **Plain ring, drawn for this (Tessa, 2026-10-13, option B):** not the
+  live dial. Just the ring, the solid arc with its end dots, the moon marker and the "N", as in the handoff's mock
+  (`design/1.9-location-off-flow/Location Off Flow.dc.html`, S1). Positions come from today's real rise and set
+  azimuths: a point at azimuth `a` is `(130 + 104 sin a, 130 - 104 cos a)` in the 260-unit space (checked against the
+  mock's 115° / 243° sample). The arc runs clockwise from rise to set. The moon marker sits at the live moon azimuth
+  when the moon is up, otherwise at the arc's midpoint (proposed; the mock just puts it on the arc). "N" is Nunito
+  Sans Bold 14, #B9A898, 14 units inside the ring at the top, and turns with the ring.
 - **Motion:** the ring group turns on a 12 s loop, ease-in-out cubic-bezier(.45, 0, .55, 1) per move:
   0° at 0 s, -70° at 3 s, hold to 4.8 s, 40° at 7.8 s, hold to 9.6 s, 0° at 12 s. The tick and pill don't turn.
 - **Reduce Motion:** static at 0°. **Background / scrolled out of view:** the still 0° frame (same rule as
@@ -51,10 +56,13 @@ Order under the card: ghosted compass, title, body, Turn On Location, Maybe late
 
 ### 2.1 As built (5.12b.1, 2026-10-13)
 
-- The ghost is `CompassGhost`: the live `CompassDial` at its 196 pt face (a 260 pt frame) scaled to 210 pt, so it
-  carries the real face, ticks, numbers and dotted arc rather than the handoff's plain ring. Its fixed needle is the
-  north tick. Labels are off. Rise/set are the **selected** day's (the card's), plus the moon if today and up.
-- PREVIEW is in the system monospaced font: IBM Plex Mono isn't bundled (adding it needs an OK).
+- 5.12b.1 as first built: `CompassGhost` was the live `CompassDial` scaled to 210 pt (face, ticks, numbers, dotted arc),
+  which read muddy and hid the arc. **Replaced in 5.12b.1a** by the plain ring above (Tessa chose B). Rise/set are the
+  **selected** day's (the card's), plus the moon if today and up.
+- Built in 5.12b.1a as `CompassGhost` + `CompassGhostGeometry` (pure placement, tested). Open: the clockwise arc
+  is wrong for southern-hemisphere passes, and the pill grows with Dynamic Type over the 210 pt ring at AX3.
+- PREVIEW pill: **Nunito Sans SemiBold 11, all caps** (Tessa, 2026-10-13), not IBM Plex Mono (not bundled, not
+  adding it). Tracking 0.12 em, #F2C27B, fill #1B1519, 1 pt #4A3A2E border, capsule, padding 7 / 11.
 - `showsLocationOffPrompt` (renamed) gates it. After Maybe later a placeholder S2 row (`CompassGuideRow`, no avatar)
   stands in until 5.12b.2.
 

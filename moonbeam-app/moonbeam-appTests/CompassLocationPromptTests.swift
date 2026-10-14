@@ -106,36 +106,95 @@ struct CompassLocationPromptTests {
         #expect(!viewModel.showsLocationGuideRow)
     }
 
-    // MARK: - Ghost data
+    // MARK: - Ghost geometry (the plain ring, 5.12b.1a)
 
-    @Test("The ghost gets the day's rise and set and the arc between them")
-    func ghostRiseAndSet() {
-        let viewModel = Self.makeViewModel(moon: FakeMoonService(pass: Self.pass))
-        viewModel.update(Self.context(auth: .denied, moonDay: Self.moonDay(rise: 72, set: 288)))
-
-        #expect(viewModel.ghostTargets.map(\.kind) == [.moonrise, .moonset])
-        #expect(viewModel.ghostArc == CompassArc(startAzimuth: 72, endAzimuth: 288, moonAzimuth: nil))
-        // The live dial's own data stays empty with location off.
-        #expect(viewModel.targets.isEmpty)
-        #expect(viewModel.arc == nil)
+    @Test("Azimuth to point matches the mock: rise 115° at (224.3, 174), set 243° at (37.3, 177.2)")
+    func azimuthToPoint() {
+        let rise = CompassGhostGeometry.point(atAzimuth: 115)
+        #expect(Double(rise.x).isApproximately(224.3, tolerance: 0.05))
+        #expect(Double(rise.y).isApproximately(174, tolerance: 0.05))
+        let set = CompassGhostGeometry.point(atAzimuth: 243)
+        #expect(Double(set.x).isApproximately(37.3, tolerance: 0.05))
+        #expect(Double(set.y).isApproximately(177.2, tolerance: 0.05))
+        // North is the ring's top.
+        let north = CompassGhostGeometry.point(atAzimuth: 0)
+        #expect(Double(north.x).isApproximately(130))
+        #expect(Double(north.y).isApproximately(26))
     }
 
-    @Test("No moonset: only the rise dot, no arc")
-    func ghostWithoutSet() {
-        let viewModel = Self.makeViewModel(moon: FakeMoonService(pass: Self.pass))
-        viewModel.update(Self.context(auth: .denied, moonDay: Self.moonDay(rise: 72, set: nil)))
+    @Test("The arc runs clockwise from rise to set, end to end, through the south")
+    func arcClockwise() throws {
+        let geometry = CompassGhostGeometry(rise: 115, set: 243, moonAzimuth: nil)
+        #expect(geometry.arcPoints.first == geometry.riseDot)
+        let end = try #require(geometry.arcPoints.last)
+        #expect(Double(end.x).isApproximately(37.3, tolerance: 0.05))
+        #expect(Double(end.y).isApproximately(177.2, tolerance: 0.05))
+        // Through due south (130, 234), the bottom of the ring.
+        #expect(geometry.arcPoints.contains { abs($0.x - 130) < 1 && abs($0.y - 234) < 0.1 })
+        // Across north, clockwise: 300° to 60° is 120°, not 240°.
+        #expect(CompassGhostGeometry.clockwiseSweep(from: 300, to: 60) == 120)
+        #expect(CompassGhostGeometry.clockwiseSweep(from: 115, to: 243) == 128)
+    }
 
-        #expect(viewModel.ghostTargets.map(\.kind) == [.moonrise])
-        #expect(viewModel.ghostArc == nil)
+    @Test("Both rise and set: two dots and an arc")
+    func bothEnds() {
+        let geometry = CompassGhostGeometry(rise: 57, set: 304, moonAzimuth: nil)
+        #expect(geometry.riseDot != nil)
+        #expect(geometry.setDot != nil)
+        #expect(!geometry.arcPoints.isEmpty)
+    }
+
+    @Test("No moonrise: the set dot only, no arc")
+    func noRise() {
+        let geometry = CompassGhostGeometry(rise: nil, set: 304, moonAzimuth: nil)
+        #expect(geometry.riseDot == nil)
+        #expect(geometry.setDot == CompassGhostGeometry.point(atAzimuth: 304))
+        #expect(geometry.arcPoints.isEmpty)
+        #expect(geometry.moonMarker == nil)
+    }
+
+    @Test("No moonset: the rise dot only, no arc")
+    func noSet() {
+        let geometry = CompassGhostGeometry(rise: 57, set: nil, moonAzimuth: nil)
+        #expect(geometry.riseDot == CompassGhostGeometry.point(atAzimuth: 57))
+        #expect(geometry.setDot == nil)
+        #expect(geometry.arcPoints.isEmpty)
+    }
+
+    @Test("Moon up: the marker sits at the live moon's azimuth")
+    func markerMoonUp() {
+        let geometry = CompassGhostGeometry(rise: 115, set: 243, moonAzimuth: 200)
+        #expect(geometry.moonMarker == CompassGhostGeometry.point(atAzimuth: 200))
+    }
+
+    @Test("Moon down: the marker sits at the arc's midpoint, across north too")
+    func markerMoonDown() {
+        let geometry = CompassGhostGeometry(rise: 115, set: 243, moonAzimuth: nil)
+        #expect(geometry.moonMarker == CompassGhostGeometry.point(atAzimuth: 179))
+        let acrossNorth = CompassGhostGeometry(rise: 300, set: 60, moonAzimuth: nil)
+        #expect(acrossNorth.moonMarker == CompassGhostGeometry.point(atAzimuth: 360))
+    }
+
+    @Test("The view model feeds the ring the day's rise and set, and the moon only when up")
+    func viewModelGhost() {
+        let day = Self.moonDay(rise: 115, set: 243)
+        let down = Self.makeViewModel(moon: FakeMoonService(position: MoonPosition(azimuth: 200, isUp: false)))
+        down.update(Self.context(auth: .denied, moonDay: day))
+        #expect(down.ghostGeometry == CompassGhostGeometry(rise: 115, set: 243, moonAzimuth: nil))
+
+        let up = Self.makeViewModel(moon: FakeMoonService(position: MoonPosition(azimuth: 200, altitude: 20, isUp: true)))
+        up.update(Self.context(auth: .denied, moonDay: day))
+        #expect(up.ghostGeometry == CompassGhostGeometry(rise: 115, set: 243, moonAzimuth: 200))
+        // The live dial's own data stays empty with location off.
+        #expect(up.targets.isEmpty)
+        #expect(up.arc == nil)
     }
 
     @Test("No ghost where the prompt doesn't show")
     func noGhostWhenRestricted() {
-        let viewModel = Self.makeViewModel(moon: FakeMoonService(pass: Self.pass))
+        let viewModel = Self.makeViewModel()
         viewModel.update(Self.context(auth: .restricted, moonDay: Self.moonDay(rise: 72, set: 288)))
-
-        #expect(viewModel.ghostTargets.isEmpty)
-        #expect(viewModel.ghostArc == nil)
+        #expect(viewModel.ghostGeometry == CompassGhostGeometry(rise: nil, set: nil, moonAzimuth: nil))
     }
 
     // MARK: - Copy
@@ -172,9 +231,8 @@ struct CompassLocationPromptTests {
         #expect(CompassGhostMotion.degrees(at: -10.5).isApproximately(CompassGhostMotion.degrees(at: 1.5)))
     }
 
-    @Test("Turning the ring is the opposite heading, and the still frame is north up")
-    func ringToHeading() {
-        #expect(CompassGhostMotion.heading(forRingDegrees: -70) == 70)
+    @Test("The still frame is north up")
+    func stillFrame() {
         #expect(CompassGhostMotion.stillDegrees == 0)
     }
 
@@ -193,13 +251,6 @@ struct CompassLocationPromptTests {
     }
 
     private static let referenceDate = Date(timeIntervalSince1970: 1_790_000_000)
-
-    /// A pass from 72° to 288°, as the moon day below has it.
-    private static let pass = MoonPass(
-        rise: MoonEvent(date: referenceDate, azimuth: 72),
-        set: MoonEvent(date: referenceDate.addingTimeInterval(MoonPass.sampleInterval * 2), azimuth: 288),
-        path: [72, 180, 288]
-    )
 
     private static func moonDay(rise: Double?, set: Double?) -> MoonDay {
         MoonDay(

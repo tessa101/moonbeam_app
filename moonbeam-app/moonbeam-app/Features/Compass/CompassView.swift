@@ -312,11 +312,7 @@ struct CompassView: View {
     /// the title a header), Turn On Location, then Maybe later.
     private var locationPrompt: some View {
         VStack(spacing: Self.promptStackSpacing) {
-            CompassGhost(
-                targets: viewModel.ghostTargets,
-                arc: viewModel.ghostArc,
-                moonGlyph: viewModel.moonGlyph
-            )
+            CompassGhost(geometry: viewModel.ghostGeometry)
             VStack(spacing: Self.promptStackSpacing) {
                 Text(CompassViewModel.locationPromptTitle)
                     .font(Theme.Fonts.teaserTitle)

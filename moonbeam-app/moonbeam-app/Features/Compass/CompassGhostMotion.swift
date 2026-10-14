@@ -56,10 +56,4 @@ nonisolated enum CompassGhostMotion {
         }
         return stillDegrees
     }
-
-    /// The dial places marks at azimuth − heading, so turning the ring by
-    /// `degrees` is a heading of the opposite sign.
-    static func heading(forRingDegrees degrees: Double) -> Double {
-        -degrees
-    }
 }

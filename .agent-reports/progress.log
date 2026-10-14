@@ -471,3 +471,11 @@
 13:46 5.12b.1: S1 default/RM, row, restricted captured; AX3 + tap round trip via device-interaction
 13:49 5.12b.1: AX3 + round trip checked, row a11y fixed + rebuilt; sim restored; writing docs
 13:50 5.12b.1: docs + latest.md written; committing
+13:50 5.12b.1: committed f6743b3; building Debug for T2 iPhone
+13:51 5.12b.1: installed f6743b3 Debug on T2 iPhone; latest.md updated; stopped
+17:16 5.12b.1: STATUS.md updated (hash, install, open items; 5.12 marked superseded)
+19:04 5.12b.1a: reading DECISIONS follow-up + LOCATION-OFF-FLOW §2
+19:07 5.12b.1a: plain ring + geometry + tests written; build-for-testing
+19:08 5.12b.1a: tests 172/172 (Xcode); moon down/up S1 captured
+19:11 5.12b.1a: RM + AX3 captured; sim restored (Large, RM off); writing docs
+19:12 5.12b.1a: docs + latest.md written; committing

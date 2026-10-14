@@ -156,11 +156,9 @@ final class CompassViewModel {
     /// later. Not persisted (§3.3).
     private(set) var isLocationPromptReopened = false
 
-    /// The ghosted compass in the prompt (§2): the selected day's rise and
-    /// set, and the moon if it's today and up, on the live dial's arc.
-    /// Empty and `nil` wherever the prompt doesn't show.
-    private(set) var ghostTargets: [CompassTarget] = []
-    private(set) var ghostArc: CompassArc?
+    /// The prompt's plain ring (§2): the selected day's rise and set, and the
+    /// moon if it's today and up. Empty wherever the prompt doesn't show.
+    private(set) var ghostGeometry = CompassGhostGeometry(rise: nil, set: nil, moonAzimuth: nil)
 
     /// `nearbyText` in the Nearby state, else `nil`. Never a distance: with
     /// the city names, that would reveal roughly where someone is. Stored
@@ -760,45 +758,24 @@ final class CompassViewModel {
 
     // MARK: - Ghost (LOCATION-OFF-FLOW.md §2)
 
-    /// The prompt's ghosted compass: the same targets and arc the live dial
-    /// would draw, with no heading behind them. No rise or no set: only the
-    /// dot that exists, and no arc. Refreshed with the targets (the minute
-    /// tick while the sensors are off), so the moon moves on.
+    /// The prompt's plain ring: the selected day's rise and set (only the
+    /// ones it has; an arc only with both), and the live moon if it's today
+    /// and up. Refreshed with the targets (the minute tick while the sensors
+    /// are off), so the moon moves on.
     private func updateGhost(at moment: Date) {
-        var newTargets: [CompassTarget] = []
-        var newArc: CompassArc?
+        var rise: Double?
+        var set: Double?
+        var moonAzimuth: Double?
         if showsLocationOffPrompt, let place = context.place, let moonDay = context.moonDay {
-            if let rise = moonDay.rise {
-                newTargets.append(CompassTarget(kind: .moonrise, azimuth: rise.azimuth))
-            }
-            if let set = moonDay.set {
-                newTargets.append(CompassTarget(kind: .moonset, azimuth: set.azimuth))
-            }
-            var moon: CompassTarget?
+            rise = moonDay.rise?.azimuth
+            set = moonDay.set?.azimuth
             if context.isToday {
                 let position = moonService.moonPosition(for: place, at: moment)
-                if position.isUp {
-                    moon = CompassTarget(kind: .moon, azimuth: position.azimuth)
-                }
-            }
-            if let moon { newTargets.append(moon) }
-            if let rise = moonDay.rise, moonDay.set != nil {
-                // The pass from this day's moonrise, unwrapped, so the arc
-                // runs the way the moon goes; or the one under way.
-                let pass = moon != nil
-                    ? moonService.moonPass(for: place, containing: moment)
-                    : moonService.moonPass(for: place, containing: rise.date.addingTimeInterval(Self.passLookupDelayAfterRise))
-                if let pass, let start = pass.path.first, let end = pass.path.last {
-                    newArc = CompassArc(
-                        startAzimuth: start,
-                        endAzimuth: end,
-                        moonAzimuth: moon.map { pass.pathAzimuth(for: $0.azimuth, at: moment) }
-                    )
-                }
+                if position.isUp { moonAzimuth = position.azimuth }
             }
         }
-        if newTargets != ghostTargets { ghostTargets = newTargets }
-        if newArc != ghostArc { ghostArc = newArc }
+        let geometry = CompassGhostGeometry(rise: rise, set: set, moonAzimuth: moonAzimuth)
+        if geometry != ghostGeometry { ghostGeometry = geometry }
     }
 
     // MARK: - Up now (COMPASS-1.1.md §3)
