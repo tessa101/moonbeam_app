@@ -13,7 +13,12 @@ by the sandbox: "Pseudo Terminal Setup Error".) Before the helper fix, runs show
 Left uncommitted (not this task): the staged `docs/LOCATION-SHEET.md` is the pre-`0c1599f` text (working copy
 matches HEAD), so committing the index would undo that cleanup; `docs/STEP-5.10a-TELESCOPE-REDRAW.md` (telescope
 correction, pending work); untracked `design/d2-luminous-calico/sleeping/`. Xcode run destination now iPhone 17
-(was T2 iPhone). Stopped here.
+(was T2 iPhone).
+
+Follow-up (`9db2b21`): CLAUDE.md's test count updated, 622 / 923 → 862 tests / 1287 cases. Checked: the staged
+`LOCATION-SHEET.md` is byte-identical to `0c1599f^` (blob `c14e788`), so `git restore --staged
+docs/LOCATION-SHEET.md` would lose nothing. Not done: the question to Tessa timed out, and it's her index.
+Stopped here.
 
 ---
 
