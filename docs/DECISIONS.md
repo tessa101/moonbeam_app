@@ -1691,3 +1691,12 @@ was sometimes a 0.3 s fade instead of a cut. Part 2 follows §5.2 on existing ti
 
 Before → after: off to on, 13 empty frames → 0; on to off, a 13-frame crossfade → dial out, then the block in.
 Evidence: `.agent-reports/5.12b.3b-swap/`.
+
+## 2026-10-14: Compass entrance tests deflaked in the tests only
+
+The 3 flaky `CompassEntranceTests` were test races, not app bugs. `EntranceSleeper` gained `isWaiting` (as in
+`LocationOffSwapTests`), and the tests wait for it before checking or firing. `isWaiting` wasn't enough for the
+shared `settle(_:at:)` helper: `CompassEntrance.headingWait` and `settleDuration` are both 0.5 s, and the
+sleeper's continuations ignore cancellation, so the superseded heading wait stays pending. `fire()` could end only
+that stale wait before the settle's own had started. The helper now waits for the heading wait, notes the request
+count, and fires only after one more request. No tolerances or timings changed. Full suite 3x: 1287/1287.

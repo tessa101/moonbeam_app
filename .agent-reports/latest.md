@@ -1,6 +1,25 @@
+# Test: deflake compass entrance timing tests: 2026-10-14
+
+Done (`060523f`, not pushed, test-only): `EntranceSleeper` (private to `CompassEntranceTests.swift`, test target)
+exposes `isWaiting`. `waitsForHeading` and `lateHeadingTurnsFromNorthUp` wait for it before checking / firing.
+`readoutFadesWhileLocked` raced in the shared `settle(_:at:)` helper, and `isWaiting` alone didn't fix it: the
+settle and heading waits are both 0.5 s and the superseded heading wait stays pending, so `fire()` could end only
+the stale wait. `settle` now waits for the heading wait, then one more request, before firing. No app code changed.
+
+Tests: full suite 3x in Xcode (iPhone 17): **1287/1287, 1287/1287, 1287/1287**. (`xcodebuild test` still blocked
+by the sandbox: "Pseudo Terminal Setup Error".) Before the helper fix, runs showed 1 and 5 failures (the other
+`settle` callers hit the same race).
+
+Left uncommitted (not this task): the staged `docs/LOCATION-SHEET.md` is the pre-`0c1599f` text (working copy
+matches HEAD), so committing the index would undo that cleanup; `docs/STEP-5.10a-TELESCOPE-REDRAW.md` (telescope
+correction, pending work); untracked `design/d2-luminous-calico/sleeping/`. Xcode run destination now iPhone 17
+(was T2 iPhone). Stopped here.
+
+---
+
 # Build 5.12b.3b part 2, the location swap + VoiceOver focus: 2026-10-14
 
-Done (part 2 commit, not pushed): the location off ↔ on swap per §5.2, on existing timings only (`LocationOffSwap`).
+Done (`8bb7ec9`, not pushed): the location off ↔ on swap per §5.2, on existing timings only (`LocationOffSwap`).
 **Off to on:** the block that was showing is held, not interactive (a `LocationOffBlock` snapshot, since granting
 clears the prompt's state), until a *newer* entrance is past `.waitingForHeading`. Then one crossfade: block out
 200 ms, dial in 300 ms. **0 empty frames** (was 13). **On to off:** dial out 200 ms, then the block in 300 ms with the
@@ -26,6 +45,9 @@ drive the phone).
 
 **Please look on the phone:** both swaps; the three VoiceOver moves; whether the old on-to-off order (dial fades, then
 the block cuts in) is gone.
+
+Device: Debug build of `8bb7ec9` installed on the T2 iPhone (devicectl; built for generic iOS because xcodebuild
+timed out while the phone was "connecting"). Xcode run destination back on T2 iPhone. Stopped here.
 
 Note: Tessa's `0c1599f` / `45c2717` landed during the run. Part 2 is built and tested on top of them. Her staged
 `docs/LOCATION-SHEET.md` and `STEP-5.10a-TELESCOPE-REDRAW.md` are left out of this commit.

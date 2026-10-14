@@ -515,3 +515,13 @@
 2026-10-14 09:32 part 2: focused tests 203/203 (3 CompassEntranceTests races fail with or without this change); building sim for after.mov
 2026-10-14 09:34 part 2: after.mov analysed (off->on 0 empty frames, on->off sequenced); docs + commit
 2026-10-14 09:45 part 2: tests 212/212 on current HEAD; committing 2/2
+2026-10-14 09:45 part 2 committed 8bb7ec9; building Debug for T2 iPhone
+2026-10-14 09:47 installed 8bb7ec9 Debug on T2 iPhone; latest.md updated; stopped
+2026-10-14 10:15 deflake: start; EntranceSleeper is test-only (CompassEntranceTests.swift), no app code needed
+2026-10-14 10:15 deflake: edits done, diagnostics clean; full suite run 1/3
+2026-10-14 10:19 deflake: isWaiting alone not enough (yield-count waitUntil runs out under full-suite load); waitUntil now time-bounded; full suite run 1/3
+2026-10-14 10:21 deflake: diag showed settle fired the stale heading wait (both 0.5 s); settle now waits for heading wait, then one more request; diag removed; full suite run 1/3
+2026-10-14 10:22 deflake: run 1/3 1287/1287 pass; run 2/3
+2026-10-14 10:23 deflake: run 2/3 1287/1287 pass; run 3/3
+2026-10-14 10:23 deflake: run 3/3 1287/1287 pass; cleanup survey
+2026-10-14 10:24 deflake committed 060523f; latest.md/STATUS/DECISIONS updated; committing reports
