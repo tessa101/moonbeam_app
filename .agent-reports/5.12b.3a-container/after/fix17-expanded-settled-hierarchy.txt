@@ -1,0 +1,52 @@
+Device orientation: Unknown
+------------------------
+Application bundle identifier: com.t-alien.moonbeam-app
+Application UI orientation: Portrait
+Application, pid: 50942, label: 'Moon Signal'
+ Window, {{0.0, 0.0}, {402.0, 874.0}}, hitPoint: {201.0, 437.0}
+  Other, {{0.0, 0.0}, {402.0, 874.0}}, hitPoint: {201.0, 437.0}
+   Other, {{0.0, 0.0}, {402.0, 874.0}}, hitPoint: {201.0, 437.0}
+    Other, {{0.0, 0.0}, {402.0, 874.0}}, hitPoint: {201.0, 437.0}
+     Other, {{0.0, 0.0}, {402.0, 874.0}}, hitPoint: {201.0, 437.0}
+      Other, {{-59.0, -120.0}, {520.0, 994.0}}, hitPoint: {201.0, 437.0}
+      ScrollView, {{0.0, 0.0}, {402.0, 874.0}}, hitPoint: {201.0, 437.0}
+       Other, {{0.0, 0.0}, {402.0, 874.0}}, hitPoint: {201.0, 437.0}
+        Other, {{0.0, 0.0}, {402.0, 102.0}}, hitPoint: {201.0, 51.0}
+       Other, {{0.0, 0.0}, {402.0, 874.0}}, hitPoint: {201.0, 437.0}
+       Other, {{0.0, 62.0}, {402.0, 779.0}}, hitPoint: {201.0, 451.5}
+        Other, {{24.0, 73.9}, {231.3, 97.5}}, hitPoint: {139.7, 122.6}
+         StaticText, {{24.7, 74.0}, {352.7, 23.3}}, label: 'Where can I find the moon today in Irvine, CA?', hitPoint: {201.0, 85.7}
+         Button, {{20.0, 111.0}, {362.0, 102.0}}, label: 'Date, today', hitPoint: {201.0, 162.0}
+         Button, {{20.0, 221.0}, {362.0, 102.0}}, label: 'Place, Irvine, CA', hitPoint: {201.0, 272.0}
+        Other, {{20.0, 199.3}, {362.0, 210.3}}, hitPoint: {201.0, 304.5}
+         Other, {{32.0, 211.3}, {44.0, 44.0}}, hitPoint: {54.0, 233.3}
+         StaticText, {{88.0, 211.7}, {99.3, 18.0}}, label: 'Date', value: Today, Friday, Oct..., hitPoint: {137.7, 220.7}
+         Button, {{288.0, 211.3}, {44.0, 44.0}}, identifier: 'chevron.left', label: 'Previous day', hitPoint: {310.0, 233.3}
+         Button, {{332.0, 211.3}, {44.0, 44.0}}, identifier: 'chevron.right', label: 'Next day', hitPoint: {354.0, 233.3}
+         Other, {{88.0, 231.7}, {167.3, 23.3}}, label: 'Last Quarter, 53% lit at midnight', hitPoint: {171.7, 243.3}
+          StaticText, {{88.0, 231.7}, {167.3, 23.3}}, label: 'Last Quarter · 53% lit', hitPoint: {171.7, 243.3}
+         Other, {{32.0, 265.3}, {338.0, 1.0}}, hitPoint: {201.0, 265.8}
+         Other, {{36.0, 284.3}, {82.0, 77.3}}, label: 'Moonrise at 11:10 PM, east-northeast, 57 degrees', hitPoint: {77.0, 323.0}
+          StaticText, {{36.0, 284.3}, {71.3, 18.0}}, label: '↑ Moonrise', hitPoint: {71.7, 293.3}
+          StaticText, {{36.0, 304.3}, {82.0, 34.0}}, label: '11:10 PM', hitPoint: {77.0, 321.3}
+          StaticText, {{36.0, 342.3}, {52.3, 19.3}}, label: '57° ENE', hitPoint: {62.2, 352.0}
+         Other, {{131.0, 292.3}, {147.3, 2.0}}, hitPoint: {204.6, 293.3}
+         Other, {{291.7, 284.3}, {74.3, 77.3}}, label: 'Moonset at 1:28 PM, northwest, 304 degrees', hitPoint: {328.8, 323.0}
+          StaticText, {{291.7, 284.3}, {68.0, 18.0}}, label: '↓ Moonset', hitPoint: {325.7, 293.3}
+          StaticText, {{291.7, 304.3}, {74.3, 34.0}}, label: '1:28 PM', hitPoint: {328.8, 321.3}
+          StaticText, {{291.7, 342.3}, {60.0, 19.3}}, label: '304° NW', hitPoint: {321.7, 352.0}
+         Other, {{32.0, 379.7}, {168.0, 18.0}}, label: 'Low in the sky. Look west.', hitPoint: {116.0, 388.7}
+          StaticText, {{32.0, 379.7}, {7.0, 18.0}}, label: '•', hitPoint: {35.5, 388.7}
+          StaticText, {{45.0, 379.7}, {155.0, 18.0}}, label: 'Low in the sky. Look west.', hitPoint: {122.5, 388.7}
+        StaticText, {{138.2, 516.4}, {15.3, 12.8}}, label: 'N', hitPoint: {145.8, 522.8}
+        StaticText, {{171.2, 544.0}, {59.7, 15.3}}, label: 'PREVIEW', hitPoint: {201.0, 551.7}
+        StaticText, {{51.3, 653.7}, {299.3, 43.7}}, label: 'With location on, you'll see the live compass to point your way', hitPoint: {201.0, 675.5}
+        Button, {{40.0, 711.3}, {322.0, 52.0}}, label: 'Turn On Location', hitPoint: {201.0, 737.3}
+        Button, {{40.0, 767.3}, {322.0, 44.0}}, label: 'Maybe later', hitPoint: {201.0, 789.3}
+        StaticText, {{20.0, 839.3}, {96.7, 14.3}}, label: 'heading: none', hitPoint: {68.3, 846.5}
+        StaticText, {{20.0, 855.7}, {170.7, 14.3}}, label: 'accuracy: unknown (low)', hitPoint: {105.3, 862.8}
+        StaticText, {{20.0, 872.0}, {200.3, 14.3}}, label: 'accuracyAuthorization: full', hitPoint: {120.2, 873.0}
+       Other, {{369.0, 62.0}, {30.0, 750.0}}, label: 'Vertical scroll bar, 2 pages', value: 0%, hitPoint: {384.0, 437.0}
+        Other, {{396.0, 65.0}, {3.0, 743.0}}, hitPoint: {397.5, 436.5}
+       Other, {{369.0, 62.0}, {30.0, 750.0}}, label: 'Vertical scroll bar, 2 pages', value: 0%, hitPoint: {384.0, 437.0}
+        Other, {{396.0, 65.0}, {3.0, 743.0}}, hitPoint: {397.5, 436.5}

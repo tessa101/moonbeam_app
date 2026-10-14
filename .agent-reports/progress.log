@@ -499,3 +499,9 @@
 20:25 part 2 prep: recording 'before' (plain swap)
 20:26 part 2: before = two 1-frame cuts (frames 1035, 1751 @60fps)
 20:26 part 1: committing
+20:26 part 1 committed ab12a9d; starting part 2 (transition)
+20:30 part 2: motion, phase, card, tests written; build-for-testing
+20:32 part 2: tests 14/14; recording 'after'
+2026-10-14 08:39 part 2: build passes; motion/phase tests 14/14
+2026-10-14 08:40 part 2: simulator hierarchy/interaction verification complete; recorder blocked by CoreSimulator sandbox
+2026-10-14 08:41 part 2 committed; installing Debug build on T2 iPhone

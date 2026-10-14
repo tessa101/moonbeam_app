@@ -1,6 +1,21 @@
+# Build 5.12b.3a part 2, one-container transition: 2026-10-14
+
+Done (part 2 commit, not pushed): a single 740 ms timing table/evaluator and TimelineView drive the S1 ↔ row transition;
+expand mirrors collapse on `cubic-bezier(0.32, 0.72, 0, 1)`. The card animates measured 381/76 pt heights and 24/20
+corners; the ring scales 1 → 52/180 and travels the measured vector ≈(-142, -71.3). Reduce Motion is a 200 ms
+crossfade/height change with no scale move. Hit testing and VoiceOver expose only the correct destination; row state and
+copy are retained. Build passes; motion/phase tests 14/14 pass.
+
+Evidence: `.agent-reports/5.12b.3a-container/`. Direct after-video/60 fps extraction is unavailable because the Xcode
+interaction API has no recorder and sandboxed simctl cannot reach CoreSimulatorService. The report records a remaining
+automation discrepancy: delayed screenshots sometimes show the ScrollView presentation shifted while its logical
+hierarchy and card geometry remain fixed. Part 1 is `ab12a9d`.
+
+---
+
 # Build 5.12b.3a part 1, S1 in the card: 2026-10-13
 
-Done (COMMIT, not pushed): S1 and the row are one outlined card (`LocationOffCard`). Expanded: ghost 180 pt, 20 pt from
+Done (`ab12a9d`, not pushed): S1 and the row are one outlined card (`LocationOffCard`). Expanded: ghost 180 pt, 20 pt from
 the top, body 12 under it (no title), Turn On Location, Maybe later; **381 pt** on iPhone 17 (spec estimate about 386).
 Collapsed: the card is the 78 pt row (one border; warm fill for S3–S6). Plain swap still; flag, reopen, S2–S6 and the
 restricted chip unchanged. Focused tests 152/152 pass in Xcode; full suite not run. Screenshots (default, AX3, row)

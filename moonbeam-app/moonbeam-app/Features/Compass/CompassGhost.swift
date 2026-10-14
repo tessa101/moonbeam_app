@@ -23,6 +23,12 @@ struct CompassGhost: View {
 
     let geometry: CompassGhostGeometry
 
+    /// PREVIEW fades on its own track in the card's swap (§5.3).
+    var previewOpacity = 1.0
+    /// The collapsed card keeps the prompt layer laid out so expansion doesn't
+    /// insert a new subtree; pause the ring while that layer is clipped away.
+    var isActive = true
+
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.scenePhase) private var scenePhase
 
@@ -70,7 +76,7 @@ struct CompassGhost: View {
                 if LocationIllustration.shouldAnimate(
                     reduceMotion: reduceMotion,
                     scenePhase: scenePhase,
-                    isVisible: isInHierarchy && isScrolledIntoView
+                    isVisible: isActive && isInHierarchy && isScrolledIntoView
                 ) {
                     CompassGhostTimeline(art: art(ringDegrees:))
                 } else {
@@ -161,6 +167,7 @@ struct CompassGhost: View {
             .foregroundStyle(Theme.Colors.dialNumber)
             .dynamicTypeSize(...Self.previewMaxTypeSize)
             .fixedSize()
+            .opacity(previewOpacity)
     }
 }
 

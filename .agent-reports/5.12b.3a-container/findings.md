@@ -42,3 +42,26 @@ diffed each frame against the one before it over the card's lower part (y 640–
 - **Row → S1 (tap the row): one frame.** Frame 1751 (29.183 s), mean change 7.9.
 - No other frame changed in that region. Both swaps are hard cuts. `before-frames/f1034|f1035.png` and
   `f1750|f1751.png` show the frame before and after each cut.
+
+## Part 2: one-clock transition
+
+- `LocationOffCardMotion` is the pure timing table and evaluator. All nine tracks use
+  `cubic-bezier(0.32, 0.72, 0, 1)`; collapse is 740 ms and expand mirrors it. The title track is absent.
+- One `TimelineView` drives the card. The measured heights (381 / 76 pt) and corner radii (24 / 20) share the card
+  track. The DEBUG readout follows the changing layout height.
+- The ring scales from 1 to 52/180 and travels between measured centres. On the iPhone 17 run the real vector was
+  approximately **(-142.0, -71.3) pt**, rather than the mock's `(-136, -71)`.
+- The hidden ghost is stopped in the settled row; screenshots ten seconds apart are byte-identical. Prompt/row hit
+  testing is off during the run and returns at the destination.
+- Reduce Motion runs all fades and the height over 200 ms, without scale, travel or offsets.
+- VoiceOver hierarchy checks pass: only the destination layer is exposed in flight.
+- Focused motion/phase tests: **14/14 pass**. Xcode build passes.
+
+### Visual-capture limitation
+
+The Xcode interaction API has no recorder, and sandboxed `simctl io recordVideo` cannot connect to CoreSimulatorService,
+so the requested after-video/constant-60-fps extraction could not be produced. Screenshot sampling shows the direct
+card geometry and accessibility hierarchy staying at `y ≈ 442`, and the pure evaluator has no 60 fps discontinuity.
+However, delayed screenshots around +1 s sometimes capture the enclosing ScrollView's presentation layer at
+`y ≈ 218` before it returns, while the hierarchy remains at `y ≈ 442`. The investigation is in
+`after/DEVICE-VERIFICATION.md`; this discrepancy is recorded rather than represented as passing video evidence.

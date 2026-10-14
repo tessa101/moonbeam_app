@@ -22,6 +22,18 @@ struct CompassGuideRow: View {
     let isActive: Bool
     let action: () -> Void
 
+    /// The card's swap (§5.3) draws each piece at its own point in the
+    /// timeline; at rest, all fully in.
+    var avatarOpacity = 1.0
+    var avatarScale: CGFloat = 1
+    var textOpacity = 1.0
+    var textOffsetX: CGFloat = 0
+    var chevronOpacity = 1.0
+
+    /// The avatar's centre in `LocationOffCard.coordinateSpace`, whenever it
+    /// moves: where the ring lands as it collapses.
+    var onAvatarCentreChange: (CGPoint) -> Void = { _ in }
+
     // MARK: - Constants (design 1.9, S2 to S6)
 
     /// Inside the card's 1 pt border, so the avatar sits at (13, 13) and the
@@ -48,6 +60,14 @@ struct CompassGuideRow: View {
                     .resizable()
                     .frame(width: Self.avatarSize, height: Self.avatarSize)
                     .clipShape(Circle())
+                    .onGeometryChange(for: CGPoint.self) { proxy in
+                        let frame = proxy.frame(in: .named(LocationOffCard.coordinateSpace))
+                        return CGPoint(x: frame.midX, y: frame.midY)
+                    } action: { centre in
+                        onAvatarCentreChange(centre)
+                    }
+                    .scaleEffect(avatarScale)
+                    .opacity(avatarOpacity)
                     .accessibilityHidden(true)
 
                 VStack(alignment: .leading, spacing: Self.textSpacing) {
@@ -61,10 +81,13 @@ struct CompassGuideRow: View {
                 .multilineTextAlignment(.leading)
                 .fixedSize(horizontal: false, vertical: true)
                 .frame(maxWidth: .infinity, alignment: .leading)
+                .offset(x: textOffsetX)
+                .opacity(textOpacity)
 
                 Text(verbatim: Self.chevron)
                     .font(Theme.Fonts.guideRowChevron)
                     .foregroundStyle(isActive ? Theme.Colors.accent : Theme.Colors.guideRowChevron)
+                    .opacity(chevronOpacity)
                     .accessibilityHidden(true)
             }
             .padding(EdgeInsets(

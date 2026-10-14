@@ -236,7 +236,19 @@ struct LocationScreen: View {
             .padding(.horizontal, Theme.Metrics.screenMargin)
             .padding(.top, Theme.Metrics.contentTopSpacing)
             .padding(.bottom, Theme.Metrics.screenMargin)
+            // A short state still fills the viewport, so crossing between a
+            // scrollable prompt and a shorter row doesn't change the scroll
+            // view's alignment model mid-transition.
+            .containerRelativeFrame(.vertical, alignment: .top) { length, _ in
+                length + 1
+            }
         }
+        // Child cards animate their own height. Preserve the reader's exact
+        // offset while layout changes so content above a card doesn't move.
+        .transaction { transaction in
+            transaction.scrollContentOffsetAdjustmentBehavior = .disabled
+        }
+        .scrollBounceBehavior(.basedOnSize)
         // COMPASS-1.1.md §9.6: over the content, not an inset, so it doesn't
         // move the fold it's shown for. Inside the bottom bar's inset, so it
         // sits on top of the note.
