@@ -96,6 +96,10 @@ means nothing on another day). It reuses the 5.11 rules, so the row, the card an
 - Pure logic goes in a value type (`LocationOffGuide`, proposed) with the formatter apart from it (CLAUDE.md); no
   logic in the view.
 
+- **As built (5.12b.2):** `LocationOffGuide` (`Features/Compass`) and `LocationOffGuideFormatter` (`Formatting`).
+  "This pass's rise" is `MoonPass.rise.date` (the date `UpNow.Pass.riseTime` shows), since `UpNow` doesn't exist with
+  location off. Minutes come from the shared `UpNowFormatter.countdownMinutes`. The tick is the 60 s guidance clock.
+
 ### 3.2 Avatars
 
 Prepared in `design/1.9-location-off-flow/avatars/` (`avatar_sleeping@1x/2x/3x.png`, `avatar_searching@1x/2x/3x.png`):
@@ -110,7 +114,7 @@ separate tail layer is for a later wag and is **not** part of this work.
   Re-opening S1 is **not** persisted: a relaunch with the flag set shows the row.
 - **Accessibility:** the whole row is one button. Label = title + subtitle. Hint "Shows the moon compass preview."
   At AX sizes the text wraps (no truncation); the avatar stays 52 pt; the chevron stays centred.
-- VoiceOver focus: Maybe later moves focus to the row; tapping the row moves it to S1's body.
+- VoiceOver focus: Maybe later moves focus to the row; tapping the row moves it to S1's body. **Not built yet** (goes with the 5.12b.3 swap).
 
 ## 4. State and persistence
 

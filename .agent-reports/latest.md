@@ -1,6 +1,27 @@
+# Build 5.12b.2 part 3, guide row UI: 2026-10-13
+
+Done (COMMIT, not pushed): the real guide row. S2 is quiet (sleeping calico, hairline border, gray chevron); S3–S6 are
+warm (awake calico, #211A1F fill, warm border, amber subtitle and chevron). Avatars are the prepared PNGs in
+`Illustrations.xcassets/locationGuide` (Original, decorative). One button, label = title + subtitle, hint "Shows the
+moon compass preview."; wraps at AX sizes; tap reopens S1. DEBUG `-screenState locationGuide.s2…s6`. Focused tests
+251/251 pass in Xcode; full suite not run. Screenshots S2–S6 + S4 at AX3: `.agent-reports/5.12b.2-row/`.
+
+Earlier today: 5.12b.1b (`cfa2db5`) S1 polish, and 5.12b.2 part 2 (`4326dc0`) guide logic.
+
+**Please look:**
+- the row's VoiceOver reading on the phone
+- countdown wording "2 hr 15 min" vs the card's "2h 15m" (one function to change)
+- not built yet: the §3.3 VoiceOver focus moves, which go with the 5.12b.3 transitions
+
+Device: INSTALL.
+
+Next: Tessa checks S1 and the row on the phone, then 5.12b.3 (transitions).
+
+---
+
 # Build 5.12b.2 part 2, guide logic: 2026-10-13
 
-Done (COMMIT, not pushed): pure `LocationOffGuide` (S2–S6 per §3.1: today only; 3 h / 60 min / under-a-minute /
+Done (`4326dc0`, not pushed): pure `LocationOffGuide` (S2–S6 per §3.1: today only; 3 h / 60 min / under-a-minute /
 +15 min rules; 5.11 up rule; this pass's rise; after-midnight next rise) and `LocationOffGuideFormatter` (copy;
 countdown wording in one function). Minutes use the card's rounding, now shared as
 `UpNowFormatter.countdownMinutes`. `CompassViewModel.locationGuide` updates on the card's existing 60 s clock. No UI

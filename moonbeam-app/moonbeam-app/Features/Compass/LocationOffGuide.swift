@@ -12,7 +12,7 @@ import Foundation
 /// compass agree. The words are `LocationOffGuideFormatter`'s.
 ///
 /// `nonisolated`: an inert value.
-nonisolated enum LocationOffGuide: Equatable, Sendable {
+nonisolated enum LocationOffGuide: Hashable, Sendable {
 
     /// S2: moon down with no moonrise within 3 h (or none), after moonset,
     /// and on any date but today.

@@ -1635,3 +1635,13 @@ PREVIEW is a plain `dialNumber` word capped at `.xxxLarge`, and the S1 title and
 uses `CompassGhostGeometry(crossesSouth:)`, with `latitude >= 0` going via south and anything else via north. No rise
 and no set: no marker. Evidence: `.agent-reports/5.12b.2-row/` (part 1).
 
+### 2026-10-13 — 5.12b.2 built (guide logic + row)
+
+- `LocationOffGuide` (pure) + `LocationOffGuideFormatter`. The rules follow §3.1. Up/down is the compass's
+  `MoonPosition.isUp`. S5/S6 use this pass's `MoonPass.rise.date`, the date behind `UpNow.Pass.riseTime`: with location
+  off there's no `UpNow`, so the date is used directly. Minutes use the card's rounding, now shared as
+  `UpNowFormatter.countdownMinutes`. It ticks on the existing 60 s guidance clock.
+- `CompassGuideRow` S2–S6 with the prepared avatar PNGs (`Illustrations.xcassets/locationGuide`, Original), drawn as
+  decorative images. DEBUG `-screenState locationGuide.s2…s6`.
+- Not built: the §3.3 VoiceOver focus moves (with 5.12b.3). Evidence: `.agent-reports/5.12b.2-row/`.
+

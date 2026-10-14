@@ -1,5 +1,7 @@
 # Status & Handoff
 
+_Step 5.12b.2, 2026-10-13 (LOCATION-OFF-FLOW.md §3): the location-off guide row is real. `LocationOffGuide` gives S2–S6 (today only; 3 h / 60 min / under-a-minute / +15 min; this pass's rise; after-midnight rise) on the card's 60 s clock with the card's minute rounding; `CompassGuideRow` draws them with the prepared calico PNGs (sleeping S2, searching S3–S6). DEBUG `-screenState locationGuide.s2…s6`. Focused tests 251/251 pass in Xcode; full suite not run. Evidence: `.agent-reports/5.12b.2-row/`. Not built: §3.3 VoiceOver focus moves (with 5.12b.3). Next: 5.12b.3 transitions._
+
 _Step 5.12b.1b, 2026-10-13 (LOCATION-OFF-FLOW.md §8): PREVIEW is a plain gray word (no pill, stops at `.xxxLarge`); S1 has no title; the ghost arc goes via south north of the equator, via north south of it; no rise and no set means no marker. Focused tests 136/136 pass in Xcode._
 
 _Step 5.12b.1a, 2026-10-13 (DECISIONS "5.12b.1 follow-up"; `docs/LOCATION-OFF-FLOW.md` §2): the S1 ghost is now the handoff's plain ring (ring, solid clockwise rise→set arc with end dots, moon marker at the live moon or the arc's midpoint, N, fixed tick), drawn for this from `CompassGhostGeometry`, not the live dial. PREVIEW is Nunito Sans SemiBold, caps. Loop, still frame, gating and row unchanged. Focused tests 172/172 pass in Xcode; full suite not run. Evidence: `.agent-reports/5.12b.1a-ghost/`. Open for Tessa: southern-hemisphere arc direction, pill size at AX3, the moon marker on a no-rise/set day. Next: 5.12b.2._
@@ -177,7 +179,7 @@ Rule: finish what changes the card before the AX reflow, or the reflow is done t
    countdown, this pass's rise while up → 5.11.2 `23° up` → 5.11.3 edge-case voice line (draft copy).
 5. [ ] **5.5 AX reflow** incl. the always-three-column card on today and the SE 3 connector; loader VoiceOver /
    Reduce Motion review (LOADER.md §10.6).
-6a. [~] **5.12b location off, prompt + moon guide** (5.12b.1 S1 done 2026-10-13, `f6743b3`; next 5.12b.2) (Tessa, 2026-10-13; `docs/LOCATION-OFF-FLOW.md`): ghosted compass prompt, new subhead, Maybe later, dismissed row (S2–S6), swap polish. Replaces the 5.12 cartoon compass. Three small runs: 5.12b.1 → .2 → .3.
+6a. [~] **5.12b location off, prompt + moon guide** (5.12b.1/.1a/.1b and 5.12b.2 done 2026-10-13; next 5.12b.3) (Tessa, 2026-10-13; `docs/LOCATION-OFF-FLOW.md`): ghosted compass prompt, new subhead, Maybe later, dismissed row (S2–S6), swap polish. Replaces the 5.12 cartoon compass. Three small runs: 5.12b.1 → .2 → .3.
 6. [x] **5.12 location off:** the cartoon-compass teaser (option 1b, 2026-10-12) is superseded by 5.12b and removed in 5.12b.1. Still open from it: confirming that restricted keeps the chip (carried into 5.12b). See DECISIONS 2026-10-12 "5.12 location-off teaser" and 2026-10-13 "5.12b".
 7. [ ] **TestFlight 0.1 (9)** (archive built and verified 2026-10-12, `d9eba76`; upload to App Store Connect pending, Tessa's): set `MARKETING_VERSION` 1.0 → **0.1** and `CURRENT_PROJECT_VERSION` 8 → 9
    (DECISIONS.md 2026-10-08, version naming); if App Store Connect rejects the version, go back to 1.0. Then device QA at default / AX1 / AX5; check the 5.8 arc after midnight (draws from the

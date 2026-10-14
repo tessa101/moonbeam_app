@@ -254,8 +254,9 @@ struct CompassLocationPromptTests {
     func copy() {
         #expect(CompassViewModel.locationPromptBody == "With location on, you'll see the live compass to point your way")
         #expect(CompassViewModel.maybeLaterTitle == "Maybe later")
-        #expect(CompassViewModel.guideRowTitle == "Compass guide is waiting")
-        #expect(CompassViewModel.guideRowSubtitle == "Tap whenever you want directions")
+        #expect(LocationOffGuideFormatter.waitingTitle == "Compass guide is waiting")
+        #expect(LocationOffGuideFormatter.waitingSubtitle == "Tap whenever you want directions")
+        #expect(LocationOffGuideFormatter.rowHint == "Shows the moon compass preview.")
     }
 
     // MARK: - Motion

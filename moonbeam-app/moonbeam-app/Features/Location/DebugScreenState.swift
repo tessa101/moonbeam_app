@@ -66,6 +66,15 @@ struct DebugScreenState: View {
         /// Location off with the moon down, so the prompt's ring puts its
         /// moon marker at the arc's midpoint (5.12b.1a).
         case locationOffMoonDown = "locationOff.moonDown"
+        /// The guide row after Maybe later (LOCATION-OFF-FLOW.md §3.1), on
+        /// the fixed 7:53 AM clock: S2 waiting (next rise 5 h off), S3
+        /// (2 hr 15 min), S4 (40 min), S5 (rose 5 min ago), S6 (up since
+        /// last night).
+        case locationGuideS2 = "locationGuide.s2"
+        case locationGuideS3 = "locationGuide.s3"
+        case locationGuideS4 = "locationGuide.s4"
+        case locationGuideS5 = "locationGuide.s5"
+        case locationGuideS6 = "locationGuide.s6"
 
         var locationFailure: LocationFailure? {
             switch self {
@@ -89,6 +98,12 @@ struct DebugScreenState: View {
         /// The home screen with location off, over the saved Irvine.
         var isLocationOff: Bool {
             [.locationOff, .locationOffDismissed, .locationOffRestricted, .locationOffMoonDown].contains(self)
+                || isLocationGuide
+        }
+
+        /// One of the guide row's states, after Maybe later.
+        var isLocationGuide: Bool {
+            [.locationGuideS2, .locationGuideS3, .locationGuideS4, .locationGuideS5, .locationGuideS6].contains(self)
         }
 
         /// Leaving the app stands for a trip to Settings that turns access
@@ -200,7 +215,9 @@ struct DebugScreenState: View {
                 Self.time(2, 7, 53)
             }
             let authState: LocationAuthState = switch state {
-            case .locationOff, .locationOffDismissed, .locationOffMoonDown, .messageDenied, .locationFailedDenied, .locationOffDialogDenied: .denied
+            case .locationOff, .locationOffDismissed, .locationOffMoonDown,
+                 .locationGuideS2, .locationGuideS3, .locationGuideS4, .locationGuideS5, .locationGuideS6,
+                 .messageDenied, .locationFailedDenied, .locationOffDialogDenied: .denied
             case .messageFirstAsk: .notDetermined
             case .messageServicesOff, .locationFailedServicesOff, .locationOffDialogServicesOff: .servicesOff
             case .messageRestricted, .locationFailedRestricted, .locationOffDialogRestricted, .locationOffRestricted:
@@ -224,15 +241,18 @@ struct DebugScreenState: View {
             default: break
             }
 
-            let moonService: any MoonService = if state == .noMoonrise {
-                AstronomyEngineMoonService()
+            let moonService: any MoonService
+            if state == .noMoonrise {
+                moonService = AstronomyEngineMoonService()
             } else {
-                Self.fakeMoon(
+                let moon = Self.fakeMoon(
                     isUp: state != .moonDown && state != .moonSetForToday && state != .locationOffMoonDown,
                     setForToday: state == .moonSetForToday,
                     longPhaseName: state == .longPhaseName,
                     now: now
                 )
+                Self.applyGuideState(state, to: moon, now: now)
+                moonService = moon
             }
             viewModel = LocationViewModel(
                 locationService: location,
@@ -243,7 +263,9 @@ struct DebugScreenState: View {
                 ),
                 moonService: moonService,
                 headingService: heading,
-                onboardingStore: InMemoryOnboardingStore(locationPromptDismissed: state == .locationOffDismissed),
+                onboardingStore: InMemoryOnboardingStore(
+                    locationPromptDismissed: state == .locationOffDismissed || state.isLocationGuide
+                ),
                 deviceTimeZone: Self.zone,
                 now: { now }
             )
@@ -273,6 +295,43 @@ struct DebugScreenState: View {
             )
             return moon
         }
+
+        /// The guide row's states: where the moon is, and when it rose or
+        /// rises next, against the fixed clock.
+        private static func applyGuideState(_ state: Kind, to moon: FakeMoonService, now: Date) {
+            let down = MoonPosition(azimuth: moonAzimuth, isUp: false)
+            func rise(inMinutes minutes: Double) -> MoonEvent {
+                MoonEvent(date: now.addingTimeInterval(minutes * secondsPerMinute), azimuth: riseAzimuth)
+            }
+            switch state {
+            case .locationGuideS2:
+                moon.position = down
+                moon.nextRise = rise(inMinutes: guideWaitingMinutes)
+            case .locationGuideS3:
+                moon.position = down
+                moon.nextRise = rise(inMinutes: guideHoursMinutes)
+            case .locationGuideS4:
+                moon.position = down
+                moon.nextRise = rise(inMinutes: guideMinutesMinutes)
+            case .locationGuideS5:
+                moon.position = MoonPosition(azimuth: riseAzimuth + 1, altitude: 1, isUp: true)
+                if let pass = moon.pass {
+                    moon.pass = MoonPass(rise: rise(inMinutes: -guideRoseMinutesAgo), set: pass.set, path: pass.path)
+                }
+            case .locationGuideS6:
+                // Up since last night, on the fixture's own pass.
+                break
+            default:
+                break
+            }
+        }
+
+        /// The guide states' times: 5 h, 2 hr 15 min and 40 min to the next
+        /// rise, and a rise 5 min ago.
+        private static let guideWaitingMinutes = 300.0
+        private static let guideHoursMinutes = 135.0
+        private static let guideMinutesMinutes = 40.0
+        private static let guideRoseMinutesAgo = 5.0
 
         /// Polls for the screen's own start to show a place.
         private static let pollInterval = Duration.milliseconds(10)
@@ -395,6 +454,11 @@ struct DebugScreenState: View {
 #Preview("11a Location off, Maybe later") { DebugScreenState(.locationOffDismissed) }
 #Preview("11b Location off, restricted") { DebugScreenState(.locationOffRestricted) }
 #Preview("11c Location off, moon down") { DebugScreenState(.locationOffMoonDown) }
+#Preview("11d Guide S2") { DebugScreenState(.locationGuideS2) }
+#Preview("11e Guide S3") { DebugScreenState(.locationGuideS3) }
+#Preview("11f Guide S4") { DebugScreenState(.locationGuideS4) }
+#Preview("11g Guide S5") { DebugScreenState(.locationGuideS5) }
+#Preview("11h Guide S6") { DebugScreenState(.locationGuideS6) }
 #Preview("12 Far") { DebugScreenState(.far) }
 #Preview("13 No moonrise, Sat Oct 3") { DebugScreenState(.noMoonrise) }
 #Preview("14 Long phase name") { DebugScreenState(.longPhaseName) }

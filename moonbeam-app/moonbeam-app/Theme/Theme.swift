@@ -43,10 +43,13 @@ nonisolated enum Theme {
         /// The location-off teaser's body (design handoff, Location Off
         /// Teaser): a step quieter than `textSecondary`.
         static let teaserBody = Color(hex: 0xB9A898)
-        /// The compass guide row's waiting border and chevron (design 1.9,
-        /// S2). Decorative: the row's text carries it.
+        /// The compass guide row (design 1.9): waiting (S2) border and
+        /// chevron; active (S3 to S6) border and fill, its chevron and
+        /// subtitle in `accent`. Decorative: the row's text carries it.
         static let guideRowBorder = Color(hex: 0x3A2E35)
         static let guideRowChevron = Color(hex: 0x6E5C66)
+        static let guideRowActiveBorder = Color(hex: 0x4A3A2E)
+        static let guideRowActiveFill = Color(hex: 0x211A1F)
         /// The ghost ring's moon marker (design 1.9, S1).
         static let ghostMoon = Color(hex: 0xF7E7BD)
         /// Tokens, directions, N, ↑/↓, primary buttons, the lock pill. Kept
@@ -226,10 +229,12 @@ nonisolated enum Theme {
         /// caps, 0.12 em (LOCATION-OFF-FLOW.md §8).
         static let previewWord = Font.custom(FontName.nunitoSansSemiBold, size: 11, relativeTo: .caption2)
         static let previewWordTracking: CGFloat = 0.12 * 11
-        /// The compass guide row (design 1.9, S2): Nunito Sans SemiBold 16
-        /// title, Regular 13 subtitle, a 24 pt "›".
+        /// The compass guide row (design 1.9): Nunito Sans SemiBold 16 title;
+        /// subtitle Regular 13 waiting (S2), SemiBold 13 active (S3 to S6); a
+        /// 24 pt "›".
         static let guideRowTitle = Font.custom(FontName.nunitoSansSemiBold, size: 16, relativeTo: .callout)
         static let guideRowSubtitle = Font.custom(FontName.nunitoSansRegular, size: 13, relativeTo: .footnote)
+        static let guideRowSubtitleActive = Font.custom(FontName.nunitoSansSemiBold, size: 13, relativeTo: .footnote)
         static let guideRowChevron = Font.custom(FontName.nunitoSansRegular, size: 24, relativeTo: .title2)
         /// The ghost ring's "N" (Nunito Sans Bold 14 in the 260-unit art).
         /// Fixed: it's part of a decorative drawing that stays 210 pt at

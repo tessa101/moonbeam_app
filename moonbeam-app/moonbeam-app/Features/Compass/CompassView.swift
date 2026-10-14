@@ -293,9 +293,8 @@ struct CompassView: View {
     private var locationOffNote: some View {
         if viewModel.showsLocationGuideRow {
             CompassGuideRow(
-                title: CompassViewModel.guideRowTitle,
-                subtitle: CompassViewModel.guideRowSubtitle,
-                hint: CompassViewModel.guideRowHint,
+                row: viewModel.guideRow,
+                isActive: viewModel.locationGuide.isActive,
                 action: viewModel.reopenLocationPrompt
             )
         } else if viewModel.showsLocationOffPrompt {

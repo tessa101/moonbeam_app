@@ -93,11 +93,6 @@ final class CompassViewModel {
     static let maybeLaterTitle = "Maybe later"
     static let maybeLaterHint = "Hides this. You can bring it back from the compass guide."
 
-    /// The compass guide row after Maybe later (§3, S2). 5.12b.2 adds the
-    /// moonrise states; this is the waiting one.
-    static let guideRowTitle = "Compass guide is waiting"
-    static let guideRowSubtitle = "Tap whenever you want directions"
-    static let guideRowHint = "Shows the moon compass preview."
 
     /// Leads into the existing Location Off flow.
     static let turnOnLocationTitle = "Turn On Location"
@@ -263,6 +258,7 @@ final class CompassViewModel {
     private let reducesMotion: () -> Bool
     private let formatter = CompassFormatter()
     private let upNowFormatter = UpNowFormatter()
+    private let guideFormatter = LocationOffGuideFormatter()
 
     // MARK: - Bookkeeping
 
@@ -334,6 +330,11 @@ final class CompassViewModel {
     // MARK: - Derived state
 
     var heading: Double? { reading?.trueHeading }
+
+    /// The guide row's words for `locationGuide` (§3.1).
+    var guideRow: LocationOffGuideFormatter.Row {
+        guideFormatter.row(for: locationGuide)
+    }
 
     /// After Maybe later, the guide row stands in for the prompt (§3), until
     /// it's tapped.
