@@ -1,5 +1,7 @@
 # Status & Handoff
 
+_Test deflake, 2026-10-14 (`060523f`): the 3 flaky `CompassEntranceTests` (the "already failing" note below) are fixed in the tests only: `EntranceSleeper.isWaiting`, and the `settle` helper no longer fires the stale heading wait. Full suite 3x in Xcode: 1287/1287 each. No app code changed._
+
 _Build 5.12b.3b, 2026-10-14 (LOCATION-OFF-FLOW.md §5.1, §5.2, §3.3): location off ↔ on swap. Part 1 confirmed §5.1's cause, plus one correction: the bottom bar's animation leaked into the swap. Part 2: off to on, the block is held (not interactive) until the dial's entrance is past waiting, then one crossfade, with 0 empty frames (was 13). On to off: the dial out 200 ms, then the block in 300 ms with its rise (was a 13-frame crossfade). VoiceOver focus moves: Maybe later → row, row → S1 body, location on → dial. Focused tests 212/212 pass in Xcode; full suite not run; 3 CompassEntranceTests were already failing (a test race). Evidence: `.agent-reports/5.12b.3b-swap/`. Open for Tessa: phone check of both swaps and the three VoiceOver moves; the phone's on-to-off order in `location_on_off.mov`, which isn't reproduced here._
 
 _Step 5.12b.3a part 1, 2026-10-13 (LOCATION-OFF-FLOW.md §5.3): S1 now sits inside the row's outlined card (`LocationOffCard`, one container; ghost 180 pt; no title; 381 pt expanded, 78 pt collapsed on iPhone 17). Plain swap still; before-recording shows a 1-frame cut each way. Focused tests 152/152 pass. Evidence: `.agent-reports/5.12b.3a-container/`. Next: part 2, the collapse/expand transition._
