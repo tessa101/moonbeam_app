@@ -510,3 +510,8 @@
 2026-10-14 09:15 part 1: building Debug for iPhone 17 simulator (C86BA1FD) to reproduce both swaps
 2026-10-14 09:16 part 1: recording before.mov (revoke then grant via Settings)
 2026-10-14 09:23 part 1: before.mov analysed; §5.1 confirmed + bottom-note animation leak; committing 1/2
+2026-10-14 09:25 part 2: design done (held block + handover rule in VM, own transitions); writing code
+2026-10-14 09:30 part 2: code + tests written, diagnostics clean; running focused suites in Xcode (iPhone 17)
+2026-10-14 09:32 part 2: focused tests 203/203 (3 CompassEntranceTests races fail with or without this change); building sim for after.mov
+2026-10-14 09:34 part 2: after.mov analysed (off->on 0 empty frames, on->off sequenced); docs + commit
+2026-10-14 09:45 part 2: tests 212/212 on current HEAD; committing 2/2

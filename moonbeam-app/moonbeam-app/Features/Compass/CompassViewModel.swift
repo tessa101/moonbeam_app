@@ -239,8 +239,20 @@ final class CompassViewModel {
     /// count (LOADER.md §12.4.1).
     private(set) var hasLockedMoonThisLaunch = false
 
-    /// The compass's entrance on its latest reload (LOADER.md §12.4).
-    private(set) var entrance = CompassEntrance.idle
+    /// The compass's entrance on its latest reload (LOADER.md §12.4). The
+    /// location-on hand-over waits on it (LOCATION-OFF-FLOW.md §5.2).
+    private(set) var entrance = CompassEntrance.idle {
+        didSet { finishLocationOnHandoverIfReady() }
+    }
+
+    /// Location just came on (§5.2): the block that was showing, held over
+    /// the compass until its entrance is past `.waitingForHeading`. `nil`
+    /// otherwise.
+    private(set) var locationOnHandover: LocationOffSwap?
+
+    /// Goes up by one each time a hand-over ends with the dial coming in, so
+    /// the view can move VoiceOver to the dial once it's in (§3.3).
+    private(set) var locationOnCount = 0
 
     /// The dial's centre is below the fold (the screen's bottom, or a
     /// bottom bar's top), as the screen last reported it.
@@ -342,6 +354,27 @@ final class CompassViewModel {
         showsLocationOffPrompt && isLocationPromptDismissed && !isLocationPromptReopened
     }
 
+    /// What the location-off slot draws (§2, §3): the held block while
+    /// location comes on (§5.2), the live one while it's off, else `nil`.
+    var locationOffBlock: LocationOffBlock? {
+        if let locationOnHandover { return locationOnHandover.block }
+        return visibility == .locationOff ? liveLocationOffBlock : nil
+    }
+
+    /// The block is held while the compass comes in: on screen, not
+    /// interactive (§5.2).
+    var isLocationOffBlockHeld: Bool { locationOnHandover != nil }
+
+    private var liveLocationOffBlock: LocationOffBlock {
+        LocationOffBlock(
+            showsPrompt: showsLocationOffPrompt,
+            isCollapsed: showsLocationGuideRow,
+            ghost: ghostGeometry,
+            row: guideRow,
+            isRowActive: locationGuide.isActive
+        )
+    }
+
     /// The ring pulsing from the live Moon (COMPASS-1.1.md §5): while the
     /// moon is up (so today) and the Moon hasn't been locked yet this
     /// launch (LOADER.md §12.4.1).
@@ -365,7 +398,7 @@ final class CompassViewModel {
     /// the fold. It hides once the centre is on screen, and with the dial
     /// scrolled off the top.
     var showsPinnedBar: Bool {
-        visibility.showsCompass && isDialCentreBelowFold
+        visibility.showsCompass && !isLocationOffBlockHeld && isDialCentreBelowFold
     }
 
     /// The pinned bar's rule: the centre's y is past the fold's, both in
@@ -430,9 +463,10 @@ final class CompassViewModel {
     /// Precise off > low accuracy > Nearby > aha. Low accuracy needs a
     /// reading, so nothing flashes up before the first one; with no compass
     /// at all (`.unavailable`) it still shows, since the spec has one line
-    /// for every reason.
+    /// for every reason. Not while the location-off block is still held
+    /// (LOCATION-OFF-FLOW.md §5.2): it comes with the dial.
     var bottomNote: CompassBottomNote? {
-        guard visibility.showsCompass else { return nil }
+        guard visibility.showsCompass, !isLocationOffBlockHeld else { return nil }
         // Sensors paused or starting: the last note, unless Precise has
         // been turned on meanwhile.
         if reading == nil, let held = heldBottomNote,
@@ -510,6 +544,9 @@ final class CompassViewModel {
     /// that becomes today gets its "Moon" target straight away.
     func update(_ context: CompassContext) {
         let wasPreciseLocationOff = isPreciseLocationOff
+        // Before granting clears the prompt's state (§5.2).
+        let previousBlock = locationOffBlock
+        let previousGeneration = entrance.generation
         // §12.4: new information for the dial is a reload; a permission or
         // Precise Location refresh with the same place and day isn't.
         let reloads = context.place != self.context.place
@@ -556,11 +593,13 @@ final class CompassViewModel {
         if reloads, wasSensing, isSensing {
             beginEntrance()
         }
+        updateLocationOnHandover(from: previousBlock, afterGeneration: previousGeneration)
     }
 
     /// Maybe later (§2): the guide row in place of the prompt, kept across
-    /// launches.
+    /// launches. Not while the block is held on its way out (§5.2).
     func dismissLocationPrompt() {
+        guard !isLocationOffBlockHeld else { return }
         onboardingStore.locationPromptDismissed = true
         isLocationPromptDismissed = true
         isLocationPromptReopened = false
@@ -568,7 +607,31 @@ final class CompassViewModel {
 
     /// The guide row was tapped (§3.3): the prompt again, for this launch.
     func reopenLocationPrompt() {
+        guard !isLocationOffBlockHeld else { return }
         isLocationPromptReopened = true
+    }
+
+    // MARK: - Location on hand-over (LOCATION-OFF-FLOW.md §5.2)
+
+    /// Location came on with the block showing: hold it until a newer
+    /// entrance than `afterGeneration` is past waiting. Anything but the
+    /// compass (off again, Far, hidden) ends the hold: off again shows the
+    /// live block in its place.
+    private func updateLocationOnHandover(from previousBlock: LocationOffBlock?, afterGeneration: Int) {
+        guard visibility.showsCompass else {
+            if locationOnHandover != nil { locationOnHandover = nil }
+            return
+        }
+        guard locationOnHandover == nil, let previousBlock else { return }
+        locationOnHandover = LocationOffSwap(block: previousBlock, afterGeneration: afterGeneration)
+        finishLocationOnHandoverIfReady()
+    }
+
+    /// The dial is coming in: the block goes, in the same crossfade.
+    private func finishLocationOnHandoverIfReady() {
+        guard let locationOnHandover, locationOnHandover.isReady(for: entrance) else { return }
+        self.locationOnHandover = nil
+        locationOnCount += 1
     }
 
     /// The compass scrolled into or out of view, or was inserted or removed.

@@ -53,6 +53,16 @@ struct LocationOffCard: View {
     @State private var ghostCentre: CGPoint?
     @State private var avatarCentre: CGPoint?
 
+    /// §3.3, §5.4: where VoiceOver goes once a swap the user asked for ends.
+    /// Maybe later: the row. The row: S1's body (S1 has no title).
+    @AccessibilityFocusState private var focus: Focus?
+    @State private var focusAfterSwap: Focus?
+
+    private enum Focus: Hashable {
+        case row
+        case body
+    }
+
     init(
         isCollapsed: Bool,
         ghost: CompassGhostGeometry,
@@ -111,6 +121,10 @@ struct LocationOffCard: View {
             guard !Task.isCancelled else { return }
             withoutLayoutAdjustment {
                 timelineIsRunning = false
+            }
+            if let focusAfterSwap {
+                focus = focusAfterSwap
+                self.focusAfterSwap = nil
             }
         }
     }
@@ -173,7 +187,10 @@ struct LocationOffCard: View {
         CompassGuideRow(
             row: row,
             isActive: isRowActive,
-            action: onRowTap,
+            action: {
+                focusAfterSwap = .body
+                onRowTap()
+            },
             avatarOpacity: frame.avatarOpacity,
             avatarScale: frame.avatarScale,
             textOpacity: frame.rowTextOpacity,
@@ -187,6 +204,7 @@ struct LocationOffCard: View {
         .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { collapsedHeight = $0 }
         .allowsHitTesting(!timelineIsRunning && isCollapsed)
         .accessibilityHidden(!phase.rowIsAccessible)
+        .accessibilityFocused($focus, equals: .row)
     }
 
     // MARK: - Prompt (S1)
@@ -207,12 +225,16 @@ struct LocationOffCard: View {
                 .padding(.top, Self.ghostToBody)
                 .offset(y: frame.promptOffsetY(frame.body))
                 .opacity(frame.promptOpacity(frame.body))
+                .accessibilityFocused($focus, equals: .body)
             Button(CompassViewModel.turnOnLocationTitle, action: onTurnOnLocation)
                 .buttonStyle(.secondary)
                 .padding(.top, Self.bodyToButton)
                 .offset(y: frame.promptOffsetY(frame.turnOnLocation))
                 .opacity(frame.promptOpacity(frame.turnOnLocation))
-            Button(CompassViewModel.maybeLaterTitle, action: onMaybeLater)
+            Button(CompassViewModel.maybeLaterTitle) {
+                focusAfterSwap = .row
+                onMaybeLater()
+            }
                 .buttonStyle(.textLink(color: Theme.Colors.teaserBody))
                 .accessibilityHint(CompassViewModel.maybeLaterHint)
                 .padding(.top, Self.buttonToMaybeLater)

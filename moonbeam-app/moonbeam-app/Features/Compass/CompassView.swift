@@ -107,24 +107,90 @@ struct CompassView: View {
         let isSettling: Bool
     }
 
+    // MARK: - Location swap (LOCATION-OFF-FLOW.md §5.2)
+
+    /// The block's height while it's held over the compass coming in, so the
+    /// slot doesn't jump to the dial's height before the dial shows.
+    @State private var locationOffBlockHeight: CGFloat?
+
+    /// Set when a hand-over ends; VoiceOver moves to the dial once it's in.
+    @State private var dialFocusRequest: Int?
+    @AccessibilityFocusState private var dialFocus: DialFocus?
+
+    /// The dial, or the heading readout if the dial has nothing to read.
+    private enum DialFocus: Hashable {
+        case dial
+        case readout
+    }
+
+    /// Each side brings its own animation, so one passing through the screen
+    /// (the bottom bar's) can't retime the swap (5.12b.3b part 1).
+    private var locationOffBlockTransition: AnyTransition {
+        .asymmetric(
+            insertion: .opacity
+                .combined(with: .offset(y: LocationOffSwap.blockInRise(reduceMotion: reduceMotion)))
+                .animation(.easeOut(duration: LocationOffSwap.blockInDuration).delay(LocationOffSwap.blockInDelay)),
+            removal: .opacity.animation(.easeOut(duration: LocationOffSwap.blockOutDuration))
+        )
+    }
+
+    /// The dial is inserted unseen (its entrance fades it in) and fades out.
+    private static let compassTransition = AnyTransition.asymmetric(
+        insertion: .identity,
+        removal: .opacity.animation(.easeOut(duration: LocationOffSwap.dialOutDuration))
+    )
+
+    private static let heightAnimationLocationOn = Animation.easeOut(duration: LocationOffSwap.heightDurationLocationOn)
+    private static let heightAnimationLocationOff = Animation.easeOut(duration: LocationOffSwap.heightDurationLocationOff)
+
     // MARK: - Body
 
     var body: some View {
         VStack(spacing: 0) {
-            switch viewModel.visibility {
-            case .here, .nearby:
-                compass
-            case .far:
-                if let farMessage = viewModel.farMessage {
-                    CompassNote(text: farMessage)
+            // One slot: the block stays over the compass while it comes in.
+            ZStack(alignment: .top) {
+                switch viewModel.visibility {
+                case .here, .nearby:
+                    compass
+                        .transition(Self.compassTransition)
+                case .far:
+                    if let farMessage = viewModel.farMessage {
+                        CompassNote(text: farMessage)
+                    }
+                case .locationOff, .hidden:
+                    EmptyView()
                 }
-            case .locationOff:
-                locationOffNote
-            case .hidden:
-                EmptyView()
+
+                if let block = viewModel.locationOffBlock {
+                    locationOffNote(block)
+                        .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { height in
+                            locationOffBlockHeight = height
+                        }
+                        .allowsHitTesting(!viewModel.isLocationOffBlockHeld)
+                        .transition(locationOffBlockTransition)
+                }
             }
+            .frame(
+                height: viewModel.isLocationOffBlockHeld ? locationOffBlockHeight : nil,
+                alignment: .top
+            )
+            // Off to on, the slot grows with the dial's fade (the inner one
+            // wins when both change); on to off, it shrinks with the dial's.
+            .animation(Self.heightAnimationLocationOn, value: viewModel.isLocationOffBlockHeld)
+            .animation(Self.heightAnimationLocationOff, value: viewModel.locationOffBlock != nil)
         }
         .frame(maxWidth: .infinity)
+        .onChange(of: viewModel.locationOnCount) { _, count in
+            dialFocusRequest = count
+        }
+        // §3.3: on location on, VoiceOver moves to the dial once it has
+        // faded in, not while it's still out.
+        .task(id: dialFocusRequest) {
+            guard dialFocusRequest != nil else { return }
+            try? await Task.sleep(for: .seconds(LocationOffSwap.dialInDuration))
+            guard !Task.isCancelled, viewModel.entrance.showsCompass else { return }
+            dialFocus = viewModel.targetsAccessibilityLabel != nil ? .dial : .readout
+        }
     }
 
     // MARK: - Compass
@@ -166,6 +232,7 @@ struct CompassView: View {
                 showsMoonPulse: viewModel.showsMoonPulse,
                 settleOffset: reduceMotion ? 0 : settleOffset
             )
+            .accessibilityFocused($dialFocus, equals: .dial)
             // The dial's frame is symmetric about the face's centre.
             .onGeometryChange(for: CGFloat.self) { $0.frame(in: .global).midY } action: { centreY in
                 onDialCentreChange(centreY)
@@ -242,6 +309,7 @@ struct CompassView: View {
                 .accessibilityLabel(viewModel.headingAccessibilityLabel)
                 .accessibilityAddTraits(.updatesFrequently)
                 .accessibilityHidden(viewModel.lockText != nil)
+                .accessibilityFocused($dialFocus, equals: .readout)
             if let lockText = viewModel.lockText, let lockReadout = viewModel.lockReadout {
                 Self.text(for: lockReadout)
                     .foregroundStyle(Theme.Colors.onAccent)
@@ -273,15 +341,16 @@ struct CompassView: View {
     /// Where the user can turn location on, one card holding the prompt
     /// (LOCATION-OFF-FLOW.md §2) or, after Maybe later, the guide row (§3,
     /// §5.3); where they can't (restricted), the plain note, since there's
-    /// nothing to show off that they could reach.
+    /// nothing to show off that they could reach. Drawn from `block`, which
+    /// is held while location comes on (§5.2).
     @ViewBuilder
-    private var locationOffNote: some View {
-        if viewModel.showsLocationOffPrompt {
+    private func locationOffNote(_ block: LocationOffBlock) -> some View {
+        if block.showsPrompt {
             LocationOffCard(
-                isCollapsed: viewModel.showsLocationGuideRow,
-                ghost: viewModel.ghostGeometry,
-                row: viewModel.guideRow,
-                isRowActive: viewModel.locationGuide.isActive,
+                isCollapsed: block.isCollapsed,
+                ghost: block.ghost,
+                row: block.row,
+                isRowActive: block.isRowActive,
                 onTurnOnLocation: onTurnOnLocation,
                 onMaybeLater: viewModel.dismissLocationPrompt,
                 onRowTap: viewModel.reopenLocationPrompt

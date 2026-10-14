@@ -114,7 +114,9 @@ separate tail layer is for a later wag and is **not** part of this work.
   Re-opening S1 is **not** persisted: a relaunch with the flag set shows the row.
 - **Accessibility:** the whole row is one button. Label = title + subtitle. Hint "Shows the moon compass preview."
   At AX sizes the text wraps (no truncation); the avatar stays 52 pt; the chevron stays centred.
-- VoiceOver focus: Maybe later moves focus to the row; tapping the row moves it to S1's body. **Not built yet** (goes with the 5.12b.3 swap).
+- VoiceOver focus: Maybe later moves focus to the row; tapping the row moves it to S1's body. Built in 5.12b.3b, once
+  the card's swap ends, and only for a swap the user asked for. Location on moves focus to the dial (its targets; the
+  readout if it has none) once its fade-in is over. All three set `@AccessibilityFocusState`; nothing is posted by hand.
 
 ## 4. State and persistence
 
@@ -161,6 +163,14 @@ Everything on the app's existing timings, not new ones:
 - **S1 to row, row to S1:** the "One container" transition of §5.3 (supersedes the earlier ~250 ms crossfade).
 - **Launch / place change / date step** keep their current load-ins (LOADER.md §12); only the swap changes.
 - Fade and height share one animation so the scroll content never jumps under the user's finger.
+
+**As built (5.12b.3b, 2026-10-14):** `LocationOffSwap` (timings + hand-over rule) and `LocationOffBlock` (the held
+block). The view model holds the block that was showing when location came on, since granting clears the prompt's own
+state, until a *newer* entrance than the one in place is past `.waitingForHeading`. That way an entrance left over from
+before location went off can't release it early. While it's held, its taps do nothing, and the bottom note and pinned
+bar wait for the dial. Each side carries its own transition, so the bottom bar's animation no longer leaks in (§5.1).
+Off to hidden (a searched city, nothing detected) isn't held, since that would need a time limit. Frame counts:
+`.agent-reports/5.12b.3b-swap/findings.md`.
 
 ### 5.3 Prompt ↔ row: "One container" (design option 1d; Tessa, 2026-10-13)
 

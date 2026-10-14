@@ -1,6 +1,40 @@
+# Build 5.12b.3b part 2, the location swap + VoiceOver focus: 2026-10-14
+
+Done (part 2 commit, not pushed): the location off ↔ on swap per §5.2, on existing timings only (`LocationOffSwap`).
+**Off to on:** the block that was showing is held, not interactive (a `LocationOffBlock` snapshot, since granting
+clears the prompt's state), until a *newer* entrance is past `.waitingForHeading`. Then one crossfade: block out
+200 ms, dial in 300 ms. **0 empty frames** (was 13). **On to off:** dial out 200 ms, then the block in 300 ms with the
+8 pt rise (was a 13-frame crossfade). Reduce Motion: the same, no rise. The bottom note and pinned bar wait for the
+dial; each side has its own transition, so the bottom bar's animation no longer leaks in. 3a's collapse/expand
+untouched.
+
+VoiceOver: Maybe later → row, row → S1's body (after 3a's 740 ms, user-initiated only), location on → the dial once
+its fade-in is over. All via `@AccessibilityFocusState`; nothing posted by hand (not `ScreenChanged`: the screen hasn't
+changed).
+
+Edge cases (tested): revoked during the hold → the live block in place (S1, since the grant cleared Maybe later);
+backgrounded during the hold → still held, the next entrance ends it; a stale entrance from before Settings can't end
+it. Not held: off → hidden (would need a time limit).
+
+Tests: `LocationOffSwapTests` 10 new. Focused suites **212/212** in Xcode (iPhone 17); full suite not run.
+**Already failing, not from this change:** 3 `CompassEntranceTests` (a `fire()`-before-sleep race), failing with or
+without this change.
+
+Evidence: `after.mov` + frame crops in `.agent-reports/5.12b.3b-swap/` (simulator). **Not captured:** a Reduce Motion
+recording, any phone recording, and a VoiceOver transcript (VoiceOver doesn't run in the simulator; the agent can't
+drive the phone).
+
+**Please look on the phone:** both swaps; the three VoiceOver moves; whether the old on-to-off order (dial fades, then
+the block cuts in) is gone.
+
+Note: Tessa's `0c1599f` / `45c2717` landed during the run. Part 2 is built and tested on top of them. Her staged
+`docs/LOCATION-SHEET.md` and `STEP-5.10a-TELESCOPE-REDRAW.md` are left out of this commit.
+
+---
+
 # Build 5.12b.3b part 1, location swap reproduce-and-diff: 2026-10-14
 
-Done (part 1 commit, not pushed): recorded both swaps on the iPhone 17 simulator through Settings (`before.mov`, real
+Done (`390bb19`, not pushed): recorded both swaps on the iPhone 17 simulator through Settings (`before.mov`, real
 capture timestamps). **Off to on:** the prompt leaves at frame 918, then **13 frames of empty slot**, dial first
 visible at frame 939, fully in about frame 955. **On to off:** a **13-frame crossfade** (frames 380–394), dial and
 prompt at part opacity together, no gap.

@@ -67,3 +67,84 @@ is an extra contributor that hides the cut sometimes. It matters for the fix: th
 transaction, so the bottom bar's animation can't override its timing. I've taken that as "confirmed, with a
 correction" and gone on to Part 2. If you read it as a different cause, Part 2 is a separate commit and can be
 dropped.
+
+## Part 2: the swap
+
+### What changed
+
+- **`LocationOffSwap`** (new, pure): the timings, all existing (block in `ContentLoadIn.duration` 300 ms with
+  `ContentLoadIn.rise` 8 pt, 0 under Reduce Motion, after the dial's 200 ms; block out and dial out
+  `LaunchStage.phaseCycleFadeOutDuration` 200 ms; dial in 300 ms, unchanged). Also the hand-over rule: the block goes
+  once a **newer** entrance than the one in place when location came on is past `.waitingForHeading`.
+- **`LocationOffBlock`** (new value): what the location-off slot draws (prompt or restricted note, collapsed, ghost,
+  row, warm). Granting clears the prompt's state at once (the ghost, the row, the dismissed flag), so the view model
+  keeps the block that was showing and draws that while it's held.
+- **`CompassViewModel`**: `locationOnHandover` / `isLocationOffBlockHeld` / `locationOffBlock` / `locationOnCount`.
+  While the block is held: Maybe later and the row tap do nothing, and the bottom note and pinned bar wait (they come
+  with the dial; the bottom note arriving early is also what used to leak its animation into the swap).
+- **`CompassView`**: the slot is one `ZStack`. The compass is inserted unseen (its entrance fades it) and leaves with a
+  200 ms fade. The block has its own asymmetric transition. The slot keeps the block's height while it's held, then
+  eases to the dial's with the dial's 300 ms fade; on to off it eases with the dial's 200 ms. Every animation is
+  attached to its own view, so the bottom bar's `.animation(value: bottomNote)` can't retime the swap.
+- **3a container untouched**: `LocationOffCard`'s collapse and expand are as they were. The only changes there are the
+  two focus moves (the button actions record where focus goes; the end of its existing timeline task applies it).
+
+### Frame counts (60 fps, real capture timestamps; `after.mov`, `after-frames/`)
+
+| Swap | Before | After |
+|---|---|---|
+| **Off to on** | prompt leaves at frame 918; **13 empty frames**; dial first visible at 939, in by about 955 | the block holds, not interactive, until the entrance's wait ends (~0.5 s on the simulator, which has no heading); then **one crossfade, frames 901–910**: block out, dial first visible at 902, in by about 918. **0 empty frames** |
+| **On to off** | **13-frame crossfade**, both at part opacity together | **dial out, frames 359–368**, then the **block in with its rise, 371–~388** (300 ms). 2 frames of empty slot between them (the dial's ease-out tail ends just before the 200 ms delay), never both at full opacity |
+
+Not recorded: the Reduce Motion variant (the simulator's Reduce Motion switch needs a tapped Settings session; see
+memory). It's covered by `LocationOffSwapTests` (the hold, no rise). No phone recording either: the agent can't record
+the T2 iPhone.
+
+### Edge cases
+
+- **Granted, then revoked quickly, during the hold:** the hold ends, the compass leaves (it was still unseen) and the
+  live block takes the held one's place in the same view, so nothing fades. Granting cleared Maybe later (§4), so if
+  the row was showing, the card expands back to S1 with 3a's own animation. Tested.
+- **Revoked during the crossfade:** the dial leaves with its 200 ms fade and the block comes back in after it with
+  the rise, same as on to off.
+- **Granted again during on to off:** the block that's arriving is held over the new compass, then hands over as usual.
+- **App backgrounded mid-swap:** the sensors stop and the entrance stays waiting, so the block stays held, and that's
+  what the app switcher snapshot shows. Back in the foreground a new entrance starts, and its heading (or wait) ends
+  the hold. Tested, including the Settings return where the context arrives before the scene is active: an entrance
+  left over from before location went off can't end the hold (`staleEntranceDoesNotRelease`).
+- **Off to hidden (a searched city with nothing detected yet):** not held. `LocationScreen` drops the whole compass
+  block while hidden, so the block fades out with the screen's own handling (as before). Holding through hidden would
+  need a cap on how long, i.e. a new timing, so I left it.
+- **Held but scrolled off screen:** the sensors don't run, so the block stays held until it's scrolled back, then
+  hands over. It's never interactive while held.
+
+### VoiceOver focus (§3.3)
+
+- **Maybe later → the row**, **row tap → S1's body** (S1 has no title), each once 3a's 740 ms timeline has ended.
+  Only for a swap the user asked for: a collapse or expand caused by something else (a grant clearing Maybe later)
+  doesn't move focus.
+- **Location on → the dial's element** (its targets label; the heading readout if the dial has no targets), 300 ms
+  after the hand-over, when the dial's fade-in has finished, and only if the dial is still showing then. While the
+  block is held, the compass is hidden from VoiceOver, so focus can't land on it before it's in.
+- **What's posted:** no notification by hand. Each move sets an `@AccessibilityFocusState`, and SwiftUI moves the
+  VoiceOver cursor to that element itself. I chose that over posting `ScreenChanged`: the screen hasn't changed (one
+  block in the middle of it has), and `ScreenChanged` plays the new-screen sound and starts reading from the top. A
+  manual `LayoutChanged` on top of the focus state would be a second, competing move. I haven't checked which
+  UIAccessibility notification SwiftUI posts under the hood.
+- **No VoiceOver transcript.** VoiceOver doesn't run in the simulator, and the agent can't drive the phone. Please
+  check the three moves on the T2 iPhone.
+
+### Tests
+
+`LocationOffSwapTests` (10, `.timeLimit(.minutes(1))`): timings; Reduce Motion rise; the ready rule; held until a
+heading, unchanged and not interactive, with no bottom note or pinned bar; held until the 0.5 s wait; the Reduce Motion
+hold; the stale entrance; revoked during the hold; backgrounded during the hold; on to off. Focused run in Xcode
+(iPhone 17): LocationOffSwap, CompassLocationPrompt, LocationOffCardMotion, CompassViewModel,
+LocationViewModelCompass and LocationOffGuide, **203/203 pass**. Re-run after Tessa's `45c2717` (DebugPanel, dial
+height, 5° ticks) landed mid-session, with CompassDialSizeTests added: **212/212 pass**. Full suite not run.
+
+**Already failing, not from this change:** `CompassEntranceTests` `waitsForHeading`, `lateHeadingTurnsFromNorthUp`
+and `readoutFadesWhileLocked` fail every time on this tree. They still fail with this change's only hook into the
+entrance (the `didSet`) taken out, and the rest of the change does nothing while there's no hand-over. It's a test
+race: `fire()` or the duration check runs before the entrance task has reached its sleep. My new test had the same
+race and now waits for the sleeper first (`isWaiting`). I left these three alone: out of scope.

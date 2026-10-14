@@ -1671,3 +1671,23 @@ collapsed. Still a plain swap. The before-recording shows it as a 1-frame cut ea
 - **Dial simplified, step 1 (Tessa):** minor ticks every 5° instead of every 2° (180 ticks down to 72); mid (10°) and
   heavy (30°) unchanged. This is COMPASS-1.1.md §4's own fallback for shimmer. Numbers, crosshair and the rest wait
   for the device look; next candidates are fewer degree numbers and dropping the crosshair or mid ticks.
+
+### 2026-10-14 — 5.12b.3b: the location off ↔ on swap and the VoiceOver focus moves
+
+Part 1 (simulator recording, real capture timestamps) confirmed §5.1's cause, with one correction: `LocationScreen`'s
+`.animation(value: bottomNote)` on the scroll view caught the swap whenever a note changed in the same update, so it
+was sometimes a 0.3 s fade instead of a cut. Part 2 follows §5.2 on existing timings only. Choices made:
+
+- **The held block is a snapshot** (`LocationOffBlock`). Granting clears the prompt's own state (ghost, row, the
+  dismissed flag), so the view model keeps what was showing until the hand-over.
+- **The hand-over waits for a newer entrance** than the one in place when location came on. Back from Settings, the
+  context arrives before the scene is active, and the old entrance can still read `.settled`.
+- **While it's held,** the block's taps do nothing, and the bottom note and pinned bar wait for the dial.
+- **Each side carries its own transition and height animation**, so no animation passing through can retime the swap.
+- **Not held:** off to hidden (a searched city, nothing detected yet). Holding there would need a time limit, which
+  would be a new timing.
+- **VoiceOver** moves with `@AccessibilityFocusState`, not `ScreenChanged` (the screen hasn't changed). The two card
+  moves happen only when the user asked for the swap.
+
+Before → after: off to on, 13 empty frames → 0; on to off, a 13-frame crossfade → dial out, then the block in.
+Evidence: `.agent-reports/5.12b.3b-swap/`.
