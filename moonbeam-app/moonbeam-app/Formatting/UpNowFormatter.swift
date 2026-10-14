@@ -107,12 +107,18 @@ nonisolated struct UpNowFormatter {
 
     // MARK: - Helpers
 
-    /// Whole minutes to go, rounded up and never below 1, so the countdown
-    /// never says "0 min" while the moon is still down.
-    private static func countdown(until date: Date, from now: Date) -> (shown: String, spoken: String) {
+    /// Whole minutes to `date`, rounded up, so a countdown never says
+    /// "0 min" while the moon is still down; `nil` under a minute away
+    /// ("rising now"). The card's countdown and the location-off guide row
+    /// (`LocationOffGuide`) both count this way, so they never disagree.
+    static func countdownMinutes(until date: Date, from now: Date) -> Int? {
         let interval = max(0, date.timeIntervalSince(now))
-        guard interval >= secondsPerMinute else { return (risingNowText, "rising now") }
-        let minutes = Int((interval / secondsPerMinute).rounded(.up))
+        guard interval >= secondsPerMinute else { return nil }
+        return Int((interval / secondsPerMinute).rounded(.up))
+    }
+
+    private static func countdown(until date: Date, from now: Date) -> (shown: String, spoken: String) {
+        guard let minutes = countdownMinutes(until: date, from: now) else { return (risingNowText, "rising now") }
         guard minutes >= 60 else { return ("in \(minutes) min", "rising in \(minutes) minutes") }
         let hours = minutes / 60
         let remainder = minutes % 60

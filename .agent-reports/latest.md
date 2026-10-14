@@ -1,6 +1,18 @@
+# Build 5.12b.2 part 2, guide logic: 2026-10-13
+
+Done (COMMIT, not pushed): pure `LocationOffGuide` (S2–S6 per §3.1: today only; 3 h / 60 min / under-a-minute /
++15 min rules; 5.11 up rule; this pass's rise; after-midnight next rise) and `LocationOffGuideFormatter` (copy;
+countdown wording in one function). Minutes use the card's rounding, now shared as
+`UpNowFormatter.countdownMinutes`. `CompassViewModel.locationGuide` updates on the card's existing 60 s clock. No UI
+yet. Tests 175/175 pass in Xcode; full suite not run. Notes: `.agent-reports/5.12b.2-row/findings.md` (part 2).
+
+Next: part 3 (row UI, avatars, DEBUG states, screenshots), then install.
+
+---
+
 # Build 5.12b.1b S1 polish: 2026-10-13
 
-Done (COMMIT, not pushed): PREVIEW is a plain gray word (no pill, capped at `.xxxLarge`); S1 title removed; the ghost
+Done (`cfa2db5`, not pushed): PREVIEW is a plain gray word (no pill, capped at `.xxxLarge`); S1 title removed; the ghost
 arc follows the sky (via south at or north of the equator, via north south of it; tested with Sydney); no rise and no
 set means no moon marker. Focused tests 136/136 pass in Xcode; full suite not run. Evidence:
 `.agent-reports/5.12b.2-row/` (part 1).

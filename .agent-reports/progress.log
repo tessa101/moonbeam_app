@@ -484,3 +484,6 @@
 19:24 5.12b.1b/5.12b.2: reading DECISIONS 5.12b.1b + LOCATION-OFF-FLOW §2-§4, §8
 19:26 part 1 (5.12b.1b): code + tests written; build-for-testing
 19:27 part 1: tests 136/136; S1 checked; committing
+19:27 part 1 committed cfa2db5; latest.md updated; starting part 2 (LocationOffGuide)
+19:29 part 2: LocationOffGuide + formatter + VM + tests written; build-for-testing
+19:30 part 2: tests 175/175; committing

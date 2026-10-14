@@ -159,6 +159,11 @@ final class CompassViewModel {
     /// moon if it's today and up. Empty wherever the prompt doesn't show.
     private(set) var ghostGeometry = CompassGhostGeometry.empty
 
+    /// The guide row's state after Maybe later (§3.1): S2 to S6 from the
+    /// moon's up/down (the compass's rule), this pass's rise and the next
+    /// one. Waiting wherever the prompt doesn't show.
+    private(set) var locationGuide = LocationOffGuide.waiting
+
     /// `nearbyText` in the Nearby state, else `nil`. Never a distance: with
     /// the city names, that would reveal roughly where someone is. Stored
     /// (not derived from `context`, which isn't observed) so moving between
@@ -283,6 +288,11 @@ final class CompassViewModel {
     /// The next moonrise while the moon is down, for Up now. Kept so the
     /// tick only looks it up again once it has passed.
     @ObservationIgnored private var nextRise: MoonEvent?
+
+    /// The next moonrise for the guide row while the moon is down, kept like
+    /// `nextRise` so the minute tick only looks it up again once it's a
+    /// minute past.
+    @ObservationIgnored private var guideNextRise: MoonEvent?
 
     /// Waits out the entrance's heading wait, then its settle.
     @ObservationIgnored private var entranceTask: Task<Void, Never>?
@@ -757,26 +767,57 @@ final class CompassViewModel {
 
     // MARK: - Ghost (LOCATION-OFF-FLOW.md §2)
 
-    /// The prompt's plain ring: the selected day's rise and set (only the
-    /// ones it has; an arc only with both), and the live moon if it's today
-    /// and up. Refreshed with the targets (the minute tick while the sensors
-    /// are off), so the moon moves on.
+    /// The prompt's plain ring and the guide row's state, from one moon
+    /// position. The ring: the selected day's rise and set (only the ones it
+    /// has; an arc only with both) and the live moon if it's today and up.
+    /// The row: today only. Refreshed with the targets, on the minute tick
+    /// that also keeps the card's guidance current while the sensors are off.
     private func updateGhost(at moment: Date) {
         var rise: Double?
         var set: Double?
         var moonAzimuth: Double?
         var crossesSouth = true
+        var guide = LocationOffGuide.waiting
         if showsLocationOffPrompt, let place = context.place, let moonDay = context.moonDay {
             crossesSouth = CompassGhostGeometry.crossesSouth(latitude: place.latitude)
             rise = moonDay.rise?.azimuth
             set = moonDay.set?.azimuth
             if context.isToday {
                 let position = moonService.moonPosition(for: place, at: moment)
-                if position.isUp { moonAzimuth = position.azimuth }
+                if position.isUp {
+                    moonAzimuth = position.azimuth
+                    guideNextRise = nil
+                }
+                guide = locationGuide(isMoonUp: position.isUp, place: place, at: moment)
+            } else {
+                guideNextRise = nil
             }
+        } else {
+            guideNextRise = nil
         }
         let geometry = CompassGhostGeometry(rise: rise, set: set, moonAzimuth: moonAzimuth, crossesSouth: crossesSouth)
         if geometry != ghostGeometry { ghostGeometry = geometry }
+        if guide != locationGuide { locationGuide = guide }
+    }
+
+    /// Today's guide state. Up: this pass's rise, as Up now's
+    /// `UpNow.Pass.riseTime` shows it. Down: the next rise, looked up again
+    /// only once it's a minute past (the moon may read down for a moment
+    /// at its rise, which `LocationOffGuide` counts as rising).
+    private func locationGuide(isMoonUp: Bool, place: Place, at moment: Date) -> LocationOffGuide {
+        var passRise: Date?
+        if isMoonUp {
+            passRise = moonService.moonPass(for: place, containing: moment)?.rise.date
+        } else if guideNextRise.map({ moment > $0.date.addingTimeInterval(Self.passLookupDelayAfterRise) }) ?? true {
+            guideNextRise = moonService.nextMoonrise(for: place, after: moment)
+        }
+        return LocationOffGuide.state(
+            now: moment,
+            isToday: true,
+            isMoonUp: isMoonUp,
+            passRise: passRise,
+            nextRise: isMoonUp ? nil : guideNextRise?.date
+        )
     }
 
     // MARK: - Up now (COMPASS-1.1.md §3)
