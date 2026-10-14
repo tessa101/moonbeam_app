@@ -1,5 +1,7 @@
 # Status & Handoff
 
+_Step 5.12b.3a part 1, 2026-10-13 (LOCATION-OFF-FLOW.md §5.3): S1 now sits inside the row's outlined card (`LocationOffCard`, one container; ghost 180 pt; no title; 381 pt expanded, 78 pt collapsed on iPhone 17). Plain swap still; before-recording shows a 1-frame cut each way. Focused tests 152/152 pass. Evidence: `.agent-reports/5.12b.3a-container/`. Next: part 2, the collapse/expand transition._
+
 _Step 5.12b.2, 2026-10-13 (LOCATION-OFF-FLOW.md §3): the location-off guide row is real. `LocationOffGuide` gives S2–S6 (today only; 3 h / 60 min / under-a-minute / +15 min; this pass's rise; after-midnight rise) on the card's 60 s clock with the card's minute rounding; `CompassGuideRow` draws them with the prepared calico PNGs (sleeping S2, searching S3–S6). DEBUG `-screenState locationGuide.s2…s6`. Focused tests 251/251 pass in Xcode; full suite not run. Evidence: `.agent-reports/5.12b.2-row/`. Not built: §3.3 VoiceOver focus moves (with 5.12b.3). Next: 5.12b.3 transitions._
 
 _Step 5.12b.1b, 2026-10-13 (LOCATION-OFF-FLOW.md §8): PREVIEW is a plain gray word (no pill, stops at `.xxxLarge`); S1 has no title; the ghost arc goes via south north of the equator, via north south of it; no rise and no set means no marker. Focused tests 136/136 pass in Xcode._

@@ -1,6 +1,18 @@
+# Build 5.12b.3a part 1, S1 in the card: 2026-10-13
+
+Done (COMMIT, not pushed): S1 and the row are one outlined card (`LocationOffCard`). Expanded: ghost 180 pt, 20 pt from
+the top, body 12 under it (no title), Turn On Location, Maybe later; **381 pt** on iPhone 17 (spec estimate about 386).
+Collapsed: the card is the 78 pt row (one border; warm fill for S3–S6). Plain swap still; flag, reopen, S2–S6 and the
+restricted chip unchanged. Focused tests 152/152 pass in Xcode; full suite not run. Screenshots (default, AX3, row)
+and the "before" frame analysis (1-frame cut each way): `.agent-reports/5.12b.3a-container/`.
+
+Next: part 2 (the collapse/expand transition), then install.
+
+---
+
 # Build 5.12b.2 part 3, guide row UI: 2026-10-13
 
-Done (COMMIT, not pushed): the real guide row. S2 is quiet (sleeping calico, hairline border, gray chevron); S3–S6 are
+Done (`6e113a3`, not pushed): the real guide row. S2 is quiet (sleeping calico, hairline border, gray chevron); S3–S6 are
 warm (awake calico, #211A1F fill, warm border, amber subtitle and chevron). Avatars are the prepared PNGs in
 `Illustrations.xcassets/locationGuide` (Original, decorative). One button, label = title + subtitle, hint "Shows the
 moon compass preview."; wraps at AX sizes; tap reopens S1. DEBUG `-screenState locationGuide.s2…s6`. Focused tests
@@ -13,7 +25,7 @@ Earlier today: 5.12b.1b (`cfa2db5`) S1 polish, and 5.12b.2 part 2 (`4326dc0`) gu
 - countdown wording "2 hr 15 min" vs the card's "2h 15m" (one function to change)
 - not built yet: the §3.3 VoiceOver focus moves, which go with the 5.12b.3 transitions
 
-Device: INSTALL.
+Device: Debug build of `6e113a3` installed on the T2 iPhone (devicectl, first try). Xcode run destination back on T2 iPhone.
 
 Next: Tessa checks S1 and the row on the phone, then 5.12b.3 (transitions).
 

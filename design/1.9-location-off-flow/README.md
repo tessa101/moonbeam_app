@@ -60,7 +60,12 @@ A single tappable row placed where S1 was. Padding 12 / 16 / 12 / 12, corner rad
 Background #1B1519 · Text #F5EADB · Muted #B9A898 · Amber #F2C27B · Hairline #3A2E35 · Warm border #4A3A2E · Warm fill #211A1F · Chevron muted #6E5C66
 Fonts: Young Serif, Nunito Sans, IBM Plex Mono. All are already in the app.
 
+## Transition
+S1 now lives inside the row's outlined card, and the prompt collapses into the row (and expands back) with the compass scaling down into the avatar. See **TRANSITION.md** for the layout and timing, and option 1d in `Location Off Transitions.dc.html`. Where TRANSITION.md and the S1 spec above disagree on layout, follow TRANSITION.md.
+
 ## Files
+- `TRANSITION.md`: the collapse and expand spec (option 1d).
+- `Location Off Transitions.dc.html`: working reference for the transition options; build **1d**.
 - `Location Off Flow.dc.html`: all six states, the rules table and the asset preview.
 - `assets/sleeping.svg`: the new sleeping cat (final).
 - `assets/searching.svg`: the awake cat (existing).

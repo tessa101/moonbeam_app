@@ -13,7 +13,8 @@ import SwiftUI
 /// 2026-10-13, 5.12b.1 follow-up).
 ///
 /// Drawn in the handoff's 260-unit space (`CompassGhostGeometry`) and scaled
-/// to 210 pt, so every size below is in those units.
+/// to 180 pt inside the location-off card (§5.3), so every size below is in
+/// those units.
 ///
 /// Reduce Motion, the app in the background and the art scrolled out of view
 /// all show the still 0° frame rather than a paused timeline, by
@@ -32,7 +33,7 @@ struct CompassGhost: View {
     // MARK: - Constants (design 1.9, in 260-unit space unless noted)
 
     /// On screen, in points.
-    static let artSize: CGFloat = 210
+    static let artSize: CGFloat = 180
     private static let scale = artSize / CompassGhostGeometry.space
     private static let layerOpacity = 0.42
     /// In points, applied after the scale.

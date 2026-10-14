@@ -1645,3 +1645,15 @@ and no set: no marker. Evidence: `.agent-reports/5.12b.2-row/` (part 1).
   decorative images. DEBUG `-screenState locationGuide.s2…s6`.
 - Not built: the §3.3 VoiceOver focus moves (with 5.12b.3). Evidence: `.agent-reports/5.12b.2-row/`.
 
+
+### 2026-10-13 — 5.12b.3: prompt and row become one resizing card ("One container", option 1d)
+
+Tessa's video of the S1 ↔ row swap (60 fps) shows three one-frame cuts. The designer's new handoff (`design/1.9-location-off-flow/TRANSITION.md`, option 1d) puts S1 inside the row's outlined card and collapses it into the row over about 740 ms: the buttons and body slide down and fade, the ring shrinks into the avatar slot while the card collapses to the row's height, and the cat, text and chevron fade in. Expand is the same timeline mirrored. Adopted as written, with two changes: S1's title stays removed (so its track and its space go, card about 386 pt expanded instead of 420), and the compass travel is derived from real geometry. Reduce Motion: a 200 ms crossfade plus the height change. Split of 5.12b.3: **3a** this transition, **3b** the location off to on swap and the VoiceOver focus moves. Spec: `docs/LOCATION-OFF-FLOW.md` §5.3, §5.4.
+
+### 2026-10-13 — 5.12b.3a part 1: S1 inside the card
+
+`LocationOffCard` is the one container: S1 expanded (ghost 180 pt, no title) and the row collapsed. The card owns the
+border, warm fill and corners (24/20); `CompassGuideRow` is content only. Measured on iPhone 17: **381 pt** expanded
+(spec estimate about 386; our CTA and the body's line height are a little shorter than the mock's) and 78 pt
+collapsed. Still a plain swap. The before-recording shows it as a 1-frame cut each way.
+

@@ -152,12 +152,63 @@ Everything on the app's existing timings, not new ones:
   as `CompassEntrance` already does). No blank gap, and the height change eases with the fade rather than jumping.
 - **On to off:** the dial out 200 ms, then the prompt/row in 300 ms with the rise, never both at full opacity.
   Sensors stop as now (visibility, not the animation, decides that).
-- **S1 to row, row to S1:** crossfade with a height collapse/expand, about 250 ms (handoff), ease-in-out. The block
-  below (none today, then the DEBUG readout) moves with it, so nothing pops. Reduce Motion: crossfade only.
+- **S1 to row, row to S1:** the "One container" transition of §5.3 (supersedes the earlier ~250 ms crossfade).
 - **Launch / place change / date step** keep their current load-ins (LOADER.md §12); only the swap changes.
 - Fade and height share one animation so the scroll content never jumps under the user's finger.
 
-### 5.3 Tests / evidence
+### 5.3 Prompt ↔ row: "One container" (design option 1d; Tessa, 2026-10-13)
+
+Source: `design/1.9-location-off-flow/TRANSITION.md` and `Location Off Transitions.dc.html` option 1d (Replay; slow
+motion 3x to study). Where it disagrees with the S1 spec above, it wins, **except for the title**: Tessa removed S1's
+title, so the title track and its space are dropped here.
+
+**Why:** the video `preview_transition.MP4` (60 fps) shows S1 → row and row → S1 each change in **one frame**, three
+cuts in six seconds, and everything below jumps with them.
+
+**Layout change to S1.** S1 sits inside the same outlined card as the row, so the two states are one container that
+resizes: 350 pt wide (screen width − 40), 1 pt border #3A2E35, no fill, content clipped to the card; corner radius
+**24 expanded → 20 collapsed**. The ghost is **180 pt** here (not 210), centred, 20 pt from the card's top. Collapsed,
+the card *is* the row (same border). Heights are the content's own (so Dynamic Type works), animated between the two
+measured values; the mock's numbers are 420 expanded (with a title) and 78 collapsed. Without the title, expect about
+386 expanded (proposed; derived: the body moves up 34 pt, to 212, the CTA to 270, Maybe later to 330).
+
+**Collapse** (tap Maybe later). Every track eases with **cubic-bezier(0.32, 0.72, 0, 1)**
+(`UnitCurve.bezier(startControlPoint: (0.32, 0.72), endControlPoint: (0, 1))`). Times in ms from the tap:
+
+| Element | Start | Dur | From → To |
+|---|---|---|---|
+| Maybe later | 0 | 180 | opacity 1→0, y 0→+10 |
+| Turn On Location | 20 | 180 | opacity 1→0, y 0→+10 |
+| Body | 40 | 180 | opacity 1→0, y 0→+10 |
+| PREVIEW word | 0 | 140 | opacity 1→0 |
+| **Compass** | 60 | 560 | scale 1→0.2889 (52/180) and move so its centre lands on the avatar centre (39, 39 in the card); opacity holds at 1 until 60% of the move, then →0 |
+| Card height | 60 | 560 | expanded → 78 (collapsed row height) |
+| Card corner radius | 60 | 560 | 24 → 20 |
+| Avatar (sleeping cat, or the awake one in S3 to S6) | 400 | 320 | opacity 0→1, scale 0.85→1 |
+| Row title + subtitle | 440 | 300 | opacity 0→1, x −8→0 |
+| Chevron | 480 | 260 | opacity 0→1 |
+
+(The mock's title track, 60 ms start / 180 ms, is dropped.) Total about 740 ms. The compass scaling into the avatar
+slot is the hero move. Derive the compass's move from the real geometry (avatar centre minus compass centre), not the
+mock's (−136, −71).
+
+**Expand** (tap the row): the same timeline mirrored, each track starting at 740 − (start + duration) with its from
+and to swapped: chevron, text and avatar fade out first; the card grows and the ring scales up out of the avatar spot;
+then body, Turn On Location and Maybe later fade in last (bottom-most last).
+
+### 5.4 Rules for the One-container transition
+
+- The ghost's rotation loop keeps running through the move.
+- Taps on the prompt's buttons are disabled once a collapse starts, and on the row until the transition finishes
+  (no interruption or reversing mid-way; it's 740 ms).
+- **Reduce Motion:** a 200 ms crossfade plus the height change; no scale move, no offsets.
+- The row keeps the current state's copy and avatar (S2, or S3 to S6); expanding never changes the row's state.
+- Content below the card (the DEBUG readout today) moves with the card's height on the same curve, so nothing pops.
+- VoiceOver: focus moves as in §3.3 once the transition ends (Maybe later → the row; row → S1's body).
+- Timing and the state (which layer is shown, which taps are live) are pure and unit-tested; the animation is driven
+  from one source (a progress value or keyframes), not a stack of unrelated delays, so the tracks can't drift.
+
+### 5.5 Tests / evidence
 
 - Pure timing constants and the state machine (which block is shown, when) in unit tests.
 - Frame evidence: a screen recording of the three moments in §5.1 before and after, extracted at 60 fps (frame
@@ -169,7 +220,8 @@ Everything on the app's existing timings, not new ones:
   reset), replace the cartoon compass (delete `CompassTeaser*` and `compassTeaser_*`). Row not yet built: Maybe later
   swaps to a placeholder S2 row without the countdown, to be completed next.
 - **5.12b.2** The row: S2 to S6, state logic + formatter + tests, avatars, tap to reopen S1.
-- **5.12b.3** Transitions per §5, with the before/after frame report.
+- **5.12b.3a** S1 in a card + the prompt/row "One container" transition (§5.3, §5.4). Reproduce-and-diff first.
+- **5.12b.3b** The location off to on swap (§5.1 and §5.2 above), plus the VoiceOver focus moves (§3.3).
 
 ## 7. Open
 

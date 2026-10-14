@@ -491,3 +491,11 @@
 19:31 part 3: row UI, imagesets, DEBUG states written; build-for-testing
 19:33 part 3: S2-S6 captured; AX3 S4 via device interaction
 19:35 part 3: tests 251/251; S2-S6 + AX3 captured; avatar made decorative; committing
+19:35 part 3 committed 6e113a3; building Debug for T2 iPhone
+19:36 installed 6e113a3 Debug on T2 iPhone; latest.md updated; stopped
+20:17 5.12b.3a: reading DECISIONS 5.12b.3, LOCATION-OFF-FLOW §5.3-5.5, TRANSITION.md
+20:19 part 1: LocationOffCard written; building
+20:22 part 1: S1 card 381 pt, row 78 pt measured; AX3 via device interaction
+20:25 part 2 prep: recording 'before' (plain swap)
+20:26 part 2: before = two 1-frame cuts (frames 1035, 1751 @60fps)
+20:26 part 1: committing

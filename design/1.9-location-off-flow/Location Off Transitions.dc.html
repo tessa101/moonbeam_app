@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link href="https://fonts.googleapis.com/css2?family=Young+Serif&family=Nunito+Sans:opsz,wght@6..12,400;6..12,600;6..12,700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<style>body{margin:0;background:#140F13;font-family:'Nunito Sans',sans-serif;color:#F5EADB}a{color:#F2C27B}a:hover{color:#F5EADB}</style>
+</helmet>
+<section data-screen-label="Transitions · text" style="background:#140F13;padding:64px 64px 24px;display:flex;flex-direction:column;gap:40px;width:1426px;box-sizing:border-box;border-bottom:1px solid #2A2026">
+  <header style="display:flex;flex-direction:column;gap:10px;max-width:900px">
+    <div style="font:500 12px/1 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:#F2C27B">Round 2 · text that carries across</div>
+    <div style="font:400 36px/1.15 'Young Serif',serif">1a and 1d, with a title that travels</div>
+    <div style="font:400 16px/1.5 'Nunito Sans',sans-serif;color:#B9A898;text-wrap:pretty;max-width:780px">Both states now share a headline: <b style="color:#F5EADB">Compass guide is ready</b> in the prompt, <b style="color:#F5EADB">Compass guide is waiting</b> in the row. The title slides and shrinks into the row's title spot and only the last word changes. To make that work, the row title uses Young Serif like the prompt title. Based on <a href="#1a">1a</a> and <a href="#1d">1d</a>.</div>
+  </header>
+  <div style="display:flex;flex-wrap:wrap;gap:40px 28px;align-items:flex-start">
+    <sc-for list="{{ opts2 }}" as="o" hint-placeholder-count="2">
+      <div id="{{ o.id }}" style="width:430px;display:flex;flex-direction:column;gap:14px">
+        <div style="display:flex;gap:10px;align-items:center"><span style="font:500 12px/1 'IBM Plex Mono',monospace;color:#F2C27B;border:1px solid #4A3A2E;border-radius:999px;padding:4px 9px">{{ o.id }}</span><span style="font:600 12px/1 'Nunito Sans',sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#9C8B7E">{{ o.tag }}</span></div>
+        <div id="ph{{ o.id }}" style="width:390px;height:820px;border-radius:44px;background:#1B1519;border:1px solid #2A2026;overflow:hidden;box-sizing:border-box;padding:58px 20px 0;display:flex;flex-direction:column;gap:20px;position:relative">
+          <div style="position:absolute;top:18px;left:34px;font:600 16px/1 'Nunito Sans',sans-serif">7:38</div>
+          <div style="font:400 26px/1.25 'Young Serif',serif;padding:0 4px">Where can I find<br>the moon <span style="color:#F2C27B;text-decoration:underline;text-underline-offset:6px;text-decoration-color:rgba(242,194,123,.55)">today</span><br>in <span style="color:#F2C27B;text-decoration:underline;text-underline-offset:6px;text-decoration-color:rgba(242,194,123,.55)">Irvine, CA</span>?</div>
+          <div style="border:1px solid #3A2E35;border-radius:24px;padding:16px 18px;display:flex;flex-direction:column;gap:14px">
+            <div style="display:flex;gap:14px;align-items:center"><div style="width:44px;height:44px;border-radius:22px;background:#120D10;box-shadow:inset -4px 0 0 #F7E7BD,0 0 18px rgba(242,194,123,.18);flex-shrink:0"></div><div style="display:flex;flex-direction:column;gap:4px"><div style="font:400 13px/1 'Nunito Sans',sans-serif;color:#B9A898">Today · Tue, Oct 13</div><div style="font:600 16px/20px 'Nunito Sans',sans-serif;white-space:nowrap">Waxing Crescent · 13% lit</div></div></div>
+            <div style="height:1px;background:#3A2E35"></div>
+            <div style="display:flex;justify-content:space-between;gap:12px"><div style="display:flex;flex-direction:column;gap:6px"><div style="font:400 13px/16px 'Nunito Sans',sans-serif;color:#B9A898">↑ Moonrise</div><div style="font:400 24px/28px 'Young Serif',serif;white-space:nowrap">10:02 <span style="font-size:15px">AM</span></div><div style="font:400 13px/16px 'Nunito Sans',sans-serif;color:#F2C27B">120° ESE</div></div><div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end"><div style="font:400 13px/16px 'Nunito Sans',sans-serif;color:#B9A898">↓ Moonset</div><div style="font:400 24px/28px 'Young Serif',serif;white-space:nowrap">7:57 <span style="font-size:15px">PM</span></div><div style="font:400 13px/16px 'Nunito Sans',sans-serif;color:#F2C27B">239° WSW</div></div></div>
+          </div>
+
+          <sc-if value="{{ o.is2a }}" hint-placeholder-val="{{ false }}">
+            <div data-k="stage" style="position:relative;width:350px;height:420px;flex-shrink:0;overflow:hidden">
+              <div data-k="compass" style="position:absolute;left:70px;top:0;width:210px;height:210px">
+                <svg viewBox="0 0 260 260" width="210" height="210" style="opacity:.42;filter:blur(1.2px)"><line x1="130" y1="0" x2="130" y2="34" stroke="#F5EADB" stroke-width="4" stroke-linecap="round"></line><g><animateTransform attributeName="transform" type="rotate" dur="12s" repeatCount="indefinite" values="0 130 130;-70 130 130;-70 130 130;40 130 130;40 130 130;0 130 130" keyTimes="0;.25;.4;.65;.8;1" calcMode="spline" keySplines=".45 0 .55 1;.45 0 .55 1;.45 0 .55 1;.45 0 .55 1;.45 0 .55 1"></animateTransform><circle cx="130" cy="130" r="104" fill="none" stroke="#5E4D57" stroke-width="2"></circle><path d="M224.3 174 A104 104 0 0 1 37.3 177.2" fill="none" stroke="#F2C27B" stroke-width="4" stroke-linecap="round"></path><circle cx="224.3" cy="174" r="6" fill="#F2C27B"></circle><circle cx="37.3" cy="177.2" r="6" fill="#F2C27B"></circle><circle cx="94.4" cy="227.7" r="16" fill="#F2C27B" opacity=".3"></circle><circle cx="94.4" cy="227.7" r="10" fill="#F7E7BD"></circle><text x="130" y="44" text-anchor="middle" font-family="Nunito Sans" font-weight="700" font-size="14" fill="#B9A898">N</text></g></svg>
+                <div data-k="pill" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center"><div style="font:500 11px/1 'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:#F2C27B;background:#1B1519;border:1px solid #4A3A2E;border-radius:999px;padding:7px 11px">Preview</div></div>
+              </div>
+              <div style="position:absolute;left:0;top:220px;width:350px;text-align:center"><span data-k="tw" style="display:inline-block;transform-origin:0 0;font:400 20px/26px 'Young Serif',serif;white-space:nowrap">Compass guide is <span data-k="w1">ready</span></span></div>
+              <div data-k="body" style="position:absolute;left:25px;top:256px;width:300px;font:400 15px/1.45 'Nunito Sans',sans-serif;color:#B9A898;text-align:center;text-wrap:pretty">She just needs your location to point the right way.</div>
+              <div data-k="cta" style="position:absolute;left:0;top:316px;width:350px;height:56px;box-sizing:border-box;border-radius:28px;background:#2A2127;border:1px solid #3F323A;display:flex;align-items:center;justify-content:center;font:600 18px/1 'Nunito Sans',sans-serif">Turn On Location</div>
+              <div data-k="later" onClick="{{ o.later }}" style="position:absolute;left:0;top:376px;width:350px;height:44px;display:flex;align-items:center;justify-content:center;font:600 16px/1 'Nunito Sans',sans-serif;color:#B9A898;cursor:pointer">Maybe later</div>
+              <div data-k="row" style="position:absolute;left:0;top:0;width:350px;height:78px;box-sizing:border-box;border:1px solid #3A2E35;border-radius:20px;opacity:0"></div>
+              <div data-k="av" style="position:absolute;left:13px;top:13px;width:52px;height:52px;border-radius:26px;overflow:hidden;opacity:0"><img src="assets/sleeping.svg" alt="" style="position:absolute;width:62.4px;height:62.4px;left:-5.8px;top:-5.2px;max-width:none"></img></div>
+              <div data-k="rtitle" style="position:absolute;left:79px;top:17px;font:400 17px/22px 'Young Serif',serif;white-space:nowrap;opacity:0">Compass guide is <span data-k="w2" style="opacity:0">waiting</span></div><div data-k="rsub" style="position:absolute;left:79px;top:43px;font:400 13px/17px 'Nunito Sans',sans-serif;color:#B9A898;opacity:0">Tap whenever you want directions</div>
+              <div data-k="chev" style="position:absolute;right:16px;top:0;height:78px;display:flex;align-items:center;font:400 24px/1 'Nunito Sans',sans-serif;color:#6E5C66;opacity:0">›</div>
+              <div data-k="hit" onClick="{{ o.hit }}" style="position:absolute;left:0;top:0;width:350px;height:78px;cursor:pointer;pointer-events:none"></div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ o.is2b }}" hint-placeholder-val="{{ false }}">
+            <div data-k="stage" style="position:relative;width:350px;height:420px;flex-shrink:0;overflow:hidden">
+              <div data-k="frame" style="position:absolute;inset:0;box-sizing:border-box;border:1px solid #3A2E35;border-radius:24px"></div>
+              <div data-k="compass" style="position:absolute;left:85px;top:20px;width:180px;height:180px">
+                <svg viewBox="0 0 260 260" width="180" height="180" style="opacity:.42;filter:blur(1.2px)"><line x1="130" y1="0" x2="130" y2="34" stroke="#F5EADB" stroke-width="4" stroke-linecap="round"></line><g><animateTransform attributeName="transform" type="rotate" dur="12s" repeatCount="indefinite" values="0 130 130;-70 130 130;-70 130 130;40 130 130;40 130 130;0 130 130" keyTimes="0;.25;.4;.65;.8;1" calcMode="spline" keySplines=".45 0 .55 1;.45 0 .55 1;.45 0 .55 1;.45 0 .55 1;.45 0 .55 1"></animateTransform><circle cx="130" cy="130" r="104" fill="none" stroke="#5E4D57" stroke-width="2"></circle><path d="M224.3 174 A104 104 0 0 1 37.3 177.2" fill="none" stroke="#F2C27B" stroke-width="4" stroke-linecap="round"></path><circle cx="224.3" cy="174" r="6" fill="#F2C27B"></circle><circle cx="37.3" cy="177.2" r="6" fill="#F2C27B"></circle><circle cx="94.4" cy="227.7" r="16" fill="#F2C27B" opacity=".3"></circle><circle cx="94.4" cy="227.7" r="10" fill="#F7E7BD"></circle><text x="130" y="44" text-anchor="middle" font-family="Nunito Sans" font-weight="700" font-size="14" fill="#B9A898">N</text></g></svg>
+                <div data-k="pill" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center"><div style="font:500 11px/1 'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:#F2C27B;background:#1B1519;border:1px solid #4A3A2E;border-radius:999px;padding:7px 11px">Preview</div></div>
+              </div>
+              <div style="position:absolute;left:0;top:212px;width:350px;text-align:center"><span data-k="tw" style="display:inline-block;transform-origin:0 0;font:400 20px/26px 'Young Serif',serif;white-space:nowrap">Compass guide is <span data-k="w1">ready</span></span></div>
+              <div data-k="body" style="position:absolute;left:25px;top:246px;width:300px;font:400 15px/1.45 'Nunito Sans',sans-serif;color:#B9A898;text-align:center;text-wrap:pretty">She just needs your location to point the right way.</div>
+              <div data-k="cta" style="position:absolute;left:20px;top:304px;width:310px;height:56px;box-sizing:border-box;border-radius:28px;background:#2A2127;border:1px solid #3F323A;display:flex;align-items:center;justify-content:center;font:600 18px/1 'Nunito Sans',sans-serif">Turn On Location</div>
+              <div data-k="later" onClick="{{ o.later }}" style="position:absolute;left:20px;top:364px;width:310px;height:44px;display:flex;align-items:center;justify-content:center;font:600 16px/1 'Nunito Sans',sans-serif;color:#B9A898;cursor:pointer">Maybe later</div>
+              <div data-k="av" style="position:absolute;left:13px;top:13px;width:52px;height:52px;border-radius:26px;overflow:hidden;opacity:0"><img src="assets/sleeping.svg" alt="" style="position:absolute;width:62.4px;height:62.4px;left:-5.8px;top:-5.2px;max-width:none"></img></div>
+              <div data-k="rtitle" style="position:absolute;left:79px;top:17px;font:400 17px/22px 'Young Serif',serif;white-space:nowrap;opacity:0">Compass guide is <span data-k="w2" style="opacity:0">waiting</span></div><div data-k="rsub" style="position:absolute;left:79px;top:43px;font:400 13px/17px 'Nunito Sans',sans-serif;color:#B9A898;opacity:0">Tap whenever you want directions</div>
+              <div data-k="chev" style="position:absolute;right:16px;top:0;height:78px;display:flex;align-items:center;font:400 24px/1 'Nunito Sans',sans-serif;color:#6E5C66;opacity:0">›</div>
+              <div data-k="hit" onClick="{{ o.hit }}" style="position:absolute;left:0;top:0;width:350px;height:78px;cursor:pointer;pointer-events:none"></div>
+            </div>
+          </sc-if>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;width:390px">
+          <div style="font:400 19px/1.25 'Young Serif',serif">{{ o.title }}</div>
+          <div onClick="{{ o.replay }}" style="flex-shrink:0;font:600 13px/1 'Nunito Sans',sans-serif;color:#F2C27B;border:1px solid #4A3A2E;border-radius:999px;padding:8px 14px;cursor:pointer" style-hover="background:#211A1F">Replay</div>
+        </div>
+        <div style="font:400 14px/1.45 'Nunito Sans',sans-serif;color:#B9A898;text-wrap:pretty;width:390px">{{ o.desc }}</div>
+      </div>
+    </sc-for>
+  </div>
+</section>
+<section data-screen-label="Transitions" style="background:#140F13;padding:64px;display:flex;flex-direction:column;gap:40px;width:1426px;box-sizing:border-box">
+  <header style="display:flex;flex-direction:column;gap:10px;max-width:900px">
+    <div style="font:500 12px/1 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:#F2C27B">Location off · prompt ↔ row transitions</div>
+    <div style="font:400 36px/1.15 'Young Serif',serif">Getting from the compass prompt to the row and back</div>
+    <div style="font:400 16px/1.5 'Nunito Sans',sans-serif;color:#B9A898;text-wrap:pretty;max-width:780px">On each phone, tap <b style="color:#F5EADB">Maybe later</b> to collapse the prompt and tap the row to expand it again, or press Replay. 1a to 1c use only the elements we already have. 1d to 1f change the design a little so the two states share more. Use Tweaks to slow everything down.</div>
+  </header>
+  <div style="display:flex;flex-wrap:wrap;gap:40px 28px;align-items:flex-start">
+    <sc-for list="{{ opts }}" as="o" hint-placeholder-count="6">
+      <div id="{{ o.id }}" style="width:430px;display:flex;flex-direction:column;gap:14px">
+        <div style="display:flex;gap:10px;align-items:center"><span style="font:500 12px/1 'IBM Plex Mono',monospace;color:#F2C27B;border:1px solid #4A3A2E;border-radius:999px;padding:4px 9px">{{ o.id }}</span><span style="font:600 12px/1 'Nunito Sans',sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#9C8B7E">{{ o.tag }}</span></div>
+        <div id="ph{{ o.id }}" style="width:390px;height:820px;border-radius:44px;background:#1B1519;border:1px solid #2A2026;overflow:hidden;box-sizing:border-box;padding:58px 20px 0;display:flex;flex-direction:column;gap:20px;position:relative">
+          <div style="position:absolute;top:18px;left:34px;font:600 16px/1 'Nunito Sans',sans-serif">7:38</div>
+          <div style="font:400 26px/1.25 'Young Serif',serif;padding:0 4px">Where can I find<br>the moon <span style="color:#F2C27B;text-decoration:underline;text-underline-offset:6px;text-decoration-color:rgba(242,194,123,.55)">today</span><br>in <span style="color:#F2C27B;text-decoration:underline;text-underline-offset:6px;text-decoration-color:rgba(242,194,123,.55)">Irvine, CA</span>?</div>
+          <div style="border:1px solid #3A2E35;border-radius:24px;padding:16px 18px;display:flex;flex-direction:column;gap:14px">
+            <div style="display:flex;gap:14px;align-items:center"><div style="width:44px;height:44px;border-radius:22px;background:#120D10;box-shadow:inset -4px 0 0 #F7E7BD,0 0 18px rgba(242,194,123,.18);flex-shrink:0"></div><div style="display:flex;flex-direction:column;gap:4px"><div style="font:400 13px/1 'Nunito Sans',sans-serif;color:#B9A898">Today · Tue, Oct 13</div><div style="font:600 16px/20px 'Nunito Sans',sans-serif;white-space:nowrap">Waxing Crescent · 13% lit</div></div></div>
+            <div style="height:1px;background:#3A2E35"></div>
+            <div style="display:flex;justify-content:space-between;gap:12px"><div style="display:flex;flex-direction:column;gap:6px"><div style="font:400 13px/16px 'Nunito Sans',sans-serif;color:#B9A898">↑ Moonrise</div><div style="font:400 24px/28px 'Young Serif',serif;white-space:nowrap">10:02 <span style="font-size:15px">AM</span></div><div style="font:400 13px/16px 'Nunito Sans',sans-serif;color:#F2C27B">120° ESE</div></div><div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end"><div style="font:400 13px/16px 'Nunito Sans',sans-serif;color:#B9A898">↓ Moonset</div><div style="font:400 24px/28px 'Young Serif',serif;white-space:nowrap">7:57 <span style="font-size:15px">PM</span></div><div style="font:400 13px/16px 'Nunito Sans',sans-serif;color:#F2C27B">239° WSW</div></div></div>
+          </div>
+
+          <sc-if value="{{ o.is1a }}" hint-placeholder-val="{{ false }}">
+            <div data-k="stage" style="position:relative;width:350px;height:420px;flex-shrink:0;overflow:hidden">
+              <div data-k="compass" style="position:absolute;left:70px;top:0;width:210px;height:210px">
+                <svg viewBox="0 0 260 260" width="210" height="210" style="opacity:.42;filter:blur(1.2px)"><line x1="130" y1="0" x2="130" y2="34" stroke="#F5EADB" stroke-width="4" stroke-linecap="round"></line><g><animateTransform attributeName="transform" type="rotate" dur="12s" repeatCount="indefinite" values="0 130 130;-70 130 130;-70 130 130;40 130 130;40 130 130;0 130 130" keyTimes="0;.25;.4;.65;.8;1" calcMode="spline" keySplines=".45 0 .55 1;.45 0 .55 1;.45 0 .55 1;.45 0 .55 1;.45 0 .55 1"></animateTransform><circle cx="130" cy="130" r="104" fill="none" stroke="#5E4D57" stroke-width="2"></circle><path d="M224.3 174 A104 104 0 0 1 37.3 177.2" fill="none" stroke="#F2C27B" stroke-width="4" stroke-linecap="round"></path><circle cx="224.3" cy="174" r="6" fill="#F2C27B"></circle><circle cx="37.3" cy="177.2" r="6" fill="#F2C27B"></circle><circle cx="94.4" cy="227.7" r="16" fill="#F2C27B" opacity=".3"></circle><circle cx="94.4" cy="227.7" r="10" fill="#F7E7BD"></circle><text x="130" y="44" text-anchor="middle" font-family="Nunito Sans" font-weight="700" font-size="14" fill="#B9A898">N</text></g></svg>
+                <div data-k="pill" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center"><div style="font:500 11px/1 'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:#F2C27B;background:#1B1519;border:1px solid #4A3A2E;border-radius:999px;padding:7px 11px">Preview</div></div>
+              </div>
+              <div data-k="title" style="position:absolute;left:0;top:220px;width:350px;font:400 20px/26px 'Young Serif',serif;text-align:center">Your moon compass is ready</div>
+              <div data-k="body" style="position:absolute;left:25px;top:256px;width:300px;font:400 15px/1.45 'Nunito Sans',sans-serif;color:#B9A898;text-align:center;text-wrap:pretty">It just needs to know where you are to point the right way.</div>
+              <div data-k="cta" style="position:absolute;left:0;top:316px;width:350px;height:56px;box-sizing:border-box;border-radius:28px;background:#2A2127;border:1px solid #3F323A;display:flex;align-items:center;justify-content:center;font:600 18px/1 'Nunito Sans',sans-serif">Turn On Location</div>
+              <div data-k="later" onClick="{{ o.later }}" style="position:absolute;left:0;top:376px;width:350px;height:44px;display:flex;align-items:center;justify-content:center;font:600 16px/1 'Nunito Sans',sans-serif;color:#B9A898;cursor:pointer">Maybe later</div>
+              <div data-k="row" style="position:absolute;left:0;top:0;width:350px;height:78px;box-sizing:border-box;border:1px solid #3A2E35;border-radius:20px;opacity:0"></div>
+              <div data-k="av" style="position:absolute;left:13px;top:13px;width:52px;height:52px;border-radius:26px;overflow:hidden;opacity:0"><img src="assets/sleeping.svg" alt="" style="position:absolute;width:62.4px;height:62.4px;left:-5.8px;top:-5.2px;max-width:none"></img></div>
+              <div data-k="rtext" style="position:absolute;left:79px;top:0;right:44px;height:78px;display:flex;flex-direction:column;justify-content:center;gap:4px;opacity:0"><div style="font:600 16px/1.2 'Nunito Sans',sans-serif">Compass guide is waiting</div><div style="font:400 13px/1.3 'Nunito Sans',sans-serif;color:#B9A898">Tap whenever you want directions</div></div>
+              <div data-k="chev" style="position:absolute;right:16px;top:0;height:78px;display:flex;align-items:center;font:400 24px/1 'Nunito Sans',sans-serif;color:#6E5C66;opacity:0">›</div>
+              <div data-k="hit" onClick="{{ o.hit }}" style="position:absolute;left:0;top:0;width:350px;height:78px;cursor:pointer;pointer-events:none"></div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ o.is1b }}" hint-placeholder-val="{{ false }}">
+            <div data-k="stage" style="position:relative;width:350px;height:420px;flex-shrink:0;overflow:hidden">
+              <div data-k="compass" style="position:absolute;left:70px;top:0;width:210px;height:210px">
+                <svg viewBox="0 0 260 260" width="210" height="210" style="opacity:.42;filter:blur(1.2px)"><line x1="130" y1="0" x2="130" y2="34" stroke="#F5EADB" stroke-width="4" stroke-linecap="round"></line><g><animateTransform attributeName="transform" type="rotate" dur="12s" repeatCount="indefinite" values="0 130 130;-70 130 130;-70 130 130;40 130 130;40 130 130;0 130 130" keyTimes="0;.25;.4;.65;.8;1" calcMode="spline" keySplines=".45 0 .55 1;.45 0 .55 1;.45 0 .55 1;.45 0 .55 1;.45 0 .55 1"></animateTransform><circle cx="130" cy="130" r="104" fill="none" stroke="#5E4D57" stroke-width="2"></circle><path d="M224.3 174 A104 104 0 0 1 37.3 177.2" fill="none" stroke="#F2C27B" stroke-width="4" stroke-linecap="round"></path><circle cx="224.3" cy="174" r="6" fill="#F2C27B"></circle><circle cx="37.3" cy="177.2" r="6" fill="#F2C27B"></circle><circle cx="94.4" cy="227.7" r="16" fill="#F2C27B" opacity=".3"></circle><circle cx="94.4" cy="227.7" r="10" fill="#F7E7BD"></circle><text x="130" y="44" text-anchor="middle" font-family="Nunito Sans" font-weight="700" font-size="14" fill="#B9A898">N</text></g></svg>
+                <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center"><div style="font:500 11px/1 'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:#F2C27B;background:#1B1519;border:1px solid #4A3A2E;border-radius:999px;padding:7px 11px">Preview</div></div>
+              </div>
+              <div data-k="title" style="position:absolute;left:0;top:220px;width:350px;font:400 20px/26px 'Young Serif',serif;text-align:center">Your moon compass is ready</div>
+              <div data-k="body" style="position:absolute;left:25px;top:256px;width:300px;font:400 15px/1.45 'Nunito Sans',sans-serif;color:#B9A898;text-align:center;text-wrap:pretty">It just needs to know where you are to point the right way.</div>
+              <div data-k="shape" style="position:absolute;left:0;top:316px;width:350px;height:56px;box-sizing:border-box;border-radius:28px;background-color:#2A2127;border:1px solid #3F323A"></div>
+              <div data-k="ctaLabel" style="position:absolute;left:0;top:316px;width:350px;height:56px;display:flex;align-items:center;justify-content:center;font:600 18px/1 'Nunito Sans',sans-serif">Turn On Location</div>
+              <div data-k="later" onClick="{{ o.later }}" style="position:absolute;left:0;top:376px;width:350px;height:44px;display:flex;align-items:center;justify-content:center;font:600 16px/1 'Nunito Sans',sans-serif;color:#B9A898;cursor:pointer">Maybe later</div>
+              <div data-k="av" style="position:absolute;left:13px;top:13px;width:52px;height:52px;border-radius:26px;overflow:hidden;opacity:0"><img src="assets/sleeping.svg" alt="" style="position:absolute;width:62.4px;height:62.4px;left:-5.8px;top:-5.2px;max-width:none"></img></div>
+              <div data-k="rtext" style="position:absolute;left:79px;top:0;right:44px;height:78px;display:flex;flex-direction:column;justify-content:center;gap:4px;opacity:0"><div style="font:600 16px/1.2 'Nunito Sans',sans-serif">Compass guide is waiting</div><div style="font:400 13px/1.3 'Nunito Sans',sans-serif;color:#B9A898">Tap whenever you want directions</div></div>
+              <div data-k="chev" style="position:absolute;right:16px;top:0;height:78px;display:flex;align-items:center;font:400 24px/1 'Nunito Sans',sans-serif;color:#6E5C66;opacity:0">›</div>
+              <div data-k="hit" onClick="{{ o.hit }}" style="position:absolute;left:0;top:0;width:350px;height:78px;cursor:pointer;pointer-events:none"></div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ o.is1c }}" hint-placeholder-val="{{ false }}">
+            <div data-k="stage" style="position:relative;width:350px;height:420px;flex-shrink:0;overflow:hidden">
+              <div data-k="compass" style="position:absolute;left:70px;top:0;width:210px;height:210px">
+                <svg viewBox="0 0 260 260" width="210" height="210" style="opacity:.42;filter:blur(1.2px)"><line x1="130" y1="0" x2="130" y2="34" stroke="#F5EADB" stroke-width="4" stroke-linecap="round"></line><g><animateTransform attributeName="transform" type="rotate" dur="12s" repeatCount="indefinite" values="0 130 130;-70 130 130;-70 130 130;40 130 130;40 130 130;0 130 130" keyTimes="0;.25;.4;.65;.8;1" calcMode="spline" keySplines=".45 0 .55 1;.45 0 .55 1;.45 0 .55 1;.45 0 .55 1;.45 0 .55 1"></animateTransform><circle cx="130" cy="130" r="104" fill="none" stroke="#5E4D57" stroke-width="2"></circle><path d="M224.3 174 A104 104 0 0 1 37.3 177.2" fill="none" stroke="#F2C27B" stroke-width="4" stroke-linecap="round"></path><circle cx="224.3" cy="174" r="6" fill="#F2C27B"></circle><circle cx="37.3" cy="177.2" r="6" fill="#F2C27B"></circle><circle cx="94.4" cy="227.7" r="16" fill="#F2C27B" opacity=".3"></circle><circle cx="94.4" cy="227.7" r="10" fill="#F7E7BD"></circle><text x="130" y="44" text-anchor="middle" font-family="Nunito Sans" font-weight="700" font-size="14" fill="#B9A898">N</text></g></svg>
+                <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center"><div style="font:500 11px/1 'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:#F2C27B;background:#1B1519;border:1px solid #4A3A2E;border-radius:999px;padding:7px 11px">Preview</div></div>
+              </div>
+              <div data-k="title" style="position:absolute;left:0;top:220px;width:350px;font:400 20px/26px 'Young Serif',serif;text-align:center">Your moon compass is ready</div>
+              <div data-k="body" style="position:absolute;left:25px;top:256px;width:300px;font:400 15px/1.45 'Nunito Sans',sans-serif;color:#B9A898;text-align:center;text-wrap:pretty">It just needs to know where you are to point the right way.</div>
+              <div data-k="cta" style="position:absolute;left:0;top:316px;width:350px;height:56px;box-sizing:border-box;border-radius:28px;background:#2A2127;border:1px solid #3F323A;display:flex;align-items:center;justify-content:center;font:600 18px/1 'Nunito Sans',sans-serif">Turn On Location</div>
+              <div data-k="later" onClick="{{ o.later }}" style="position:absolute;left:0;top:376px;width:350px;height:44px;display:flex;align-items:center;justify-content:center;font:600 16px/1 'Nunito Sans',sans-serif;color:#B9A898;cursor:pointer">Maybe later</div>
+              <div data-k="row" style="position:absolute;left:0;top:0;width:350px;height:78px;box-sizing:border-box;border:1px solid #3A2E35;border-radius:20px;opacity:0"></div>
+              <div data-k="av" style="position:absolute;left:13px;top:13px;width:52px;height:52px;border-radius:26px;overflow:hidden;opacity:0"><img src="assets/sleeping.svg" alt="" style="position:absolute;width:62.4px;height:62.4px;left:-5.8px;top:-5.2px;max-width:none"></img></div>
+              <div data-k="rtext" style="position:absolute;left:79px;top:0;right:44px;height:78px;display:flex;flex-direction:column;justify-content:center;gap:4px;opacity:0"><div style="font:600 16px/1.2 'Nunito Sans',sans-serif">Compass guide is waiting</div><div style="font:400 13px/1.3 'Nunito Sans',sans-serif;color:#B9A898">Tap whenever you want directions</div></div>
+              <div data-k="chev" style="position:absolute;right:16px;top:0;height:78px;display:flex;align-items:center;font:400 24px/1 'Nunito Sans',sans-serif;color:#6E5C66;opacity:0">›</div>
+              <div data-k="hit" onClick="{{ o.hit }}" style="position:absolute;left:0;top:0;width:350px;height:78px;cursor:pointer;pointer-events:none"></div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ o.is1d }}" hint-placeholder-val="{{ false }}">
+            <div data-k="stage" style="position:relative;width:350px;height:420px;flex-shrink:0;overflow:hidden">
+              <div data-k="frame" style="position:absolute;inset:0;box-sizing:border-box;border:1px solid #3A2E35;border-radius:24px"></div>
+              <div data-k="compass" style="position:absolute;left:85px;top:20px;width:180px;height:180px">
+                <svg viewBox="0 0 260 260" width="180" height="180" style="opacity:.42;filter:blur(1.2px)"><line x1="130" y1="0" x2="130" y2="34" stroke="#F5EADB" stroke-width="4" stroke-linecap="round"></line><g><animateTransform attributeName="transform" type="rotate" dur="12s" repeatCount="indefinite" values="0 130 130;-70 130 130;-70 130 130;40 130 130;40 130 130;0 130 130" keyTimes="0;.25;.4;.65;.8;1" calcMode="spline" keySplines=".45 0 .55 1;.45 0 .55 1;.45 0 .55 1;.45 0 .55 1;.45 0 .55 1"></animateTransform><circle cx="130" cy="130" r="104" fill="none" stroke="#5E4D57" stroke-width="2"></circle><path d="M224.3 174 A104 104 0 0 1 37.3 177.2" fill="none" stroke="#F2C27B" stroke-width="4" stroke-linecap="round"></path><circle cx="224.3" cy="174" r="6" fill="#F2C27B"></circle><circle cx="37.3" cy="177.2" r="6" fill="#F2C27B"></circle><circle cx="94.4" cy="227.7" r="16" fill="#F2C27B" opacity=".3"></circle><circle cx="94.4" cy="227.7" r="10" fill="#F7E7BD"></circle><text x="130" y="44" text-anchor="middle" font-family="Nunito Sans" font-weight="700" font-size="14" fill="#B9A898">N</text></g></svg>
+                <div data-k="pill" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center"><div style="font:500 11px/1 'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:#F2C27B;background:#1B1519;border:1px solid #4A3A2E;border-radius:999px;padding:7px 11px">Preview</div></div>
+              </div>
+              <div data-k="title" style="position:absolute;left:0;top:212px;width:350px;font:400 20px/26px 'Young Serif',serif;text-align:center">Your moon compass is ready</div>
+              <div data-k="body" style="position:absolute;left:25px;top:246px;width:300px;font:400 15px/1.45 'Nunito Sans',sans-serif;color:#B9A898;text-align:center;text-wrap:pretty">It just needs to know where you are to point the right way.</div>
+              <div data-k="cta" style="position:absolute;left:20px;top:304px;width:310px;height:56px;box-sizing:border-box;border-radius:28px;background:#2A2127;border:1px solid #3F323A;display:flex;align-items:center;justify-content:center;font:600 18px/1 'Nunito Sans',sans-serif">Turn On Location</div>
+              <div data-k="later" onClick="{{ o.later }}" style="position:absolute;left:20px;top:364px;width:310px;height:44px;display:flex;align-items:center;justify-content:center;font:600 16px/1 'Nunito Sans',sans-serif;color:#B9A898;cursor:pointer">Maybe later</div>
+              <div data-k="av" style="position:absolute;left:13px;top:13px;width:52px;height:52px;border-radius:26px;overflow:hidden;opacity:0"><img src="assets/sleeping.svg" alt="" style="position:absolute;width:62.4px;height:62.4px;left:-5.8px;top:-5.2px;max-width:none"></img></div>
+              <div data-k="rtext" style="position:absolute;left:79px;top:0;right:44px;height:78px;display:flex;flex-direction:column;justify-content:center;gap:4px;opacity:0"><div style="font:600 16px/1.2 'Nunito Sans',sans-serif">Compass guide is waiting</div><div style="font:400 13px/1.3 'Nunito Sans',sans-serif;color:#B9A898">Tap whenever you want directions</div></div>
+              <div data-k="chev" style="position:absolute;right:16px;top:0;height:78px;display:flex;align-items:center;font:400 24px/1 'Nunito Sans',sans-serif;color:#6E5C66;opacity:0">›</div>
+              <div data-k="hit" onClick="{{ o.hit }}" style="position:absolute;left:0;top:0;width:350px;height:78px;cursor:pointer;pointer-events:none"></div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ o.is1e }}" hint-placeholder-val="{{ false }}">
+            <div data-k="stage" style="position:relative;width:350px;height:420px;flex-shrink:0;overflow:hidden">
+              <div data-k="compass" style="position:absolute;left:70px;top:0;width:210px;height:210px">
+                <svg viewBox="0 0 260 260" width="210" height="210" style="opacity:.42;filter:blur(1.2px)"><line x1="130" y1="0" x2="130" y2="34" stroke="#F5EADB" stroke-width="4" stroke-linecap="round"></line><g><animateTransform attributeName="transform" type="rotate" dur="12s" repeatCount="indefinite" values="0 130 130;-70 130 130;-70 130 130;40 130 130;40 130 130;0 130 130" keyTimes="0;.25;.4;.65;.8;1" calcMode="spline" keySplines=".45 0 .55 1;.45 0 .55 1;.45 0 .55 1;.45 0 .55 1;.45 0 .55 1"></animateTransform><circle cx="130" cy="130" r="104" fill="none" stroke="#5E4D57" stroke-width="2"></circle><path d="M224.3 174 A104 104 0 0 1 37.3 177.2" fill="none" stroke="#F2C27B" stroke-width="4" stroke-linecap="round"></path><circle cx="224.3" cy="174" r="6" fill="#F2C27B"></circle><circle cx="37.3" cy="177.2" r="6" fill="#F2C27B"></circle><circle cx="94.4" cy="227.7" r="16" fill="#F2C27B" opacity=".3"></circle><circle cx="94.4" cy="227.7" r="10" fill="#F7E7BD"></circle><text x="130" y="44" text-anchor="middle" font-family="Nunito Sans" font-weight="700" font-size="14" fill="#B9A898">N</text></g></svg>
+              </div>
+              <div data-k="title" style="position:absolute;left:0;top:220px;width:350px;font:400 20px/26px 'Young Serif',serif;text-align:center">Your moon compass is ready</div>
+              <div data-k="body" style="position:absolute;left:25px;top:256px;width:300px;font:400 15px/1.45 'Nunito Sans',sans-serif;color:#B9A898;text-align:center;text-wrap:pretty">She just needs to know where you are to point the right way.</div>
+              <div data-k="cta" style="position:absolute;left:0;top:316px;width:350px;height:56px;box-sizing:border-box;border-radius:28px;background:#2A2127;border:1px solid #3F323A;display:flex;align-items:center;justify-content:center;font:600 18px/1 'Nunito Sans',sans-serif">Turn On Location</div>
+              <div data-k="later" onClick="{{ o.later }}" style="position:absolute;left:0;top:376px;width:350px;height:44px;display:flex;align-items:center;justify-content:center;font:600 16px/1 'Nunito Sans',sans-serif;color:#B9A898;cursor:pointer">Maybe later</div>
+              <div data-k="row" style="position:absolute;left:0;top:0;width:350px;height:78px;box-sizing:border-box;border:1px solid #3A2E35;border-radius:20px;opacity:0"></div>
+              <div data-k="av" style="position:absolute;left:13px;top:13px;width:52px;height:52px;transform:translate(136px,66px) scale(1.25)">
+                <div data-k="avA" style="position:absolute;inset:0;border-radius:26px;overflow:hidden"><img src="assets/searching.svg" alt="" style="width:52px;height:68px;display:block;margin-top:-6px"></img></div>
+                <div data-k="avS" style="position:absolute;inset:0;border-radius:26px;overflow:hidden;opacity:0"><img src="assets/sleeping.svg" alt="" style="position:absolute;width:62.4px;height:62.4px;left:-5.8px;top:-5.2px;max-width:none"></img></div>
+              </div>
+              <div data-k="rtext" style="position:absolute;left:79px;top:0;right:44px;height:78px;display:flex;flex-direction:column;justify-content:center;gap:4px;opacity:0"><div style="font:600 16px/1.2 'Nunito Sans',sans-serif">Compass guide is waiting</div><div style="font:400 13px/1.3 'Nunito Sans',sans-serif;color:#B9A898">Tap whenever you want directions</div></div>
+              <div data-k="chev" style="position:absolute;right:16px;top:0;height:78px;display:flex;align-items:center;font:400 24px/1 'Nunito Sans',sans-serif;color:#6E5C66;opacity:0">›</div>
+              <div data-k="hit" onClick="{{ o.hit }}" style="position:absolute;left:0;top:0;width:350px;height:78px;cursor:pointer;pointer-events:none"></div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ o.is1f }}" hint-placeholder-val="{{ false }}">
+            <div data-k="stage" style="position:relative;width:350px;height:430px;flex-shrink:0;overflow:hidden">
+              <div data-k="frame" style="position:absolute;inset:0;box-sizing:border-box;border:1px solid #4A3A2E;border-radius:20px"></div>
+              <div style="position:absolute;left:13px;top:13px;width:52px;height:52px">
+                <div style="position:absolute;inset:0;border-radius:26px;overflow:hidden"><img src="assets/sleeping.svg" alt="" style="position:absolute;width:62.4px;height:62.4px;left:-5.8px;top:-5.2px;max-width:none"></img></div>
+              </div>
+              <div style="position:absolute;left:79px;top:0;right:44px;height:78px;display:flex;flex-direction:column;justify-content:center;gap:4px"><div style="font:600 16px/1.2 'Nunito Sans',sans-serif">Compass guide is waiting</div><div style="font:400 13px/1.3 'Nunito Sans',sans-serif;color:#B9A898">Tap whenever you want directions</div></div>
+              <div data-k="chev" style="position:absolute;right:14px;top:27px;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font:400 24px/1 'Nunito Sans',sans-serif;color:#6E5C66;transform:rotate(90deg)">›</div>
+              <div data-k="div" style="position:absolute;left:16px;right:16px;top:78px;height:1px;background:#3A2E35"></div>
+              <div data-k="compass" style="position:absolute;left:95px;top:90px;width:160px;height:160px">
+                <svg viewBox="0 0 260 260" width="160" height="160" style="opacity:.42;filter:blur(1.2px)"><line x1="130" y1="0" x2="130" y2="34" stroke="#F5EADB" stroke-width="4" stroke-linecap="round"></line><g><animateTransform attributeName="transform" type="rotate" dur="12s" repeatCount="indefinite" values="0 130 130;-70 130 130;-70 130 130;40 130 130;40 130 130;0 130 130" keyTimes="0;.25;.4;.65;.8;1" calcMode="spline" keySplines=".45 0 .55 1;.45 0 .55 1;.45 0 .55 1;.45 0 .55 1;.45 0 .55 1"></animateTransform><circle cx="130" cy="130" r="104" fill="none" stroke="#5E4D57" stroke-width="2"></circle><path d="M224.3 174 A104 104 0 0 1 37.3 177.2" fill="none" stroke="#F2C27B" stroke-width="4" stroke-linecap="round"></path><circle cx="224.3" cy="174" r="6" fill="#F2C27B"></circle><circle cx="37.3" cy="177.2" r="6" fill="#F2C27B"></circle><circle cx="94.4" cy="227.7" r="16" fill="#F2C27B" opacity=".3"></circle><circle cx="94.4" cy="227.7" r="10" fill="#F7E7BD"></circle><text x="130" y="44" text-anchor="middle" font-family="Nunito Sans" font-weight="700" font-size="14" fill="#B9A898">N</text></g></svg>
+                <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center"><div style="font:500 11px/1 'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:#F2C27B;background:#1B1519;border:1px solid #4A3A2E;border-radius:999px;padding:7px 11px">Preview</div></div>
+              </div>
+              <div data-k="body" style="position:absolute;left:25px;top:260px;width:300px;font:400 15px/1.45 'Nunito Sans',sans-serif;color:#B9A898;text-align:center;text-wrap:pretty">It just needs to know where you are to point the right way.</div>
+              <div data-k="cta" style="position:absolute;left:16px;top:318px;width:318px;height:56px;box-sizing:border-box;border-radius:28px;background:#2A2127;border:1px solid #3F323A;display:flex;align-items:center;justify-content:center;font:600 18px/1 'Nunito Sans',sans-serif">Turn On Location</div>
+              <div data-k="later" onClick="{{ o.later }}" style="position:absolute;left:16px;top:376px;width:318px;height:44px;display:flex;align-items:center;justify-content:center;font:600 16px/1 'Nunito Sans',sans-serif;color:#B9A898;cursor:pointer">Maybe later</div>
+              <div data-k="hit" onClick="{{ o.hit }}" style="position:absolute;left:0;top:0;width:350px;height:78px;cursor:pointer"></div>
+            </div>
+          </sc-if>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;width:390px">
+          <div style="font:400 19px/1.25 'Young Serif',serif">{{ o.title }}</div>
+          <div onClick="{{ o.replay }}" style="flex-shrink:0;font:600 13px/1 'Nunito Sans',sans-serif;color:#F2C27B;border:1px solid #4A3A2E;border-radius:999px;padding:8px 14px;cursor:pointer" style-hover="background:#211A1F">Replay</div>
+        </div>
+        <div style="font:400 14px/1.45 'Nunito Sans',sans-serif;color:#B9A898;text-wrap:pretty;width:390px">{{ o.desc }}</div>
+      </div>
+    </sc-for>
+  </div>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;slowmo&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:1,&quot;min&quot;:1,&quot;max&quot;:4,&quot;step&quot;:0.5,&quot;unit&quot;:&quot;×&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Playback&quot;},&quot;autoplay&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Playback&quot;}}">
+const EZ='cubic-bezier(.32,.72,0,1)';
+const out=(dy)=>[{opacity:1,transform:'translateY(0px)'},{opacity:0,transform:`translateY(${dy}px)`}];
+const fin=(from)=>[{opacity:0,transform:from},{opacity:1,transform:'none'}];
+const O=[{opacity:0},{opacity:1}], X=[{opacity:1},{opacity:0}];
+const rowIn=(t)=>[['row',O,280,t],['av',fin('scale(.85)'),320,t+20],['rtext',fin('translateX(-8px)'),300,t+60],['chev',O,260,t+100]];
+const STEPS={
+  '1a':[['later',out(10),180,0],['cta',out(10),180,20],['body',out(10),180,40],['title',out(10),180,60],['pill',X,140,0],
+    ['compass',[{transform:'translate(0px,0px) scale(1)',opacity:1},{opacity:1,offset:.6},{transform:'translate(-136px,-66px) scale(.2476)',opacity:0}],560,60],
+    ['stage',[{height:'420px'},{height:'78px'}],560,60],...rowIn(380)],
+  '1b':[['later',X,140,0],['body',X,160,20],['title',X,160,40],['ctaLabel',X,120,0],['compass',[{opacity:1,transform:'scale(1)'},{opacity:0,transform:'scale(.92)'}],220,0],
+    ['shape',[{top:'316px',height:'56px',borderRadius:'28px',backgroundColor:'#2A2127',borderColor:'#3F323A'},{top:'0px',height:'78px',borderRadius:'20px',backgroundColor:'rgba(42,33,39,0)',borderColor:'#3A2E35'}],600,60],
+    ['stage',[{height:'420px'},{height:'78px'}],600,60],['av',fin('scale(.85)'),300,420],['rtext',fin('translateX(-8px)'),300,450],['chev',O,260,480]],
+  '1c':[['later',out(-12),220,0],['cta',out(-12),220,40],['body',out(-12),220,80],['title',out(-12),220,120],
+    ['compass',[{opacity:1,transform:'scale(1)'},{opacity:0,transform:'translateY(-12px) scale(.96)'}],260,150],
+    ['stage',[{height:'420px'},{height:'78px'}],520,120],
+    ['row',fin('translateY(14px)'),360,380],['av',fin('translateY(14px)'),360,400],['rtext',fin('translateY(14px)'),360,420],['chev',fin('translateY(14px)'),360,440]],
+  '1d':[['later',out(10),180,0],['cta',out(10),180,20],['body',out(10),180,40],['title',out(10),180,60],['pill',X,140,0],
+    ['compass',[{transform:'translate(0px,0px) scale(1)',opacity:1},{opacity:1,offset:.6},{transform:'translate(-136px,-71px) scale(.2889)',opacity:0}],560,60],
+    ['frame',[{borderRadius:'24px'},{borderRadius:'20px'}],560,60],
+    ['stage',[{height:'420px'},{height:'78px'}],560,60],['av',fin('scale(.85)'),320,400],['rtext',fin('translateX(-8px)'),300,440],['chev',O,260,480]],
+  '1e':[['later',out(10),180,0],['cta',out(10),180,20],['body',out(10),180,40],['title',out(10),180,60],
+    ['compass',[{transform:'translate(0px,0px) scale(1)',opacity:1},{opacity:1,offset:.5},{transform:'translate(-136px,-66px) scale(.2476)',opacity:0}],560,60],
+    ['av',[{transform:'translate(136px,66px) scale(1.25)'},{transform:'translate(0px,0px) scale(1)'}],560,60],
+    ['avA',X,320,480],['avS',O,320,480],
+    ['stage',[{height:'420px'},{height:'78px'}],560,60],['row',O,280,400],['rtext',fin('translateX(-8px)'),300,440],['chev',O,260,480]],
+  '1f':[['later',out(-16),200,0],['cta',out(-16),200,30],['body',out(-16),200,60],['compass',[{opacity:1,transform:'scale(1)'},{opacity:0,transform:'translateY(-16px) scale(.94)'}],240,80],['div',X,200,120],
+    ['stage',[{height:'430px'},{height:'78px'}],560,60],['chev',[{transform:'rotate(90deg)'},{transform:'rotate(0deg)'}],460,60],
+    ['frame',[{borderColor:'#4A3A2E'},{borderColor:'#3A2E35'}],460,60]]
+};
+const META=[
+  ['1a','Existing elements','Ring becomes the avatar','The compass ring shrinks into the avatar circle while the sleeping cat fades in. They’re both circles, so the ring reads as the thing she curled up in.'],
+  ['1b','Existing elements','Button becomes the row','The Turn On Location pill stretches up into the row’s outline. Tapping the row drops it back down into the button, so the way back always lands on the action.'],
+  ['1c','Existing elements','Fold and settle','The baseline. The prompt folds away from the bottom up and the row rises in. Nothing is shared; it relies on timing alone, so it’s the cheapest to build.'],
+  ['1d','Design tweak · prompt in a card','One container','The prompt sits in the same outlined card as the row, so the card simply shrinks. The ring lands in the avatar slot as in 1a. Most continuous, but it adds a box on the home screen.'],
+  ['1e','Design tweak · cat replaces the Preview pill','She was there all along','The awake cat sits in the compass centre. On dismiss she rides the ring down into the avatar and falls asleep. On expand she wakes and carries it back up. The cat ties the two states together.'],
+  ['1f','Design tweak · row is the header','The row never leaves','The row stays at the top in both states and the prompt opens beneath it like a drawer. The header keeps the waiting state either way; only the chevron turns. Tap the header to toggle.']
+];
+const TXT=(src,topY,base)=>root=>{const tw=root.querySelector('[data-k="tw"]');const dx=79-(tw.offsetLeft+tw.parentElement.offsetLeft), dy=17-topY;
+  return [...src.filter(s=>!['title','rtext'].includes(s[0])),
+   ['tw',[{transform:'translate(0px,0px) scale(1)',opacity:1},{transform:`translate(${dx}px,${dy}px) scale(.85)`,opacity:1,offset:.97},{transform:`translate(${dx}px,${dy}px) scale(.85)`,opacity:0}],560,60],
+   ['w1',X,180,360],['rtitle',[{opacity:0},{opacity:0,offset:.97},{opacity:1}],560,60],['w2',O,240,620],['rsub',fin('translateY(6px)'),300,520]];};
+const rev=f=>f.slice().reverse().map(k=>k.offset!=null?{...k,offset:1-k.offset}:k);
+STEPS['2a']=TXT(STEPS['1a'],220);STEPS['2b']=TXT(STEPS['1d'],212);
+const META2=[['2a','From 1a · ring to avatar','Ring + travelling title','The ring lands in the avatar as in 1a, and the title glides into the row at the same time, so "ready" turns into "waiting" in place.'],
+ ['2b','From 1d · one container','Card + travelling title','1d’s single card, with the same title move. Container, ring and headline all carry across, so the two states read as one object.']];
+class Component extends DCLogic {
+  col={}; busy={};
+  componentDidMount(){this.sync();}
+  componentDidUpdate(){this.sync();}
+  componentWillUnmount(){clearInterval(this.t);}
+  sync(){const on=!!this.props.autoplay, k=this.props.slowmo??1;
+    if(on&&this.tk!==k){clearInterval(this.t);this.tk=k;this.t=setInterval(()=>[...META,...META2].forEach(([id])=>this.run(id,!this.col[id])),(1100+1600*k));}
+    if(!on&&this.t){clearInterval(this.t);this.t=null;this.tk=null;}}
+  run(id,collapse){
+    const root=document.getElementById('ph'+id); if(!root||this.busy[id]||!!this.col[id]===collapse) return Promise.resolve();
+    this.busy[id]=true; const k=this.props.slowmo??1; const S=STEPS[id]; const st=typeof S==='function'?S(root):S; const T=Math.max(...st.map(s=>s[2]+s[3]));
+    const anims=st.map(([key,fr,d,dl])=>{const el=root.querySelector(`[data-k="${key}"]`); if(!el) return null;
+      return el.animate(collapse?fr:rev(fr),{duration:d*k,delay:(collapse?dl:T-(dl+d))*k,easing:EZ,fill:'both'});}).filter(Boolean);
+    return Promise.all(anims.map(a=>a.finished)).then(()=>{anims.forEach(a=>{try{a.commitStyles()}catch(e){} a.cancel();});
+      this.col[id]=collapse; this.busy[id]=false;
+      const q=s=>root.querySelector(`[data-k="${s}"]`);
+      ['later','cta'].forEach(s=>{const e=q(s); if(e) e.style.pointerEvents=collapse?'none':'auto';});
+      const h=q('hit'); if(h&&id!=='1f') h.style.pointerEvents=collapse?'auto':'none';});
+  }
+  hit(id){ if(this.col[id]) this.run(id,false); else if(id==='1f') this.run(id,true); }
+  replay(id){ const c=!!this.col[id]; this.run(id,!c).then(()=>setTimeout(()=>this.run(id,c),700*(this.props.slowmo??1))); }
+  renderVals(){
+    const mk=([id,tag,title,desc])=>({id,tag,title,desc,['is'+id]:true,later:()=>this.run(id,true), hit:()=>this.hit(id), replay:()=>this.replay(id)});
+    return { opts2: META2.map(mk), opts: META.map(([id,tag,title,desc])=>({id,tag,title,desc,['is'+id]:true,
+      later:()=>this.run(id,true), hit:()=>this.hit(id), replay:()=>this.replay(id)})) };
+  }
+}
+</script>
+</body>
+</html>
