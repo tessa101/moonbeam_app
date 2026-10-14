@@ -1,16 +1,27 @@
-# TestFlight build 10 preparation: 2026-10-14 (in progress)
+# TestFlight build 10 preparation: 2026-10-14 (ready to archive)
 
-Done: `docs/LOCATION-SHEET.md` unstaged (working copy == HEAD, nothing lost). CLAUDE.md already says "862 tests /
-1287 cases" (`9db2b21`), so no new Docs commit was needed. `c205672` Release: bump build to 10 (app target Debug +
-Release; tests target unchanged at 1; MARKETING_VERSION stays 0.1).
+Commits (not pushed): `c205672` Release: bump build to 10 (app Debug + Release; tests target stays 1;
+MARKETING_VERSION stays 0.1). `3dc28b7` reports. `5cefc1e` Docs: `docs/TESTFLIGHT-BUILD-10.md`, STATUS (item 7,
+sizing + simplification done), DECISIONS (5° ticks closed). Cleanup: `docs/LOCATION-SHEET.md` unstaged (working copy
+== HEAD). CLAUDE.md already said 862 tests / 1287 cases (`9db2b21`), so no commit for that.
 
-Next: full suite in Xcode (iPhone 17), Release build, Release/plist checks, then docs (TESTFLIGHT-BUILD-10.md,
-STATUS, DECISIONS).
+Verify: full suite in Xcode (iPhone 17) **1287/1287 pass**. Release build (generic iOS, unsigned) **BUILD SUCCEEDED**
+in 19 s. **One new warning** vs a Release build of `d9eba76`: `LocationScreen.swift:348` 'contentSpace' main-actor
+static in a Sendable closure (from `45c2717`; not fixed). Bundle: Moon Signal, 0.1 (10), iOS 26.0, encryption false,
+PrivacyInfo present; DEBUG code absent; Show onboarding / Forget saved place / BuildChannel present.
 
-Open: untracked `design/d2-luminous-calico/sleeping/` waiting on Tessa (not committed, not deleted).
-`docs/STEP-5.10a-TELESCOPE-REDRAW.md` left as a working-tree change, as asked. Nothing pushed, no archive.
+Cleanup survey: no new TODOs, prints or commented-out code in this session's changes. Left as is (from earlier):
+`MoonTableSpike.run()` still runs at every launch in Release and prints to the console (`moonbeam_appApp.swift:30`);
+untracked `moonbeam-app/moonbeam-app/.DS_Store` (ignored).
+
+Left uncommitted: `docs/STEP-5.10a-TELESCOPE-REDRAW.md` (as asked); `design/d2-luminous-calico/sleeping/` (question
+for Tessa). Not done: archive, upload, push (Tessa's).
+
+Open for Tessa: the telescope correction says the shipping art (Option A) isn't the one she wanted; ship anyway or
+hold? Fix the new warning before archiving? Keep or drop the sleeping/ folder?
 
 ---
+
 
 # Test: deflake compass entrance timing tests: 2026-10-14
 
