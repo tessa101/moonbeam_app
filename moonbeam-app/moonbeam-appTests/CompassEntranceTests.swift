@@ -102,6 +102,9 @@ struct CompassEntranceTests {
         private var waiters: [CheckedContinuation<Void, any Error>] = []
         private(set) var requestedDurations: [Duration] = []
 
+        /// A wait has started: `fire()` now ends it (not before its task runs).
+        var isWaiting: Bool { !waiters.isEmpty }
+
         func sleep(_ duration: Duration) async throws {
             requestedDurations.append(duration)
             try await withCheckedThrowingContinuation { waiters.append($0) }
@@ -159,8 +162,14 @@ struct CompassEntranceTests {
 
     /// Heading delivered, settle waited out: the compass is live.
     private func settle(_ harness: Harness, at heading: Double) async {
+        // The heading wait first, so the next request is the settle's own.
+        // Both waits are 0.5 s, and the superseded heading wait stays
+        // pending, so neither `isWaiting` nor the duration tells them apart.
+        await waitUntil { harness.entrance.isWaiting }
+        let requestsBefore = harness.entrance.requestedDurations.count
         harness.heading.send(Self.reading(heading))
         await waitUntil { harness.viewModel.heading == heading }
+        await waitUntil { harness.entrance.requestedDurations.count > requestsBefore }
         harness.entrance.fire()
         await waitUntil { harness.viewModel.entrance.phase == .settled }
     }
@@ -193,8 +202,9 @@ struct CompassEntranceTests {
     // MARK: - Phases
 
     @Test("Waits for the first heading, out of sight, readout held")
-    func waitsForHeading() {
+    func waitsForHeading() async {
         let harness = Self.makeRunningHarness()
+        await waitUntil { harness.entrance.isWaiting }
 
         #expect(harness.viewModel.entrance.phase == .waitingForHeading)
         #expect(!harness.viewModel.entrance.showsCompass)
@@ -232,6 +242,7 @@ struct CompassEntranceTests {
     func lateHeadingTurnsFromNorthUp() async {
         let harness = Self.makeRunningHarness()
 
+        await waitUntil { harness.entrance.isWaiting }
         harness.entrance.fire()
         await waitUntil { harness.viewModel.entrance.phase == .noHeading }
         #expect(harness.viewModel.entrance.showsCompass)
