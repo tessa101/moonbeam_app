@@ -46,13 +46,14 @@ struct SearchSheet: View {
                         viewModel.query = ""
                     }
                     .labelStyle(.iconOnly)
-                    .foregroundStyle(.secondary)
+                    .buttonStyle(.inline(.secondary))
                 }
             }
 
             Button("Cancel") {
                 dismiss()
             }
+            .buttonStyle(.inline)
         }
     }
 
@@ -67,6 +68,9 @@ struct SearchSheet: View {
                         Button("Use my location", systemImage: "location") {
                             viewModel.useMyLocation()
                         }
+                        // The row style leaves the color to the label; keep the tint.
+                        .foregroundStyle(.tint)
+                        .buttonStyle(.row)
                     }
                 }
                 recentsSection(recents)
@@ -96,6 +100,7 @@ struct SearchSheet: View {
                     } label: {
                         placeLabel(title: place.shortName, detail: place.displayName)
                     }
+                    .buttonStyle(.row)
                     .accessibilityLabel(place.displayName)
                 }
                 .onDelete { offsets in
@@ -113,6 +118,7 @@ struct SearchSheet: View {
         } label: {
             placeLabel(title: suggestion.title, detail: suggestion.subtitle)
         }
+        .buttonStyle(.row)
         .accessibilityElement(children: .combine)
     }
 
