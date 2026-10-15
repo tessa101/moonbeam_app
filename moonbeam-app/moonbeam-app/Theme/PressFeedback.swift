@@ -10,6 +10,10 @@ import SwiftUI
 /// slight shrink and dim while the finger is down, and a quick spring back.
 /// With Reduce Motion it only dims.
 ///
+/// The look is held for at least `PressHold.minimum` (100 ms) even if the
+/// finger lifts sooner, so an ordinary tap shows it (STEP-5.13 §4). With
+/// Reduce Motion the dim is held the same way. The action isn't delayed.
+///
 /// Applied by the button styles (`.pressFeedback(isPressed:)`), never by a
 /// view, so every button picks it up from its style.
 struct PressFeedback: ViewModifier {
@@ -17,6 +21,7 @@ struct PressFeedback: ViewModifier {
     let isPressed: Bool
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var hold = PressHold()
 
     // MARK: - Constants (proposed; tune on device)
 
@@ -44,8 +49,19 @@ struct PressFeedback: ViewModifier {
             // the tapped chevron from a stale header position.
             .animation(Self.animation) { content in
                 content
-                    .scaleEffect(Self.scale(isPressed: isPressed, reduceMotion: reduceMotion))
-                    .opacity(Self.opacity(isPressed: isPressed))
+                    .scaleEffect(Self.scale(isPressed: hold.showsPressedLook, reduceMotion: reduceMotion))
+                    .opacity(Self.opacity(isPressed: hold.showsPressedLook))
+            }
+            .onChange(of: isPressed, initial: true) { _, pressed in
+                guard pressed else {
+                    hold.fingerUp()
+                    return
+                }
+                let cycle = hold.fingerDown()
+                Task { @MainActor in
+                    try? await Task.sleep(for: PressHold.minimum)
+                    hold.minimumPassed(cycle: cycle)
+                }
             }
     }
 }
