@@ -1,5 +1,7 @@
 # Status & Handoff
 
+_Build 5.14.1, 2026-10-15 (STEP-5.14 §2, not pushed): landing and upsell load in with `ContentLoadIn` by block index (`.index(n)`); between screens the old page fades out in 0.2 s, then the new one loads in; `ScreenChanged` 150 ms after the swap. "That's okay for now", copy and buttons unchanged; no cat yet. Full suite in Xcode (iPhone 17) 1298/1298. Simulator recordings in `.agent-reports/5.14.1/` (the T2 can't be recorded from the agent). Phone check pending (VoiceOver focus, feel)._
+
 _TestFlight 0.1 (10) prepared, 2026-10-14 (`c205672`, `docs/TESTFLIGHT-BUILD-10.md`): build 9 → 10, version stays 0.1. Full suite in Xcode (iPhone 17) 1287/1287; Release build succeeds with one new warning vs build 9 (`LocationScreen.swift:348`, from `45c2717`); bundle checks pass (Moon Signal, iOS 26.0, privacy manifest, encryption false, DEBUG code out, TestFlight tools in). Not archived or uploaded (Tessa's). Compass simplification and dynamic sizing done; telescope correction and 5.5 still pending._
 
 _Test deflake, 2026-10-14 (`060523f`): the 3 flaky `CompassEntranceTests` (the "already failing" note below) are fixed in the tests only: `EntranceSleeper.isWaiting`, and the `settle` helper no longer fires the stale heading wait. Full suite 3x in Xcode: 1287/1287 each. No app code changed._

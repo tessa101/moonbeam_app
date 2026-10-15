@@ -533,3 +533,15 @@
 2026-10-14 14:19 build 10 prep: full suite 1287/1287 pass (Xcode, iPhone 17); Release build starting
 2026-10-14 14:21 build 10 prep: Release build OK (19s), 1 new warning vs build 9 (LocationScreen.swift:348 contentSpace, from 45c2717); bundle checks OK; writing docs
 2026-10-14 14:22 build 10 prep: docs committed 5cefc1e; updating latest.md; then stop
+2026-10-15 13:00 5.13.3 start: read §4 + DECISIONS; plan: (1) 100 ms hold in PressFeedback + tests, (2) move unstyled controls onto shared styles, (3) drift test
+2026-10-15 13:01 5.13.3 (1/3): PressHold + PressFeedback wired, PressHoldTests written; building
+2026-10-15 13:02 5.13.3 part 1/3: build OK, PressHold+PressFeedback tests 10/10, committed 98f1d93; updating latest.md
+2026-10-15 13:04 5.13.3 part 2: added .inline/.row styles, applied to search + calendar sheets; MadlibSentence tokens are Text links (not Buttons) -> needs Tessa; building
+2026-10-15 13:05 5.13.3 part 2: build OK, full suite 1293/1293 (Xcode, iPhone 17), SearchSheet preview checked; committed 7b03608; stopping for Tessa (Madlib tokens, 2 .plain buttons, ‹ › 90 ms)
+2026-10-15 13:11 5.13.3 resume (Tessa): tokens -> 5.13.4 allowlist; Close + guide row to shared; ‹ › 100 ms; then drift test, stop
+2026-10-15 13:16 5.14.1 start: 5.13.3 NOT done (Close/guide row/‹› edits uncommitted, drift test unwritten); reading STEP-5.14 §2
+2026-10-15 13:18 5.14.1: ContentLoadIn .index position, landing+upsell blocks, OnboardingScreenChange + view sequencing written; writing tests
+2026-10-15 13:18 5.14.1: build OK (sim, for testing); full suite in Xcode (iPhone 17)
+2026-10-15 13:19 5.14.1: full suite 1298/1298 (Xcode, iPhone 17); sim build for recordings (T2 can't be recorded from here)
+2026-10-15 13:27 5.14.1: sim recordings A + Reduce Motion made and measured (fade 0.18-0.19 s, stagger ~0.15 s, rise 0 under RM); writing findings + docs
+2026-10-15 13:28 5.14.1: findings, DECISIONS/STATUS (my hunks only), latest.md written; committing

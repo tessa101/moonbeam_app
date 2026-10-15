@@ -1705,3 +1705,16 @@ count, and fires only after one more request. No tolerances or timings changed. 
 
 - **Closed (Tessa, on device):** the dial's simplification ends at step 1, minor ticks every 5°. Mid ticks, degree
   numbers and the crosshair stay as they are. Ships in TestFlight 0.1 (10).
+
+## 2026-10-15: 5.14.1 onboarding load-ins, landing and upsell (agent)
+
+- `ContentLoadIn` gets a generic position, `.index(n)`, beside the main screen's `.main(Block)`, rather than adding
+  onboarding cases to `Block` (which drives the main screen's replay and "Aha" rules). Indexed blocks load in once,
+  never replay, ignore "Aha". Timings unchanged.
+- The handover is in the view (`OnboardingView.displayedStep` trails `viewModel.step` by the 0.2 s fade), not the
+  view model: it's presentation only and the view model's step rules don't change. The timing rules are a value type,
+  `OnboardingScreenChange`, so they're tested without a view.
+- `ScreenChanged` moves from the step change to 150 ms after the new page is in place (the title, block 1, has
+  started), so it no longer fires while the old page is still up.
+- "That's okay for now" keeps the instant swap and instant announce until 5.14.2 gives it a load-in (the fade-out
+  would otherwise end on a page that pops in).

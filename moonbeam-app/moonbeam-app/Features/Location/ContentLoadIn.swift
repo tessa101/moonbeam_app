@@ -27,6 +27,15 @@ struct ContentLoadIn: ViewModifier {
         case compass
     }
 
+    /// Where a block sits in its screen's load-in: one of the main screen's
+    /// blocks, or the nth block of another screen (onboarding, STEP-5.14 §2).
+    /// An indexed block loads in once, on appearance, with the usual stagger;
+    /// it never replays and ignores "Aha".
+    enum Position: Equatable {
+        case main(Block)
+        case index(Int)
+    }
+
     // MARK: - Timings (§2.1, proposed values)
 
     static let duration: TimeInterval = 0.3
@@ -36,7 +45,17 @@ struct ContentLoadIn: ViewModifier {
 
     /// How long after the screen arrives a block starts loading in.
     static func delay(for block: Block) -> TimeInterval {
-        Double(block.rawValue) * stagger
+        delay(forIndex: block.rawValue)
+    }
+
+    /// The same stagger for a screen's nth block, counting from 0.
+    static func delay(forIndex index: Int) -> TimeInterval {
+        Double(index) * stagger
+    }
+
+    /// How a screen's nth block comes in: the usual load-in.
+    static func animation(forIndex index: Int) -> Animation {
+        .easeOut(duration: duration).delay(delay(forIndex: index))
     }
 
     /// Where a block starts, below its resting place. Reduce Motion: no rise.
@@ -108,7 +127,7 @@ struct ContentLoadIn: ViewModifier {
         let isActive: Bool
     }
 
-    let block: Block
+    let position: Position
     let generation: Int
     /// While false the block stays out (opacity 0) and loads in when it
     /// turns true, e.g. the compass until a replacement's place lands.
@@ -140,7 +159,7 @@ struct ContentLoadIn: ViewModifier {
             .environment(\.contentRevealsAt, revealsAt)
             .task(id: Trigger(generation: generation, isActive: isActive)) {
                 let isReplay = hasLoadedIn
-                if isReplay, !Self.replaysOnPlaceChange(block) { return }
+                if isReplay, !replays { return }
                 // Snap out without animating, then let the stagger bring the
                 // new generation in.
                 var transaction = Transaction()
@@ -151,17 +170,33 @@ struct ContentLoadIn: ViewModifier {
                 guard isActive else { return }
                 hasLoadedIn = true
                 await Task.yield()
-                let animation = isReplay
-                    ? Self.replayAnimation(for: block)
-                    : Self.animation(for: block, afterAha: afterAha)
-                let delay = isReplay
-                    ? Self.replayDelay(for: block)
-                    : (afterAha ? Self.afterAhaDelay(for: block) : Self.delay(for: block))
-                revealsAt = Date.now.addingTimeInterval(delay)
-                withAnimation(animation) {
+                let timing = timing(isReplay: isReplay)
+                revealsAt = Date.now.addingTimeInterval(timing.delay)
+                withAnimation(timing.animation) {
                     isIn = true
                 }
             }
+    }
+
+    /// Indexed blocks load in once; main-screen blocks per §12.9.
+    private var replays: Bool {
+        switch position {
+        case .main(let block): Self.replaysOnPlaceChange(block)
+        case .index: false
+        }
+    }
+
+    /// This load-in's animation and the delay before it shows.
+    private func timing(isReplay: Bool) -> (animation: Animation, delay: TimeInterval) {
+        switch position {
+        case .index(let index):
+            return (Self.animation(forIndex: index), Self.delay(forIndex: index))
+        case .main(let block) where isReplay:
+            return (Self.replayAnimation(for: block), Self.replayDelay(for: block))
+        case .main(let block):
+            let delay = afterAha ? Self.afterAhaDelay(for: block) : Self.delay(for: block)
+            return (Self.animation(for: block, afterAha: afterAha), delay)
+        }
     }
 }
 
@@ -180,6 +215,12 @@ extension View {
         generation: Int = 0,
         isActive: Bool = true
     ) -> some View {
-        modifier(ContentLoadIn(block: block, generation: generation, isActive: isActive))
+        modifier(ContentLoadIn(position: .main(block), generation: generation, isActive: isActive))
+    }
+
+    /// Loads this block in as the nth of its screen (0 first) when the screen
+    /// appears, with the main screen's fade, rise and stagger (STEP-5.14 §2).
+    func contentLoadIn(index: Int) -> some View {
+        modifier(ContentLoadIn(position: .index(index), generation: 0, isActive: true))
     }
 }

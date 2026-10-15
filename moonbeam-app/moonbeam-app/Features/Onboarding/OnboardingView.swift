@@ -16,9 +16,20 @@ struct OnboardingView: View {
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.openURL) private var openURL
 
+    /// The screen on show. Trails `viewModel.step` by the outgoing page's
+    /// fade-out (`OnboardingScreenChange`).
+    @State private var displayedStep: OnboardingViewModel.Step
+    /// The outgoing page is fading out.
+    @State private var isLeaving = false
+
+    init(viewModel: OnboardingViewModel) {
+        self.viewModel = viewModel
+        _displayedStep = State(initialValue: viewModel.step)
+    }
+
     var body: some View {
         Group {
-            switch viewModel.step {
+            switch displayedStep {
             case .landing:
                 OnboardingLandingScreen(onGetStarted: viewModel.getStarted)
             case .locationUpsell:
@@ -33,11 +44,10 @@ struct OnboardingView: View {
                 )
             }
         }
+        .opacity(isLeaving ? 0 : 1)
         .background { ScreenBackground() }
-        // A new screen replaces the old one in place, so VoiceOver is told
-        // to start again from its top (the title).
-        .onChange(of: viewModel.step) {
-            AccessibilityNotification.ScreenChanged().post()
+        .task(id: viewModel.step) {
+            await changeScreen(to: viewModel.step)
         }
         // Use my location with Location Services off or already denied: no
         // prompt can show, so the app's Settings page instead (DECISIONS.md
@@ -49,6 +59,36 @@ struct OnboardingView: View {
             guard phase == .active else { return }
             viewModel.sceneDidBecomeActive()
         }
+    }
+
+    // MARK: - Screen change
+
+    /// Fades the old page out, puts the new one in place (its blocks then
+    /// load in on appearance), then tells VoiceOver. A new screen replaces
+    /// the old one in place, so VoiceOver starts again from its top (the
+    /// title). A step change mid-fade cancels this run; the next one carries
+    /// on from the faded page.
+    private func changeScreen(to step: OnboardingViewModel.Step) async {
+        guard step != displayedStep else { return }
+        if OnboardingScreenChange.loadsIn(step) {
+            withAnimation(OnboardingScreenChange.exitAnimation) {
+                isLeaving = true
+            }
+            try? await Task.sleep(for: .seconds(OnboardingScreenChange.exitDuration))
+            guard !Task.isCancelled else { return }
+        }
+        var transaction = Transaction()
+        transaction.disablesAnimations = true
+        withTransaction(transaction) {
+            displayedStep = step
+            isLeaving = false
+        }
+        let announceDelay = OnboardingScreenChange.announceDelay(for: step)
+        if announceDelay > 0 {
+            try? await Task.sleep(for: .seconds(announceDelay))
+            guard !Task.isCancelled else { return }
+        }
+        AccessibilityNotification.ScreenChanged().post()
     }
 
     // MARK: - Actions

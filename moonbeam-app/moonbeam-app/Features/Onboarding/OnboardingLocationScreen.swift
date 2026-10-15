@@ -25,28 +25,39 @@ struct OnboardingLocationScreen: View {
     /// The design's location icon is the madlib's pin.
     private static let infoSymbol = MadlibFormatter.placeSymbol
 
+    /// Load-in order, top to bottom (STEP-5.14 §2).
+    private enum LoadInBlock: Int {
+        case moon, title, body, preciseNote, useMyLocation, searchInstead
+    }
+
     // MARK: - Body
 
     var body: some View {
         OnboardingPage(topSpacing: Self.topSpacing) {
             VStack(alignment: .leading, spacing: Self.spacing) {
                 OnboardingMoon(size: Self.moonSize)
+                    .contentLoadIn(index: LoadInBlock.moon.rawValue)
 
                 Text(OnboardingCopy.upsellTitle)
                     .font(Theme.Fonts.onboardingTitle)
                     .accessibilityAddTraits(.isHeader)
+                    .contentLoadIn(index: LoadInBlock.title.rawValue)
 
                 Text(OnboardingCopy.upsellBody)
                     .font(Theme.Fonts.body)
                     .foregroundStyle(Theme.Colors.textBody)
+                    .contentLoadIn(index: LoadInBlock.body.rawValue)
 
                 preciseNote
+                    .contentLoadIn(index: LoadInBlock.preciseNote.rawValue)
             }
         } actions: {
             Button(OnboardingCopy.useMyLocation, action: onUseMyLocation)
                 .buttonStyle(.primary)
+                .contentLoadIn(index: LoadInBlock.useMyLocation.rawValue)
             Button(OnboardingCopy.searchInstead, action: onSearchInstead)
                 .buttonStyle(.textLink)
+                .contentLoadIn(index: LoadInBlock.searchInstead.rawValue)
         }
     }
 

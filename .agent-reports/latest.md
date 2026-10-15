@@ -1,3 +1,63 @@
+# Build 5.14.1: onboarding load-ins, landing and upsell (STEP-5.14 §2): 2026-10-15
+
+**5.13.3 is not done.** Parts 1-2 are committed (`98f1d93`, `7b03608`). The resume edits (dialog Close → `.inline`,
+compass guide row → `.row`, ‹ › hold 90 → 100 ms + its test) are in the working tree, uncommitted and unverified on
+their own; part 3 (the drift test) isn't written. Left untouched, and not in this commit.
+
+Done (this commit, not pushed):
+- `ContentLoadIn` gets `.index(n)` / `contentLoadIn(index:)`: same 8 pt rise, 300 ms ease-out, 150 ms stagger, Reduce
+  Motion fade only; loads in once, no replay, no "Aha". Main screen unchanged.
+- Landing: moon, "Moon Signal", tagline, Get started. Upsell: moon, title, body, Precise Location box, Use my
+  location, Search for a city instead.
+- Between screens: the old page fades out in 0.2 s, then the new one loads in (`OnboardingScreenChange`,
+  `OnboardingView.displayedStep`). No slide or push.
+- VoiceOver `ScreenChanged`: now 150 ms after the swap (the title has started), not at the step change.
+- Not touched: "That's okay for now" (still an instant swap), copy, button behaviour, moon glyph + halo.
+
+Verify: build OK; full suite in Xcode (iPhone 17) **1298/1298** (+5 `OnboardingScreenChangeTests`). Recordings
+measured frame by frame: fade-out 0.18-0.19 s; blocks start ≈ 0.15 s apart in order; rise ≈ 5 pt at 30% in,
+0 pt under Reduce Motion. `.agent-reports/5.14.1/findings.md`.
+
+Caveats: the recordings are **simulator** (iPhone 17), not device: the T2 can't be recorded from here. The `.mov`s
+are on disk, not committed (as before). VoiceOver timing is unit-tested, not heard. The tree's uncommitted 5.13.3
+edits were present for the tests, recordings and T2 build.
+
+Next: Tessa's phone check (feel of the 0.2 s fade + stagger, VoiceOver lands on the upsell title, device recording).
+Then 5.14.2 ("That's okay for now" load-in) or the cat (needs `d2-searching` sliced). Blocked: 5.13.3 part 3 waits
+on the uncommitted resume edits being verified and committed.
+
+---
+
+
+# Build 5.13.3: tap feedback on every control (STEP-5.13 §4): 2026-10-15 (paused for Tessa)
+
+Done (not pushed):
+- `98f1d93` part 1: shared `PressFeedback` holds the pressed look ≥ 100 ms (`PressHold`, value type), action on
+  release, animation still scoped to scale/opacity, Reduce Motion opacity-only and held. `PressHoldTests` (6).
+- `7b03608` part 2: new shared `.inline` and `.row` styles. Search sheet Cancel, Clear, Use my location, recents,
+  suggestions; calendar sheet Today, Cancel, Done. SearchSheet preview checked.
+- Debug panel / TestFlight tools: already on `.textLink`, so they get the hold with no change.
+
+Verify: build OK; full suite **1293/1293** (Xcode, iPhone 17). Not done: phone check (T2), drift test.
+Run destination was "Any iOS Device" (left from build 10 archive); switched to iPhone 17.
+
+Blocked, needs Tessa:
+1. **Sentence tokens aren't Buttons.** They're `AttributedString` links inside one `Text` per line (for the shared
+   scale and wrapping). A link can't take a ButtonStyle or a 44 pt target. Options: (a) keep one Text per line and
+   draw the pressed token with a `TextRenderer`, with 44 pt tap targets placed over the token runs' bounds
+   (keeps layout; most code); (b) split lines into Text + Button pieces in a flow layout (simpler press, but
+   changes how lines wrap and touches `MadlibScale`).
+2. **Two `.plain` buttons not in the list:** the Location Off dialog's Close (safe to move) and the compass guide
+   row (scaling the row moves the avatar centre it reports for the swap, so needs a phone check). Move both?
+3. **‹ › hold is 90 ms** (`DayStepButtonStyle`, its own style). Raise to 100 to match "every control"?
+
+Next: part 3, the drift test (no `Button` in the app target without a shared style), once 1 and 2 are settled,
+since it would fail today on them. STATUS/DECISIONS lines appended but not committed (files hold Tessa's uncommitted
+5.13 edits).
+
+---
+
+
 # TestFlight build 10 preparation: 2026-10-14 (ready to archive)
 
 Commits (not pushed): `c205672` Release: bump build to 10 (app Debug + Release; tests target stays 1;
