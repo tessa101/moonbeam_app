@@ -41,8 +41,15 @@ struct LocationScreenScrollingTests {
         #expect(maximumOffset > 200, "\(diagnostic)")
         guard maximumOffset > 200 else { return }
         scroll.setContentOffset(CGPoint(x: 0, y: maximumOffset), animated: false)
+        // Bringing the compass on screen starts its sensors and may animate
+        // a bottom accuracy note. Reach the final bottom after that inset
+        // settles, rather than comparing with its intermediate animation.
+        try await Task.sleep(for: .milliseconds(600))
+        let settledMaximum = scroll.contentSize.height + scroll.adjustedContentInset.bottom - scroll.bounds.height
+        scroll.setContentOffset(CGPoint(x: 0, y: settledMaximum), animated: false)
         try await Task.sleep(for: .milliseconds(100))
-        #expect(abs(scroll.contentOffset.y - maximumOffset) < 2)
+        #expect(!model.compass.showsPinnedBar, "The pinned summary must leave when the real compass is visible")
+        #expect(abs(scroll.contentOffset.y - settledMaximum) < 2)
         #expect(abs(scroll.bounds.maxY - scroll.contentSize.height - scroll.adjustedContentInset.bottom) < 2)
     }
 

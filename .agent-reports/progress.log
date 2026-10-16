@@ -576,3 +576,5 @@
 2026-10-16 09:32 PDT 5.5b: first full run has one known CompassEntranceFrameTests timing-sensitive failure; new card cases pass; made the render suite sequential and rerunning full suite.
 2026-10-16 09:36 PDT 5.5b: test-only repair committed cca3cb0; latest updated; 1405 cases pass; completing intermediate AX2/AX4 matrix coverage before the card commit.
 2026-10-16 09:38 PDT 5.5b: reviewed intermediate AX2/AX4 cards; final full suite 883 tests / 1441 cases pass; findings/status complete; preparing card commit.
+2026-10-16 09:48 5.5c: added AX dial sizing, natural readout height and letter enlargement; checking hosted layout and scrolling.
+2026-10-16 09:52 5.5c: full suite 885 tests / 1450 cases pass; twelve captures reviewed; committing compass changes.

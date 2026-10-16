@@ -259,7 +259,9 @@ nonisolated enum Theme {
         /// `dialLetterMaxSize`, so the dial's geometry holds at AX sizes
         /// (§4). The view scales the size and builds the font with
         /// `dialLetter(size:dialScale:)`; both sizes are for the 196 pt dial
-        /// and grow with a bigger one (COMPASS-1.1.md §9.3).
+        /// and grow with a bigger one (COMPASS-1.1.md §9.3). At AX sizes
+        /// the dial passes a scale of 1 to cap letters at 17 screen points;
+        /// Large Content Viewer supplies enlargement.
         static let dialLetterSize: CGFloat = 15
         static let dialLetterMaxSize: CGFloat = 17
         static func dialLetter(size: CGFloat, dialScale: CGFloat = 1) -> Font {

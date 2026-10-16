@@ -1,5 +1,7 @@
 # Status & Handoff
 
+_5.5c, 2026-10-16: AX compass keeps a width-safe 260 pt face target (233 pt on SE), wrapped lock readout reserves its own height, letters cap at 17 screen points with Large Content Viewer. Existing pinned-summary visibility rule retained and full-screen scroll checks pass. Full suite 885 tests / 1450 cases pass. Next: 5.5d whole-flow and device accessibility review. Report: `.agent-reports/5.5c/findings.md`._
+
 _5.5b, 2026-10-16: nine edge-case scenarios reviewed at both widths, default + AX1–AX5, and nine lock checks. AX guidance no longer reserves empty space; zone labels follow the complete time. SE connector fit rule retained. Full suite 883 tests / 1441 cases pass; test-only compass frame timing repair `cca3cb0`. Tessa confirmed scrolling on device. Next: 5.5c. Report: `.agent-reports/5.5b/findings.md`._
 
 _5.5a.1 scrolling follow-up, 2026-10-16: fixed main-screen content constrained to one viewport, which prevented scrolling to enlarged text. Full-screen tests reproduced all six AX1/3/5 failures; six reachability plus two prompt-transition cases now pass. Full suite 881 tests / 1324 cases pass. No phone installation. Report: `.agent-reports/5.5a/scrolling-followup.md`._

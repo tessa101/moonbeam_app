@@ -36,6 +36,7 @@ struct CompassView: View {
     var onReadoutTopChange: (CGFloat) -> Void = { _ in }
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     /// When the block this compass loads in with starts to show, if it's
     /// loading in (LOADER.md §12.4): the settle waits for it.
@@ -45,9 +46,8 @@ struct CompassView: View {
     /// offset, then animated to 0 (§12.4).
     @State private var settleOffset = 0.0
 
-    /// The readout's slot, so the dial doesn't move when the pill appears.
-    /// The pill is taller than the slot and overflows it, as in the HTML;
-    /// the slot grows with the readout's text style.
+    /// The default readout slot holds the dial still during lock changes.
+    /// At AX sizes this is a minimum: wrapped pills reserve their full height.
     @ScaledMetric(relativeTo: .title2) private var readoutHeight = Self.readoutBaseHeight
 
     /// The block's width, which sizes the dial (COMPASS-1.1.md §9.3).
@@ -65,6 +65,7 @@ struct CompassView: View {
     /// 45% (CSS 36 px blur).
     private static let pillPaddingVertical: CGFloat = 10
     private static let pillPaddingHorizontal: CGFloat = 18
+    private static let accessibilityPillCornerRadius: CGFloat = 24
     private static let pillGlowOpacity = 0.45
     private static let pillGlowRadius: CGFloat = 18
 
@@ -201,7 +202,8 @@ struct CompassView: View {
     private var faceDiameter: CGFloat {
         CompassDial.faceDiameter(
             forWidth: availableWidth,
-            dialHeightBudget: heightBudget.map { $0 - readoutHeight + Self.readoutPull }
+            dialHeightBudget: heightBudget.map { $0 - readoutHeight + Self.readoutPull },
+            isAccessibilitySize: dynamicTypeSize.isAccessibilitySize
         )
     }
 
@@ -211,7 +213,10 @@ struct CompassView: View {
         VStack(spacing: 0) {
             readout
                 .fixedSize(horizontal: false, vertical: true)
-                .frame(height: readoutHeight)
+                .frame(
+                    minHeight: readoutHeight,
+                    maxHeight: dynamicTypeSize.isAccessibilitySize ? nil : readoutHeight
+                )
                 .onGeometryChange(for: CGFloat.self) { proxy in
                     proxy.frame(in: .global).minY
                 } action: { minY in
@@ -238,7 +243,9 @@ struct CompassView: View {
                 onDialCentreChange(centreY)
             }
             // After the centre is read, so it stays the face's (§12.4.1).
-            .padding(.top, -Self.readoutPull)
+            // Wrapped lock text needs its natural height and the full gap
+            // above the needle and target labels.
+            .padding(.top, dynamicTypeSize.isAccessibilitySize ? 0 : -Self.readoutPull)
 
             // No target rows (4.7): rise/set bearings are in the moon card
             // above, and VoiceOver reads every target from the dial.
@@ -315,7 +322,17 @@ struct CompassView: View {
                     .foregroundStyle(Theme.Colors.onAccent)
                     .padding(.vertical, Self.pillPaddingVertical)
                     .padding(.horizontal, Self.pillPaddingHorizontal)
-                    .background(Theme.Colors.accent, in: Capsule())
+                    .multilineTextAlignment(.center)
+                    .background {
+                        if dynamicTypeSize.isAccessibilitySize {
+                            // A tall capsule curves behind the first and last
+                            // lines. Gentle corners keep wrapped text inside.
+                            RoundedRectangle(cornerRadius: Self.accessibilityPillCornerRadius)
+                                .fill(Theme.Colors.accent)
+                        } else {
+                            Capsule().fill(Theme.Colors.accent)
+                        }
+                    }
                     .shadow(color: Theme.Colors.accent.opacity(Self.pillGlowOpacity), radius: Self.pillGlowRadius)
                     .transition(.asymmetric(
                         insertion: .opacity.animation(Self.readoutFadeIn),

@@ -282,8 +282,11 @@ The screen scrolls; containers reflow:
   when available width requires it; verify smaller phones, longer times, "last night", missing events,
   and AX4/AX5. The page scrolls rather than clipping content. This supersedes unconditional AX stacking.
 - Review the pinned compass bar covering or duplicating the compass readout as part of 5.5.
-- Dial is a fixed **260 pt**; letters capped at 17 pt and expose the **Large Content Viewer**. Only
-  the heading readout scales.
+- **5.5c (2026-10-16):** at AX sizes the dial targets a **260 pt face**, constrained by width so side labels
+  stay on screen (233 pt on SE 3). It does not shrink to the height left below the card; the page scrolls.
+  Letters cap at **17 screen points** and offer **Large Content Viewer** on a 44 pt press-and-hold region.
+  The heading readout scales; wrapped lock text takes its natural height in a rounded panel above the dial.
+  Default-size dial sizing and lock capsules retain their existing behavior.
 
 ### 4.1 Pinned compass bar (new)
 When the compass is available (not hidden, not Far) and the dial is **out of view below**, pin a

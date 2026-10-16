@@ -71,6 +71,7 @@ struct CompassDial: View, Animatable {
     }
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     /// The letters scale with Dynamic Type up to `dialLetterMaxSize` (§2).
     @ScaledMetric(relativeTo: .subheadline) private var letterSize = Theme.Fonts.dialLetterSize
@@ -83,6 +84,7 @@ struct CompassDial: View, Animatable {
     /// §9.3's target; the screen's width caps it first on today's phones.
     static let maxFaceDiameter: CGFloat = 300
     static let minFaceDiameter = designDiameter
+    static let accessibilityFaceDiameter: CGFloat = 260
     /// "↑ Rise", the widest label, at 12 pt bold, rounded up.
     private static let widestLabelWidth: CGFloat = 38
 
@@ -115,9 +117,15 @@ struct CompassDial: View, Animatable {
     /// `faceDiameter(forWidth:)`, but no taller than the dial's frame can be
     /// in `dialHeightBudget` (nil: no limit). Never under the 196 pt dial:
     /// on a screen too short for it (the SE), the pinned bar covers what
-    /// scrolls off (§9.6).
-    static func faceDiameter(forWidth width: CGFloat, dialHeightBudget: CGFloat?) -> CGFloat {
+    /// scrolls off (§9.6). At AX sizes the page scrolls and the dial keeps
+    /// its 260 pt target, constrained only by the side labels' width.
+    static func faceDiameter(
+        forWidth width: CGFloat, dialHeightBudget: CGFloat?, isAccessibilitySize: Bool = false
+    ) -> CGFloat {
         let byWidth = faceDiameter(forWidth: width)
+        // Large text already requires scrolling. Keep a useful dial instead
+        // of shrinking it to the space left below a much taller card.
+        if isAccessibilitySize { return min(byWidth, accessibilityFaceDiameter) }
         guard let dialHeightBudget else { return byWidth }
         let byHeight = max(dialHeightBudget - frameChrome, minFaceDiameter)
         return min(byWidth, byHeight).rounded(.down)
@@ -474,11 +482,20 @@ struct CompassDial: View, Animatable {
     }
 
     /// Young Serif; N in amber, the rest in `textPrimary`, always upright.
+    /// AX letters stop at 17 screen points; press and hold enlarges them
+    /// without adding four separate stops to the dial's VoiceOver element.
     private var letters: some View {
         ForEach(Self.cardinals, id: \.label) { cardinal in
             Text(cardinal.label)
-                .font(Theme.Fonts.dialLetter(size: letterSize, dialScale: scale))
+                .font(Theme.Fonts.dialLetter(
+                    size: letterSize, dialScale: dynamicTypeSize.isAccessibilitySize ? 1 : scale
+                ))
                 .foregroundStyle(cardinal.degrees == 0 ? Theme.Colors.accent : Theme.Colors.textPrimary)
+                .frame(width: Theme.Metrics.minimumHitTarget, height: Theme.Metrics.minimumHitTarget)
+                .contentShape(Rectangle())
+                .accessibilityShowsLargeContentViewer {
+                    Text(cardinal.label)
+                }
                 .position(point(at: cardinal.degrees, distance: Self.letterCentreDistance * scale))
         }
     }

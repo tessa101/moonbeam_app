@@ -29,6 +29,16 @@ struct CompassDialSizeTests {
         #expect(diameter <= CompassDial.maxFaceDiameter)
     }
 
+    @Test("AX dial keeps its target size despite a tall card, within the side-label width", arguments: [
+        (CGFloat(335), CGFloat(233)), (362, 260), (1_000, 260),
+    ])
+    func accessibilitySize(width: CGFloat, expected: CGFloat) {
+        for budget: CGFloat? in [nil, 100, 1_000] {
+            #expect(CompassDial.faceDiameter(forWidth: width, dialHeightBudget: budget,
+                                            isAccessibilitySize: true) == expected)
+        }
+    }
+
     // MARK: - Height (DECISIONS.md 2026-10-14)
 
     @Test("No height budget: the width alone sizes the dial")

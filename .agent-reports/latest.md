@@ -1,3 +1,9 @@
+# 5.5c — compass accessibility (2026-10-16)
+
+Ready to commit. AX dial keeps its width-safe target size; wrapped lock readout reserves natural height and uses a rounded panel. Letters cap at 17 screen points and expose Large Content Viewer. Existing pinned-bar/readout gating retained. Reviewed twelve compass captures; full suite **885 tests / 1450 cases pass**. Report: `.agent-reports/5.5c/findings.md`. Next: 5.5d whole-flow large text, VoiceOver and Reduce Motion, then physical-device checks (including letter enlargement). No phone install or push.
+
+---
+
 # 5.5b — card edge-case pass (2026-10-16)
 
 Reviewed nine event/status scenarios at both phone card widths, default + AX1–AX5 (108 renders), plus nine lock checks. Fixed empty AX guidance space and placed AX time-zone labels after the complete time. SE connector still hides when its minimum gap does not fit. Full suite **883 tests / 1441 cases pass**. Test-only compass frame-clock repair is `cca3cb0`; app compass unchanged. Findings and lean image set: `.agent-reports/5.5b/`. Tessa confirmed the prior scrolling fix on device. Next: 5.5c compass overlap/sizing/Large Content Viewer. No phone install or push.

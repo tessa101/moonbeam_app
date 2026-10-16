@@ -1764,3 +1764,9 @@ Tessa's large-text scrolling failure reproduces in the full LocationScreen at bo
 ## 2026-10-16: 5.5b edge-case pass and natural AX guidance/zone order
 
 Reviewed nine scripted card scenarios at both widths, default + AX1–AX5, plus rise/set/moon locks. AX guidance now exists only when there is guidance; default card-height reservation remains. At AX, the zone follows digits and AM/PM as its own row. The SE connector keeps the documented minimum line/gaps and gives way before text shrinks; do not force it into a gap that cannot fit. Full suite 883 tests / 1441 cases pass. Test-only `cca3cb0` separates the compass frame test's logical entrance clock from render speed and waits for asynchronous heading delivery; app behavior/durations and visual assertions unchanged. Tessa confirmed the earlier scroll fix on device. Next: 5.5c; physical/VoiceOver edge-case checks remain in 5.5d.
+
+## 2026-10-16 — 5.5c compass accessibility
+
+AX dial targets a 260 pt face but keeps the existing side-label width limit (233 pt on SE 3). A taller moon card no longer reduces it to the 196 pt floor: the page already scrolls. This reconciles DESIGN-1.1 §4 with the later width-fit work. Default sizing retains its height budget. AX letters cap at 17 actual screen points and expose Large Content Viewer through 44 pt regions; the dial remains one VoiceOver target summary.
+
+At AX sizes the readout slot becomes a minimum rather than a fixed height, so wrapped lock text reserves its actual space above the dial. The full label/needle gap is retained and the lock panel uses 24 pt corners instead of a tall capsule that curves behind its text. Defaults retain their fixed slot and capsule. Existing pinned-summary gating already waits until the real readout is below the fold; retained and covered by rule tests and full-screen scroll checks. Device press-and-hold / VoiceOver review remains in 5.5d.
