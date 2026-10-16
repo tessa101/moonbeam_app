@@ -1,3 +1,15 @@
+# 5.5b — card edge-case pass (2026-10-16)
+
+Reviewed nine event/status scenarios at both phone card widths, default + AX1–AX5 (108 renders), plus nine lock checks. Fixed empty AX guidance space and placed AX time-zone labels after the complete time. SE connector still hides when its minimum gap does not fit. Full suite **883 tests / 1441 cases pass**. Test-only compass frame-clock repair is `cca3cb0`; app compass unchanged. Findings and lean image set: `.agent-reports/5.5b/`. Tessa confirmed the prior scrolling fix on device. Next: 5.5c compass overlap/sizing/Large Content Viewer. No phone install or push.
+
+---
+
+# 5.5b validation: compass frame test repaired
+
+Committed test-only repair `cca3cb0`: wait for injected headings and control the entrance clock independently of image-capture speed. App compass code unchanged. Full combined working-tree suite: 883 tests / 1405 cases pass. Card layout and matrix work remains to be committed.
+
+---
+
 # 5.5a.1 — large-text scrolling restored (2026-10-16)
 
 Reproduced Tessa's scrolling report in the actual LocationScreen: all six AX1/AX3/AX5 cases at SE/iPhone 17 dimensions failed because the scroll content was fixed to one viewport. Changed that to a viewport minimum so longer content has its natural scroll range. Six bottom-reachability cases and two prompt collapse/expand cases now pass; full suite **881 tests / 1324 cases pass**. Report: `.agent-reports/5.5a/scrolling-followup.md`. No phone installation or push. Next remains 5.5b, followed by compass/whole-flow accessibility review.

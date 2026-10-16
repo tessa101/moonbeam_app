@@ -1,5 +1,7 @@
 # Status & Handoff
 
+_5.5b, 2026-10-16: nine edge-case scenarios reviewed at both widths, default + AX1–AX5, and nine lock checks. AX guidance no longer reserves empty space; zone labels follow the complete time. SE connector fit rule retained. Full suite 883 tests / 1441 cases pass; test-only compass frame timing repair `cca3cb0`. Tessa confirmed scrolling on device. Next: 5.5c. Report: `.agent-reports/5.5b/findings.md`._
+
 _5.5a.1 scrolling follow-up, 2026-10-16: fixed main-screen content constrained to one viewport, which prevented scrolling to enlarged text. Full-screen tests reproduced all six AX1/3/5 failures; six reachability plus two prompt-transition cases now pass. Full suite 881 tests / 1324 cases pass. No phone installation. Report: `.agent-reports/5.5a/scrolling-followup.md`._
 
 _5.5a first card pass, 2026-10-16: AX glyph/text/controls reflow, 60 pt equal day buttons, locale-ordered time/day-period rows, natural status height. Full suite 879 tests / 1316 cases pass. Card renders reviewed at both phone widths, standard + AX1/2/3/5; phone, scrolling and VoiceOver checks pending. Next: 5.5b. See `docs/STEP-5.5-ACCESSIBILITY.md` and `.agent-reports/5.5a/findings.md`._

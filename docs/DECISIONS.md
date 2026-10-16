@@ -1759,3 +1759,8 @@ Implement DESIGN-1.1 §4: AX glyph 64 pt above date/phase text, separate equal-w
 ## 2026-10-16: 5.5a.1 scrolling uses a viewport minimum, not a fixed content extent
 
 Tessa's large-text scrolling failure reproduces in the full LocationScreen at both phone sizes, AX1/3/5. The viewport-relative fixed content frame from `fb16d962` lets text draw beyond it without extending the scroll range. Replace it with a minimum height measured from the scroll viewport, retaining the one-point overflow and disabled automatic offset adjustment used by prompt/guide transitions. Six bottom-reachability cases plus two default-size prompt-collapse/expand cases pass; full suite 881 tests / 1324 cases pass. This closes the reported scroll-extent bug; physical gesture/VoiceOver and broader whole-flow review remain.
+
+
+## 2026-10-16: 5.5b edge-case pass and natural AX guidance/zone order
+
+Reviewed nine scripted card scenarios at both widths, default + AX1–AX5, plus rise/set/moon locks. AX guidance now exists only when there is guidance; default card-height reservation remains. At AX, the zone follows digits and AM/PM as its own row. The SE connector keeps the documented minimum line/gaps and gives way before text shrinks; do not force it into a gap that cannot fit. Full suite 883 tests / 1441 cases pass. Test-only `cca3cb0` separates the compass frame test's logical entrance clock from render speed and waits for asynchronous heading delivery; app behavior/durations and visual assertions unchanged. Tessa confirmed the earlier scroll fix on device. Next: 5.5c; physical/VoiceOver edge-case checks remain in 5.5d.

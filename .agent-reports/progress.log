@@ -572,3 +572,7 @@
 2026-10-16 08:59 PDT 5.5a: card geometry cases pass; full run has one CompassEntranceFrameTests timing failure (185° vs 190° at sample 13); adding full-height card review artifacts and rerunning to assess the failure.
 2026-10-16 09:03 PDT 5.5a: final full suite 879 tests / 1316 cases pass; all ten full-height card captures reviewed; docs/findings complete; preparing isolated first-step commit.
 2026-10-16 09:11 PDT 5.5a.1: reproduced six large-text scroll-range failures; viewport minimum fix passes six reachability + two prompt-transition cases; full suite 881 tests / 1324 cases pass; preparing isolated commit.
+2026-10-16 09:31 PDT 5.5b: reviewed nine edge-case matrices at both widths, standard/AX1/3/5; lock checks pass; removed absent AX guidance slot, moved AX time zones below the complete time; full suite started.
+2026-10-16 09:32 PDT 5.5b: first full run has one known CompassEntranceFrameTests timing-sensitive failure; new card cases pass; made the render suite sequential and rerunning full suite.
+2026-10-16 09:36 PDT 5.5b: test-only repair committed cca3cb0; latest updated; 1405 cases pass; completing intermediate AX2/AX4 matrix coverage before the card commit.
+2026-10-16 09:38 PDT 5.5b: reviewed intermediate AX2/AX4 cards; final full suite 883 tests / 1441 cases pass; findings/status complete; preparing card commit.

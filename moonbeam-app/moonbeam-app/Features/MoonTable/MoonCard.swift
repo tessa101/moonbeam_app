@@ -148,30 +148,32 @@ struct MoonCard: View {
         }
     }
 
-    /// Reserve a font-scaled line on other dates. Today's text may wrap,
-    /// rather than hiding the useful end of a sentence at narrow/AX sizes.
+    /// Standard sizes reserve a line on other dates. AX uses only the
+    /// guidance that is present, so an absent message leaves no empty block.
     private static let guidanceBulletSpacing: CGFloat = 6
 
+    @ViewBuilder
     private var guidanceLine: some View {
-        ZStack(alignment: .topLeading) {
-            Text(dynamicTypeSize.isAccessibilitySize ? " \n " : " ")
-                .font(Theme.Fonts.label).hidden()
-            if let guidance = viewModel.compass.guidance {
-                HStack(alignment: .firstTextBaseline, spacing: Self.guidanceBulletSpacing) {
-                    Text("•")
-                        .foregroundStyle(Theme.Colors.accent)
-                        .accessibilityHidden(true)
-                    Text(guidance)
-                        .foregroundStyle(Theme.Colors.textSecondary)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-                .font(Theme.Fonts.label)
-                .accessibilityElement(children: .ignore)
-                .accessibilityLabel(guidance)
+        if let guidance = viewModel.compass.guidance {
+            HStack(alignment: .firstTextBaseline, spacing: Self.guidanceBulletSpacing) {
+                Text("•")
+                    .foregroundStyle(Theme.Colors.accent)
+                    .accessibilityHidden(true)
+                Text(guidance)
+                    .foregroundStyle(Theme.Colors.textSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
             }
+            .font(Theme.Fonts.label)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(guidance)
+        } else if !dynamicTypeSize.isAccessibilitySize {
+            Text(" ")
+                .font(Theme.Fonts.label)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .hidden()
+                .accessibilityHidden(true)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .accessibilityHidden(viewModel.compass.guidance == nil)
     }
 
     private var cardShape: RoundedRectangle {
@@ -762,14 +764,23 @@ struct MoonCard: View {
             let zoneText = Text(timeZone)
                 .font(Theme.Fonts.note)
                 .foregroundStyle(Theme.Colors.textSecondary)
-            ViewThatFits(in: .horizontal) {
-                HStack(alignment: .firstTextBaseline, spacing: Self.timeZoneSpacing) {
-                    timeText
-                    zoneText
-                }
+            if dynamicTypeSize.isAccessibilitySize {
+                // The period already has its own row. Keep the zone after
+                // the whole time instead of beside its digits above AM/PM.
                 VStack(alignment: .leading, spacing: Self.timeZoneSpacing) {
                     timeText
                     zoneText
+                }
+            } else {
+                ViewThatFits(in: .horizontal) {
+                    HStack(alignment: .firstTextBaseline, spacing: Self.timeZoneSpacing) {
+                        timeText
+                        zoneText
+                    }
+                    VStack(alignment: .leading, spacing: Self.timeZoneSpacing) {
+                        timeText
+                        zoneText
+                    }
                 }
             }
         } else {
