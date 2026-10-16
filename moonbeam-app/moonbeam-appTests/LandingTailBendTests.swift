@@ -22,7 +22,7 @@ struct LandingTailBendTests {
     private static let jointX = [110.9, 97.9, 96.9, 102.0, 105.2, 93.3]
     private static let spanBottom = 588.0
     private static let bandHeight = (588.0 - 402.2) / 7
-    private static let loop = 4.05
+    private static let loop = 1.40
 
     private func bend() throws -> IllustrationTailBend {
         try #require(Self.spec.tailBend)
@@ -40,8 +40,8 @@ struct LandingTailBendTests {
     @Test("§5.3's flex and lag; only the tail layer is banded")
     func constants() throws {
         let bend = try bend()
-        #expect(bend.flex == 0.80)
-        #expect(bend.lag == 0.15)
+        #expect(bend.flex == 1.00)
+        #expect(bend.lag == 0.44)
         #expect(Self.tailLayer.asset == "searching_tail")
         let banded = Self.spec.layers.filter { Self.spec.tailBands(of: $0, at: 1) != nil }
         #expect(banded.map(\.asset) == ["searching_tail"])
@@ -76,30 +76,60 @@ struct LandingTailBendTests {
         }
     }
 
-    @Test("Weights: base 0.2 + 0.8/7, the rest 0.8/7, summing to one")
+    @Test("Weights: flex 1 shares the swing evenly, 1/7 per joint, summing to one")
     func weights() throws {
         let bend = try bend()
-        #expect(abs(bend.weight(of: 0) - (0.2 + 0.8 / 7)) < Self.tolerance)
+        #expect(abs(bend.weight(of: 0) - 1.0 / 7) < Self.tolerance)
         for index in 1..<7 {
-            #expect(abs(bend.weight(of: index) - 0.8 / 7) < Self.tolerance)
+            #expect(abs(bend.weight(of: index) - 1.0 / 7) < Self.tolerance)
         }
         #expect(abs((0..<7).map(bend.weight(of:)).reduce(0, +) - 1) < Self.tolerance)
     }
 
-    @Test("The tip reaches the base's +13.8° peak lag × loop later")
+    @Test("Each joint reaches the base's +11.7° peak its lag later; the tip lag × loop later")
     func lagShift() throws {
         let bend = try bend()
         let track = try track()
         let basePeak = Self.loop * 0.25
-        #expect(abs(bend.angle(of: 0, track: track, at: basePeak) - 13.8 * bend.weight(of: 0)) < Self.tolerance)
+        #expect(abs(bend.angle(of: 0, track: track, at: basePeak) - 11.7 * bend.weight(of: 0)) < Self.tolerance)
         for index in 1..<7 {
-            let delay = 0.15 * Self.loop * Double(index) / 6
-            #expect(abs(bend.angle(of: index, track: track, at: basePeak + delay) - 13.8 * bend.weight(of: index))
+            let delay = 0.44 * Self.loop * Double(index) / 6
+            #expect(abs(bend.angle(of: index, track: track, at: basePeak + delay) - 11.7 * bend.weight(of: index))
                 < Self.tolerance)
         }
     }
 
-    @Test("Flex 0 and lag 0 reproduce a rigid swing about the base pivot", arguments: [0.0, 0.6, 1.0125, 2.2, 3.0375])
+    @Test("The tip repeats the base's turn lag × loop later (0.616 s)", arguments: [0.0, 0.1, 0.35, 0.6, 1.05, 1.3])
+    func tipTrailsBase(time: Double) throws {
+        let bend = try bend()
+        let track = try track()
+        let tipDelay = 0.44 * Self.loop
+        // Flex 1: every joint has the same weight, so the tip's own turn is
+        // the base's, shifted by the whole lag.
+        #expect(abs(bend.angle(of: 6, track: track, at: time + tipDelay) - bend.angle(of: 0, track: track, at: time))
+            < Self.tolerance)
+    }
+
+    @Test("The first second starts at rest and moves without a jump")
+    func firstSecondHasNoJump() throws {
+        let bend = try bend()
+        let track = try track()
+        let step = 1.0 / 120
+        // At 120 Hz, the base's fastest turn (ease-in-out, 11.7° per quarter
+        // loop, 1/7 weight) is well under 0.1° a frame for each joint.
+        let maximumStep = 0.1
+        var previous = (0..<7).map { bend.angle(of: $0, track: track, at: 0) }
+        #expect(previous.allSatisfy { $0 == 0 })
+        for frame in 1...120 {
+            let angles = (0..<7).map { bend.angle(of: $0, track: track, at: Double(frame) * step) }
+            for (now, before) in zip(angles, previous) {
+                #expect(abs(now - before) < maximumStep, "frame \(frame)")
+            }
+            previous = angles
+        }
+    }
+
+    @Test("Flex 0 and lag 0 reproduce a rigid swing about the base pivot", arguments: [0.0, 0.2, 0.35, 0.7, 1.05, 1.3])
     func rigidCase(time: Double) throws {
         var rigid = Self.spec
         rigid.tailBend?.flex = 0

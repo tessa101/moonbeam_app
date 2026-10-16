@@ -222,7 +222,8 @@ nonisolated struct IllustrationSpec: Equatable, Sendable {
     /// The star's loop: 1h's telescope loop, kept for the carried-over star.
     private static let starDuration: TimeInterval = 6.59
 
-    /// The landing's bending tail (STEP-5.14 §5.1, §5.3, Tessa, 2026-10-16),
+    /// The landing's bending tail (STEP-5.14 §5.1, §5.3 second pass, Tessa,
+    /// 2026-10-16): a quick ripple, the swing shared evenly along the bands,
     /// in the searching art's own space, inside its `translate(-15 -130)`.
     /// The table's band-0 x (117.5) is unused: joint 0 is the pivot.
     private static let searchingArtOffset = CGPoint(x: -15, y: -130)
@@ -238,13 +239,13 @@ nonisolated struct IllustrationSpec: Equatable, Sendable {
     )
     /// The tail's root, which is also its base joint: (132, 582) in art space.
     private static let searchingTailPivot = CGPoint(x: 117, y: 452)
-    private static let searchingTailFlex = 0.80
-    private static let searchingTailLag = 0.15
+    private static let searchingTailFlex = 1.00
+    private static let searchingTailLag = 0.44
     private static let searchingTailJointX = [110.9, 97.9, 96.9, 102.0, 105.2, 93.3]
     private static let searchingTailSpan = 402.2...588.0
     /// About 1.5 art units, so the turned joints stay closed.
     private static let searchingTailOverlap = 1.5
-    private static let searchingTailDuration: TimeInterval = 4.05
+    private static let searchingTailDuration: TimeInterval = 1.40
     /// The combined head and paw ("look-around lite") and where it turns.
     private static let searchingLookDuration: TimeInterval = 9.30
     private static let searchingLookPivot = CGPoint(x: 237, y: 268)
@@ -301,7 +302,7 @@ nonisolated struct IllustrationSpec: Equatable, Sendable {
             .moonDisc: discBreath,
             // §5.3's base swing, spread over the bending tail's joints.
             .tail: IllustrationMotion(
-                rotation: IllustrationKeyframes(duration: searchingTailDuration, values: [0, 13.8, 0, -13.8, 0])
+                rotation: IllustrationKeyframes(duration: searchingTailDuration, values: [0, 11.7, 0, -11.7, 0])
             ),
             .head: IllustrationMotion(
                 rotation: IllustrationKeyframes(duration: searchingLookDuration, [
