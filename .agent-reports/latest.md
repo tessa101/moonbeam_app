@@ -1,3 +1,9 @@
+# 5.5d — simulator review checkpoint (2026-10-16)
+
+Ready to commit. Reviewed 40 hosted flow cases at both phone dimensions: AX1/AX5 onboarding, failure screens, calendar/search, plus AX5 searching and permission loaders. Added touch-scroll, horizontal-fit and bottom-reachability coverage, including native UIKit text traits. No product code changed. Full suite **889 tests / 1490 cases pass**; final onboarding real-scroll assertion **12/12 pass**. Source review of VoiceOver/focus and Reduce Motion is recorded separately from device verification. **5.5d remains open for physical-device sign-off**: spoken order/focus, motion feel, keyboard/sheet gestures and compass-letter enlargement. Checklist and contact sheets: `.agent-reports/5.5d/findings.md`. No phone install or push.
+
+---
+
 # 5.5c — compass accessibility (2026-10-16)
 
 Ready to commit. AX dial keeps its width-safe target size; wrapped lock readout reserves natural height and uses a rounded panel. Letters cap at 17 screen points and expose Large Content Viewer. Existing pinned-bar/readout gating retained. Reviewed twelve compass captures; full suite **885 tests / 1450 cases pass**. Report: `.agent-reports/5.5c/findings.md`. Next: 5.5d whole-flow large text, VoiceOver and Reduce Motion, then physical-device checks (including letter enlargement). No phone install or push.

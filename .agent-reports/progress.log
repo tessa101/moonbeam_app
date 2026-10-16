@@ -578,3 +578,5 @@
 2026-10-16 09:38 PDT 5.5b: reviewed intermediate AX2/AX4 cards; final full suite 883 tests / 1441 cases pass; findings/status complete; preparing card commit.
 2026-10-16 09:48 5.5c: added AX dial sizing, natural readout height and letter enlargement; checking hosted layout and scrolling.
 2026-10-16 09:52 5.5c: full suite 885 tests / 1450 cases pass; twelve captures reviewed; committing compass changes.
+2026-10-16 09:55 5.5d: reviewing onboarding, failures and sheets with hosted AX1/AX5 scroll captures; auditing VoiceOver and Reduce Motion wiring.
+2026-10-16 10:02 5.5d: 40 flow cases reviewed; full suite 889 tests / 1490 cases and focused onboarding 12/12 pass; committing simulator checkpoint, device sign-off pending.
