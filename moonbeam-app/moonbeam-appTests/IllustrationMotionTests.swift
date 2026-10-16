@@ -21,10 +21,7 @@ struct IllustrationMotionTests {
         #expect(question.scale?.value(at: questionTime) == 1.2)
         #expect(question.opacity?.value(at: questionTime) == 1)
 
-        let tube = try #require(IllustrationSpec.permissionOff.motions[.tube])
-        #expect(tube.rotation?.value(at: 6.59 * 0.22) == -7)
-
-        let disc = try #require(IllustrationSpec.permissionOff.motions[.moonDisc])
+        let disc = try #require(IllustrationSpec.readyToLook.motions[.moonDisc])
         #expect(disc.brightness?.value(at: 5.88 * 0.5) == 1.06)
     }
 
@@ -32,37 +29,59 @@ struct IllustrationMotionTests {
     private static let tolerance = 0.000_001
 
     @Test(
-        "The lens glint warms up, flickers with the wobble and fades",
-        arguments: [
-            (0.0, 0.0), (0.18, 0.10), (0.28, 0.85), (0.50, 0.80), (0.56, 0.55),
-            (0.62, 0.95), (0.68, 0.70), (0.74, 0.60), (0.90, 0.0), (1.0, 0.0),
-        ]
+        "1k's head lifts twice as if about to peek",
+        arguments: [(0.0, 0.0), (0.22, -3.2), (0.40, -2.2), (0.58, -3.6), (0.80, -1.0), (1.0, 0.0)]
     )
-    func glintStops(offset: Double, opacity: Double) throws {
-        let glint = try #require(IllustrationSpec.permissionOff.motions[.lensGlint]?.opacity)
-        #expect(glint.duration == 6.59)
-        #expect(abs(glint.value(at: 6.59 * offset) - opacity) < Self.tolerance)
+    func readyToLookHead(offset: Double, degrees: Double) throws {
+        let head = try #require(IllustrationSpec.readyToLook.motions[.head]?.rotation)
+        #expect(head.duration == 8.82)
+        #expect(abs(head.value(at: 8.82 * offset) - degrees) < Self.tolerance)
     }
 
-    @Test("The glint eases between stops on the tube's loop")
-    func glintBetweenStops() throws {
-        let glint = try #require(IllustrationSpec.permissionOff.motions[.lensGlint]?.opacity)
-        // Halfway from .18 to .28: ease-in-out is symmetric, so the midpoint.
-        #expect(abs(glint.value(at: 6.59 * 0.23) - 0.475) < Self.tolerance)
-        // The next loop repeats it.
-        #expect(abs(glint.value(at: 6.59 * 1.28) - 0.85) < Self.tolerance)
+    @Test(
+        "1k's ear rests, then flicks",
+        arguments: [(0.0, 0.0), (0.62, 0.0), (0.66, -9.0), (0.70, 3.0), (0.74, -4.0), (0.80, 0.0), (1.0, 0.0)]
+    )
+    func readyToLookEar(offset: Double, degrees: Double) throws {
+        let ear = try #require(IllustrationSpec.readyToLook.motions[.ear]?.rotation)
+        #expect(ear.duration == 6.24)
+        #expect(abs(ear.value(at: 6.24 * offset) - degrees) < Self.tolerance)
     }
 
-    @Test("The glint only fades; its tilt comes from the tube it rides on")
-    func glintRidesTheTube() throws {
-        let spec = IllustrationSpec.permissionOff
-        let glint = try #require(spec.motions[.lensGlint])
-        #expect(glint.rotation == nil)
-        #expect(glint.scale == nil)
-        #expect(glint.offsetY == nil)
-        let wobble = 6.59 * 0.62
-        #expect(spec.pose(of: .lensGlint, at: wobble).rotation == 0)
-        #expect(abs(spec.pose(of: .tube, at: wobble).rotation - -7.5) < Self.tolerance)
+    @Test("1k breathes taller than wide, and sways its tail, each on its own loop")
+    func readyToLookBreathAndTail() throws {
+        let spec = IllustrationSpec.readyToLook
+        let breath = spec.pose(of: .breath, at: 4.47 * 0.5)
+        #expect(abs(breath.scaleX - 1.006) < Self.tolerance)
+        #expect(abs(breath.scaleY - 1.014) < Self.tolerance)
+        #expect(breath.scale == 1)
+        let tail = try #require(spec.motions[.tail]?.rotation)
+        #expect(tail.duration == 4.94)
+        #expect(abs(tail.value(at: 4.94 * 0.25) - 4) < Self.tolerance)
+        #expect(abs(tail.value(at: 4.94 * 0.75) - -3) < Self.tolerance)
+        // Four independent lengths, so the mix rarely repeats.
+        let durations = [
+            spec.motions[.breath]?.scaleY?.duration, spec.motions[.head]?.rotation?.duration,
+            spec.motions[.ear]?.rotation?.duration, tail.duration,
+        ]
+        #expect(Set(durations.compactMap { $0 }).count == 4)
+    }
+
+    @Test("The star keeps 1h's sparkle loop")
+    func readyToLookStarLoop() throws {
+        let star = try #require(IllustrationSpec.readyToLook.star)
+        #expect(star.motion.rotation?.duration == 6.59)
+        #expect(star.motion.scale?.value(at: 6.59 * 0.36) == 1)
+        #expect(star.motion.rotation?.value(at: 6.59 * 0.54) == 90)
+        #expect(star.motion.opacity?.value(at: 6.59 * 0.46) == 0.8)
+    }
+
+    @Test("Per-axis scale stretches about the pivot")
+    func perAxisScaleTransform() {
+        let pose = IllustrationMotion.Pose(scaleX: 1.5, scaleY: 2)
+        let pivot = CGPoint(x: 10, y: 20)
+        #expect(CGPoint(x: 10, y: 20).applying(pose.transform(pivot: pivot)) == pivot)
+        #expect(CGPoint(x: 12, y: 21).applying(pose.transform(pivot: pivot)) == CGPoint(x: 13, y: 22))
     }
 
     @Test("The empty moon ring turns linearly and loops seamlessly")
@@ -82,11 +101,15 @@ struct IllustrationMotionTests {
         #expect(IllustrationSpec.restricted.sparkState(at: nil) == nil)
     }
 
-    @Test("Reduce Motion shows the telescope at rest with no glint")
-    func telescopeStill() {
-        let spec = IllustrationSpec.permissionOff
-        #expect(spec.pose(of: .lensGlint, at: nil).opacity == 0)
-        #expect(spec.pose(of: .tube, at: nil) == .rest)
+    @Test("Reduce Motion shows ready to look at offset zero, with no star")
+    func readyToLookStill() {
+        let spec = IllustrationSpec.readyToLook
+        for part in [IllustrationSpec.Part.breath, .head, .ear, .tail] {
+            #expect(spec.pose(of: part, at: nil) == .rest, "\(part)")
+        }
+        for layer in spec.layers {
+            #expect(spec.transform(of: layer, at: nil) == .identity, "\(layer.asset)")
+        }
         // The star's still frame is its first stop: hidden.
         #expect(spec.star?.motion.pose(at: 0).opacity == 0)
         #expect(spec.star?.motion.pose(at: 0).scale == 0)

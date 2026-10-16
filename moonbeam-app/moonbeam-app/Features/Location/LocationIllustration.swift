@@ -135,14 +135,7 @@ private struct LocationIllustrationLayer: View {
         let poses = layer.parts.map { part in
             (part, spec.pose(of: part, at: time))
         }
-        let transform = poses.reduce(CGAffineTransform.identity) { result, item in
-            result.concatenating(
-                item.1.scaledTransform(
-                    pivot: spec.pivots[item.0],
-                    canvasScale: canvasScale
-                )
-            )
-        }
+        let transform = spec.transform(of: layer, at: time, canvasScale: canvasScale)
         let opacity = poses.reduce(1.0) { result, item in
             result * item.1.opacity * waypointOpacity(for: item.0)
         }
@@ -150,12 +143,32 @@ private struct LocationIllustrationLayer: View {
             result * item.1.brightness
         }
 
-        Image(layer.asset)
-            .resizable()
+        slice
             .frame(width: canvasSize.width, height: canvasSize.height)
             .brightness(brightness - 1)
             .opacity(opacity)
             .transformEffect(transform)
+    }
+
+    /// A full-canvas vector slice, or a raster drawn at its own viewBox
+    /// rect on the canvas, so its pixels are only scaled once.
+    @ViewBuilder private var slice: some View {
+        if let placement = layer.placement {
+            Image(layer.asset)
+                .resizable()
+                .interpolation(.high)
+                .frame(
+                    width: placement.width * canvasScale,
+                    height: placement.height * canvasScale
+                )
+                .position(
+                    x: placement.midX * canvasScale,
+                    y: placement.midY * canvasScale
+                )
+        } else {
+            Image(layer.asset)
+                .resizable()
+        }
     }
 
     private func waypointOpacity(for part: IllustrationSpec.Part) -> Double {
@@ -210,18 +223,6 @@ private struct IllustrationSparkView: View {
             }
             .position(point)
             .opacity(state.opacity)
-    }
-}
-
-private extension IllustrationMotion.Pose {
-    /// Converts the spec's viewBox-space transform to the fitted frame.
-    func scaledTransform(pivot: CGPoint?, canvasScale: CGFloat) -> CGAffineTransform {
-        var scaledPose = self
-        scaledPose.offsetY *= canvasScale
-        let scaledPivot = pivot.map {
-            CGPoint(x: $0.x * canvasScale, y: $0.y * canvasScale)
-        }
-        return scaledPose.transform(pivot: scaledPivot)
     }
 }
 

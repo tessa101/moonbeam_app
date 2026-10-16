@@ -18,6 +18,10 @@ nonisolated struct IllustrationMotion: Equatable, Sendable {
     var rotation: IllustrationKeyframes?
     /// About the part's pivot.
     var scale: IllustrationKeyframes?
+    /// Per-axis factors on top of `scale`, for 1k's breath (CSS
+    /// `scale(x, y)`), which stretches more in height than width.
+    var scaleX: IllustrationKeyframes?
+    var scaleY: IllustrationKeyframes?
     var opacity: IllustrationKeyframes?
     /// ViewBox units, before the scale (CSS `scale(s) translateY(y)`), so
     /// it shrinks with the part.
@@ -29,6 +33,8 @@ nonisolated struct IllustrationMotion: Equatable, Sendable {
     struct Pose: Equatable, Sendable {
         var rotation: Double = 0
         var scale: Double = 1
+        var scaleX: Double = 1
+        var scaleY: Double = 1
         var opacity: Double = 1
         var offsetY: Double = 0
         var brightness: Double = 1
@@ -43,8 +49,19 @@ nonisolated struct IllustrationMotion: Equatable, Sendable {
             return CGAffineTransform(translationX: -origin.x, y: -origin.y)
                 .concatenating(CGAffineTransform(translationX: 0, y: offsetY))
                 .concatenating(CGAffineTransform(rotationAngle: rotation * .pi / 180))
-                .concatenating(CGAffineTransform(scaleX: scale, y: scale))
+                .concatenating(CGAffineTransform(scaleX: scale * scaleX, y: scale * scaleY))
                 .concatenating(CGAffineTransform(translationX: origin.x, y: origin.y))
+        }
+
+        /// `transform(pivot:)` in a frame drawn `canvasScale` points per
+        /// viewBox unit.
+        func scaledTransform(pivot: CGPoint?, canvasScale: CGFloat) -> CGAffineTransform {
+            var scaledPose = self
+            scaledPose.offsetY *= canvasScale
+            let scaledPivot = pivot.map {
+                CGPoint(x: $0.x * canvasScale, y: $0.y * canvasScale)
+            }
+            return scaledPose.transform(pivot: scaledPivot)
         }
     }
 
@@ -52,6 +69,8 @@ nonisolated struct IllustrationMotion: Equatable, Sendable {
         Pose(
             rotation: rotation?.value(at: time) ?? 0,
             scale: scale?.value(at: time) ?? 1,
+            scaleX: scaleX?.value(at: time) ?? 1,
+            scaleY: scaleY?.value(at: time) ?? 1,
             opacity: opacity?.value(at: time) ?? 1,
             offsetY: offsetY?.value(at: time) ?? 0,
             brightness: brightness?.value(at: time) ?? 1

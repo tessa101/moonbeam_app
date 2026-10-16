@@ -28,15 +28,16 @@ nonisolated struct IllustrationSpec: Equatable, Sendable {
         case head
         case tail
         case question
-        case tube
-        /// The telescope's lens glint: rides on the tube and flickers.
-        case lensGlint = "lens-glint"
         case map
         case route
         case waypoint1 = "waypoint-1"
         case waypoint2 = "waypoint-2"
         case waypoint3 = "waypoint-3"
         case lock
+        /// 1k: the whole cat's breath, which carries every cat layer.
+        case breath
+        /// 1k: the left ear, which flicks on top of the head's tilt.
+        case ear
 
         /// A waypoint's index into the spark's waypoints.
         var waypointIndex: Int? {
@@ -54,14 +55,20 @@ nonisolated struct IllustrationSpec: Equatable, Sendable {
     struct Layer: Equatable, Sendable {
         let asset: String
         let parts: [Part]
+        /// Where a raster slice sits in the viewBox, when it isn't a
+        /// full-canvas vector: 1k's cat layers are drawn at their own rect
+        /// so their pixels aren't resampled onto the canvas first.
+        let placement: CGRect?
 
-        init(_ asset: String, moves parts: [Part] = []) {
+        init(_ asset: String, moves parts: [Part] = [], placement: CGRect? = nil) {
             self.asset = asset
             self.parts = parts
+            self.placement = placement
         }
     }
 
-    /// 1h: the 4-point sparkle you add over the telescope.
+    /// The 4-point sparkle on permission off: added over 1h's telescope,
+    /// and carried over unchanged to 1k (Tessa, 2026-10-16).
     struct Star: Equatable, Sendable {
         /// The doc's path, centred on 0, 0.
         static let pathData = "M0 -11 Q1.4 -1.4 11 0 Q1.4 1.4 0 11 Q-1.4 1.4 -11 0 Q-1.4 -1.4 0 -11Z"
@@ -99,6 +106,17 @@ nonisolated struct IllustrationSpec: Equatable, Sendable {
     /// `part`'s anchor, if it has a pivot.
     func anchor(for part: Part) -> UnitPoint? {
         pivots[part].map(Self.unitPoint)
+    }
+
+    /// `layer`'s whole move at `time`, in viewBox points: its innermost
+    /// part's move first, then each parent's, as nested SVG groups apply
+    /// them. 1k's ear turns on the tilted head, which rides the breath.
+    func transform(of layer: Layer, at time: TimeInterval?, canvasScale: CGFloat = 1) -> CGAffineTransform {
+        layer.parts.reduce(CGAffineTransform.identity) { outer, part in
+            pose(of: part, at: time)
+                .scaledTransform(pivot: pivots[part], canvasScale: canvasScale)
+                .concatenating(outer)
+        }
     }
 
     // MARK: - Poses
@@ -141,15 +159,20 @@ nonisolated struct IllustrationSpec: Equatable, Sendable {
     /// the moon is mirrored about the art's centre line (x 200) so the
     /// crescent is lit on the right, the app's waxing side; was (150, 212).
     private static let crescentMoonCentre = CGPoint(x: 250, y: 212)
-    /// The telescope art's own moon (STEP-5.10a telescope redraw, Tessa,
-    /// 2026-10-12): redrawn to match the D2 original, lit on the left, so
-    /// it doesn't share the mirrored `crescentMoonCentre`.
-    private static let telescopeMoonCentre = CGPoint(x: 190, y: 203)
-    /// The redrawn mount head's centre: the tube, and the glint riding on
-    /// it, tilt about it. Was (155, 335).
-    private static let telescopeMountCentre = CGPoint(x: 204, y: 330)
-    /// The tube's tilt loop, which the glint's flicker shares.
-    private static let telescopeDuration: TimeInterval = 6.59
+    /// 1k's full moon, the same as the searching art's.
+    private static let readyToLookMoonCentre = CGPoint(x: 215, y: 202)
+    /// Where every 1k cat raster (800 × 860 px) sits in the viewBox: placed
+    /// at (215, 250) under the foreground's `translate(-49 27.73)
+    /// scale(0.415)`, so 332 × 356.9 units.
+    private static let readyToLookCatScale = 0.415
+    private static let readyToLookCatRect = CGRect(
+        x: -49 + 215 * readyToLookCatScale,
+        y: 27.73 + 250 * readyToLookCatScale,
+        width: 800 * readyToLookCatScale,
+        height: 860 * readyToLookCatScale
+    )
+    /// The star's loop: 1h's telescope loop, kept for the carried-over star.
+    private static let starDuration: TimeInterval = 6.59
 
     /// Not found's empty moon: the ring turns around it.
     private static let emptyMoonCentre = CGPoint(x: 173, y: 202)
@@ -175,7 +198,7 @@ nonisolated struct IllustrationSpec: Equatable, Sendable {
         switch kind {
         case .searching: searching
         case .locationNotFound: locationNotFound
-        case .permissionOff: permissionOff
+        case .permissionOff: readyToLook
         case .servicesOff: servicesOff
         case .restricted: restricted
         }
@@ -255,54 +278,61 @@ nonisolated struct IllustrationSpec: Equatable, Sendable {
         ]
     )
 
-    /// 1h "Almost a star": the telescope tilts up on its mount, holds,
-    /// wobbles and drops back; its lens glint warms up as it rises,
-    /// flickers with the wobble and fades on the way down; a star
-    /// sparkles. The stand stays.
-    static let permissionOff = IllustrationSpec(
+    /// 1k "Ready to look" (replaces 1h, Tessa, 2026-10-16): the cat holds
+    /// the telescope, breathes, lifts its head as if about to peek, flicks
+    /// an ear and sways its tail, each on its own loop so the mix rarely
+    /// repeats. The disc breathes; the art's halo is hidden in the source
+    /// (`display="none"`), so there's none. The cat layers are the supplied
+    /// rasters at native size; the moon stays vector.
+    static let readyToLook = IllustrationSpec(
         layers: [
-            Layer("permissionOff_moonHalo", moves: [.moonHalo]),
-            Layer("permissionOff_moonDisc", moves: [.moonDisc]),
-            Layer("permissionOff_stand"),
-            Layer("permissionOff_tube", moves: [.tube]),
-            Layer("permissionOff_lensGlint", moves: [.tube, .lensGlint]),
+            Layer("readyToLook_moonDisc", moves: [.moonDisc]),
+            Layer("readyToLook_tail", moves: [.breath, .tail], placement: readyToLookCatRect),
+            Layer("readyToLook_body", moves: [.breath], placement: readyToLookCatRect),
+            Layer("readyToLook_head", moves: [.breath, .head], placement: readyToLookCatRect),
+            Layer("readyToLook_ear", moves: [.breath, .head, .ear], placement: readyToLookCatRect),
         ],
         pivots: [
-            .moonHalo: telescopeMoonCentre,
-            .moonDisc: telescopeMoonCentre,
-            .tube: telescopeMountCentre,
-            .lensGlint: telescopeMountCentre,
+            .moonDisc: readyToLookMoonCentre,
+            .breath: CGPoint(x: 200, y: 478),
+            .head: CGPoint(x: 205, y: 277),
+            .ear: CGPoint(x: 163.5, y: 193),
+            .tail: CGPoint(x: 97, y: 414.5),
         ],
         motions: [
-            .moonHalo: haloBreath,
             .moonDisc: discBreath,
-            .tube: IllustrationMotion(
-                rotation: IllustrationKeyframes(duration: telescopeDuration, [
-                    (0, 0), (0.22, -7), (0.50, -7), (0.56, -5.5), (0.62, -7.5),
-                    (0.68, -6.5), (0.72, -7), (0.90, 0), (1, 0),
+            .breath: IllustrationMotion(
+                scaleX: IllustrationKeyframes(duration: 4.47, values: [1, 1.006, 1]),
+                scaleY: IllustrationKeyframes(duration: 4.47, values: [1, 1.014, 1])
+            ),
+            .head: IllustrationMotion(
+                rotation: IllustrationKeyframes(duration: 8.82, [
+                    (0, 0), (0.22, -3.2), (0.40, -2.2), (0.58, -3.6), (0.80, -1), (1, 0),
                 ])
             ),
-            // Opacity only: the tilt comes from the tube it rides on. 0 at
-            // offset 0, so the Reduce Motion still shows no glint.
-            .lensGlint: IllustrationMotion(
-                opacity: IllustrationKeyframes(duration: telescopeDuration, [
-                    (0, 0), (0.18, 0.10), (0.28, 0.85), (0.50, 0.80), (0.56, 0.55),
-                    (0.62, 0.95), (0.68, 0.70), (0.74, 0.60), (0.90, 0), (1, 0),
+            .ear: IllustrationMotion(
+                rotation: IllustrationKeyframes(duration: 6.24, [
+                    (0, 0), (0.62, 0), (0.66, -9), (0.70, 3), (0.74, -4), (0.80, 0), (1, 0),
                 ])
+            ),
+            .tail: IllustrationMotion(
+                rotation: IllustrationKeyframes(duration: 4.94, values: [0, 4, 0, -3, 0])
             ),
         ],
         star: Star(
-            // Top right of the redrawn art, clear of the left-lit crescent
-            // and the tube at full tilt; was (128, 122).
-            centre: CGPoint(x: 326, y: 150),
+            // 1h's sparkle and loop, unchanged. 1k's full disc covers its
+            // old spot (326, 150), so it moves to open sky above the
+            // telescope's tip: 32 clear of the disc's rim, well above the
+            // tube, and away from the head, which tilts left.
+            centre: CGPoint(x: 370, y: 118),
             motion: IllustrationMotion(
-                rotation: IllustrationKeyframes(duration: telescopeDuration, [
+                rotation: IllustrationKeyframes(duration: starDuration, [
                     (0, 0), (0.26, 0), (0.36, 45), (0.46, 60), (0.54, 90), (0.66, 135), (1, 135),
                 ]),
-                scale: IllustrationKeyframes(duration: telescopeDuration, [
+                scale: IllustrationKeyframes(duration: starDuration, [
                     (0, 0), (0.26, 0), (0.36, 1), (0.46, 0.7), (0.54, 1), (0.66, 0), (1, 0),
                 ]),
-                opacity: IllustrationKeyframes(duration: telescopeDuration, [
+                opacity: IllustrationKeyframes(duration: starDuration, [
                     (0, 0), (0.26, 0), (0.36, 1), (0.46, 0.8), (0.54, 1), (0.66, 0), (1, 0),
                 ])
             )

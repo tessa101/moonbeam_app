@@ -29,11 +29,23 @@ struct LocationFailureScreenTests {
         #expect(failure.illustration == kind)
     }
 
-    @Test("Every layer is in the app's asset catalog, on the shared 400 × 520 canvas", arguments: LocationIllustration.Kind.allCases)
+    /// 1k's cat rasters ship as supplied: 800 × 860 px, one scale.
+    private static let readyToLookPixelSize = CGSize(width: 800, height: 860)
+    private static let aspectTolerance = 0.000_001
+
+    @Test("Every layer is in the app's asset catalog, on the shared 400 × 520 canvas or at native size", arguments: LocationIllustration.Kind.allCases)
     func layersExist(kind: LocationIllustration.Kind) throws {
         for layer in kind.spec.layers {
             let image = try #require(UIImage(named: layer.asset), "missing \(layer.asset)")
-            #expect(image.size == IllustrationSpec.viewBox, "\(layer.asset) is \(image.size)")
+            if let placement = layer.placement {
+                // Placed rasters keep their pixels and are drawn at their rect.
+                #expect(image.scale == 1, "\(layer.asset) is @\(image.scale)x")
+                #expect(image.size == Self.readyToLookPixelSize, "\(layer.asset) is \(image.size)")
+                let imageAspect = image.size.width / image.size.height
+                #expect(abs(placement.width / placement.height - imageAspect) < Self.aspectTolerance)
+            } else {
+                #expect(image.size == IllustrationSpec.viewBox, "\(layer.asset) is \(image.size)")
+            }
         }
     }
 
