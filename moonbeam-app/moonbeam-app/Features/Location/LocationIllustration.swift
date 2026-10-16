@@ -13,6 +13,7 @@ struct LocationIllustration: View {
     /// Which drawing. Each has the moon inside it, so it takes the dimmed
     /// moon's place.
     nonisolated enum Kind: CaseIterable, Sendable {
+        case searching
         case locationNotFound
         case permissionOff
         case servicesOff
@@ -30,20 +31,22 @@ struct LocationIllustration: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.scenePhase) private var scenePhase
     @State private var isVisible = false
+    @State private var motionStartedAt: TimeInterval?
 
     let kind: Kind
+    var animationDelay: TimeInterval = 0
 
     var body: some View {
         ZStack {
             if Self.shouldAnimate(
                 reduceMotion: reduceMotion,
                 scenePhase: scenePhase,
-                isVisible: isVisible
+                isVisible: isVisible && motionStartedAt != nil
             ) {
                 TimelineView(.animation) { context in
                     LocationIllustrationFrame(
                         spec: kind.spec,
-                        time: context.date.timeIntervalSinceReferenceDate
+                        time: timelineTime(for: context.date)
                     )
                 }
             } else {
@@ -57,6 +60,14 @@ struct LocationIllustration: View {
         }
         .onDisappear {
             isVisible = false
+            motionStartedAt = nil
+        }
+        .task {
+            if animationDelay > 0 {
+                try? await Task.sleep(for: .seconds(animationDelay))
+                guard !Task.isCancelled else { return }
+            }
+            motionStartedAt = Date.timeIntervalSinceReferenceDate
         }
     }
 
@@ -68,6 +79,14 @@ struct LocationIllustration: View {
         isVisible: Bool
     ) -> Bool {
         !reduceMotion && scenePhase == .active && isVisible
+    }
+
+    /// Landing art starts at its rest pose when its load-in reaches home.
+    /// Existing failure illustrations keep their established absolute phase.
+    private func timelineTime(for date: Date) -> TimeInterval {
+        let now = date.timeIntervalSinceReferenceDate
+        guard animationDelay > 0, let motionStartedAt else { return now }
+        return max(now - motionStartedAt, 0)
     }
 }
 

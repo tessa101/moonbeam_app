@@ -71,6 +71,9 @@ struct IllustrationSpecTests {
             "locNotFound_moonDisc", "locNotFound_moonRing", "locNotFound_tail",
             "locNotFound_body", "locNotFound_head", "locNotFound_question",
         ])
+        #expect(IllustrationSpec.searching.layers.map(\.asset) == [
+            "searching_moonHalo", "searching_moonDisc", "searching_tail", "searching_body", "searching_look",
+        ])
         #expect(IllustrationSpec.permissionOff.layers.map(\.asset) == [
             "permissionOff_moonHalo", "permissionOff_moonDisc", "permissionOff_stand", "permissionOff_tube",
             "permissionOff_lensGlint",
@@ -95,5 +98,17 @@ struct IllustrationSpecTests {
             IllustrationSpec.permissionOff.layers.first { $0.asset == "permissionOff_lensGlint" }?.parts
                 == [.tube, .lensGlint]
         )
+    }
+
+    @Test("Landing searching art keeps head and paw still with the calm tail sway")
+    func landingSearchingMotion() throws {
+        let spec = IllustrationSpec.searching
+        #expect(spec.motions[.head] == nil)
+        #expect(spec.layers.first { $0.asset == "searching_look" }?.parts == [])
+        let tail = try #require(spec.motions[.tail]?.rotation)
+        #expect(tail.duration == 4.2)
+        #expect(tail.value(at: 4.2 * 0.25) == 4)
+        #expect(tail.value(at: 4.2 * 0.75) == -3)
+        #expect(spec.motions[.moonHalo] != nil)
     }
 }

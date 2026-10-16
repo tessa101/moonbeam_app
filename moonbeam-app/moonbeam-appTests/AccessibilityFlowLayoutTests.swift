@@ -65,7 +65,12 @@ struct AccessibilityFlowLayoutTests {
         let name = "\(screen.rawValue)-\(Int(phone.width))-\(size)"
         try save(window, name: name + "-top")
         let scrolls = scrollViews(in: host.view).filter { !$0.isHidden && $0.bounds.height > 0 }
-        if size == .accessibility5 && [.landing, .upsell, .declined].contains(screen) {
+        // 5.14: the landing hides its cat at AX4+, so on a tall phone it can fit
+        // without scrolling. Reachability is still checked below for every
+        // scroll view; require an overflow range on the landing only where
+        // it must overflow (the small phone).
+        let mustOverflow = screen == .landing ? phone.height < 700 : [.upsell, .declined].contains(screen)
+        if size == .accessibility5 && mustOverflow {
             #expect(scrolls.contains {
                 $0.contentSize.height > $0.bounds.height - $0.adjustedContentInset.top - $0.adjustedContentInset.bottom + 1
             }, "\(name): enlarged onboarding must create a real scroll range")

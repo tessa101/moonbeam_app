@@ -2,8 +2,8 @@
 """Slice the location-failure illustrations into stackable layers.
 
 STEP-5.10a-LOCATION-FAILURE.md, Chunk 4. For each failure state's layered
-SVG in design/1.6-location-error-illustrations/assets/anim/ (searching.svg is
-skipped), emit one SVG per animated part and one per static run between them,
+SVG in design/1.6-location-error-illustrations/assets/anim/, emit one SVG per
+animated part and one per static run between them,
 in the original z-order. Every slice keeps the full document: the same root
 (400 x 520 viewBox), the shared <defs> (gradients), and every group and
 transform, including the art's translate(dx -130). Only the slice's own shapes
@@ -47,6 +47,7 @@ SHAPES = {"path", "circle", "ellipse", "rect", "line", "polyline", "polygon", "t
 # Per state: the file, the asset-name prefix, and the animated parts
 # (ILLUSTRATIONS_MOTION.md "Assets" table, plus the shared moon breathing).
 STATES = [
+    ("searching.svg", "searching", ["moon-halo", "moon-disc", "tail", "look"]),
     ("location-not-found.svg", "locNotFound", ["moon-disc", "moon-ring", "head", "tail", "question"]),
     ("permission-off.svg", "permissionOff", ["moon-halo", "moon-disc", "tube"]),
     ("services-off.svg", "servicesOff", ["moon-halo", "moon-disc", "map", "route"]),

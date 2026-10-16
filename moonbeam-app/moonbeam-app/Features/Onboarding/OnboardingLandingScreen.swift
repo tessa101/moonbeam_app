@@ -5,17 +5,16 @@
 
 import SwiftUI
 
-/// Onboarding 1, Landing (DESIGN-1.1.md §5): a 150 pt moon with a big soft
-/// glow, the app name, the tagline and Get started.
+/// Onboarding 1, Landing (STEP-5.14): the searching cat, app name, tagline
+/// and Get started.
 struct OnboardingLandingScreen: View {
 
     let onGetStarted: () -> Void
 
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+
     // MARK: - Constants (read from the HTML)
 
-    private static let topSpacing: CGFloat = 150
-    private static let moonSize: CGFloat = 150
-    private static let moonToText: CGFloat = 30
     private static let titleToTagline: CGFloat = 12
     private static let taglineMaxWidth: CGFloat = 280
 
@@ -27,10 +26,16 @@ struct OnboardingLandingScreen: View {
     // MARK: - Body
 
     var body: some View {
-        OnboardingPage(topSpacing: Self.topSpacing, alignment: .center) {
-            VStack(spacing: Self.moonToText) {
-                OnboardingMoon(size: Self.moonSize, hasHalo: true)
+        OnboardingPage(topSpacing: OnboardingLandingLayout.topSpacing, alignment: .center) {
+            VStack(spacing: OnboardingLandingLayout.artToTextSpacing) {
+                if let artSize = OnboardingLandingLayout.artSize(for: dynamicTypeSize) {
+                    LocationIllustration(
+                        kind: .searching,
+                        animationDelay: ContentLoadIn.duration
+                    )
+                    .frame(width: artSize.width, height: artSize.height)
                     .contentLoadIn(index: LoadInBlock.moon.rawValue)
+                }
 
                 VStack(spacing: Self.titleToTagline) {
                     Text(AppInfo.name)

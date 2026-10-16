@@ -173,12 +173,37 @@ nonisolated struct IllustrationSpec: Equatable, Sendable {
 
     static func spec(for kind: LocationIllustration.Kind) -> IllustrationSpec {
         switch kind {
+        case .searching: searching
         case .locationNotFound: locationNotFound
         case .permissionOff: permissionOff
         case .servicesOff: servicesOff
         case .restricted: restricted
         }
     }
+
+    /// 1a "Look-around", simplified for the landing: shared moon breathing
+    /// and only the calm independent tail sway. The head and paw stay still.
+    static let searching = IllustrationSpec(
+        layers: [
+            Layer("searching_moonHalo", moves: [.moonHalo]),
+            Layer("searching_moonDisc", moves: [.moonDisc]),
+            Layer("searching_tail", moves: [.tail]),
+            Layer("searching_body"),
+            Layer("searching_look"),
+        ],
+        pivots: [
+            .moonHalo: CGPoint(x: 215, y: 202),
+            .moonDisc: CGPoint(x: 215, y: 202),
+            .tail: CGPoint(x: 117, y: 452),
+        ],
+        motions: [
+            .moonHalo: haloBreath,
+            .moonDisc: discBreath,
+            .tail: IllustrationMotion(
+                rotation: IllustrationKeyframes(duration: 4.2, values: [0, 4, 0, -3, 0])
+            ),
+        ]
+    )
 
     /// 1g "Huh?": no halo; the ring turns, the head tilts, the question
     /// pops as the head tilts, the tail swishes.
