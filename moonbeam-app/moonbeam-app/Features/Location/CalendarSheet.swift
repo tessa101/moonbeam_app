@@ -15,9 +15,15 @@ import SwiftUI
 struct CalendarSheet: View {
 
     @Bindable var viewModel: LocationViewModel
+    let maximumHeight: CGFloat
 
     @Environment(\.dismiss) private var dismiss
-    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+
+    /// The first frame stays at `.large` until both global edges are known.
+    /// Their difference includes the navigation bar without depending on a
+    /// fixed toolbar height.
+    @State private var sheetTop: CGFloat?
+    @State private var calendarBottom: CGFloat?
 
     var body: some View {
         NavigationStack {
@@ -33,7 +39,13 @@ struct CalendarSheet: View {
                 .environment(\.timeZone, viewModel.calendarTimeZone)
                 .environment(\.calendar, pickerCalendar)
                 .padding(.horizontal)
+                .onGeometryChange(for: CGFloat.self) { proxy in
+                    proxy.frame(in: .global).maxY
+                } action: { bottom in
+                    calendarBottom = bottom
+                }
             }
+            .scrollBounceBehavior(.basedOnSize)
             .navigationTitle("Choose a date")
             .navigationBarTitleDisplayMode(.inline)
             // Toolbar buttons stay on the system style (STEP-5.13 §4,
@@ -61,9 +73,28 @@ struct CalendarSheet: View {
                 }
             }
         }
-        // §2: medium, or large when Dynamic Type needs the room.
-        .presentationDetents(dynamicTypeSize.isAccessibilitySize ? [.large] : [.medium])
+        .onGeometryChange(for: CGFloat.self) { proxy in
+            proxy.frame(in: .global).minY
+        } action: { top in
+            sheetTop = top
+        }
+        // Fit the calendar when it fits. Small screens fall back to the
+        // system's large detent, and the ScrollView handles taller content.
+        .presentationDetents([fittedDetent])
         .presentationDragIndicator(.visible)
+    }
+
+    private var fittedDetent: PresentationDetent {
+        guard
+            maximumHeight > 0,
+            let sheetTop,
+            let calendarBottom
+        else {
+            return .large
+        }
+        let contentHeight = calendarBottom - sheetTop
+        guard contentHeight < maximumHeight else { return .large }
+        return .height(contentHeight)
     }
 
     /// The user's own calendar, in the place's zone.

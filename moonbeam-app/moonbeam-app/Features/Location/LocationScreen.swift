@@ -184,7 +184,7 @@ struct LocationScreen: View {
             }
         }
         .sheet(isPresented: $viewModel.isCalendarPresented) {
-            CalendarSheet(viewModel: viewModel)
+            CalendarSheet(viewModel: viewModel, maximumHeight: viewportHeight ?? 0)
         }
     }
 

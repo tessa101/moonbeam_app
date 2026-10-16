@@ -1,0 +1,215 @@
+Device orientation: Unknown
+------------------------
+Application bundle identifier: com.t-alien.moonbeam-app
+Application UI orientation: Portrait
+Application, pid: 90040, label: 'Moon Signal'
+ Window, {{0.0, 0.0}, {375.0, 667.0}}, hitPoint: {187.5, 333.5}
+  Other, {{0.0, 0.0}, {375.0, 667.0}}, hitPoint: {187.5, 333.5}
+   Other, {{0.0, 0.0}, {375.0, 667.0}}, hitPoint: {187.5, 333.5}
+    Other, {{-375.0, -667.0}, {1125.0, 2001.0}}, identifier: 'PopoverDismissRegion', label: 'dismiss popup', hitPoint: {187.5, 333.5}
+  Other, {{0.0, 0.0}, {375.0, 667.0}}, hitPoint: {187.5, 333.5}
+   Other, {{-375.0, -667.0}, {1125.0, 2001.0}}, identifier: 'PopoverDismissRegion', label: 'dismiss popup', hitPoint: {187.5, 333.5}
+   Other, {{8.0, 553.2}, {359.0, 105.8}}, hitPoint: {187.5, 606.1}
+    Button, {{139.6, 549.4}, {95.7, 23.0}}, label: 'Sheet Grabber', value: Collapsed, hitPoint: {187.5, 560.9}
+    Other, {{8.0, 553.2}, {359.0, 105.8}}, hitPoint: {187.5, 606.1}
+     Other, {{8.0, 553.2}, {359.0, 105.8}}, hitPoint: {187.5, 606.1}
+      Other, {{8.0, 553.2}, {359.0, 105.8}}, hitPoint: {187.5, 606.1}
+       Other, {{8.0, 553.2}, {359.0, 105.8}}, hitPoint: {187.5, 606.1}
+        NavigationBar, {{8.0, 568.5}, {359.0, 51.7}}, identifier: 'Choose a date', hitPoint: {187.5, 594.4}
+         Other, {{27.1, 572.4}, {75.2, 34.5}}, hitPoint: {64.7, 589.6}
+          Other, {{27.1, 572.4}, {75.2, 34.5}}, hitPoint: {64.7, 589.6}
+           Button, {{27.1, 572.4}, {75.2, 34.5}}, label: 'Today', hitPoint: {64.7, 589.6}
+         StaticText, {{117.6, 577.1}, {131.6, 24.9}}, label: 'Choose a date', hitPoint: {183.4, 589.6}
+         Other, {{266.5, 572.4}, {81.4, 34.5}}, hitPoint: {307.2, 589.6}
+          Other, {{266.5, 572.4}, {81.4, 34.5}}, hitPoint: {307.2, 589.6}
+           Button, {{266.5, 572.4}, {81.4, 34.5}}, label: 'Cancel', hitPoint: {307.2, 589.6}
+        Other, {{8.0, 553.2}, {359.0, 105.8}}, hitPoint: {187.5, 606.1}
+         Other, {{8.0, 553.2}, {359.0, 105.8}}, hitPoint: {187.5, 606.1}
+          Other, {{8.0, 553.2}, {359.0, 105.8}}, hitPoint: {187.5, 606.1}
+           Other, {{8.0, 553.2}, {359.0, 105.8}}, hitPoint: {187.5, 606.1}
+            ScrollView, {{8.0, 553.2}, {359.0, 105.8}}, hitPoint: {187.5, 606.1}
+             Other, {{8.0, 319.1}, {359.0, 344.6}}, hitPoint: {187.5, 491.5}
+              DatePicker, {{31.0, 319.1}, {320.7, 344.6}}, label: 'Choose a date', hitPoint: {191.3, 491.5}
+               Other, {{31.0, 319.1}, {320.7, 344.6}}, hitPoint: {191.3, 491.5}
+                Other, {{31.0, 319.1}, {320.7, 344.6}}, hitPoint: {191.3, 491.5}
+                 Other, {{31.0, 319.1}, {320.7, 344.6}}, hitPoint: {191.3, 491.5}
+                  Button, {{31.0, 334.5}, {320.7, 48.8}}, label: 'Month', value: October 2026, hitPoint: {191.3, 358.9}
+                   Button, {{257.9, 334.5}, {49.8, 48.8}}, identifier: 'DatePicker.PreviousMonth', label: 'Previous Month', hitPoint: {282.8, 358.9}
+                   Button, {{307.6, 334.5}, {49.8, 48.8}}, identifier: 'DatePicker.NextMonth', label: 'Next Month', hitPoint: {332.5, 358.9}
+                   Button, {{38.6, 334.5}, {200.6, 48.8}}, identifier: 'DatePicker.Show', label: 'Show year picker', value: October 2026, hitPoint: {138.9, 358.9}
+                    StaticText, {{42.5, 338.3}, {172.8, 41.2}}, label: 'October 2026', hitPoint: {128.9, 358.9}
+                  Other, {{31.0, 398.6}, {320.7, 26.3}}, hitPoint: {191.3, 411.8}
+                  CollectionView, {{31.0, 424.9}, {320.7, 231.2}}, hitPoint: {191.3, 540.5}
+                   Button, {{212.9, 425.9}, {43.6, 45.5}}, label: 'Thursday, October 1', hitPoint: {234.6, 448.6}
+                    Other, {{212.9, 425.9}, {43.6, 45.5}}, hitPoint: {234.6, 448.6}
+                     Other, {{212.9, 425.9}, {43.6, 45.5}}, hitPoint: {234.6, 448.6}
+                      Other, {{213.6, 427.6}, {42.1, 42.1}}, hitPoint: {234.6, 448.6}
+                      StaticText, {{227.7, 430.9}, {13.9, 35.4}}, label: '1', hitPoint: {234.6, 448.6}
+                   Button, {{256.4, 425.9}, {43.6, 45.5}}, label: 'Friday, October 2', hitPoint: {278.2, 448.6}
+                    Other, {{256.4, 425.9}, {43.6, 45.5}}, hitPoint: {278.2, 448.6}
+                     Other, {{256.4, 425.9}, {43.6, 45.5}}, hitPoint: {278.2, 448.6}
+                      Other, {{257.1, 427.6}, {42.1, 42.1}}, hitPoint: {278.2, 448.6}
+                      StaticText, {{269.6, 430.9}, {17.2, 35.4}}, label: '2', hitPoint: {278.2, 448.6}
+                   Button, {{300.0, 425.9}, {43.6, 45.5}}, label: 'Saturday, October 3', Selected, hitPoint: {321.8, 448.6}
+                    Other, {{300.0, 425.9}, {43.6, 45.5}}, hitPoint: {321.8, 448.6}
+                     Other, {{300.0, 425.9}, {43.6, 45.5}}, hitPoint: {321.8, 448.6}
+                      Other, {{300.7, 427.6}, {42.1, 42.1}}, hitPoint: {321.8, 448.6}
+                      StaticText, {{312.4, 430.9}, {18.7, 35.4}}, label: '3', hitPoint: {321.8, 448.6}
+                   Button, {{38.6, 471.4}, {43.6, 45.5}}, label: 'Sunday, October 4', hitPoint: {60.4, 494.1}
+                    Other, {{38.6, 471.4}, {43.6, 45.5}}, hitPoint: {60.4, 494.1}
+                     Other, {{38.6, 471.4}, {43.6, 45.5}}, hitPoint: {60.4, 494.1}
+                      Other, {{39.4, 473.0}, {42.1, 42.1}}, hitPoint: {60.4, 494.1}
+                      StaticText, {{51.1, 476.4}, {18.7, 35.4}}, label: '4', hitPoint: {60.4, 494.1}
+                   Button, {{82.2, 471.4}, {43.6, 45.5}}, label: 'Monday, October 5', hitPoint: {104.0, 494.1}
+                    Other, {{82.2, 471.4}, {43.6, 45.5}}, hitPoint: {104.0, 494.1}
+                     Other, {{82.2, 471.4}, {43.6, 45.5}}, hitPoint: {104.0, 494.1}
+                      Other, {{82.9, 473.0}, {42.1, 42.1}}, hitPoint: {104.0, 494.1}
+                      StaticText, {{94.9, 476.4}, {18.2, 35.4}}, label: '5', hitPoint: {104.0, 494.1}
+                   Button, {{125.8, 471.4}, {43.6, 45.5}}, label: 'Tuesday, October 6', hitPoint: {147.5, 494.1}
+                    Other, {{125.8, 471.4}, {43.6, 45.5}}, hitPoint: {147.5, 494.1}
+                     Other, {{125.8, 471.4}, {43.6, 45.5}}, hitPoint: {147.5, 494.1}
+                      Other, {{126.5, 473.0}, {42.1, 42.1}}, hitPoint: {147.5, 494.1}
+                      StaticText, {{138.0, 476.4}, {19.1, 35.4}}, label: '6', hitPoint: {147.5, 494.1}
+                   Button, {{169.3, 471.4}, {43.6, 45.5}}, label: 'Wednesday, October 7', hitPoint: {191.1, 494.1}
+                    Other, {{169.3, 471.4}, {43.6, 45.5}}, hitPoint: {191.1, 494.1}
+                     Other, {{169.3, 471.4}, {43.6, 45.5}}, hitPoint: {191.1, 494.1}
+                      Other, {{170.0, 473.0}, {42.1, 42.1}}, hitPoint: {191.1, 494.1}
+                      StaticText, {{182.7, 476.4}, {16.8, 35.4}}, label: '7', hitPoint: {191.1, 494.1}
+                   Button, {{212.9, 471.4}, {43.6, 45.5}}, label: 'Thursday, October 8', hitPoint: {234.6, 494.1}
+                    Other, {{212.9, 471.4}, {43.6, 45.5}}, hitPoint: {234.6, 494.1}
+                     Other, {{212.9, 471.4}, {43.6, 45.5}}, hitPoint: {234.6, 494.1}
+                      Other, {{213.6, 473.0}, {42.1, 42.1}}, hitPoint: {234.6, 494.1}
+                      StaticText, {{225.6, 476.4}, {18.2, 35.4}}, label: '8', hitPoint: {234.6, 494.1}
+                   Button, {{256.4, 471.4}, {43.6, 45.5}}, label: 'Friday, October 9', hitPoint: {278.2, 494.1}
+                    Other, {{256.4, 471.4}, {43.6, 45.5}}, hitPoint: {278.2, 494.1}
+                     Other, {{256.4, 471.4}, {43.6, 45.5}}, hitPoint: {278.2, 494.1}
+                      Other, {{257.1, 473.0}, {42.1, 42.1}}, hitPoint: {278.2, 494.1}
+                      StaticText, {{268.6, 476.4}, {19.1, 35.4}}, label: '9', hitPoint: {278.2, 494.1}
+                   Button, {{300.0, 471.4}, {43.6, 45.5}}, label: 'Saturday, October 10', hitPoint: {321.8, 494.1}
+                    Other, {{300.0, 471.4}, {43.6, 45.5}}, hitPoint: {321.8, 494.1}
+                     Other, {{300.0, 471.4}, {43.6, 45.5}}, hitPoint: {321.8, 494.1}
+                      Other, {{300.7, 473.0}, {42.1, 42.1}}, hitPoint: {321.8, 494.1}
+                      StaticText, {{305.7, 476.4}, {32.1, 35.4}}, label: '10', hitPoint: {321.8, 494.1}
+                   Button, {{38.6, 516.8}, {43.6, 45.5}}, label: 'Sunday, October 11', hitPoint: {60.4, 539.6}
+                    Other, {{38.6, 516.8}, {43.6, 45.5}}, hitPoint: {60.4, 539.6}
+                     Other, {{38.6, 516.8}, {43.6, 45.5}}, hitPoint: {60.4, 539.6}
+                      Other, {{39.4, 518.5}, {42.1, 42.1}}, hitPoint: {60.4, 539.6}
+                      StaticText, {{46.8, 521.9}, {27.3, 35.4}}, label: '11', hitPoint: {60.4, 539.6}
+                   Button, {{82.2, 516.8}, {43.6, 45.5}}, label: 'Monday, October 12', hitPoint: {104.0, 539.6}
+                    Other, {{82.2, 516.8}, {43.6, 45.5}}, hitPoint: {104.0, 539.6}
+                     Other, {{82.2, 516.8}, {43.6, 45.5}}, hitPoint: {104.0, 539.6}
+                      Other, {{82.9, 518.5}, {42.1, 42.1}}, hitPoint: {104.0, 539.6}
+                      StaticText, {{88.4, 521.9}, {31.1, 35.4}}, label: '12', hitPoint: {104.0, 539.6}
+                   Button, {{125.8, 516.8}, {43.6, 45.5}}, label: 'Tuesday, October 13', hitPoint: {147.5, 539.6}
+                    Other, {{125.8, 516.8}, {43.6, 45.5}}, hitPoint: {147.5, 539.6}
+                     Other, {{125.8, 516.8}, {43.6, 45.5}}, hitPoint: {147.5, 539.6}
+                      Other, {{126.5, 518.5}, {42.1, 42.1}}, hitPoint: {147.5, 539.6}
+                      StaticText, {{131.7, 521.9}, {31.6, 35.4}}, label: '13', hitPoint: {147.5, 539.6}
+                   Button, {{169.3, 516.8}, {43.6, 45.5}}, label: 'Wednesday, October 14', hitPoint: {191.1, 539.6}
+                    Other, {{169.3, 516.8}, {43.6, 45.5}}, hitPoint: {191.1, 539.6}
+                     Other, {{169.3, 516.8}, {43.6, 45.5}}, hitPoint: {191.1, 539.6}
+                      Other, {{170.0, 518.5}, {42.1, 42.1}}, hitPoint: {191.1, 539.6}
+                      StaticText, {{175.1, 521.9}, {32.1, 35.4}}, label: '14', hitPoint: {191.1, 539.6}
+                   Button, {{212.9, 516.8}, {43.6, 45.5}}, label: 'Today, Thursday, October 15', hitPoint: {234.6, 539.6}
+                    Other, {{212.9, 516.8}, {43.6, 45.5}}, hitPoint: {234.6, 539.6}
+                     Other, {{212.9, 516.8}, {43.6, 45.5}}, hitPoint: {234.6, 539.6}
+                      Other, {{213.6, 518.5}, {42.1, 42.1}}, hitPoint: {234.6, 539.6}
+                      StaticText, {{218.9, 521.9}, {31.6, 35.4}}, label: '15', hitPoint: {234.6, 539.6}
+                   Button, {{256.4, 516.8}, {43.6, 45.5}}, label: 'Friday, October 16', hitPoint: {278.2, 539.6}
+                    Other, {{256.4, 516.8}, {43.6, 45.5}}, hitPoint: {278.2, 539.6}
+                     Other, {{256.4, 516.8}, {43.6, 45.5}}, hitPoint: {278.2, 539.6}
+                      Other, {{257.1, 518.5}, {42.1, 42.1}}, hitPoint: {278.2, 539.6}
+                      StaticText, {{261.9, 521.9}, {32.5, 35.4}}, label: '16', hitPoint: {278.2, 539.6}
+                   Button, {{300.0, 516.8}, {43.6, 45.5}}, label: 'Saturday, October 17', hitPoint: {321.8, 539.6}
+                    Other, {{300.0, 516.8}, {43.6, 45.5}}, hitPoint: {321.8, 539.6}
+                     Other, {{300.0, 516.8}, {43.6, 45.5}}, hitPoint: {321.8, 539.6}
+                      Other, {{300.7, 518.5}, {42.1, 42.1}}, hitPoint: {321.8, 539.6}
+                      StaticText, {{306.7, 521.9}, {30.2, 35.4}}, label: '17', hitPoint: {321.8, 539.6}
+                   Button, {{38.6, 562.3}, {43.6, 45.5}}, label: 'Sunday, October 18', hitPoint: {60.4, 585.0}
+                    Other, {{38.6, 562.3}, {43.6, 45.5}}, hitPoint: {60.4, 585.0}
+                     Other, {{38.6, 562.3}, {43.6, 45.5}}, hitPoint: {60.4, 585.0}
+                      Other, {{39.4, 564.0}, {42.1, 42.1}}, hitPoint: {60.4, 585.0}
+                      StaticText, {{44.4, 567.3}, {32.1, 35.4}}, label: '18', hitPoint: {60.4, 585.0}
+                   Button, {{82.2, 562.3}, {43.6, 45.5}}, label: 'Monday, October 19', hitPoint: {104.0, 585.0}
+                    Other, {{82.2, 562.3}, {43.6, 45.5}}, hitPoint: {104.0, 585.0}
+                     Other, {{82.2, 562.3}, {43.6, 45.5}}, hitPoint: {104.0, 585.0}
+                      Other, {{82.9, 564.0}, {42.1, 42.1}}, hitPoint: {104.0, 585.0}
+                      StaticText, {{87.7, 567.3}, {32.5, 35.4}}, label: '19', hitPoint: {104.0, 585.0}
+                   Button, {{125.8, 562.3}, {43.6, 45.5}}, label: 'Tuesday, October 20', hitPoint: {147.5, 585.0}
+                    Other, {{125.8, 562.3}, {43.6, 45.5}}, hitPoint: {147.5, 585.0}
+                     Other, {{125.8, 562.3}, {43.6, 45.5}}, hitPoint: {147.5, 585.0}
+                      Other, {{126.5, 564.0}, {42.1, 42.1}}, hitPoint: {147.5, 585.0}
+                      StaticText, {{129.6, 567.3}, {35.9, 35.4}}, label: '20', hitPoint: {147.5, 585.0}
+                   Button, {{169.3, 562.3}, {43.6, 45.5}}, label: 'Wednesday, October 21', hitPoint: {191.1, 585.0}
+                    Other, {{169.3, 562.3}, {43.6, 45.5}}, hitPoint: {191.1, 585.0}
+                     Other, {{169.3, 562.3}, {43.6, 45.5}}, hitPoint: {191.1, 585.0}
+                      Other, {{170.0, 564.0}, {42.1, 42.1}}, hitPoint: {191.1, 585.0}
+                      StaticText, {{175.5, 567.3}, {31.1, 35.4}}, label: '21', hitPoint: {191.1, 585.0}
+                   Button, {{212.9, 562.3}, {43.6, 45.5}}, label: 'Thursday, October 22', hitPoint: {234.6, 585.0}
+                    Other, {{212.9, 562.3}, {43.6, 45.5}}, hitPoint: {234.6, 585.0}
+                     Other, {{212.9, 562.3}, {43.6, 45.5}}, hitPoint: {234.6, 585.0}
+                      Other, {{213.6, 564.0}, {42.1, 42.1}}, hitPoint: {234.6, 585.0}
+                      StaticText, {{217.4, 567.3}, {34.5, 35.4}}, label: '22', hitPoint: {234.6, 585.0}
+                   Button, {{256.4, 562.3}, {43.6, 45.5}}, label: 'Friday, October 23', hitPoint: {278.2, 585.0}
+                    Other, {{256.4, 562.3}, {43.6, 45.5}}, hitPoint: {278.2, 585.0}
+                     Other, {{256.4, 562.3}, {43.6, 45.5}}, hitPoint: {278.2, 585.0}
+                      Other, {{257.1, 564.0}, {42.1, 42.1}}, hitPoint: {278.2, 585.0}
+                      StaticText, {{260.5, 567.3}, {35.4, 35.4}}, label: '23', hitPoint: {278.2, 585.0}
+                   Button, {{300.0, 562.3}, {43.6, 45.5}}, label: 'Saturday, October 24', hitPoint: {321.8, 585.0}
+                    Other, {{300.0, 562.3}, {43.6, 45.5}}, hitPoint: {321.8, 585.0}
+                     Other, {{300.0, 562.3}, {43.6, 45.5}}, hitPoint: {321.8, 585.0}
+                      Other, {{300.7, 564.0}, {42.1, 42.1}}, hitPoint: {321.8, 585.0}
+                      StaticText, {{304.3, 567.3}, {34.9, 35.4}}, label: '24', hitPoint: {321.8, 585.0}
+                   Button, {{38.6, 607.8}, {43.6, 45.5}}, label: 'Sunday, October 25', hitPoint: {60.4, 630.5}
+                    Other, {{38.6, 607.8}, {43.6, 45.5}}, hitPoint: {60.4, 630.5}
+                     Other, {{38.6, 607.8}, {43.6, 45.5}}, hitPoint: {60.4, 630.5}
+                      Other, {{39.4, 609.5}, {42.1, 42.1}}, hitPoint: {60.4, 630.5}
+                      StaticText, {{42.9, 612.8}, {34.9, 35.4}}, label: '25', hitPoint: {60.4, 630.5}
+                   Button, {{82.2, 607.8}, {43.6, 45.5}}, label: 'Monday, October 26', hitPoint: {104.0, 630.5}
+                    Other, {{82.2, 607.8}, {43.6, 45.5}}, hitPoint: {104.0, 630.5}
+                     Other, {{82.2, 607.8}, {43.6, 45.5}}, hitPoint: {104.0, 630.5}
+                      Other, {{82.9, 609.5}, {42.1, 42.1}}, hitPoint: {104.0, 630.5}
+                      StaticText, {{86.0, 612.8}, {35.9, 35.4}}, label: '26', hitPoint: {104.0, 630.5}
+                   Button, {{125.8, 607.8}, {43.6, 45.5}}, label: 'Tuesday, October 27', hitPoint: {147.5, 630.5}
+                    Other, {{125.8, 607.8}, {43.6, 45.5}}, hitPoint: {147.5, 630.5}
+                     Other, {{125.8, 607.8}, {43.6, 45.5}}, hitPoint: {147.5, 630.5}
+                      Other, {{126.5, 609.5}, {42.1, 42.1}}, hitPoint: {147.5, 630.5}
+                      StaticText, {{130.5, 612.8}, {34.0, 35.4}}, label: '27', hitPoint: {147.5, 630.5}
+                   Button, {{169.3, 607.8}, {43.6, 45.5}}, label: 'Wednesday, October 28', hitPoint: {191.1, 630.5}
+                    Other, {{169.3, 607.8}, {43.6, 45.5}}, hitPoint: {191.1, 630.5}
+                     Other, {{169.3, 607.8}, {43.6, 45.5}}, hitPoint: {191.1, 630.5}
+                      Other, {{170.0, 609.5}, {42.1, 42.1}}, hitPoint: {191.1, 630.5}
+                      StaticText, {{173.4, 612.8}, {35.4, 35.4}}, label: '28', hitPoint: {191.1, 630.5}
+                   Button, {{212.9, 607.8}, {43.6, 45.5}}, label: 'Thursday, October 29', hitPoint: {234.6, 630.5}
+                    Other, {{212.9, 607.8}, {43.6, 45.5}}, hitPoint: {234.6, 630.5}
+                     Other, {{212.9, 607.8}, {43.6, 45.5}}, hitPoint: {234.6, 630.5}
+                      Other, {{213.6, 609.5}, {42.1, 42.1}}, hitPoint: {234.6, 630.5}
+                      StaticText, {{216.7, 612.8}, {35.9, 35.4}}, label: '29', hitPoint: {234.6, 630.5}
+                   Button, {{256.4, 607.8}, {43.6, 45.5}}, label: 'Friday, October 30', hitPoint: {278.2, 630.5}
+                    Other, {{256.4, 607.8}, {43.6, 45.5}}, hitPoint: {278.2, 630.5}
+                     Other, {{256.4, 607.8}, {43.6, 45.5}}, hitPoint: {278.2, 630.5}
+                      Other, {{257.1, 609.5}, {42.1, 42.1}}, hitPoint: {278.2, 630.5}
+                      StaticText, {{260.0, 612.8}, {36.4, 35.4}}, label: '30', hitPoint: {278.2, 630.5}
+                   Button, {{300.0, 607.8}, {43.6, 45.5}}, label: 'Saturday, October 31', hitPoint: {321.8, 630.5}
+                    Other, {{300.0, 607.8}, {43.6, 45.5}}, hitPoint: {321.8, 630.5}
+                     Other, {{300.0, 607.8}, {43.6, 45.5}}, hitPoint: {321.8, 630.5}
+                      Other, {{300.7, 609.5}, {42.1, 42.1}}, hitPoint: {321.8, 630.5}
+                      StaticText, {{306.0, 612.8}, {31.6, 35.4}}, label: '31', hitPoint: {321.8, 630.5}
+             Other, {{8.0, 553.2}, {359.0, 105.8}}, hitPoint: {187.5, 606.1}
+              Other, {{8.0, 553.2}, {359.0, 105.3}}, hitPoint: {187.5, 605.9}
+             Other, {{8.0, 553.2}, {359.0, 105.8}}, hitPoint: {187.5, 606.1}
+              Other, {{8.0, 553.2}, {359.0, 105.3}}, hitPoint: {187.5, 605.9}
+             Other, {{335.4, 620.2}, {28.7, 19.6}}, label: 'Vertical scroll bar, 9 pages', value: 98%, hitPoint: {349.8, 630.0}
+              Other, {{361.3, 603.0}, {2.9, 34.5}}, hitPoint: {362.7, 620.2}
+             Other, {{335.4, 620.2}, {28.7, 19.6}}, label: 'Vertical scroll bar, 9 pages', value: 98%, hitPoint: {349.8, 630.0}
+              Other, {{361.3, 603.0}, {2.9, 34.5}}, hitPoint: {362.7, 620.2}
+        Toolbar, {{8.0, 553.2}, {359.0, 105.8}}, identifier: 'Toolbar', label: 'Toolbar', hitPoint: {187.5, 606.1}
+         Other, {{8.0, 553.2}, {359.0, 105.8}}, hitPoint: {187.5, 606.1}
+    Other, {{8.0, 553.2}, {359.0, 105.8}}, hitPoint: {187.5, 606.1}
+     Other, {{8.0, 553.2}, {359.0, 105.8}}, hitPoint: {187.5, 606.1}
+      Other, {{8.0, 553.2}, {359.0, 105.8}}, hitPoint: {187.5, 606.1}
+       Other, {{8.0, 553.2}, {359.0, 105.8}}, hitPoint: {187.5, 606.1}
+        Other, {{8.0, 553.2}, {359.0, 105.8}}, hitPoint: {187.5, 606.1}
+         Other, {{8.0, 553.2}, {359.0, 619.4}}, hitPoint: {187.5, 610.1}
+       Other, {{8.0, 553.2}, {359.0, 105.8}}, hitPoint: {187.5, 606.1}
+        Other, {{8.0, 553.2}, {359.0, 619.4}}, hitPoint: {187.5, 610.1}
