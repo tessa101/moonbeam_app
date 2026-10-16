@@ -1,5 +1,7 @@
 # 5.13.4 — sentence token buttons
 
+**Closed 2026-10-16 at Tessa’s request.** Saved full-suite results independently confirmed: 891 tests / 1515 cases pass. Physical-phone verification was not performed by either agent. Remaining 5.14 work moves to a new chat.
+
 Date and place tokens now remain inside the sentence's native `Text` layout while real SwiftUI buttons draw and hit-test the rendered token fragments. This keeps the existing shared scale and Dynamic Type wrapping instead of moving the sentence into a flow layout.
 
 - A custom text attribute identifies token runs; `SentenceTokenRenderer` reports one rectangle per wrapped fragment and can draw either the surrounding words or token ink.
