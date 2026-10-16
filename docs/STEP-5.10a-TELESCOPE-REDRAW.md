@@ -1,5 +1,7 @@
 # Step 5.10a: Telescope redraw (permission-off illustration)
 
+> **SUPERSEDED (Tessa, 2026-10-16): this task is removed from the plan. Do not run any chunk or the "pick up tomorrow" paths below.** The permission-off telescope is replaced by the 1k Ready-to-look cat (`docs/STEP-5.14-ONBOARDING-CAT-AND-LOAD-IN.md`, `design/1.10-ready-to-look/`). Kept for history only; the `6bbdd9a` art stays in the app until that replacement lands.
+
 > Owner: Tessa · 2026-10-12 · Decision: **Option A**, moon lit on the LEFT (matches the original D2 art). Supersedes the Chunk 2b mirror for this illustration only. Lens glint: kept.
 
 ## Why
@@ -24,3 +26,20 @@ Z-order: moonHalo, moonDisc, stand, tube, lensGlint, (star on top).
 3. Screenshots of `-screenState locationFailed.denied` at default, AX1, AX5 and iPhone SE 3, plus three frames of the motion (rest, hold, wobble). Check the art frame, headline and primary button heights are unchanged vs the other causes, and the star clears the crescent and the tube at max tilt.
 
 Environment notes from earlier chunks apply: no `xcodebuild test`, no `simctl`; use `build-for-testing` and give me test commands for Terminal.
+
+---
+
+## CORRECTION (Tessa, 2026-10-12, 16:30): the art choice in this doc was wrong. Do not run chunks 2 and 3 as written.
+
+"The left telescope" meant the **original D2 art** (far left of `design/1.7-telescope-redraw/compare.png`; source: `design/d2-luminous-calico/reference/d2-approved.png`, third panel), NOT Option A or B. Both A and B are vector redraws and neither is what she wanted. Chunk 1 (`6bbdd9a`) imported A, so the denied screen currently shows the wrong telescope.
+
+Status: paused. Chunks 2 and 3 are on hold. Nothing pushed.
+
+### Pick up tomorrow
+1. Get the original telescope into layered form. The original is a shaded 3D-style raster; the crop in `d2-approved.png` is only about 360 x 450 px, too small for @3x. Options to offer her:
+   - a. Ask for a higher-resolution render of the original, then cut it into raster layers (moon, stand, tube, glint) with the same layer names on the 400 x 520 canvas.
+   - b. Trace it into vector again, matching the shading, rim light and the glow along the crescent's left edge more closely than A did.
+   - c. Hybrid: raster for the shaded tube and stand, vector for the moon and halo so those can still breathe cleanly.
+2. Replace the `permissionOff_*` layers from `6bbdd9a` once the right art exists.
+3. Reuse from this round: the layer split and names, the tube pivot at the mount head, the lens glint idea (original motion notes: "the front lens catches moonlight now and then"), and the moon lit LEFT for this illustration. The pivot, star and glint numbers in this doc were computed for A's geometry and must be re-measured against the new art.
+4. Still open: keep the lens glint? (Tessa hasn't answered.)

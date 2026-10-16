@@ -1808,3 +1808,8 @@ At AX sizes the readout slot becomes a minimum rather than a fixed height, so wr
 ## 2026-10-16 — 5.13.4 sentence tokens keep native text layout
 
 Keep each sentence line as one native `Text`; do not replace it with a flow layout. Mark token runs for a `TextRenderer`, then overlay one real button per token using the renderer's fragment rectangles. The button redraws only the token ink, uses the shared `PressFeedback`, and hit-tests the union of ≥44 pt fragment targets. Date expands upward and place downward so their close-set targets do not overlap. The visible buttons replace both attributed-string URL routing and the accessibility-only stand-ins; VoiceOver label, hint and activation live on the same controls sighted users tap. Remove the 5.13.3 drift-test allowlist. Focused 28/28 and full suite 891 tests / 1515 cases pass; physical-phone feel and spoken-order review remain.
+
+
+## 2026-10-16: Telescope redraw task removed (Tessa)
+
+The permission-off telescope redraw (Option A, then the "original D2 raster" correction) is dropped from the plan. The telescope is replaced by the 1k Ready-to-look cat (STEP-5.14, `design/1.10-ready-to-look/`). `docs/STEP-5.10a-TELESCOPE-REDRAW.md` is marked superseded; its paused chunks 2 and 3 and the open questions (higher-res source, keep the lens glint) no longer apply. The `6bbdd9a` art stays in the app until the replacement lands. Next implementation: the ready-to-look prompt in STEP-5.14.

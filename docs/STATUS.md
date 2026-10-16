@@ -247,7 +247,8 @@ Rule: finish what changes the card before the AX reflow, or the reflow is done t
    - [x] **Dynamic compass sizing** (`45c2717`, confirmed on device): the dial fits the screen height.
    - [x] **Compass simplification** (closed, confirmed on device): 5° minor ticks only; mid ticks, numbers and
      crosshair stay.
-   - [ ] **Telescope redraw:** correction pending (`docs/STEP-5.10a-TELESCOPE-REDRAW.md`).
+   - [x] **Telescope redraw:** removed from the plan (Tessa, 2026-10-16); the permission-off telescope is replaced by
+     the ready-to-look cat (5.14). `docs/STEP-5.10a-TELESCOPE-REDRAW.md` is superseded.
    - [ ] **A11y / 5.5 reflow:** not in build 10 (item 5).
    Before: 0.1 (9) (archive built and verified 2026-10-12, `d9eba76`; upload pending). If App Store Connect rejects
    0.1, go back to 1.0 (DECISIONS.md 2026-10-08, version naming). Then device QA at default / AX1 / AX5; check the
@@ -255,7 +256,7 @@ Rule: finish what changes the card before the AX reflow, or the reflow is done t
 8. [ ] **Design review + pre-1.0:** motion pass, voice A (always-on answer line), light mode, onboarding copy, Round 2
    screens, VoiceOver order at AX2, final name + persona; remove Show onboarding / Forget saved place / `BuildChannel`;
    replace `appStoreReceiptURL`; USNO rows (item 3 below).
-8a. [ ] **Design track (Tessa, 2026-10-12, not agent work until designed):** redo the location-settings bottom sheets (layout hard to parse); telescope illustration redrawn 2026-10-12 (5.10a telescope redraw); 5.12 exploration.
+8a. [ ] **Design track (Tessa, 2026-10-12, not agent work until designed):** redo the location-settings bottom sheets (layout hard to parse); telescope illustration: redraw dropped 2026-10-16, replaced by the ready-to-look cat (5.14); 5.12 exploration.
 9. Later: Daily Moon Report widget / push; sun / tide sister app.
 - OK for now: sentence tokens have no pressed state.
 
