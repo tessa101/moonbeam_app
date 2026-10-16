@@ -32,6 +32,9 @@ struct CompassEntranceFrameTests {
     private static let sampleInterval = Duration.milliseconds(16)
     /// Past the 0.5 s settle and the readout's fade, with capture overhead.
     private static let sampleCount = 70
+    /// Advance the model's settle after all three readings and the dial's
+    /// visible turn. Snapshot/render load must not decide when it expires.
+    private static let settleSample = 35
     private static let layoutWait = Duration.milliseconds(400)
 
     /// `CompassDial`'s letter distance on its 196 pt design dial (private
@@ -89,10 +92,12 @@ struct CompassEntranceFrameTests {
     @Test("Launch entrance: never north-up, nothing in the centre, no stale readout", .timeLimit(.minutes(1)))
     func launchEntranceFrames() async throws {
         let heading = FakeHeadingService()
+        let entranceClock = CompassFrameClock()
         let viewModel = CompassViewModel(
             headingService: heading,
             moonService: FakeMoonService(position: MoonPosition(azimuth: 140, altitude: 23, isUp: true)),
-            now: { Self.referenceDate }
+            now: { Self.referenceDate },
+            entranceSleep: { try await entranceClock.sleep($0) }
         )
         viewModel.update(Self.context)
 
@@ -109,6 +114,7 @@ struct CompassEntranceFrameTests {
         defer {
             window.isHidden = true
             viewModel.setOnScreen(false)
+            entranceClock.cancelAll()
         }
         try await Task.sleep(for: Self.layoutWait)
 
@@ -126,8 +132,26 @@ struct CompassEntranceFrameTests {
         var sentIndex = 0
         for sample in 0..<Self.sampleCount {
             if sentIndex < Self.headings.count, sample == Self.headingSamples[sentIndex] {
-                heading.send(HeadingReading(trueHeading: Self.headings[sentIndex], accuracy: 3))
+                let sentHeading = Self.headings[sentIndex]
+                heading.send(HeadingReading(trueHeading: sentHeading, accuracy: 3))
+                // AsyncStream delivery happens on another main-actor task.
+                // Capture the frame after this input is consumed, rather
+                // than occasionally asserting against the previous input.
+                let deadline = ContinuousClock.now.advanced(by: .seconds(1))
+                while viewModel.heading != sentHeading && ContinuousClock.now < deadline {
+                    await Task.yield()
+                }
+                #expect(viewModel.heading == sentHeading, "the injected heading was not delivered")
                 sentIndex += 1
+            }
+            if sample == Self.settleSample {
+                #expect(entranceClock.requestedDurations == [CompassEntrance.headingWait, CompassEntrance.settleDuration])
+                entranceClock.advance()
+                let deadline = ContinuousClock.now.advanced(by: .seconds(1))
+                while viewModel.entrance.phase != .settled && ContinuousClock.now < deadline {
+                    await Task.yield()
+                }
+                #expect(viewModel.entrance.phase == .settled)
             }
             let frame = try #require(Self.capture(window))
 
@@ -229,6 +253,30 @@ struct CompassEntranceFrameTests {
             }
         }
         return count
+    }
+}
+
+/// Logical entrance time is independent of how long pixel capture takes.
+@MainActor
+private final class CompassFrameClock {
+    private var waiters: [CheckedContinuation<Void, any Error>] = []
+    private(set) var requestedDurations: [Duration] = []
+
+    func sleep(_ duration: Duration) async throws {
+        requestedDurations.append(duration)
+        try await withCheckedThrowingContinuation { waiters.append($0) }
+    }
+
+    func advance() {
+        let pending = waiters
+        waiters = []
+        pending.forEach { $0.resume() }
+    }
+
+    func cancelAll() {
+        let pending = waiters
+        waiters = []
+        pending.forEach { $0.resume(throwing: CancellationError()) }
     }
 }
 
