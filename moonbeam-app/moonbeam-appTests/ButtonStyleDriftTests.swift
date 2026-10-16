@@ -20,6 +20,12 @@ import Testing
 ///
 /// "Shared" means a `ButtonStyle` whose body applies `.pressFeedback(…)`, used
 /// by its type or by a static name in `extension ButtonStyle where Self == …`.
+///
+/// Toolbar buttons are the exception, the other way round: inside `.toolbar`,
+/// `ToolbarItem` or `ToolbarItemGroup` a button must keep the system style
+/// (STEP-5.13 §4, corrected in 5.13.3c). Any custom style there turns the bar
+/// item into a squeezed custom view ("Tod…" on the calendar sheet) and drops
+/// the system's disabled look; the bar's glass gives the press feedback.
 @Suite("Button style drift", .timeLimit(.minutes(1)))
 struct ButtonStyleDriftTests {
 
@@ -52,17 +58,28 @@ struct ButtonStyleDriftTests {
 
         var unstyled: [String: [String]] = [:]
         var buttonCount = 0
+        var toolbarCount = 0
         for source in sources {
             for button in Self.buttons(in: source.code) {
                 buttonCount += 1
-                if let style = button.style, Self.isShared(style, shared) { continue }
                 let line = Self.lineNumber(of: button.offset, in: source.code)
+                if button.isInToolbar {
+                    toolbarCount += 1
+                    #expect(
+                        button.style == nil,
+                        "\(source.path) line \(line): toolbar Button on \(button.style ?? "") (keep the system style, 5.13.3c)"
+                    )
+                    continue
+                }
+                if let style = button.style, Self.isShared(style, shared) { continue }
                 unstyled[source.path, default: []].append("line \(line): \(button.style ?? "no style")")
             }
         }
 
         // The app has ~30 buttons; far fewer means the scan broke, not the app.
         #expect(buttonCount >= 25, "Only \(buttonCount) buttons found")
+        // The calendar sheet's Today, Cancel and Done.
+        #expect(toolbarCount >= 3, "Only \(toolbarCount) toolbar buttons found; is the toolbar check working?")
 
         for (path, found) in unstyled.sorted(by: { $0.key < $1.key }) {
             let allowed = Self.allowlist[path]?.count ?? 0
@@ -87,7 +104,7 @@ struct ButtonStyleDriftTests {
         #expect(DayStepButtonStyle.minimumPressedDuration == PressHold.minimum)
     }
 
-    @Test("The scan: own style, container style, innermost wins, .plain fails, comments and strings ignored")
+    @Test("The scan: own style, container style, innermost wins, .plain fails, toolbars, comments and strings ignored")
     func scanner() {
         let source = """
         struct Held: ButtonStyle {
@@ -117,6 +134,16 @@ struct ButtonStyleDriftTests {
                 }
                 .buttonStyle(Held())
                 Button("g", action: go)
+                    .toolbar {
+                        ToolbarItem(placement: .topBarLeading) {
+                            Button("h", action: go)
+                                .disabled(flag)
+                        }
+                        ToolbarItemGroup {
+                            Button("i") {}
+                                .buttonStyle(.held)
+                        }
+                    }
             }
         }
         """
@@ -125,9 +152,13 @@ struct ButtonStyleDriftTests {
         #expect(shared.types == ["Held"])
         #expect(shared.names == ["held": "Held"])
 
-        let styles = Self.buttons(in: code).map(\.style)
-        #expect(styles == [".held", "Held()", ".plain", "Held()", "Loose()", nil])
-        #expect(styles.map { $0.map { Self.isShared($0, shared) } ?? false } == [true, true, false, true, false, false])
+        let buttons = Self.buttons(in: code)
+        let styles = buttons.map(\.style)
+        #expect(styles == [".held", "Held()", ".plain", "Held()", "Loose()", nil, nil, ".held"])
+        #expect(styles.map { $0.map { Self.isShared($0, shared) } ?? false }
+            == [true, true, false, true, false, false, false, true])
+        // h is a system toolbar button (passes); i has a custom style in a toolbar (fails the rule).
+        #expect(buttons.map(\.isInToolbar) == [false, false, false, false, false, false, true, true])
     }
 
     // MARK: - Sources
@@ -209,6 +240,8 @@ struct ButtonStyleDriftTests {
         let offset: Int
         /// The innermost `.buttonStyle(…)` argument, trimmed, or nil.
         let style: String?
+        /// Inside `.toolbar { … }`, `ToolbarItem` or `ToolbarItemGroup`.
+        let isInToolbar: Bool
     }
 
     static func buttons(in code: [UInt8]) -> [FoundButton] {
@@ -225,7 +258,11 @@ struct ButtonStyleDriftTests {
             guard end < code.count, code[end] == UInt8(ascii: "(") || code[end] == UInt8(ascii: "{") else { continue }
             if code[end] == UInt8(ascii: "("), let close = matching(code, end) { end = close + 1 }
             end = skipTrailingClosures(code, end)
-            found.append(FoundButton(offset: i, style: style(for: i, end: end, in: code)))
+            found.append(FoundButton(
+                offset: i,
+                style: style(for: i, end: end, in: code),
+                isInToolbar: isInToolbar(i, in: code)
+            ))
         }
         return found
     }
@@ -237,6 +274,51 @@ struct ButtonStyleDriftTests {
         while let open = enclosingOpener(of: inner, in: code), let close = matching(code, open) {
             if let style = buttonStyle(inChainAt: close + 1, in: code) { return style }
             inner = open
+        }
+        return nil
+    }
+
+    private static let toolbarNames: Set<String> = ["toolbar", "ToolbarItem", "ToolbarItemGroup"]
+
+    /// Whether any bracket around `index` belongs to a toolbar: `name {`,
+    /// `name(…) {` or `name(`.
+    private static func isInToolbar(_ index: Int, in code: [UInt8]) -> Bool {
+        var inner = index
+        while let open = enclosingOpener(of: inner, in: code) {
+            var end = open
+            if code[open] == UInt8(ascii: "{") {
+                end = skipSpaceBackward(code, open - 1) + 1
+                if end > 0, code[end - 1] == UInt8(ascii: ")"), let callOpen = openingBracket(of: end - 1, in: code) {
+                    end = callOpen
+                }
+            }
+            var start = end
+            while start > 0, isIdentifier(code[start - 1]) { start -= 1 }
+            if toolbarNames.contains(String(decoding: code[start..<end], as: UTF8.self)) { return true }
+            inner = open
+        }
+        return false
+    }
+
+    /// The last index at or before `index` that isn't whitespace.
+    private static func skipSpaceBackward(_ code: [UInt8], _ index: Int) -> Int {
+        var i = index
+        while i >= 0, [UInt8(ascii: " "), UInt8(ascii: "\n"), UInt8(ascii: "\t"), UInt8(ascii: "\r")]
+            .contains(code[i]) { i -= 1 }
+        return i
+    }
+
+    /// The bracket that opens the one closing at `close`.
+    private static func openingBracket(of close: Int, in code: [UInt8]) -> Int? {
+        var depth = 0
+        var i = close
+        while i >= 0 {
+            if closers.contains(code[i]) { depth += 1 }
+            if openers[code[i]] != nil {
+                depth -= 1
+                if depth == 0 { return i }
+            }
+            i -= 1
         }
         return nil
     }

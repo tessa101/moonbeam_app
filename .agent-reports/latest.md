@@ -1,9 +1,24 @@
+# Build 5.13.3c: calendar toolbar buttons back on the system style: 2026-10-15 (in progress)
+
+Checkpoint commit (Tessa: "commit what's done and keep going"). **Tests not yet run on this commit.**
+- Reproduced on iOS 27 sims (iPhone 17, SE 3; default/AX1/AX3; today/other/Done): 17/18 before shots in
+  `.agent-reports/5.13.3c/before/`. Today is "Tod…" / "To…" on a small dark capsule; "Can…" with Done at AX sizes.
+  Missing: se3-ax3-today (headline overlap makes the date link untappable; separate bug).
+- Cause, from probes (`probe-1`, `probe-2`): any custom `ButtonStyle` on a toolbar item squeezes it, even a bare
+  label style; the 44 pt frame isn't the root. Dimming doesn't stack: under a custom style the system dims nothing,
+  so the 0.35 gold was the only dimming (system disabled = gray).
+- Fix: CalendarSheet Today, Cancel, Done on the system style. Drift test: toolbar Buttons must have no custom style.
+- Next: run drift + full suite, after screenshots, findings, docs, final commit, T2 install.
+
+---
+
+
 # Build 5.13.3 finish: resume edits + drift test (STEP-5.13 §4): 2026-10-15 (done; stopped)
 
 Done (not pushed):
 - `7090bc0` part 2b: the resume edits, verified. Dialog Close `.plain` → `.inline` (keeps its gray and 44 pt;
   preview checked), compass guide row `.plain` → `.row`, ‹ › hold 90 → 100 ms (`PressHold.minimum`) + its test.
-- Part 3 (this commit): `ButtonStyleDriftTests` (3). Scans the app sources; every `Button` must get its innermost
+- `3c11aaf` part 3: `ButtonStyleDriftTests` (3). Scans the app sources; every `Button` must get its innermost
   `.buttonStyle` from a style whose body applies `.pressFeedback` (derived, not listed), or `DayStepButtonStyle`
   (own look, hold = `PressHold.minimum`, asserted). Allowlist: exactly 1 in `MadlibSentence.swift`, the tokens'
   VoiceOver stand-in Buttons in `.accessibilityChildren` (the drawn tokens are Text links), comment → 5.13.4. The

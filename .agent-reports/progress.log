@@ -553,3 +553,9 @@
 2026-10-15 17:09 5.13.3 part 3: committed 7090bc0 (A); ButtonStyleDriftTests written (source scan, allowlist MadlibSentence a11y tokens -> 5.13.4); building
 2026-10-15 17:09 5.13.3 part 3: drift suite 3/3; mutation (guide row -> .plain) fails at CompassGuideRow.swift:56 as expected, reverted; full suite
 2026-10-15 17:10 5.13.3 part 3: full suite 1301/1301; docs + latest.md; committing; then stop
+2026-10-15 17:10 5.13.3 part 3 committed 3c11aaf; latest.md hash added (uncommitted); stopped
+2026-10-15 17:34 5.13.3c start: calendar Today 'Tod…' + dark pill; confirming cause
+2026-10-15 17:35 5.13.3c: before build (HEAD 3c11aaf) installed on iPhone 17 + SE3 sims (iOS 27 only; T2 is 26.6.2)
+2026-10-15 17:52 5.13.3c: before matrix 17/18 (se3-ax3-today unreachable: headline overlap); probes: any custom ButtonStyle in a toolbar item squeezes it + drops system disabled look; 44 pt frame / 0.35 not the root; probe file deleted; fixing
+2026-10-15 17:52 5.13.3c: before matrix 17/18 (se3-ax3-today unreachable: headline overlap); probes: any custom ButtonStyle in a toolbar item squeezes it + drops system disabled look; 44 pt frame / 0.35 not the root; probe file deleted; fixing
+2026-10-15 18:16 5.13.3c: checkpoint commit (fix + drift toolbar rule, diagnostics clean, tests NOT run yet); then tests

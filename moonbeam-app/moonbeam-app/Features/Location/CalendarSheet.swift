@@ -36,18 +36,20 @@ struct CalendarSheet: View {
             }
             .navigationTitle("Choose a date")
             .navigationBarTitleDisplayMode(.inline)
+            // Toolbar buttons stay on the system style (STEP-5.13 §4,
+            // corrected 5.13.3c): any custom ButtonStyle turns a nav-bar item
+            // into a squeezed custom view ("Tod…") and drops the system's
+            // disabled look. The bar's glass gives the press feedback.
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     // The only way back to today; nothing to do when already there.
                     Button("Today", action: viewModel.goToToday)
-                        .buttonStyle(.inline)
                         .disabled(viewModel.isOnToday)
                 }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Cancel") {
                         dismiss()
                     }
-                    .buttonStyle(.inline)
                 }
                 // Only after the wheel (or an ambiguous tap) moved the
                 // highlight; a plain tap on a day picks it and closes.
@@ -55,7 +57,6 @@ struct CalendarSheet: View {
                     ToolbarItem(placement: .topBarTrailing) {
                         Button("Done", action: viewModel.confirmCalendarDraft)
                             .fontWeight(.semibold)
-                            .buttonStyle(.inline)
                     }
                 }
             }
