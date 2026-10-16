@@ -1,6 +1,24 @@
 # Status & Handoff
 
+_5.14.0 test update, 2026-10-16 (Tessa ran the commands in Terminal; the agent runner had stalled): after `build-for-testing`, the six focused suites pass (`test-without-building`). Full suite: 894 tests, 28 issues, none attributable to 5.14.0 except one stale assertion: landing at AX5 on iPhone 17 no longer needs a scroll range (cat hidden at AX4+), so `AccessibilityFlowLayoutTests` now requires overflow for the landing only on the small phone (test-only edit); Accessibility flow, landing and illustration-spec suites then pass (11 tests). The other 27 issues are not 5.14.0: `SentenceTokenTests` (26) fails identically on a clean `git archive HEAD` copy from the command line (accessibility-tree lookups; passed 891/891 in Xcode, so likely a CLI/Xcode environment difference; run from Xcode to confirm), and one `PlaceChangeLayoutTests` timing bound failed only under full-suite load (passes alone). Still outstanding: visual checks (iPhone 17/SE 3 default, large text, AX4+, Reduce Motion), VoiceOver order, recording. Uncommitted; no install, push or upload. Logs: `.agent-reports/5.14.0/`._
+
+_5.14.0 implemented, verification checkpoint 2026-10-16: landing moon replaced by five full-canvas D2 searching
+vector layers in the shared illustration renderer. Only shared halo/disc breathing and calm 1a tail sway run; the
+head/paw remain still. Motion begins after the first 300 ms load-in, stops off-screen/in background, and is absent
+under Reduce Motion. Layout uses 240 × 312, steps down for large text, and hides at AX4+. Project build succeeds and
+file diagnostics are clean. Xcode's focused test action stalled twice (ten-minute cutoff, then bounded retry), so no
+full suite was run; preview rendering also cancelled before producing a frame. Required iPhone 17/SE 3, large-text,
+AX4+, Reduce Motion, VoiceOver and recording checks remain. No install, push or upload. Details:
+`docs/STEP-5.14-ONBOARDING-CAT-AND-LOAD-IN.md` and `.agent-reports/5.14.0-findings.md`._
+
+_5.14 prompt prepared, 2026-10-16: `docs/STEP-5.14-ONBOARDING-CAT-AND-LOAD-IN.md` now distinguishes completed
+5.14.1 from remaining work and includes bounded agent prompts. Next: vector searching cat on the landing;
+then 1k ready-to-look permission-off art. Declined-screen load-in stays held for Tessa's search/cancel design.
+Sleeping-cat placement is not inferred from the still handoff. Documentation only; no new app build/test run._
+
 _5.13.4 closed, 2026-10-16 at Tessa’s request. Implementation `959053d`; saved Xcode result independently verified: 891 tests / 1515 cases pass. No phone verification/install or push claimed. Continue remaining 5.14 in a new chat using `.agent-reports/5.14-handoff.md`; keep search-flow design and housekeeping separate._
+
+_5.13.4 complete, 2026-10-16 (`959053d`, not pushed): sentence date/place tokens are real buttons over native text-layout fragments, retain the shared 100 ms press feedback, and expose ≥44 pt targets without changing wrapping. VoiceOver uses the visible buttons; the drift-test allowlist is gone. Focused 28/28 and full suite 891 tests / 1515 cases pass. Default and AX5 previews reviewed; physical-phone tap/VoiceOver check remains. Report: `.agent-reports/5.13.4/findings.md`._
 
 _5.5 closed, 2026-10-16: Tessa accepted the accessibility work and asked to close it out. 5.5a–5.5d are off the active queue. Latest validation: 889 tests / 1490 cases pass, plus 12 focused onboarding reachability cases. Device checklist retained as reference; no separate agent-performed device pass claimed. Remaining separate work: 5.13.4 sentence-token tap targets/feedback; 5.14 cat and remaining onboarding animation; search-flow design stays with Tessa. Details: `docs/STEP-5.5-ACCESSIBILITY.md`._
 
@@ -21,6 +39,8 @@ _Build 5.13.3c, 2026-10-15 (`5b80b71` + follow-up; not pushed): the calendar she
 _Build 5.13.3 done, 2026-10-15 (`7090bc0` part 2b, part 3 in the next commit; not pushed; STEP-5.13 §4): dialog Close → `.inline`, guide row → `.row`, ‹ › hold 100 ms; `ButtonStyleDriftTests` fails if any Button lacks a shared style (sentence tokens allowlisted until 5.13.4). Full suite in Xcode (iPhone 17) 1301/1301. Phone check pending: guide row press vs the ring swap._
 
 _Build 5.14.1, 2026-10-15 (STEP-5.14 §2, not pushed): landing and upsell load in with `ContentLoadIn` by block index (`.index(n)`); between screens the old page fades out in 0.2 s, then the new one loads in; `ScreenChanged` 150 ms after the swap. "That's okay for now", copy and buttons unchanged; no cat yet. Full suite in Xcode (iPhone 17) 1298/1298. Simulator recordings in `.agent-reports/5.14.1/` (the T2 can't be recorded from the agent). Phone check pending (VoiceOver focus, feel)._
+
+_Build 5.13.3 parts 1-2, 2026-10-15 (`98f1d93`, `7b03608`, not pushed; STEP-5.13 §4): the shared pressed look is held ≥ 100 ms (`PressHold`); the search and calendar sheets' controls are on the new shared `.inline` / `.row` styles; debug tools were already on `.textLink`. Full suite in Xcode (iPhone 17) 1293/1293. Paused for Tessa: the sentence tokens are Text links, not Buttons (approach?); the dialog Close and compass guide row are `.plain`; the ‹ › hold is 90 ms. Part 3 (drift test) after those. Phone check pending._
 
 _TestFlight 0.1 (10) prepared, 2026-10-14 (`c205672`, `docs/TESTFLIGHT-BUILD-10.md`): build 9 → 10, version stays 0.1. Full suite in Xcode (iPhone 17) 1287/1287; Release build succeeds with one new warning vs build 9 (`LocationScreen.swift:348`, from `45c2717`); bundle checks pass (Moon Signal, iOS 26.0, privacy manifest, encryption false, DEBUG code out, TestFlight tools in). Not archived or uploaded (Tessa's). Compass simplification and dynamic sizing done; telescope correction and 5.5 still pending._
 
@@ -210,6 +230,15 @@ Rule: finish what changes the card before the AX reflow, or the reflow is done t
 5. [~] **5.5 AX reflow** incl. the always-three-column card on today and the SE 3 connector; loader VoiceOver /
    Reduce Motion review (LOADER.md §10.6).
 6a. [~] **5.12b location off, prompt + moon guide** (5.12b.1/.1a/.1b, 5.12b.2 and 5.12b.3a done 2026-10-13; 5.12b.3b 2026-10-14) (Tessa, 2026-10-13; `docs/LOCATION-OFF-FLOW.md`): ghosted compass prompt, new subhead, Maybe later, dismissed row (S2–S6), swap polish. Replaces the 5.12 cartoon compass. Three small runs: 5.12b.1 → .2 → .3.
+6b. [ ] **5.13 search is a detour, "That's okay for now", sheet content, tap feedback** (Tessa, 2026-10-14/15;
+   `docs/STEP-5.13-ONBOARDING-DECLINE-SEARCH.md`): Cancel returns to where search was opened; Got it opens search;
+   Use my location first with the pin, five suggested cities with no recents; every control shows a pressed state on
+   a normal tap. Three small runs: 5.13.1 → .2 → .3. Not built. **5.13.1/.2 on hold** until the cancel-search flow is
+   decided (MVP blocker, separate chat); .3 parts 1-2 done 2026-10-15 (`98f1d93`, `7b03608`), part 2b + 3 done 2026-10-15 (`7090bc0` + drift test).
+6c. [ ] **5.14 cat on the landing + onboarding load-ins** (`docs/STEP-5.14-ONBOARDING-CAT-AND-LOAD-IN.md`): the awake
+   searching cat with halo pulse and tail sway; `ContentLoadIn` on all screens. Needs `d2-searching` sliced. After 5.13.
+6d. [ ] **App Store prep checklist** (2026-10-15, `docs/APP-STORE-PREP.md`): proposed cut line A, ordered work, store
+   assets, open decisions. Draft; cut line not yet confirmed by Tessa.
 6. [x] **5.12 location off:** the cartoon-compass teaser (option 1b, 2026-10-12) is superseded by 5.12b and removed in 5.12b.1. Still open from it: confirming that restricted keeps the chip (carried into 5.12b). See DECISIONS 2026-10-12 "5.12 location-off teaser" and 2026-10-13 "5.12b".
 7. [~] **TestFlight 0.1 (10) prepared** (2026-10-14, `c205672`; `docs/TESTFLIGHT-BUILD-10.md`): `CURRENT_PROJECT_VERSION`
    9 → 10, `MARKETING_VERSION` stays 0.1. 1287/1287 pass; Release build succeeds (one new warning, see the doc).

@@ -1706,6 +1706,40 @@ count, and fires only after one more request. No tolerances or timings changed. 
 - **Closed (Tessa, on device):** the dial's simplification ends at step 1, minor ticks every 5°. Mid ticks, degree
   numbers and the crosshair stay as they are. Ships in TestFlight 0.1 (10).
 
+## 2026-10-14/15: Search is a detour; "That's okay for now"; suggested cities; tap feedback; cat on the landing (Tessa)
+
+- **Problem (TestFlight 0.1 (10) recording):** Don't Allow → "That's okay" → Got it → the telescope. The same message
+  twice in a row.
+- **Rule (2026-10-15):** opening Search for a city and cancelling **returns to the screen it was opened from**
+  (upsell, "That's okay for now", telescope, First ask). A pick goes to the main screen. The upsell was the one
+  exception (it exited onboarding and landed on First ask); onboarding now presents the sheet over itself.
+- **"That's okay for now":** new title and body (STEP-5.13 §2). **Got it** opens the city search; **Enable location**
+  unchanged. (Replaces the 2026-10-14 idea of "Ok, search for a city".)
+- **Search sheet:** Use my location first with the place pin (denied or off opens Settings, as the upsell does);
+  with no recents, Los Angeles, New York, Paris, London and Tokyo under "Search for your city or choose one of
+  these". Fixed places, no network.
+- **Correction (2026-10-15, phone check):** nav-bar / toolbar buttons stay system. The shared `.inline` style truncated
+  the calendar sheet's Today to "Tod…" and double-dimmed it; Today, Cancel and Done return to the system style.
+- **Tap feedback (global, app-wide design-system rule):** the pressed state must show on an ordinary tap, so every control holds its look for at least
+  100 ms, and every control (sheets, sentence tokens, debug tools) uses the shared style; a test enforces it.
+  Strength starts at the current values and is tuned on the phone.
+- **Cat on the landing (not built):** the awake searching cat on the moon halo, with the halo pulse and a tail sway,
+  replaces the landing moon. Load-ins reuse `ContentLoadIn`. STEP-5.14-ONBOARDING-CAT-AND-LOAD-IN.md.
+- **Hold (2026-10-15, Tessa):** the cancel-search flow is part of the MVP and still being decided in another chat.
+  5.13.1 and 5.13.2 wait for it; the agent starts on work that doesn't depend on it (housekeeping, 5.13.3, 5.5).
+- **Specs:** STEP-5.13-ONBOARDING-DECLINE-SEARCH.md, STEP-5.14-ONBOARDING-CAT-AND-LOAD-IN.md. Supersedes the open
+  follow-up in STEP-5.10a-LOCATION-CONSOLIDATION.md §6.
+
+## 2026-10-15: 5.13.3 tap feedback, parts 1-2 (agent)
+
+- The 100 ms minimum hold is a value type, `PressHold`, fed by `PressFeedback`, so the rule is tested without a view.
+  The look is held; the action is not delayed.
+- Two new shared styles rather than stretching `.textLink` (full width): `.inline` for Cancel/Clear/Today/Done (keeps
+  the label's font, tint by default, 44 pt minimum; the toolbar glass stays) and `.row` for list rows (full width,
+  44 pt minimum; replaces the list's gray highlight).
+- Open: the sentence tokens are links inside `Text`, not Buttons (approach for Tessa); the dialog Close and compass
+  guide row are on `.plain`; the ‹ › hold is 90 ms.
+
 ## 2026-10-15: 5.14.1 onboarding load-ins, landing and upsell (agent)
 
 - `ContentLoadIn` gets a generic position, `.index(n)`, beside the main screen's `.main(Block)`, rather than adding
@@ -1770,3 +1804,7 @@ Reviewed nine scripted card scenarios at both widths, default + AX1–AX5, plus 
 AX dial targets a 260 pt face but keeps the existing side-label width limit (233 pt on SE 3). A taller moon card no longer reduces it to the 196 pt floor: the page already scrolls. This reconciles DESIGN-1.1 §4 with the later width-fit work. Default sizing retains its height budget. AX letters cap at 17 actual screen points and expose Large Content Viewer through 44 pt regions; the dial remains one VoiceOver target summary.
 
 At AX sizes the readout slot becomes a minimum rather than a fixed height, so wrapped lock text reserves its actual space above the dial. The full label/needle gap is retained and the lock panel uses 24 pt corners instead of a tall capsule that curves behind its text. Defaults retain their fixed slot and capsule. Existing pinned-summary gating already waits until the real readout is below the fold; retained and covered by rule tests and full-screen scroll checks. Device press-and-hold / VoiceOver review remains in 5.5d.
+
+## 2026-10-16 — 5.13.4 sentence tokens keep native text layout
+
+Keep each sentence line as one native `Text`; do not replace it with a flow layout. Mark token runs for a `TextRenderer`, then overlay one real button per token using the renderer's fragment rectangles. The button redraws only the token ink, uses the shared `PressFeedback`, and hit-tests the union of ≥44 pt fragment targets. Date expands upward and place downward so their close-set targets do not overlap. The visible buttons replace both attributed-string URL routing and the accessibility-only stand-ins; VoiceOver label, hint and activation live on the same controls sighted users tap. Remove the 5.13.3 drift-test allowlist. Focused 28/28 and full suite 891 tests / 1515 cases pass; physical-phone feel and spoken-order review remain.

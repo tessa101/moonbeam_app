@@ -1,30 +1,54 @@
+# 5.14.0 — searching cat implemented; verification checkpoint (2026-10-16)
+
+The landing now uses the existing D2 searching vector as five full-canvas slices: halo, disc, tail, body and a
+combined still head/paw layer. It runs the shared halo/disc breath plus only 1a's calm 4.2 s tail sway; motion starts
+when the 300 ms art load-in lands and the shared lifecycle removes the timeline under Reduce Motion, off-screen and
+in background. Responsive art is 240 × 312 by default, 160 × 208 at xxxLarge, 96 × 124.8 at AX1–AX3, hidden at
+AX4+, on the existing scrollable page with 24 pt top spacing. 5.14.1 load-ins, accessibility behavior, token feedback,
+upsell/loader/declined/search paths and later artwork are unchanged.
+
+Validation: four edited Swift files have no Xcode diagnostics; Debug project build succeeds in 10.962 s with no
+errors; all five slices are vector-only and metadata-free. Xcode's focused test action stalled twice without output
+(stopped at ten minutes, then a one-minute bounded retry), so no full suite was attempted. The one lean preview also
+failed before rendering (`noBuildDescription(...cancelled)`). Simulator/device visual checks therefore remain for
+iPhone 17 and SE 3 default, large text, AX4+, Reduce Motion, VoiceOver order and a short entrance/idle recording.
+No phone installation, commit, push or upload. Full findings: `.agent-reports/5.14.0-findings.md`.
+
+---
+
 # 5.13.4 — closed; next chat 5.14 (2026-10-16)
 
-Closed at Tessa’s request. Implementation `959053d`; saved Xcode full suite independently verified: **891 tests / 1515 cases pass**. No phone verification/install or push claimed. The old paused handoff is superseded. Next-chat context: `.agent-reports/5.14-handoff.md`. Documentation-only closeout; no tests rerun or new implementation.
+Closeout committed as `9b1181a` (not pushed). Closed at Tessa’s request. Implementation `959053d`; saved Xcode full suite independently verified: **891 tests / 1515 cases pass**. No phone verification/install or push claimed. The old paused handoff is superseded. Next-chat context: `.agent-reports/5.14-handoff.md`. Documentation-only closeout; no tests rerun or new implementation.
+
+---
+
+# 5.13.4 — sentence token buttons (2026-10-16)
+
+Committed as `959053d` (not pushed). Sentence date/place tokens are now real buttons over native text-layout fragments: wrapping and shared scale stay intact, every fragment is at least 44 pt, and the shared 100 ms pressed look applies. VoiceOver uses those same visible buttons; the old URL links/accessibility stand-ins and drift allowlist are gone. Focused **28/28** and full suite **891 tests / 1515 cases pass**. Default + AX5 previews reviewed. Screenshot-heavy place-change timing guard widened 200 → 250 ms for repeatable full-suite capture overhead, still below the removed 400 ms delay. Report: `.agent-reports/5.13.4/findings.md`. Physical-phone tap/VoiceOver check remains; no install or push.
 
 ---
 
 # 5.5 — closed (2026-10-16)
 
-Tessa accepted the work and requested closeout. **5.5a–5.5d complete; removed from the active queue.** Latest full validation: 889 tests / 1490 cases pass, plus 12 focused onboarding reachability cases. Review commit `519dceb`; compass `23c62be`. Device checklist retained for reference, without claiming an independent agent device pass. Next separate work: 5.13.4 sentence-token tap targets/feedback, then remaining 5.14 cat/onboarding work when artwork is ready. Search-flow design remains with Tessa. Documentation-only closeout; no tests rerun, install or push.
+Closeout committed as `ced13b9` (not pushed). Tessa accepted the work and requested closeout. **5.5a–5.5d complete; removed from the active queue.** Latest full validation: 889 tests / 1490 cases pass, plus 12 focused onboarding reachability cases. Review commit `519dceb`; compass `23c62be`. Device checklist retained for reference, without claiming an independent agent device pass. Next separate work: 5.13.4 sentence-token tap targets/feedback, then remaining 5.14 cat/onboarding work when artwork is ready. Search-flow design remains with Tessa. Documentation-only closeout; no tests rerun, install or push.
 
 ---
 
 # 5.5d — simulator review checkpoint (2026-10-16)
 
-Ready to commit. Reviewed 40 hosted flow cases at both phone dimensions: AX1/AX5 onboarding, failure screens, calendar/search, plus AX5 searching and permission loaders. Added touch-scroll, horizontal-fit and bottom-reachability coverage, including native UIKit text traits. No product code changed. Full suite **889 tests / 1490 cases pass**; final onboarding real-scroll assertion **12/12 pass**. Source review of VoiceOver/focus and Reduce Motion is recorded separately from device verification. **5.5d remains open for physical-device sign-off**: spoken order/focus, motion feel, keyboard/sheet gestures and compass-letter enlargement. Checklist and contact sheets: `.agent-reports/5.5d/findings.md`. No phone install or push.
+Committed as `519dceb` (not pushed). Reviewed 40 hosted flow cases at both phone dimensions: AX1/AX5 onboarding, failure screens, calendar/search, plus AX5 searching and permission loaders. Added touch-scroll, horizontal-fit and bottom-reachability coverage, including native UIKit text traits. No product code changed. Full suite **889 tests / 1490 cases pass**; final onboarding real-scroll assertion **12/12 pass**. Source review of VoiceOver/focus and Reduce Motion is recorded separately from device verification. **5.5d remains open for physical-device sign-off**: spoken order/focus, motion feel, keyboard/sheet gestures and compass-letter enlargement. Checklist and contact sheets: `.agent-reports/5.5d/findings.md`. No phone install or push.
 
 ---
 
 # 5.5c — compass accessibility (2026-10-16)
 
-Ready to commit. AX dial keeps its width-safe target size; wrapped lock readout reserves natural height and uses a rounded panel. Letters cap at 17 screen points and expose Large Content Viewer. Existing pinned-bar/readout gating retained. Reviewed twelve compass captures; full suite **885 tests / 1450 cases pass**. Report: `.agent-reports/5.5c/findings.md`. Next: 5.5d whole-flow large text, VoiceOver and Reduce Motion, then physical-device checks (including letter enlargement). No phone install or push.
+Committed as `23c62be` (not pushed). AX dial keeps its width-safe target size; wrapped lock readout reserves natural height and uses a rounded panel. Letters cap at 17 screen points and expose Large Content Viewer. Existing pinned-bar/readout gating retained. Reviewed twelve compass captures; full suite **885 tests / 1450 cases pass**. Report: `.agent-reports/5.5c/findings.md`. Next: 5.5d whole-flow large text, VoiceOver and Reduce Motion, then physical-device checks (including letter enlargement). No phone install or push.
 
 ---
 
 # 5.5b — card edge-case pass (2026-10-16)
 
-Reviewed nine event/status scenarios at both phone card widths, default + AX1–AX5 (108 renders), plus nine lock checks. Fixed empty AX guidance space and placed AX time-zone labels after the complete time. SE connector still hides when its minimum gap does not fit. Full suite **883 tests / 1441 cases pass**. Test-only compass frame-clock repair is `cca3cb0`; app compass unchanged. Findings and lean image set: `.agent-reports/5.5b/`. Tessa confirmed the prior scrolling fix on device. Next: 5.5c compass overlap/sizing/Large Content Viewer. No phone install or push.
+Committed card step `480a672` (not pushed). Reviewed nine event/status scenarios at both phone card widths, default + AX1–AX5 (108 renders), plus nine lock checks. Fixed empty AX guidance space and placed AX time-zone labels after the complete time. SE connector still hides when its minimum gap does not fit. Full suite **883 tests / 1441 cases pass**. Test-only compass frame-clock repair is `cca3cb0`; app compass unchanged. Findings and lean image set: `.agent-reports/5.5b/`. Tessa confirmed the prior scrolling fix on device. Next: 5.5c compass overlap/sizing/Large Content Viewer. No phone install or push.
 
 ---
 
@@ -36,19 +60,19 @@ Committed test-only repair `cca3cb0`: wait for injected headings and control the
 
 # 5.5a.1 — large-text scrolling restored (2026-10-16)
 
-Reproduced Tessa's scrolling report in the actual LocationScreen: all six AX1/AX3/AX5 cases at SE/iPhone 17 dimensions failed because the scroll content was fixed to one viewport. Changed that to a viewport minimum so longer content has its natural scroll range. Six bottom-reachability cases and two prompt collapse/expand cases now pass; full suite **881 tests / 1324 cases pass**. Report: `.agent-reports/5.5a/scrolling-followup.md`. No phone installation or push. Next remains 5.5b, followed by compass/whole-flow accessibility review.
+Committed as `d4106af` (not pushed). Reproduced Tessa's scrolling report in the actual LocationScreen: all six AX1/AX3/AX5 cases at SE/iPhone 17 dimensions failed because the scroll content was fixed to one viewport. Changed that to a viewport minimum so longer content has its natural scroll range. Six bottom-reachability cases and two prompt collapse/expand cases now pass; full suite **881 tests / 1324 cases pass**. Report: `.agent-reports/5.5a/scrolling-followup.md`. No phone installation or push. Next remains 5.5b, followed by compass/whole-flow accessibility review.
 
 ---
 
 # 5.5a — moon card accessibility, first pass (2026-10-16)
 
-AX card header now has a 64 pt glyph above text and equal-width 60 pt day buttons in their own row. AX time/day-period rows allow the rise/set pair to fit through AX3 for the reviewed fixture; AX5 stacks it. Status grows with its actual content. Final full suite: **879 tests / 1316 cases pass**. Ten hosted geometry checks and ten full-height card renders reviewed. Findings: `.agent-reports/5.5a/findings.md`. Next: 5.5b event/status edge cases and SE connector, then compass and whole-flow review. Phone, scrolling and VoiceOver checks pending; no device install or push.
+Committed as `e6b14da` (not pushed). AX card header now has a 64 pt glyph above text and equal-width 60 pt day buttons in their own row. AX time/day-period rows allow the rise/set pair to fit through AX3 for the reviewed fixture; AX5 stacks it. Status grows with its actual content. Final full suite: **879 tests / 1316 cases pass**. Ten hosted geometry checks and ten full-height card renders reviewed. Findings: `.agent-reports/5.5a/findings.md`. Next: 5.5b event/status edge cases and SE connector, then compass and whole-flow review. Phone, scrolling and VoiceOver checks pending; no device install or push.
 
 ---
 
 # 5.13.3e calendar scroll-height follow-up — 2026-10-16
 
-The headline and initial calendar fixes are committed as `87028cc` and `f6bc5b1`. Review found the calendar sheet collapsing on scroll in the saved SE AX1 evidence. Follow-up code now fits from scroll content size plus its top inset, never global edges. Six sizing regression cases added; Xcode full suite **878 tests / 1307 cases pass**. iPhone 17 and SE3 large-text fixtures show the complete month; repeated scroll attempts do not collapse the settled sheet. Full matrix, overflowing-scroll and physical phone checks remain. Calendar follow-up approved for commit; no device installation or push. Details: `.agent-reports/5.13.3e/scroll-height-followup.md`.
+The headline and initial calendar fixes are committed as `87028cc` and `f6bc5b1`. Review found the calendar sheet collapsing on scroll in the saved SE AX1 evidence. Follow-up code now fits from scroll content size plus its top inset, never global edges. Six sizing regression cases added; Xcode full suite **878 tests / 1307 cases pass**. iPhone 17 and SE3 large-text fixtures show the complete month; repeated scroll attempts do not collapse the settled sheet. Full matrix, overflowing-scroll and physical phone checks remain. Committed as `e60bb14`; no device installation or push. Details: `.agent-reports/5.13.3e/scroll-height-followup.md`.
 
 ---
 
@@ -75,7 +99,10 @@ Needs Tessa:
 2. Separate bugs seen: the headline overlaps itself at AX sizes (SE AX3: the calendar can't be opened from today);
    the SE's medium calendar sheet hides the last week; the headline's accessibility frames are off.
 
-Next: T2 install (below), then your call on 1.
+Device: Debug build of `5988dc8` installed on the T2 iPhone (devicectl, generic iOS build, first try). This line is
+uncommitted.
+
+Next: your call on 1. Phone check: the calendar toolbar on iOS 26.6.2 (only iOS 27 was checked here).
 
 ---
 
