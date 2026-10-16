@@ -72,6 +72,8 @@ struct MoonCard: View {
     private static let stepButtonSpacing: CGFloat = 0
 
     private static let glyphSize: CGFloat = 44
+    private static let accessibilityGlyphSize: CGFloat = 64
+    private static let accessibilityStepSpacing: CGFloat = 12
     /// Between the phase name and its illumination ("Last Quarter · 53% lit").
     private static let phaseSeparator = " · "
     /// At the default size the phase line shrinks in these steps, down to
@@ -185,20 +187,15 @@ struct MoonCard: View {
 
     // MARK: - Header row
 
-    /// Glyph, the two text lines, ‹ ›. At accessibility sizes the text
-    /// gets its own full-width rows under the glyph and ‹ ›, since squeezed
-    /// between them it wraps a word per line.
+    /// At accessibility sizes, the phase and day controls each get the full
+    /// card width rather than competing for space beside the glyph.
     @ViewBuilder
     private var header: some View {
         if dynamicTypeSize.isAccessibilitySize {
             VStack(alignment: .leading, spacing: Self.headerSpacing) {
-                HStack(spacing: Self.headerSpacing) {
-                    glyph
-                    Spacer(minLength: 0)
-                    stepButtons
-                }
-                .padding(.trailing, -Self.headerTrailingOutset)
+                glyph
                 headerText
+                stepButtons
             }
         } else {
             HStack(spacing: Self.headerSpacing) {
@@ -215,7 +212,10 @@ struct MoonCard: View {
     /// frame, and the glyph waits hidden until it has.
     private var glyph: some View {
         PhaseGlyph(geometry: table.glyph)
-            .frame(width: Self.glyphSize, height: Self.glyphSize)
+            .frame(
+                width: dynamicTypeSize.isAccessibilitySize ? Self.accessibilityGlyphSize : Self.glyphSize,
+                height: dynamicTypeSize.isAccessibilitySize ? Self.accessibilityGlyphSize : Self.glyphSize
+            )
             .opacity(hidesPhaseGlyph ? 0 : 1)
             .anchorPreference(key: CardPhaseSlotKey.self, value: .bounds) { $0 }
             .accessibilityHidden(true)
@@ -230,7 +230,7 @@ struct MoonCard: View {
     }
 
     private var stepButtons: some View {
-        HStack(spacing: Self.stepButtonSpacing) {
+        HStack(spacing: dynamicTypeSize.isAccessibilitySize ? Self.accessibilityStepSpacing : Self.stepButtonSpacing) {
             stepButton(.previous, title: "Previous day", systemImage: "chevron.left", enabled: viewModel.canGoBack) {
                 viewModel.previousDay()
             }
@@ -738,10 +738,25 @@ struct MoonCard: View {
         // The display font as the base too, so the line is measured for
         // Young Serif 24, not the body font, and it wraps instead of being
         // cut short at AX sizes.
-        let timeText = Self.text(for: time)
-            .font(Theme.Fonts.display)
-            .foregroundStyle(Theme.Colors.textPrimary)
-            .fixedSize(horizontal: false, vertical: true)
+        let timeText = Group {
+            if dynamicTypeSize.isAccessibilitySize {
+                // Keep each locale's run order, including AM/PM prefixes.
+                // A separate day-period line lets the pair fit without
+                // shrinking digits or splitting a time in the middle.
+                VStack(alignment: .leading, spacing: 0) {
+                    ForEach(time.runs.indices, id: \.self) { index in
+                        let run = time.runs[index]
+                        Text(run.text.trimmingCharacters(in: .whitespacesAndNewlines))
+                            .font(Theme.Fonts.display(scale: run.isDayPeriod ? Theme.Fonts.dayPeriodScale : 1))
+                    }
+                }
+            } else {
+                Self.text(for: time)
+                    .font(Theme.Fonts.display)
+            }
+        }
+        .foregroundStyle(Theme.Colors.textPrimary)
+        .fixedSize(horizontal: false, vertical: true)
 
         if let timeZone {
             let zoneText = Text(timeZone)
@@ -764,10 +779,9 @@ struct MoonCard: View {
 
     // MARK: - Up now pill (COMPASS-1.1.md §9.2; the §9.14 AX fallback)
 
-    /// "● Up now · 266° W", outlined when the compass is locked on the
-    /// Moon. Only while the moon is up, and only where the three columns
-    /// don't fit; one element for VoiceOver, with the formatter's sentence
-    /// (§3).
+    /// Full-width status when the three-column row does not fit. AX height
+    /// follows the actual status instead of reserving the longest sample.
+    /// One element for VoiceOver, with the formatter's complete sentence.
     private func middlePill() -> some View {
         let isHighlighted = viewModel.highlightedCardCell == .upNow
         let shape = RoundedRectangle(cornerRadius: Self.pillHeight / 2)
@@ -776,10 +790,12 @@ struct MoonCard: View {
                 .fill(Theme.Colors.moonLit)
                 .frame(width: Self.upNowDotSize, height: Self.upNowDotSize)
             ZStack(alignment: .leading) {
-                Text("Set for today · Back late tonight, 12:20 AM")
-                    .font(Theme.Fonts.label)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .hidden()
+                if !dynamicTypeSize.isAccessibilitySize {
+                    Text("Set for today · Back late tonight, 12:20 AM")
+                        .font(Theme.Fonts.label)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .hidden()
+                }
                 Text(viewModel.compass.upNow?.pillText ?? "")
                     .font(Theme.Fonts.label)
                     .fixedSize(horizontal: false, vertical: true)
@@ -922,8 +938,8 @@ private struct CellStyle: ViewModifier {
 
 // MARK: - ‹ › button style
 
-/// §2: a 32 pt raised circle with a faint top highlight and a soft shadow,
-/// centred in a 44 pt hit area.
+/// §2: a 32 pt raised circle in a 44 pt hit area at standard sizes. AX uses
+/// two equal-width, 60 pt buttons in a separate row (DESIGN-1.1 §4).
 struct DayStepButtonStyle: ButtonStyle {
 
     @Environment(\.isEnabled) private var isEnabled
@@ -969,10 +985,14 @@ private struct DayStepPressedBody: View {
     let layoutProbe: DayStepLayoutProbe?
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @State private var showsPressedLook = false
     @State private var pressIsDown = false
     @State private var minimumHoldElapsed = false
     @State private var pressCycle = 0
+
+    private static let accessibilityHeight: CGFloat = 60
+    private static let accessibilityCornerRadius: CGFloat = 14
 
     private var isPressedByTest: Bool {
         guard let direction, let layoutProbe else { return false }
@@ -984,13 +1004,19 @@ private struct DayStepPressedBody: View {
     }
 
     var body: some View {
-        let circle = Circle()
+        let isAccessibilitySize = dynamicTypeSize.isAccessibilitySize
+        let circle = RoundedRectangle(cornerRadius: isAccessibilitySize
+            ? Self.accessibilityCornerRadius : Theme.Metrics.stepButtonSize / 2)
         let inner = circle.inset(by: Theme.Metrics.hairline)
 
         configuration.label
             .font(Theme.Fonts.label)
             .foregroundStyle(Theme.Colors.textPrimary)
-            .frame(width: Theme.Metrics.stepButtonSize, height: Theme.Metrics.stepButtonSize)
+            .frame(maxWidth: isAccessibilitySize ? .infinity : nil)
+            .frame(
+                width: isAccessibilitySize ? nil : Theme.Metrics.stepButtonSize,
+                height: isAccessibilitySize ? Self.accessibilityHeight : Theme.Metrics.stepButtonSize
+            )
             .background {
                 circle
                     .fill(Theme.Colors.surfaceRaised)
@@ -1026,7 +1052,10 @@ private struct DayStepPressedBody: View {
                     showsPressedLook && !reduceMotion ? DayStepButtonStyle.pressedScale : 1
                 )
             }
-            .frame(width: Theme.Metrics.minimumHitTarget, height: Theme.Metrics.minimumHitTarget)
+            .frame(
+                width: isAccessibilitySize ? nil : Theme.Metrics.minimumHitTarget,
+                height: isAccessibilitySize ? Self.accessibilityHeight : Theme.Metrics.minimumHitTarget
+            )
             .contentShape(Rectangle())
             .onChange(of: isPressed, initial: true) { _, pressed in
                 updatePressedLook(pressed)

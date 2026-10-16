@@ -1749,3 +1749,8 @@ The saved SE AX1 after-scroll evidence for `f6bc5b1` shows a 105.8 pt sheet, dow
 ## 2026-10-16: Queue clarification (Tessa)
 
 5.13.1/.2 search-flow design remains Tessa's pending work. Replace the telescope with the ready-to-look cat animation; the older telescope redraw/replacement-art plan is superseded. Next substantial implementation task remains 5.5a. Disabled Today appearance is under visual review, with no appearance change authorized yet.
+
+
+## 2026-10-16: 5.5a first moon-card accessibility pass
+
+Implement DESIGN-1.1 §4: AX glyph 64 pt above date/phase text, separate equal-width 60 pt day controls; existing press/disabled/Reduce Motion behavior retained. At AX sizes keep time runs in locale order with the day period on its own line, so the rise/set fit test can retain a readable pair before stacking. The AX status grows with actual text; remove its hidden longest-status reservation. Standard-size height stability remains tested; AX no longer promises equal up/down heights. Full suite 879 tests / 1316 cases pass; ten hosted control-layout cases and full-height card renders at both phone widths reviewed. Whole-screen/VoiceOver/phone checks and event/status edge cases remain in 5.5b–d. Spec/tracking: `docs/STEP-5.5-ACCESSIBILITY.md`. Disabled Today stays unchanged per Tessa.

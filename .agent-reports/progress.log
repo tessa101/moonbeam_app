@@ -568,3 +568,6 @@
 
 2026-10-16 08:33 PDT 5.13.3e follow-up: saved AX1 evidence confirms calendar collapses on scroll; replaced global-edge measurement with scroll content size + top inset; regression cases added; Xcode full suite started (shell simulator connection unavailable).
 2026-10-16 08:38 PDT 5.13.3e follow-up: Xcode full suite 878 tests / 1307 cases pass; large-text iPhone 17 + SE3 complete grid and repeated scroll attempts checked in Device Hub; scheme restored; docs/report updated; physical phone + overflow matrix pending; uncommitted.
+2026-10-16 08:57 PDT 5.5a: card header reflow + locale-ordered day-period rows implemented; ten real header geometry cases added; starting Xcode validation.
+2026-10-16 08:59 PDT 5.5a: card geometry cases pass; full run has one CompassEntranceFrameTests timing failure (185° vs 190° at sample 13); adding full-height card review artifacts and rerunning to assess the failure.
+2026-10-16 09:03 PDT 5.5a: final full suite 879 tests / 1316 cases pass; all ten full-height card captures reviewed; docs/findings complete; preparing isolated first-step commit.

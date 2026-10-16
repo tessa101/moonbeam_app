@@ -8,8 +8,9 @@ import Testing
 @testable import moonbeam_app
 
 /// COMPASS-1.1.md §9.14: the moon card is the same height with the moon up
-/// (three columns, or the AX pill fallback) as down, so nothing below it
-/// moves when the moon rises or sets. Rendered for real with `ImageRenderer`
+/// (three columns) as down at standard text size, so nothing below it
+/// moves when the moon rises or sets. AX sections grow to fit their actual
+/// content (DESIGN-1.1 §4). Rendered for real with `ImageRenderer`
 /// at the card's width on the iPhone 17 and the SE 3.
 @Suite("Moon card height")
 @MainActor
@@ -115,10 +116,9 @@ struct MoonCardHeightTests {
 
     // MARK: - Tests
 
-    @Test("Up and down render the same card height", arguments: [
+    @Test("Up and down render the same standard-size card height", arguments: [
         (iPhone17CardWidth, DynamicTypeSize.large),
         (se3CardWidth, .large),
-        (iPhone17CardWidth, .accessibility1),
     ])
     func upEqualsDown(width: CGFloat, size: DynamicTypeSize) throws {
         let up = try Self.cardHeight(isMoonUp: true, width: width, size: size)

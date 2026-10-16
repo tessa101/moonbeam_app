@@ -1,5 +1,7 @@
 # Status & Handoff
 
+_5.5a first card pass, 2026-10-16: AX glyph/text/controls reflow, 60 pt equal day buttons, locale-ordered time/day-period rows, natural status height. Full suite 879 tests / 1316 cases pass. Card renders reviewed at both phone widths, standard + AX1/2/3/5; phone, scrolling and VoiceOver checks pending. Next: 5.5b. See `docs/STEP-5.5-ACCESSIBILITY.md` and `.agent-reports/5.5a/findings.md`._
+
 _5.13.3e follow-up, 2026-10-16 (approved for commit): fixed calendar sheet collapsing on scroll by sizing from content height plus navigation inset. Full suite in Xcode: 878 tests / 1307 cases pass. Large-text iPhone 17 and SE3 simulator checks show the complete month; full matrix, overflowing-scroll and physical phone review remain. Report: `.agent-reports/5.13.3e/scroll-height-followup.md`._
 
 _Build 5.13.3c, 2026-10-15 (`5b80b71` + follow-up; not pushed): the calendar sheet's Today, Cancel and Done are back on the system style ("Tod…" fixed); the drift test requires toolbar buttons to have no custom style. Full suite 1301/1301. Open for Tessa: disabled Today looks enabled (root foreground style, same in build 10); the headline overlaps at AX sizes; the SE's calendar sheet is clipped._
@@ -193,7 +195,7 @@ Rule: finish what changes the card before the AX reflow, or the reflow is done t
    - [x] **5.10a location-failure Chunk 6** (built 2026-10-10, 1099 cases pass): loader → failure crossfade, ordered `ContentLoadIn` entrance, 1.2 s shared search minimum, instant-failure path, Reduce Motion zero-rise; Chunk 3 flash/overlap findings resolved. Continuous simulator recording unavailable; representative device captures retained locally.
 4. [x] **5.11 moon state** (MOON-STATE.md; 5.11.1/.2 `810bc6e`/`75cba2c`, 5.11.3 `be6bbeb`, Tessa approved 2026-10-12): 5.11.1 middle column on today (Up now / Not up yet / Set for today),
    countdown, this pass's rise while up → 5.11.2 `23° up` → 5.11.3 edge-case voice line (draft copy).
-5. [ ] **5.5 AX reflow** incl. the always-three-column card on today and the SE 3 connector; loader VoiceOver /
+5. [~] **5.5 AX reflow** incl. the always-three-column card on today and the SE 3 connector; loader VoiceOver /
    Reduce Motion review (LOADER.md §10.6).
 6a. [~] **5.12b location off, prompt + moon guide** (5.12b.1/.1a/.1b, 5.12b.2 and 5.12b.3a done 2026-10-13; 5.12b.3b 2026-10-14) (Tessa, 2026-10-13; `docs/LOCATION-OFF-FLOW.md`): ghosted compass prompt, new subhead, Maybe later, dismissed row (S2–S6), swap polish. Replaces the 5.12 cartoon compass. Three small runs: 5.12b.1 → .2 → .3.
 6. [x] **5.12 location off:** the cartoon-compass teaser (option 1b, 2026-10-12) is superseded by 5.12b and removed in 5.12b.1. Still open from it: confirming that restricted keeps the chip (carried into 5.12b). See DECISIONS 2026-10-12 "5.12 location-off teaser" and 2026-10-13 "5.12b".

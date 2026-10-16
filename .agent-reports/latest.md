@@ -1,3 +1,9 @@
+# 5.5a — moon card accessibility, first pass (2026-10-16)
+
+AX card header now has a 64 pt glyph above text and equal-width 60 pt day buttons in their own row. AX time/day-period rows allow the rise/set pair to fit through AX3 for the reviewed fixture; AX5 stacks it. Status grows with its actual content. Final full suite: **879 tests / 1316 cases pass**. Ten hosted geometry checks and ten full-height card renders reviewed. Findings: `.agent-reports/5.5a/findings.md`. Next: 5.5b event/status edge cases and SE connector, then compass and whole-flow review. Phone, scrolling and VoiceOver checks pending; no device install or push.
+
+---
+
 # 5.13.3e calendar scroll-height follow-up — 2026-10-16
 
 The headline and initial calendar fixes are committed as `87028cc` and `f6bc5b1`. Review found the calendar sheet collapsing on scroll in the saved SE AX1 evidence. Follow-up code now fits from scroll content size plus its top inset, never global edges. Six sizing regression cases added; Xcode full suite **878 tests / 1307 cases pass**. iPhone 17 and SE3 large-text fixtures show the complete month; repeated scroll attempts do not collapse the settled sheet. Full matrix, overflowing-scroll and physical phone checks remain. Calendar follow-up approved for commit; no device installation or push. Details: `.agent-reports/5.13.3e/scroll-height-followup.md`.
