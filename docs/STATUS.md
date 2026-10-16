@@ -1,5 +1,7 @@
 # Status & Handoff
 
+_Build 5.13.3c, 2026-10-15 (`5b80b71` + follow-up; not pushed): the calendar sheet's Today, Cancel and Done are back on the system style ("Tod…" fixed); the drift test requires toolbar buttons to have no custom style. Full suite 1301/1301. Open for Tessa: disabled Today looks enabled (root foreground style, same in build 10); the headline overlaps at AX sizes; the SE's calendar sheet is clipped._
+
 _Build 5.13.3 done, 2026-10-15 (`7090bc0` part 2b, part 3 in the next commit; not pushed; STEP-5.13 §4): dialog Close → `.inline`, guide row → `.row`, ‹ › hold 100 ms; `ButtonStyleDriftTests` fails if any Button lacks a shared style (sentence tokens allowlisted until 5.13.4). Full suite in Xcode (iPhone 17) 1301/1301. Phone check pending: guide row press vs the ring swap._
 
 _Build 5.14.1, 2026-10-15 (STEP-5.14 §2, not pushed): landing and upsell load in with `ContentLoadIn` by block index (`.index(n)`); between screens the old page fades out in 0.2 s, then the new one loads in; `ScreenChanged` 150 ms after the swap. "That's okay for now", copy and buttons unchanged; no cat yet. Full suite in Xcode (iPhone 17) 1298/1298. Simulator recordings in `.agent-reports/5.14.1/` (the T2 can't be recorded from the agent). Phone check pending (VoiceOver focus, feel)._

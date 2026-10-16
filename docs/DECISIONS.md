@@ -1729,3 +1729,13 @@ count, and fires only after one more request. No tolerances or timings changed. 
 - Allowlist: one unstyled Button in `MadlibSentence` (the tokens' VoiceOver stand-ins, never drawn) until 5.13.4.
   Counts are exact, so the entry fails once 5.13.4 lands and must be removed.
 - Checked by mutation: putting the guide row back on `.plain` fails with `CompassGuideRow.swift line 56: .plain`.
+
+## 2026-10-15: 5.13.3c toolbar buttons stay system (agent, per Tessa's corrected STEP-5.13 §4)
+
+- Any custom `ButtonStyle` on a nav-bar item makes it a squeezed custom view ("Tod…"); the 44 pt frame wasn't the
+  root cause, and the dimming didn't stack (the system dims nothing under a custom style). Calendar Today, Cancel and
+  Done are back on the system style.
+- `ButtonStyleDriftTests`: toolbar Buttons must have **no** custom style (a rule, not a file allowlist), so the
+  regression fails the test.
+- Open (Tessa): disabled Today looks enabled, because the app root's `.foregroundStyle(textPrimary)` reaches sheets
+  and overrides the toolbar's tint and disabled gray. The same in build 10. See `.agent-reports/5.13.3c/findings.md`.

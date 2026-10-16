@@ -559,3 +559,9 @@
 2026-10-15 17:52 5.13.3c: before matrix 17/18 (se3-ax3-today unreachable: headline overlap); probes: any custom ButtonStyle in a toolbar item squeezes it + drops system disabled look; 44 pt frame / 0.35 not the root; probe file deleted; fixing
 2026-10-15 17:52 5.13.3c: before matrix 17/18 (se3-ax3-today unreachable: headline overlap); probes: any custom ButtonStyle in a toolbar item squeezes it + drops system disabled look; 44 pt frame / 0.35 not the root; probe file deleted; fixing
 2026-10-15 18:16 5.13.3c: checkpoint commit (fix + drift toolbar rule, diagnostics clean, tests NOT run yet); then tests
+2026-10-15 18:17 5.13.3c: drift 3/3; mutation (.inline back on Today)
+2026-10-15 18:17 5.13.3c: mutation caught at CalendarSheet.swift:46, reverted; full suite
+2026-10-15 18:18 5.13.3c: full suite 1301/1301 (Xcode, iPhone 17) on 5b80b71; after build
+2026-10-15 18:28 5.13.3c: after round iPhone 17 9/9 + search 4; SE3 0/9 (location failure on sim); NEW: disabled Today = enabled look, labels cream; investigating
+2026-10-15 18:31 5.13.3c: probe-3: root .foregroundStyle(textPrimary) (app root, since 5.1) makes system toolbar items cream + undimmed when disabled; same in build 10 -> flag for Tessa; SE3 location re-set, SE3 round
+2026-10-15 18:45 5.13.3c: after 17/18 + search 4; findings, DECISIONS/STATUS (my hunks), latest.md; committing

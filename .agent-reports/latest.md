@@ -1,14 +1,27 @@
-# Build 5.13.3c: calendar toolbar buttons back on the system style: 2026-10-15 (in progress)
+# Build 5.13.3c: calendar toolbar buttons back on the system style: 2026-10-15 (done)
 
-Checkpoint commit (Tessa: "commit what's done and keep going"). **Tests not yet run on this commit.**
-- Reproduced on iOS 27 sims (iPhone 17, SE 3; default/AX1/AX3; today/other/Done): 17/18 before shots in
-  `.agent-reports/5.13.3c/before/`. Today is "Tod…" / "To…" on a small dark capsule; "Can…" with Done at AX sizes.
-  Missing: se3-ax3-today (headline overlap makes the date link untappable; separate bug).
-- Cause, from probes (`probe-1`, `probe-2`): any custom `ButtonStyle` on a toolbar item squeezes it, even a bare
-  label style; the 44 pt frame isn't the root. Dimming doesn't stack: under a custom style the system dims nothing,
-  so the 0.35 gold was the only dimming (system disabled = gray).
-- Fix: CalendarSheet Today, Cancel, Done on the system style. Drift test: toolbar Buttons must have no custom style.
-- Next: run drift + full suite, after screenshots, findings, docs, final commit, T2 install.
+Commits (not pushed): `5b80b71` checkpoint (fix + drift-test toolbar rule + before shots), then the follow-up with
+the after shots, findings and docs. `.agent-reports/5.13.3c/findings.md`.
+
+- Fixed: "Today" in full at every size on iPhone 17 and SE 3 (iOS 27 sims); Cancel fits beside Done at AX sizes.
+  The system now shortens the title when Done shows (buttons get their full width).
+- Cause, confirmed with probes: any custom `ButtonStyle` on a toolbar item squeezes it. The 44 pt frame wasn't
+  the root cause, and the dimming didn't stack. STEP-5.13 §4 says "double-dimmed": flagged, not edited (your
+  untracked file).
+- Drift test: toolbar Buttons must have no custom style; the mutation check (`.inline` back on Today) fails as
+  it should. Search sheet Clear/Cancel stay `.inline` (not toolbar items). `.inline`/`.row` audit: no other
+  toolbar items; `.row` in the search List is fine.
+- Tests: drift 3/3; full suite in Xcode (iPhone 17) 1301/1301.
+- Shots: before 17/18, after 17/18 (+4 search). `se3-ax3-today` can't be taken: the headline overlaps at AX3 and
+  hides the "today" link.
+
+Needs Tessa:
+1. **Disabled Today looks enabled** (cream, no dimming). The app root's `.foregroundStyle(textPrimary)` reaches
+   sheets and overrides the toolbar's tint and disabled gray. The same in build 10. Fix options in findings.
+2. Separate bugs seen: the headline overlaps itself at AX sizes (SE AX3: the calendar can't be opened from today);
+   the SE's medium calendar sheet hides the last week; the headline's accessibility frames are off.
+
+Next: T2 install (below), then your call on 1.
 
 ---
 
