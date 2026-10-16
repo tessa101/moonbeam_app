@@ -223,3 +223,24 @@ Acceptance: the tail reads as one flexing piece with no visible seams at its ext
 Only the landing tail numbers change (§5.3). Head and paw keep 9.30 s / ±3.2°. The ready-to-look cat is not touched.
 
 > Read `CLAUDE.md` and `docs/STEP-5.14-ONBOARDING-CAT-AND-LOAD-IN.md` (§5.1 and §5.3). Change only the landing cat's tail constants to the values now in §5.3: loop 1.40 s, base swing ±11.7° (0 / +11.7 / 0 / −11.7 / 0 at .25 steps), flex 1.00, lag 0.44. Keep the head/paw track, the ready-to-look cat, the start-at-rest rule, Reduce Motion, pausing and layout as they are. With flex 1.00 and lag 0.44, check the tail at its extreme poses for seams and gaps at default size and SE 3 (the largest single-joint turn changes), and check the first second of the loop starts at rest with no jump. Update the existing tests that assert the old tail constants and add a check that the tip trails the base by lag × loop. Run focused illustration and onboarding tests first, then one full suite and a build. Known pre-existing failures: 25 SentenceTokenTests and the PlaceChangeLayoutTests blank-ink case. Update spec §5 result, STATUS and reports, then stop. No push, upload or phone install.
+
+**Run 3 result — 2026-10-16 (`1e9bc53`, not pushed)**
+
+- Only the landing tail constants changed: loop 1.40 s, 0 / +11.7 / 0 / −11.7 / 0°, flex 1.00, lag 0.44. Head/paw
+  (9.30 s), ready-to-look, the start-at-rest rule, Reduce Motion, pausing and layout are unchanged.
+- **The net swing is smaller than ±11.7°.** With flex 1 every joint gets 1/7 of the swing (1.67°), and lag 0.44 spreads
+  the joints over 44% of the loop (the tip is 0.616 s behind the base), so their turns partly cancel. In steady state
+  the tip's total turn peaks at about **±5.7°**, and the most S-shaped pose has a 3.2° spread between joints. The tail
+  reads as a quick ripple, not a wide sweep. This is §5.1's formula at these values, not a code limit; flagged for
+  Tessa's phone check.
+- Seams (`ImageRenderer`, 240 pt art, 3× and 2×): **no gaps** at base ±11.7°, tip-sum ±5.7°, the most S-curled pose
+  or the largest single-joint turn (1.67°, about Run 2's 1.58°, inside the 1.5-unit overlap). The still residual is
+  unchanged from Run 2 (max 19/255, outline only).
+- First second: joint angles are all 0 at t = 0, and the t = 0 frame is pixel-identical to the still, so idle starts
+  without a jump. The tip-sum moves at most 0.27° per 120 Hz frame. Stills at 0.1 s steps show a smooth ease-out.
+- Focused 90/90 (including the new tip-trails-base and first-second checks). Full suite 1572: 1546 pass. The failures
+  are the 25 known `SentenceTokenTests` and `LocationScreenScrollingTests.bottomIsReachable` (SE, AX1), which passes
+  alone (8/8; also seen in Run 1). Build succeeds. No in-app recording this run. Files:
+  `.agent-reports/5.14-retune-landing-2/`.
+- Remaining: phone feel (is ±5.7° net enough; does 1.40 s still read as calm), Reduce Motion and VoiceOver on device.
+

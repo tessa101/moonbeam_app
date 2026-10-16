@@ -625,3 +625,9 @@
 2026-10-16 14:22 PDT Run 2: focused 82/82 pass; extreme-pose stills rendered (no gaps; still residual 1074 ch max 19/255 @3x); running full suite
 2026-10-16 14:26 PDT Run 2: full 1538/1564 (25 SentenceToken known + PlaceChange blank-ink, passes alone); build OK; sim stills (SE3/17 default, xxxL, AX3, AX4) + 12 s recording; Reduce Motion sim toggle ineffective (1 try); destination restored to T2 iPhone; committing code
 2026-10-16 14:27 PDT Run 2: docs/reports updated (spec §1 + §5.4 result, STATUS, DECISIONS, handoff, latest, findings); committing docs, then stop
+2026-10-16 14:27 PDT Run 2: done; commits e9a96bf (code), dab5199 (docs); stopping. No install/push/upload.
+2026-10-16 15:02 PDT 5.14 §5.5 Run 3 (landing tail second pass): started; reading spec
+2026-10-16 15:03 PDT Run 3: tail constants 1.40 s / ±11.7 / flex 1.00 / lag 0.44; tests updated + tip-trail and first-second checks; diagnostics clean; destination -> iPhone 17; running focused suites
+2026-10-16 15:05 PDT Run 3: focused 90/90; seam stills (no gaps, max joint 1.67°; still == t0 frame); running full suite
+2026-10-16 15:07 PDT Run 3: full 1546/1572 (25 SentenceToken known + LocationScreenScrolling AX1, passes alone 8/8); build OK; destination restored to T2 iPhone; committing Tessa's spec, then code
+2026-10-16 15:07 PDT Run 3: docs/reports updated (spec §5.5 result, STATUS, handoff, latest, findings); committing docs, then stop

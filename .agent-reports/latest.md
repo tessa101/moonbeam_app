@@ -1,3 +1,14 @@
+# 5.14 §5.5 Run 3 — landing tail second pass (2026-10-16)
+
+Done: the landing tail is now 1.40 s, ±11.7°, flex 1.00, lag 0.44 (STEP-5.14 §5.3); nothing else changed. Flag for
+Tessa: with even weights and a 44% lag the joints partly cancel, so the tip's net swing is about **±5.7°**, a ripple,
+not a wide sweep. No seams at the extremes (max joint turn 1.67°); idle starts at rest with no jump. Focused **90/90**.
+Full **1572: 1546 pass** (25 known SentenceToken + LocationScreenScrolling SE AX1, which passes alone). Build succeeds.
+Next: phone feel check. Blocked: nothing. No install, push or upload. Code `1e9bc53`, Tessa's spec `6f584e8` (not
+pushed). Findings: `.agent-reports/5.14-retune-landing-2/findings.md`.
+
+---
+
 # 5.14 §5.4 Run 2 — landing tail and head/paw retune (2026-10-16)
 
 Done: the landing cat's vector tail bends (Run 1's `IllustrationTailBend`, 7 masked bands, flex 0.80, lag 0.15,
