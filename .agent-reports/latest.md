@@ -1,3 +1,9 @@
+# 5.5 — closed (2026-10-16)
+
+Tessa accepted the work and requested closeout. **5.5a–5.5d complete; removed from the active queue.** Latest full validation: 889 tests / 1490 cases pass, plus 12 focused onboarding reachability cases. Review commit `519dceb`; compass `23c62be`. Device checklist retained for reference, without claiming an independent agent device pass. Next separate work: 5.13.4 sentence-token tap targets/feedback, then remaining 5.14 cat/onboarding work when artwork is ready. Search-flow design remains with Tessa. Documentation-only closeout; no tests rerun, install or push.
+
+---
+
 # 5.5d — simulator review checkpoint (2026-10-16)
 
 Ready to commit. Reviewed 40 hosted flow cases at both phone dimensions: AX1/AX5 onboarding, failure screens, calendar/search, plus AX5 searching and permission loaders. Added touch-scroll, horizontal-fit and bottom-reachability coverage, including native UIKit text traits. No product code changed. Full suite **889 tests / 1490 cases pass**; final onboarding real-scroll assertion **12/12 pass**. Source review of VoiceOver/focus and Reduce Motion is recorded separately from device verification. **5.5d remains open for physical-device sign-off**: spoken order/focus, motion feel, keyboard/sheet gestures and compass-letter enlargement. Checklist and contact sheets: `.agent-reports/5.5d/findings.md`. No phone install or push.

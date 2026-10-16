@@ -1,5 +1,7 @@
 # Status & Handoff
 
+_5.5 closed, 2026-10-16: Tessa accepted the accessibility work and asked to close it out. 5.5a–5.5d are off the active queue. Latest validation: 889 tests / 1490 cases pass, plus 12 focused onboarding reachability cases. Device checklist retained as reference; no separate agent-performed device pass claimed. Remaining separate work: 5.13.4 sentence-token tap targets/feedback; 5.14 cat and remaining onboarding animation; search-flow design stays with Tessa. Details: `docs/STEP-5.5-ACCESSIBILITY.md`._
+
 _5.5d simulator checkpoint, 2026-10-16: 40 hosted AX flow cases reviewed across onboarding, all four failures, calendar/search and searching/First Ask loaders at both phone dimensions. No new product-code defect found. Native controls also receive UIKit large-text traits. Full suite 889 tests / 1490 cases pass; 12 focused onboarding reachability cases pass. VoiceOver/Reduce Motion source wiring reviewed; physical-device spoken focus, motion, keyboard/sheet gestures and compass Large Content Viewer remain. Keep 5.5d open for device sign-off. Checklist: `.agent-reports/5.5d/findings.md`._
 
 _5.5c, 2026-10-16: AX compass keeps a width-safe 260 pt face target (233 pt on SE), wrapped lock readout reserves its own height, letters cap at 17 screen points with Large Content Viewer. Existing pinned-summary visibility rule retained and full-screen scroll checks pass. Full suite 885 tests / 1450 cases pass. Next: 5.5d whole-flow and device accessibility review. Report: `.agent-reports/5.5c/findings.md`._

@@ -1,6 +1,6 @@
 # 5.5d — simulator review, 2026-10-16
 
-The simulator layout review found no new product-code defect in the cases below. Added reproducible hosted-screen coverage and retained the existing app behavior. **5.5d remains open for physical-device accessibility sign-off.**
+The simulator layout review found no new product-code defect in the cases below. Added reproducible hosted-screen coverage and retained the existing app behavior. **Closed 2026-10-16 per Tessa’s “ok seems fine let’s close this out.” This records user acceptance; the agent did not independently perform the physical-device checks.**
 
 ## Layout coverage
 
@@ -23,7 +23,7 @@ Reviewed the live view wiring and existing tests: ContentLoadIn/FailureLoadIn re
 
 Full suite: **889 tests / 1490 cases / 75 suites, zero failures**, 62.159 s (`/private/tmp/moonbeam-55d-complete.xcresult`). Final onboarding real-scroll assertion: all 12 focused cases pass (18.385 s), `/private/tmp/moonbeam-55d-reachability.xcresult`. No product source, device installation or push in this pass.
 
-## Device sign-off still required
+## Device checklist retained for reference
 
 1. Largest text: scroll the main screen, all three onboarding pages and failure messages to their last line/action. Open the calendar as a sheet, exercise month/year selection and Done/Cancel; search with the keyboard visible, edit/clear text, select a result/recent and delete a recent.
 2. VoiceOver: swipe through the main sentence/actions, card date controls/events/status and compass. Confirm full direction names, no decorative/hidden elements and no duplicate readout. After onboarding changes focus should start at the heading; after Maybe later it should move to the guide, reopening the guide to the prompt, and enabling location to the dial. Check failure headline focus and action order.

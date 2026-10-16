@@ -1,11 +1,13 @@
 # Step 5.5: accessibility reflow
 
-Source: DESIGN-1.1.md §4 and DECISIONS.md, October 12. Implement in small reviewable steps.
+Source: DESIGN-1.1.md §4 and DECISIONS.md, October 12.
+
+**Closed 2026-10-16 per Tessa: “ok seems fine let’s close this out.” Steps 5.5a–5.5d are complete and off the active queue.**
 
 - **5.5a — moon card (first pass built 2026-10-16):** 64 pt phase glyph above text, a separate row of two equal 60 pt day controls; locale-ordered time/day-period rows at AX sizes so the existing rise/set pair can fit without shrinking. Retain the full-width status and wrapping guidance below; stack complete events when their ideal widths do not fit. Verify default and AX1/2/3/5 at both phone widths.
 - **5.5b — event/connector edge cases (built/reviewed 2026-10-16):** finish the longer-time, prior-night, missing-event and status matrix; address the SE connector where needed without shrinking accessible text.
-- **5.5c — compass (built 2026-10-16; device gesture check pending):** pinned bar vs readout overlap/duplication, dial sizing and Large Content Viewer for capped compass letters.
-- **5.5d — whole-flow review (simulator checkpoint 2026-10-16; device sign-off pending):** large text through sheets, onboarding and failure screens; VoiceOver order and loader/Reduce Motion review, followed by device QA.
+- **5.5c — compass (complete; included in Tessa’s 2026-10-16 closeout):** pinned bar vs readout overlap/duplication, dial sizing and Large Content Viewer for capped compass letters.
+- **5.5d — whole-flow review (complete; closed by Tessa 2026-10-16):** large text through sheets, onboarding and failure screens; VoiceOver order and loader/Reduce Motion review, followed by device QA.
 
 5.13 search-flow design remains pending with Tessa. Sentence-token tap targets/press feedback are tracked under 5.13.4. The telescope will be replaced by the ready-to-look cat animation. Disabled Today is left as is per Tessa.
 
@@ -15,4 +17,4 @@ Source: DESIGN-1.1.md §4 and DECISIONS.md, October 12. Implement in small revie
 
 5.5b: reviewed 108 card renders (nine scenarios, both widths, default + AX1–AX5) and nine lock cases. Removed absent AX guidance space; AX zone labels now follow the complete time. SE connector fit rule retained. Full suite 883 tests / 1441 cases pass. Details: `.agent-reports/5.5b/findings.md`. Compass pass 5.5c is now built.
 
-5.5d simulator checkpoint: 40 hosted flow cases cover AX1/AX5 onboarding, four failure causes, calendar/search at both phone dimensions, plus AX5 searching/First Ask loaders. UIKit large-text traits also applied for native controls. Top/bottom captures reviewed; no new product-code issue found. Full suite 889 tests / 1490 cases pass. Source review confirms existing VoiceOver labels/focus wiring and Reduce Motion paths; actual spoken order, keyboard/sheet gestures, motion feel and Large Content Viewer require physical-device sign-off. Checklist and evidence: `.agent-reports/5.5d/findings.md`. **Keep 5.5d open until those checks pass.**
+5.5d simulator checkpoint: 40 hosted flow cases cover AX1/AX5 onboarding, four failure causes, calendar/search at both phone dimensions, plus AX5 searching/First Ask loaders. UIKit large-text traits also applied for native controls. Top/bottom captures reviewed; no new product-code issue found. Full suite 889 tests / 1490 cases pass. Source review confirms existing VoiceOver labels/focus wiring and Reduce Motion paths; actual spoken order, keyboard/sheet gestures, motion feel and Large Content Viewer require physical-device sign-off. Checklist and evidence: `.agent-reports/5.5d/findings.md`. **Closed per Tessa’s sign-off; the agent did not independently perform the physical-device checks.**
