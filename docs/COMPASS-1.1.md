@@ -485,6 +485,8 @@ a quick tap releases before the spring is seen. Tessa chose **a stronger press p
 - **As built (5.10c):** 0.88 scale, 10% white fill overlay, 90 ms minimum, 0.15 s spring release, soft 0.5 impact.
   The extended regression drives press/release and samples both arrow frames across every §9.19 date and direction;
   full suite 974/974. Report: `.agent-reports/5.10c/findings.md`.
+- **2026-10-15 (5.13.3, Tessa):** the minimum is now **100 ms**, the same `PressHold.minimum` every shared style uses
+  (STEP-5.13 §4). Look and haptic unchanged.
 
 ## Decision log
 
