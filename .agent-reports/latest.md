@@ -1,12 +1,11 @@
-# 5.14 ready-to-look — telescope replaced by 1k; tests blocked (2026-10-16)
+# 5.14 ready-to-look — telescope replaced by 1k (2026-10-16)
 
 Permission off (launch and explicit) draws the 1k ready-to-look cat. The `rtl-*` rasters are byte-identical and
 native, the moon disc is vector, and the stack is tail, body, head, ear. The ear nests in the head and the breath
 wraps all, with the handoff's pivots and independent loops. 1h's star is kept, unchanged, at **(370, 118)**. The halo
-is hidden, as in the source (Tessa to confirm). `build-for-testing` succeeds. **No tests ran**: `Pseudo Terminal
-Setup Error` from xcodebuild, and the Xcode action fails on signing (phone destination); stopped without retries.
-Simulator stills and a 16 s idle recording are in `.agent-reports/5.14-ready-to-look/`. Next: focused, then full
-suite, from Xcode or Terminal; Reduce Motion, AX4+ and VoiceOver; phone review. No install, push or upload.
+is hidden, as in the source (Tessa to confirm). Build succeeds. Focused suites **210/210 pass** (Xcode, iPhone 17). Full suite **1528 cases: 1502 pass, 26 fail**, all pre-existing and outside this change: 25 `SentenceTokenTests` accessibility-tree lookups (also fail alone; failed identically on clean HEAD in 5.14.0) and one `PlaceChangeLayoutTests` timing bound (passes alone).
+Simulator stills and a 16 s idle recording are in `.agent-reports/5.14-ready-to-look/`. Next: Reduce Motion, VoiceOver and
+phone review; Tessa to confirm the halo and star. No install, push or upload.
 Code: `ff355b0` (not pushed). Findings: `.agent-reports/5.14-ready-to-look/findings.md`.
 
 ---

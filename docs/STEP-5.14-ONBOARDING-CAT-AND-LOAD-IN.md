@@ -2,7 +2,7 @@
 
 _Tessa, 2026-10-15. Reconciled for the next agent run, 2026-10-16. Partly built: 5.14.1 landed the
 landing/upsell load-ins and page fades, and 5.14.0 now integrates the landing searching cat. The
-ready-to-look replacement is implemented (tests pending); the declined-screen load-in remains. Search/cancel
+ready-to-look replacement is implemented; the declined-screen load-in remains. Search/cancel
 design (5.13.1–.2) stays with Tessa; do not implement that flow here._
 
 ## Current baseline and newer art
@@ -116,10 +116,10 @@ Agent prompt:
   nested transforms (unchanged output for the existing art).
 - **Halo is not shown**: the 1k source sets `display="none"` on it and the reference renders none, though the prose
   says "shared breathing". Awaiting Tessa.
-- Test build succeeds. **Tests not run**: `test-without-building` hits `Pseudo Terminal Setup Error` in the agent
-  environment, and the Xcode action fails on signing (phone destination). Simulator stills (iPhone 17 default, launch
-  and explicit; SE 3 default; xxxLarge) and a 16 s idle recording are in `.agent-reports/5.14-ready-to-look/`.
-  Remaining: focused and full suites, Reduce Motion/AX4+/VoiceOver/light-mode checks, and phone review.
+- Build succeeds. Focused suites 210/210 pass; full suite 1528 cases, 1502 pass. The 26 failures are pre-existing
+  and unrelated (25 `SentenceTokenTests`, 1 load-timing `PlaceChangeLayoutTests`). Simulator stills (iPhone 17
+  default, launch and explicit; SE 3 default; xxxLarge) and a 16 s idle recording are in
+  `.agent-reports/5.14-ready-to-look/`. Remaining: Reduce Motion, VoiceOver and light-mode checks, and phone review.
 
 ### Subsequent run — 5.14.2 declined-screen load-in
 

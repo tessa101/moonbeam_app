@@ -609,3 +609,6 @@
 2026-10-16 12:37 PDT 5.14 ready-to-look: tests updated, diagnostics clean; build-for-testing via guarded CLI
 2026-10-16 12:39 PDT 5.14 ready-to-look: TEST BUILD SUCCEEDED; focused tests blocked: xcodebuild 'Pseudo Terminal Setup Error' (sandboxed and unsandboxed), Xcode action fails signing (device destination). No retries; moving to simulator stills
 2026-10-16 12:45 PDT 5.14 ready-to-look: committed ff355b0 (code/assets/tests); stills + 16 s idle recording captured; docs/reports updated; committing docs, then stop. Tests NOT run (PTY error). No install/push/upload.
+2026-10-16 12:45 PDT 5.14 ready-to-look: per memory, switched Xcode destination to iPhone 17; running focused suites via RunSomeTests
+2026-10-16 12:46 PDT 5.14 ready-to-look: focused 210/210 pass (Xcode, iPhone 17); running full suite
+2026-10-16 12:48 PDT 5.14 ready-to-look: full suite 1502/1528 (26 pre-existing: SentenceToken 25, PlaceChange timing 1, passes alone); destination restored to T2 iPhone; docs corrected; committing, then stop
