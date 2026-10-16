@@ -13,16 +13,16 @@ import SwiftUI
 /// changes length. Each line is one `Text`. At the default size all three
 /// share one scale (`MadlibScale`: the smallest any line needs, down to
 /// 70%) and a line wraps only below that; at other sizes nothing shrinks
-/// and long lines wrap (§3.1a). Each token is a
-/// link whose URL an `OpenURLAction` turns back into a view-model call.
-/// VoiceOver would read those as links inside the text, so the text is
-/// replaced, for accessibility only, by the sentence as a header followed
-/// by a real button per token: "Date, today, button", "Place, Los
+/// and long lines wrap (§3.1a). Tokens keep that same text layout, with
+/// real buttons over their rendered fragments (5.13.4).
+/// VoiceOver reads the sentence's header group followed by the actual
+/// token buttons: "Date, today, button", "Place, Los
 /// Angeles, C A, button", in that order. The words come from `MadlibFormatter` via
 /// `LocationViewModel`.
 struct MadlibSentence: View {
 
     let viewModel: LocationViewModel
+    var onTokenFrames: (MadlibFormatter.Token.Kind, [CGRect]) -> Void = { _, _ in }
 
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
@@ -35,12 +35,6 @@ struct MadlibSentence: View {
     @State private var placeRevealed = true
 
     // MARK: - Constants
-
-    /// Token links use this scheme and the token kind as the host, so the
-    /// `OpenURLAction` can tell them apart and never hands them to the system.
-    private static let linkScheme = "moonbeam-token"
-    private static let dateHost = "date"
-    private static let placeHost = "place"
 
     private static let underlineOpacity = 0.55
 
@@ -57,9 +51,6 @@ struct MadlibSentence: View {
     /// in once the city is known. Opacity only, so Reduce Motion keeps it.
     static let placeRevealFade = Animation.easeOut(duration: 0.3)
     private static let placeLineIndex = 2
-
-    private static let dateHint = "Opens the calendar"
-    private static let placeHint = "Opens search"
 
     // MARK: - Body
 
@@ -85,10 +76,17 @@ struct MadlibSentence: View {
                 SentenceLine(
                     text: text,
                     scale: scale,
-                    usesFixedHeight: MadlibScale.shrinks(at: dynamicTypeSize)
+                    usesFixedHeight: MadlibScale.shrinks(at: dynamicTypeSize),
+                    token: sentence.lines[index].compactMap { part in
+                        if case let .token(token) = part { return token }
+                        return nil
+                    }.first,
+                    onOpen: viewModel.open,
+                    onTokenFrames: onTokenFrames
                 )
                     .opacity(hidesLine(index, pending: sentence.placeIsPending) ? 0 : 1)
                     .allowsHitTesting(!hidesLine(index, pending: sentence.placeIsPending))
+                    .accessibilityHidden(hidesLine(index, pending: sentence.placeIsPending))
                     .background(alignment: .leading) {
                         // Measures the line at full size on one line. It
                         // doesn't depend on `scale`, so there's no loop.
@@ -135,26 +133,9 @@ struct MadlibSentence: View {
         }
         .fixedSize(horizontal: false, vertical: true)
         .padding(.horizontal, Theme.Metrics.sentenceInset)
-        .environment(\.openURL, OpenURLAction { url in
-            guard let kind = Self.tokenKind(for: url) else { return .discarded }
-            viewModel.open(kind)
-            return .handled
-        })
-        .accessibilityElement()
-        .accessibilityChildren {
-            VStack {
-                Text(sentence.accessibilityLabel)
-                    .accessibilityAddTraits(.isHeader)
-                ForEach(sentence.tokens, id: \.kind) { token in
-                    Button {
-                        viewModel.open(token.kind)
-                    } label: {
-                        Text(token.accessibilityLabel)
-                    }
-                    .accessibilityHint(Self.hint(for: token.kind))
-                }
-            }
-        }
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel(sentence.accessibilityLabel)
+        .accessibilityAddTraits(.isHeader)
     }
 
     // MARK: - Place line
@@ -193,73 +174,10 @@ struct MadlibSentence: View {
             pattern: .solid,
             color: Theme.Colors.accent.opacity(underlineOpacity)
         )
-        words.link = url(for: token.kind)
-
         return Text("\(icon)\(space)\(Text(words))")
+            .customAttribute(SentenceTokenAttribute())
     }
 
-    // MARK: - Links
-
-    private static func url(for kind: MadlibFormatter.Token.Kind) -> URL? {
-        var components = URLComponents()
-        components.scheme = linkScheme
-        components.host = switch kind {
-        case .date: dateHost
-        case .place: placeHost
-        }
-        return components.url
-    }
-
-    private static func tokenKind(for url: URL) -> MadlibFormatter.Token.Kind? {
-        guard url.scheme == linkScheme else { return nil }
-        switch url.host() {
-        case dateHost: return .date
-        case placeHost: return .place
-        default: return nil
-        }
-    }
-
-    private static func hint(for kind: MadlibFormatter.Token.Kind) -> String {
-        switch kind {
-        case .date: dateHint
-        case .place: placeHint
-        }
-    }
-}
-
-// MARK: - Line
-
-/// One of the sentence's three lines (§3.1a), set at the scale all three
-/// share. It wraps only if it doesn't fit at that scale.
-private struct SentenceLine: View {
-
-    let text: Text
-    let scale: CGFloat
-    let usesFixedHeight: Bool
-
-    /// The sentence's size after Dynamic Type. Scaled here rather than by
-    /// `Font.custom(_:size:relativeTo:)`, which rounds a size like 26.6 back
-    /// up to 27, so a line meant to just fit would wrap.
-    @ScaledMetric(relativeTo: .title)
-    private var fullSize = Theme.Fonts.sentenceSize
-
-    /// A full-size line's minimum slot. At the default size this is also the
-    /// fixed height, so fractional metrics at different shared scales can't
-    /// move the card below (§3.1a, §9.19). At wrapping sizes it is only a
-    /// floor, leaving the line free to take its natural multi-line height.
-    private var fullLineHeight: CGFloat {
-        fullSize * Theme.Fonts.sentenceLineHeightMultiple
-    }
-
-    var body: some View {
-        text
-            .font(Theme.Fonts.sentence(fixedSize: fullSize * scale))
-            .fixedSize(horizontal: false, vertical: true)
-            .frame(
-                minHeight: fullLineHeight,
-                maxHeight: usesFixedHeight ? fullLineHeight : nil
-            )
-    }
 }
 
 // MARK: - Previews

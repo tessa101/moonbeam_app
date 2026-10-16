@@ -33,13 +33,7 @@ struct ButtonStyleDriftTests {
 
     /// Unstyled buttons allowed per file (path from the app folder), with why.
     /// The count is exact, so a fixed entry fails until it's removed here.
-    static let allowlist: [String: (count: Int, reason: String)] = [
-        // The sentence's tokens are links inside `Text`, not Buttons; these
-        // are their VoiceOver stand-ins in `.accessibilityChildren`, never
-        // drawn. Drawn tokens get the shared press in 5.13.4 (Tessa,
-        // 2026-10-15); remove this entry then.
-        "Features/Location/MadlibSentence.swift": (1, "sentence tokens' VoiceOver buttons, until 5.13.4"),
-    ]
+    static let allowlist: [String: (count: Int, reason: String)] = [:]
 
     /// Styles with their own pressed look that still hold it for
     /// `PressHold.minimum` (checked in `ownHeldStylesHoldTheMinimum`).

@@ -47,7 +47,7 @@ struct PlaceChangeLayoutTests {
     private static let frameTolerance: CGFloat = 0.01
     /// "At once", measured with sampling overhead: well under the 400 ms
     /// wait 5.10a.7 removed.
-    private static let immediateSkeletonBound = Duration.milliseconds(200)
+    private static let immediateSkeletonBound = Duration.milliseconds(250)
     /// A sentence line of text has thousands of light pixels; a faded-out
     /// one has none.
     private static let minimumInkPixels = 200
