@@ -13,6 +13,7 @@ design (5.13.1–.2) stays with Tessa; do not implement that flow here._
   The declined screen still swaps instantly and has no block load-in.
 - Landing now uses the **searching cat**, as in §1. It uses the existing vector sources; its calm 1a tail sway is distinct
   from the 1f searching scan/flick/signal-ring animation. Do not add those story beats to the landing.
+  **Superseded in part by §5 (2026-10-16):** the landing tail and head/paw motion are retuned there.
 - Permission-off's telescope is to be replaced with **1k Ready to look**, per the newer handoff:
   `design/1.10-ready-to-look/ILLUSTRATIONS_MOTION.md` and its HTML reference. Reuse the existing permission-off
   destination; this is an illustration replacement, not a change to routing or First ask's moon.
@@ -29,6 +30,7 @@ design (5.13.1–.2) stays with Tessa; do not implement that flow here._
 - **Art:** the awake searching cat with the moon disc halo behind it (D2 "searching", the 1a "Look-around" still),
   replacing the 150 pt moon glyph on the landing. Title, tagline and Get started stay.
 - **Motion (Tessa):** the halo's slow pulse stays, and the **tail sways** (the motion study's tail sway, about ±3°).
+  _Tail and head/paw numbers below are superseded by §5._
   Both come from the illustration system, not new code: `haloBreath` (shared by the cat states) and the `tail`
   move. Today's landing halo is a static glow (`OnboardingMoon`, 18% accent blur); the pulse is the illustration's.
   Under Reduce Motion: still art, no sway, no pulse.
@@ -129,3 +131,51 @@ about Got it, sheet content, cancel destinations or sleeping-cat placement.
 Agent prompt:
 
 > Once Tessa has finalized the relevant 5.13 search/cancel flow, implement only the remaining declined-screen presentation in STEP-5.14 §2 against that finalized code. Reuse indexed ContentLoadIn for moon, title, body, primary action and secondary action in that order. Extend the existing OnboardingScreenChange handover to the declined screen: 0.2 s outgoing fade, incoming stagger, and ScreenChanged after the title starts. Preserve existing transition cancellation/reentrancy handling and avoid changing the view model's permission/search decisions. Retain the dimmed moon unless Tessa has explicitly approved sleeping-cat placement; if approved, the supplied sleeping composite stays still, with tail animation deferred. Keep the system permission prompt and sheet motion native. Verify deny/Settings return and the finalized search/cancel/pick paths, including fast repeated actions and Reduce Motion; run focused onboarding tests, then one full suite and build. Record a short continuous flow if available and state any physical-device VoiceOver/motion checks still needed. Update spec/status/reports and stop. No push/upload or phone install.
+
+## 5. Motion retune: ready-to-look and landing cats (Tessa, 2026-10-16)
+
+Tessa compared options in a side-by-side preview (real art, handoff pivots, shared easing) and tuned both cats. **These numbers replace the earlier tail, ear and head/paw numbers** for the two cats, including ILLUSTRATIONS_MOTION.md 1k and §1's "calm ±3° sway, head/paw still". Easing for every segment stays `cubic-bezier(.42, 0, .58, 1)`. Everything not listed here is unchanged: head, breath, moon disc and star on ready-to-look; halo breath, disc breath, load-in timing and "idle starts as the entrance lands" on the landing. Reduce Motion, off-screen/background pausing, responsive sizing and decorative accessibility are unchanged.
+
+### 5.1 Bendable tail (shared mechanism)
+
+The tail sways as a whole instead of pivoting rigidly from its base. Cut the tail art into **7 horizontal bands**, base (bottom) to tip (top). Each band is nested inside the one below it and rotates about its own joint, so the tail curls and the tip follows the base.
+
+- **Joint angle:** `a_i(t) = tailTrack(t − lag × loop × i/6) × w_i`, for band `i` = 0 (base) … 6 (tip). `tailTrack` is the tuned keyframe track in degrees.
+- **Weights:** `w_0 = (1 − flex) + flex/7`, `w_i = flex/7` for `i ≥ 1`. They sum to 1, so the tip's total swing equals the tuned amount at lag 0.
+- `flex = 0` and `lag = 0` must reproduce today's rigid swing about the base pivot (test it).
+- Keep band count, flex and lag as named constants in the illustration spec, not in views.
+- Bands overlap their lower neighbour slightly so no seam opens; the base band extends below the art and the tip band above it.
+- Check joints for seams at the tail's extreme poses, not only at rest.
+
+| Cat | Art | Tail span (local y) | Base pivot (joint 0) | Joint x, bands 0–6 | Overlap | Space |
+|---|---|---|---|---|---|---|
+| Ready-to-look | raster `rtl-tail.png`, native resolution, clipped with rects, no resampling | 639 to 902 | (351.8, 932) | 338.4, 350.5, 365.0, 366.1, 356.4, 324.7, 311.1 | ~4 image px | the cat group's image space (images placed at 215, 250) |
+| Landing | vector tail layer of `searching.svg`, stays vector (clip or mask the existing layer) | 402.2 to 588.0 | (132, 582) | 117.5, 110.9, 97.9, 96.9, 102.0, 105.2, 93.3 | ~1.5 units | the art space inside `translate(-15 -130)` |
+
+Band height = span ÷ 7. Joint `i` (1…6) sits at `y = spanBottom − i × bandHeight`, at the x above; joint 0 uses the existing pivot. (The base pivot lies a little below the art bottom, hidden behind the body.)
+
+### 5.2 Ready-to-look (permission-off) cat
+
+- **Tail:** loop **2.25 s**; base swing 0 / +20 / 0 / −15 / 0° at offsets 0 / .25 / .5 / .75 / 1; **flex 0.95, lag 0.30**.
+- **Ear:** loop **5.35 s**; 0 / 0 / −21 / +7 / −8.7 / 0 / 0° at offsets 0 / .55 / .60 / .65 / .70 / .76 / 1; pivot unchanged (163.5, 193). A quick, larger flick, then a settle.
+- Head (8.82 s), breath (4.47 s), disc breath and the star keep their current values.
+
+### 5.3 Onboarding landing (searching) cat
+
+- **Tail:** loop **4.05 s**; base swing 0 / +13.8 / 0 / −13.8 / 0° at offsets 0 / .25 / .5 / .75 / 1; **flex 0.80, lag 0.15**.
+- **Head and paw** (the combined look layer): loop **9.30 s**; 0 / −3.2 / −3.2 / 0 / +3.3 / +3.3 / 0° at offsets 0 / .14 / .36 / .50 / .64 / .86 / 1; pivot (237, 268) viewBox. A gentle look left and right ("look-around lite"). Still no scan, signal rings or tail flick.
+- Replaces §1's "head/paw stay still" and "calm 1a tail sway (0 → +4° → 0 → −3° → 0 over 4.2 s)".
+
+### 5.4 Agent prompts (one chunk per invocation)
+
+Run ready-to-look first. If it lands the bendable tail, the landing run reuses it; otherwise the landing run builds it once.
+
+**Run 1: ready-to-look retune**
+
+> Read `CLAUDE.md`, `.agent-reports/5.14-handoff.md`, `.agent-reports/5.14-ready-to-look/findings.md` and `docs/STEP-5.14-ONBOARDING-CAT-AND-LOAD-IN.md` (§5.1 and §5.2). Implement only the ready-to-look tail and ear retune described there, using its numbers exactly: the new ear keyframes and the bendable tail (7 raster bands from `rtl-tail.png` at native resolution, per-joint rotation with weights and lag as written). Extend IllustrationSpec / IllustrationMotion narrowly; keep spec constants named; flex 0 / lag 0 must reproduce the old rigid swing (test it). Preserve the shipped rig otherwise: stack order, head, breath, disc, star, Reduce Motion offset-zero still (every joint identity), pausing, accessibility-hidden art, other causes, copy, routing and onboarding. Run focused illustration tests first (new keyframes, joint weights, lag shift, rigid case), then one full suite and a build. The 25 SentenceTokenTests failures and the PlaceChange timing case are known and pre-existing. Render stills at the tail's extremes (+20° and −15° at peak) and inspect joints for seams at default size and SE 3; fix overlap rather than hide any seam. Capture a short idle recording if possible. Report actual results, seams, frame cost if measurable and remaining phone checks; update spec, STATUS and reports, then stop. No push, upload or phone install.
+
+**Run 2: landing retune**
+
+> Read `CLAUDE.md`, `.agent-reports/5.14-handoff.md`, `.agent-reports/5.14.0-findings.md` and `docs/STEP-5.14-ONBOARDING-CAT-AND-LOAD-IN.md` (§1, §5.1 and §5.3). Implement only the landing cat's tail and head/paw retune described in §5.3, using its numbers exactly. Reuse the bendable tail from the ready-to-look run if it has landed; otherwise build it once per §5.1, keeping the tail vector (clip or mask the existing tail layer, no rasterizing). Update §1's superseded motion text to point at §5. Preserve the entrance and idle-starts-as-it-lands rule, halo and disc breath, Reduce Motion (still art, joints identity), pausing, responsive sizing (240 × 312 default, shrinking at large text, hidden at AX4+) and the rest of the landing, upsell, loader, declined screen and search flow. Run focused tests first (new keyframes, joint weights, lag, head/paw track), then one full suite and a build. Inspect extreme-pose stills for seams at default size, SE 3, one large-text size, AX4+ and Reduce Motion; confirm Get started still fits above the fold on SE 3. Capture a short entrance-and-idle recording if possible. Report actual results, seams, frame cost if measurable and remaining phone checks; update spec, STATUS and reports, then stop. No push, upload or phone install.
+
+Acceptance: the tail reads as one flexing piece with no visible seams at its extreme poses; the ear flick is clearly livelier but still a flick, not a twitch loop; the landing head/paw look is gentle (±3°) and the cat still reads as calm on first launch; Reduce Motion shows the still pose; no regression in the other four causes or the landing layout.
