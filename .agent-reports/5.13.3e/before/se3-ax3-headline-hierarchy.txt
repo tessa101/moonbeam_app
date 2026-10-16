@@ -1,0 +1,44 @@
+Device orientation: Unknown
+------------------------
+Application bundle identifier: com.t-alien.moonbeam-app
+Application UI orientation: Portrait
+Application, pid: 86467, label: 'Moon Signal'
+ Window, {{0.0, 0.0}, {375.0, 667.0}}, hitPoint: {187.5, 333.5}
+  Other, {{0.0, 0.0}, {375.0, 667.0}}, hitPoint: {187.5, 333.5}
+   Other, {{0.0, 0.0}, {375.0, 667.0}}, hitPoint: {187.5, 333.5}
+    Other, {{0.0, 0.0}, {375.0, 667.0}}, hitPoint: {187.5, 333.5}
+     Other, {{0.0, 0.0}, {375.0, 667.0}}, hitPoint: {187.5, 333.5}
+      Other, {{-72.5, -120.0}, {520.0, 787.0}}, hitPoint: {187.5, 333.5}
+      ScrollView, {{0.0, 0.0}, {375.0, 667.0}}, hitPoint: {187.5, 333.5}
+       Other, {{0.0, 0.0}, {375.0, 667.0}}, hitPoint: {187.5, 333.5}
+        Other, {{0.0, 0.0}, {375.0, 60.0}}, hitPoint: {187.5, 30.0}
+       Other, {{0.0, 0.0}, {375.0, 667.0}}, hitPoint: {187.5, 333.5}
+       Other, {{0.0, 20.0}, {375.0, 648.0}}, hitPoint: {187.5, 343.5}
+        Other, {{24.0, 9.4}, {260.0, 218.7}}, hitPoint: {154.0, 118.7}
+         StaticText, {{27.0, 36.8}, {321.0, 50.5}}, label: 'Where can I find the moon today in Irvine, CA?', hitPoint: {187.5, 62.1}
+         Button, {{20.0, 117.3}, {335.0, 58.5}}, label: 'Date, today', hitPoint: {187.5, 146.6}
+         Button, {{20.0, 183.8}, {335.0, 58.5}}, label: 'Place, Irvine, CA', hitPoint: {187.5, 213.1}
+        Other, {{20.0, 232.0}, {335.0, 721.5}}, hitPoint: {187.5, 449.5}
+         Other, {{32.0, 244.0}, {44.0, 44.0}}, hitPoint: {54.0, 266.0}
+         Button, {{261.0, 244.0}, {44.0, 44.0}}, identifier: 'chevron.left', label: 'Previous day', hitPoint: {283.0, 266.0}
+         Button, {{305.0, 244.0}, {44.0, 44.0}}, identifier: 'chevron.right', label: 'Next day', hitPoint: {327.0, 266.0}
+         StaticText, {{32.0, 300.0}, {221.5, 40.0}}, label: 'Date', value: Today, Friday, Oct..., hitPoint: {142.8, 320.0}
+         Other, {{32.0, 342.0}, {213.0, 103.0}}, label: 'Last Quarter, 53% lit at midnight', hitPoint: {138.5, 393.5}
+          StaticText, {{32.0, 342.0}, {213.0, 50.5}}, label: 'Last Quarter', hitPoint: {138.5, 367.2}
+          StaticText, {{32.0, 394.5}, {123.0, 50.5}}, label: '53% lit', hitPoint: {93.5, 419.8}
+         Other, {{32.0, 455.0}, {311.0, 1.0}}, hitPoint: {187.5, 455.5}
+         Other, {{26.0, 474.0}, {323.0, 399.8}}, hitPoint: {187.5, 570.5}
+          Other, {{36.0, 474.0}, {169.5, 151.0}}, label: 'Moonrise, last night, 10:06 PM.', hitPoint: {120.8, 549.5}
+           StaticText, {{36.0, 474.0}, {102.0, 40.0}}, label: '↑ Rose', hitPoint: {87.0, 494.0}
+           StaticText, {{36.0, 516.0}, {169.5, 64.0}}, label: '10:06 PM', hitPoint: {120.8, 548.0}
+           StaticText, {{36.0, 584.0}, {126.5, 41.0}}, label: 'last night', hitPoint: {99.2, 604.5}
+          Other, {{36.0, 647.0}, {140.5, 151.0}}, label: 'Moonset, 1:28 PM.', hitPoint: {106.2, 657.0}
+           StaticText, {{36.0, 647.0}, {95.0, 40.0}}, label: '↓ Sets', hitPoint: {83.5, 657.0}
+       Other, {{342.0, 20.0}, {30.0, 647.0}}, label: 'Vertical scroll bar, 2 pages', value: 0%, hitPoint: {357.0, 343.5}
+        Other, {{369.0, 23.0}, {3.0, 640.0}}, hitPoint: {370.5, 343.0}
+       Other, {{342.0, 20.0}, {30.0, 647.0}}, label: 'Vertical scroll bar, 2 pages', value: 0%, hitPoint: {357.0, 343.5}
+        Other, {{369.0, 23.0}, {3.0, 640.0}}, hitPoint: {370.5, 343.0}
+      Other, {{16.0, 593.5}, {343.0, 124.7}}, hitPoint: {187.5, 630.2}
+       Other, {{38.0, 596.5}, {162.5, 49.5}}, label: 'Heading 240 degrees west-southwest', hitPoint: {119.2, 621.2}
+        StaticText, {{38.0, 596.5}, {162.5, 49.5}}, label: '240° WSW', hitPoint: {119.2, 621.2}
+       Button, {{291.0, 593.5}, {58.0, 55.5}}, label: 'Go to compass', hitPoint: {320.0, 621.2}

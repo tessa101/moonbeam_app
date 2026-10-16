@@ -1,0 +1,48 @@
+Device orientation: Unknown
+------------------------
+Application bundle identifier: com.t-alien.moonbeam-app
+Application UI orientation: Portrait
+Application, pid: 86192, label: 'Moon Signal'
+ Window, {{0.0, 0.0}, {402.0, 874.0}}, hitPoint: {201.0, 437.0}
+  Other, {{0.0, 0.0}, {402.0, 874.0}}, hitPoint: {201.0, 437.0}
+   Other, {{0.0, 0.0}, {402.0, 874.0}}, hitPoint: {201.0, 437.0}
+    Other, {{0.0, 0.0}, {402.0, 874.0}}, hitPoint: {201.0, 437.0}
+     Other, {{0.0, 0.0}, {402.0, 874.0}}, hitPoint: {201.0, 437.0}
+      Other, {{-59.0, -120.0}, {520.0, 994.0}}, hitPoint: {201.0, 437.0}
+      ScrollView, {{0.0, 0.0}, {402.0, 874.0}}, hitPoint: {201.0, 437.0}
+       Other, {{0.0, 0.0}, {402.0, 874.0}}, hitPoint: {201.0, 437.0}
+        Other, {{0.0, 0.0}, {402.0, 102.0}}, hitPoint: {201.0, 51.0}
+       Other, {{0.0, 0.0}, {402.0, 874.0}}, hitPoint: {201.0, 437.0}
+       Other, {{0.0, 62.0}, {402.0, 779.0}}, hitPoint: {201.0, 451.5}
+        Other, {{24.0, 54.7}, {351.7, 190.6}}, hitPoint: {199.8, 150.0}
+         StaticText, {{20.2, 82.0}, {361.7, 50.7}}, label: 'Where can I find the moon today in Irvine, CA?', hitPoint: {201.0, 107.3}
+         Button, {{20.0, 162.3}, {362.0, 80.3}}, label: 'Date, today', hitPoint: {201.0, 202.5}
+         Button, {{20.0, 250.7}, {362.0, 80.3}}, label: 'Place, Irvine, CA', hitPoint: {201.0, 290.8}
+        Other, {{20.0, 273.3}, {362.0, 720.0}}, hitPoint: {201.0, 573.7}
+         Other, {{32.0, 285.3}, {44.0, 44.0}}, hitPoint: {54.0, 307.3}
+         Button, {{288.0, 285.3}, {44.0, 44.0}}, identifier: 'chevron.left', label: 'Previous day', hitPoint: {310.0, 307.3}
+         Button, {{332.0, 285.3}, {44.0, 44.0}}, identifier: 'chevron.right', label: 'Next day', hitPoint: {354.0, 307.3}
+         StaticText, {{32.0, 341.3}, {221.7, 39.7}}, label: 'Date', value: Today, Friday, Oct..., hitPoint: {142.8, 361.2}
+         Other, {{32.0, 383.0}, {290.0, 103.3}}, label: 'Waning Crescent, 29% lit at midnight', hitPoint: {177.0, 434.7}
+          StaticText, {{32.0, 383.0}, {290.0, 50.7}}, label: 'Waning Crescent', hitPoint: {177.0, 408.3}
+          StaticText, {{32.0, 435.7}, {122.7, 50.7}}, label: '29% lit', hitPoint: {93.3, 461.0}
+         Other, {{32.0, 496.3}, {338.0, 1.0}}, hitPoint: {201.0, 496.8}
+         Other, {{26.0, 515.3}, {350.0, 398.3}}, hitPoint: {201.0, 694.7}
+          Other, {{36.0, 515.3}, {169.3, 150.3}}, label: 'Moonrise, last night, 10:06 PM.', hitPoint: {120.7, 590.5}
+           StaticText, {{36.0, 515.3}, {102.0, 39.7}}, label: '↑ Rose', hitPoint: {87.0, 535.2}
+           StaticText, {{36.0, 557.0}, {169.3, 63.7}}, label: '10:06 PM', hitPoint: {120.7, 588.8}
+           StaticText, {{36.0, 624.7}, {126.7, 41.0}}, label: 'last night', hitPoint: {99.3, 645.2}
+          Other, {{36.0, 687.7}, {140.3, 150.3}}, label: 'Moonset, 1:28 PM.', hitPoint: {106.2, 762.8}
+           StaticText, {{36.0, 687.7}, {95.0, 39.7}}, label: '↓ Sets', hitPoint: {83.5, 707.5}
+           StaticText, {{36.0, 729.3}, {140.3, 63.7}}, label: '1:28 PM', hitPoint: {106.2, 761.2}
+           StaticText, {{36.0, 797.0}, {128.3, 41.0}}, label: '304° NW', hitPoint: {100.2, 817.5}
+          Other, {{26.0, 834.3}, {350.0, 79.3}}, label: 'Moon up now, west, 266 degrees, 23 degrees above the horizon.', hitPoint: {201.0, 854.2}
+           StaticText, {{56.0, 834.3}, {250.7, 79.3}}, label: 'Up now · 266° W · 23° up', hitPoint: {181.3, 854.2}
+       Other, {{369.0, 62.0}, {30.0, 750.0}}, label: 'Vertical scroll bar, 2 pages', value: 0%, hitPoint: {384.0, 437.0}
+        Other, {{396.0, 65.0}, {3.0, 743.0}}, hitPoint: {397.5, 436.5}
+       Other, {{369.0, 62.0}, {30.0, 750.0}}, label: 'Vertical scroll bar, 2 pages', value: 0%, hitPoint: {384.0, 437.0}
+        Other, {{396.0, 65.0}, {3.0, 743.0}}, hitPoint: {397.5, 436.5}
+      Other, {{16.0, 766.3}, {370.0, 147.3}}, hitPoint: {201.0, 820.2}
+       Other, {{38.0, 769.3}, {162.3, 49.7}}, label: 'Heading 240 degrees west-southwest', hitPoint: {119.2, 794.2}
+        StaticText, {{38.0, 769.3}, {162.3, 49.7}}, label: '240° WSW', hitPoint: {119.2, 794.2}
+       Button, {{318.0, 766.3}, {58.0, 55.7}}, label: 'Go to compass', hitPoint: {347.0, 794.2}

@@ -82,7 +82,11 @@ struct MadlibSentence: View {
         VStack(alignment: .leading, spacing: 0) {
             ForEach(sentence.lines.indices, id: \.self) { index in
                 let text = Self.text(for: sentence.lines[index])
-                SentenceLine(text: text, scale: scale)
+                SentenceLine(
+                    text: text,
+                    scale: scale,
+                    usesFixedHeight: MadlibScale.shrinks(at: dynamicTypeSize)
+                )
                     .opacity(hidesLine(index, pending: sentence.placeIsPending) ? 0 : 1)
                     .allowsHitTesting(!hidesLine(index, pending: sentence.placeIsPending))
                     .background(alignment: .leading) {
@@ -231,6 +235,7 @@ private struct SentenceLine: View {
 
     let text: Text
     let scale: CGFloat
+    let usesFixedHeight: Bool
 
     /// The sentence's size after Dynamic Type. Scaled here rather than by
     /// `Font.custom(_:size:relativeTo:)`, which rounds a size like 26.6 back
@@ -238,8 +243,10 @@ private struct SentenceLine: View {
     @ScaledMetric(relativeTo: .title)
     private var fullSize = Theme.Fonts.sentenceSize
 
-    /// A full-size line's fixed slot, so fractional font metrics at different
-    /// shared scales can't move the card below (§3.1a, §9.19).
+    /// A full-size line's minimum slot. At the default size this is also the
+    /// fixed height, so fractional metrics at different shared scales can't
+    /// move the card below (§3.1a, §9.19). At wrapping sizes it is only a
+    /// floor, leaving the line free to take its natural multi-line height.
     private var fullLineHeight: CGFloat {
         fullSize * Theme.Fonts.sentenceLineHeightMultiple
     }
@@ -248,7 +255,10 @@ private struct SentenceLine: View {
         text
             .font(Theme.Fonts.sentence(fixedSize: fullSize * scale))
             .fixedSize(horizontal: false, vertical: true)
-            .frame(height: fullLineHeight)
+            .frame(
+                minHeight: fullLineHeight,
+                maxHeight: usesFixedHeight ? fullLineHeight : nil
+            )
     }
 }
 

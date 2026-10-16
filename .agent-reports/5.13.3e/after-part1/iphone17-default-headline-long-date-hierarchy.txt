@@ -1,0 +1,62 @@
+Device orientation: Unknown
+------------------------
+Application bundle identifier: com.t-alien.moonbeam-app
+Application UI orientation: Portrait
+Application, pid: 87616, label: 'Moon Signal'
+ Window, {{0.0, 0.0}, {402.0, 874.0}}, hitPoint: {201.0, 437.0}
+  Other, {{0.0, 0.0}, {402.0, 874.0}}, hitPoint: {201.0, 437.0}
+   Other, {{0.0, 0.0}, {402.0, 874.0}}, hitPoint: {201.0, 437.0}
+    Other, {{0.0, 0.0}, {402.0, 874.0}}, hitPoint: {201.0, 437.0}
+     Other, {{0.0, 0.0}, {402.0, 874.0}}, hitPoint: {201.0, 437.0}
+      Other, {{-59.0, -120.0}, {520.0, 994.0}}, hitPoint: {201.0, 437.0}
+      ScrollView, {{0.0, 0.0}, {402.0, 874.0}}, hitPoint: {201.0, 437.0}
+       Other, {{0.0, 0.0}, {402.0, 874.0}}, hitPoint: {201.0, 437.0}
+        Other, {{0.0, 0.0}, {402.0, 102.0}}, hitPoint: {201.0, 51.0}
+       Other, {{0.0, 0.0}, {402.0, 874.0}}, hitPoint: {201.0, 437.0}
+       Other, {{0.0, 62.0}, {402.0, 779.0}}, hitPoint: {201.0, 451.5}
+        Other, {{24.0, 73.9}, {327.3, 97.5}}, hitPoint: {187.7, 122.6}
+         StaticText, {{37.2, 74.0}, {327.7, 46.7}}, label: 'Where can I find the moon on Sat, Oct 3 in Irvine, CA?', hitPoint: {201.0, 97.3}
+         Button, {{20.0, 134.3}, {362.0, 90.3}}, label: 'Date, Saturday, October 3', hitPoint: {201.0, 179.5}
+         Button, {{20.0, 232.7}, {362.0, 90.3}}, label: 'Place, Irvine, CA', hitPoint: {201.0, 277.8}
+        Other, {{20.0, 199.3}, {362.0, 210.3}}, hitPoint: {201.0, 304.5}
+         Other, {{32.0, 211.3}, {44.0, 44.0}}, hitPoint: {54.0, 233.3}
+         StaticText, {{88.0, 211.7}, {58.7, 18.0}}, label: 'Date', value: Tomorrow, Saturday..., hitPoint: {117.3, 220.7}
+         Button, {{288.0, 211.3}, {44.0, 44.0}}, identifier: 'chevron.left', label: 'Previous day', hitPoint: {310.0, 233.3}
+         Button, {{332.0, 211.3}, {44.0, 44.0}}, identifier: 'chevron.right', label: 'Next day', hitPoint: {354.0, 233.3}
+         Other, {{88.0, 231.7}, {167.3, 23.3}}, label: 'Last Quarter, 53% lit at midnight', hitPoint: {171.7, 243.3}
+          StaticText, {{88.0, 231.7}, {167.3, 23.3}}, label: 'Last Quarter · 53% lit', hitPoint: {171.7, 243.3}
+         Other, {{32.0, 265.3}, {338.0, 1.0}}, hitPoint: {201.0, 265.8}
+         Other, {{36.0, 284.3}, {82.0, 77.3}}, label: 'Moonrise at 11:10 PM, east-northeast, 57 degrees', hitPoint: {77.0, 323.0}
+          StaticText, {{36.0, 284.3}, {71.3, 18.0}}, label: '↑ Moonrise', hitPoint: {71.7, 293.3}
+          StaticText, {{36.0, 304.3}, {82.0, 34.0}}, label: '11:10 PM', hitPoint: {77.0, 321.3}
+          StaticText, {{36.0, 342.3}, {52.3, 19.3}}, label: '57° ENE', hitPoint: {62.2, 352.0}
+         Other, {{131.0, 292.3}, {147.3, 2.0}}, hitPoint: {204.6, 293.3}
+         Other, {{291.7, 284.3}, {74.3, 77.3}}, label: 'Moonset at 1:28 PM, northwest, 304 degrees', hitPoint: {328.8, 323.0}
+          StaticText, {{291.7, 284.3}, {68.0, 18.0}}, label: '↓ Moonset', hitPoint: {325.7, 293.3}
+          StaticText, {{291.7, 304.3}, {74.3, 34.0}}, label: '1:28 PM', hitPoint: {328.8, 321.3}
+          StaticText, {{291.7, 342.3}, {60.0, 19.3}}, label: '304° NW', hitPoint: {321.7, 352.0}
+         Other, {{32.0, 379.7}, {338.0, 18.0}}, hitPoint: {201.0, 388.7}
+        Other, {{145.5, 444.7}, {111.0, 34.0}}, label: 'Heading 240 degrees west-southwest', hitPoint: {201.0, 461.7}
+         StaticText, {{145.5, 444.7}, {111.0, 34.0}}, label: '240° WSW', hitPoint: {201.0, 461.7}
+        Other, {{67.5, 504.2}, {301.4, 299.0}}, label: 'Targets: moonrise, 57 degrees east-northeast; moonset, 304 degrees northwest', hitPoint: {218.2, 653.7}
+         Other, {{199.5, 512.4}, {3.0, 28.0}}, hitPoint: {201.0, 526.4}
+         Other, {{86.0, 522.7}, {230.0, 230.0}}, hitPoint: {201.0, 637.7}
+         StaticText, {{191.0, 544.8}, {20.0, 15.3}}, label: '240', hitPoint: {201.0, 552.4}
+         StaticText, {{148.4, 556.2}, {20.0, 15.3}}, label: '210', hitPoint: {158.4, 563.9}
+         StaticText, {{334.9, 555.7}, {34.0, 16.7}}, label: '↓ Set', hitPoint: {351.9, 564.0}
+         StaticText, {{224.5, 565.5}, {21.7, 25.3}}, label: 'W', hitPoint: {235.3, 578.2}
+         StaticText, {{135.0, 590.7}, {13.0, 25.3}}, label: 'S', hitPoint: {141.5, 603.3}
+         StaticText, {{264.8, 587.4}, {20.0, 15.3}}, label: '300', hitPoint: {274.8, 595.1}
+         Other, {{167.9, 604.5}, {66.3, 66.3}}, hitPoint: {201.0, 637.7}
+         StaticText, {{105.8, 630.0}, {20.0, 15.3}}, label: '150', hitPoint: {115.8, 637.7}
+         StaticText, {{276.2, 630.0}, {20.0, 15.3}}, label: '330', hitPoint: {286.2, 637.7}
+         StaticText, {{252.5, 659.3}, {16.0, 25.3}}, label: 'N', hitPoint: {260.5, 672.0}
+         StaticText, {{117.2, 672.6}, {20.0, 15.3}}, label: '120', hitPoint: {127.2, 680.3}
+         StaticText, {{159.8, 684.5}, {13.7, 25.3}}, label: 'E', hitPoint: {166.7, 697.1}
+         StaticText, {{236.9, 703.8}, {13.3, 15.3}}, label: '30', hitPoint: {243.6, 711.5}
+         StaticText, {{194.3, 715.2}, {13.3, 15.3}}, label: '60', hitPoint: {201.0, 722.9}
+         StaticText, {{189.7, 786.5}, {39.0, 16.7}}, label: '↑ Rise', hitPoint: {209.2, 794.8}
+       Other, {{369.0, 62.0}, {30.0, 750.0}}, label: 'Vertical scroll bar, 2 pages', value: 0%, hitPoint: {384.0, 437.0}
+        Other, {{396.0, 65.0}, {3.0, 743.0}}, hitPoint: {397.5, 436.5}
+       Other, {{369.0, 62.0}, {30.0, 750.0}}, label: 'Vertical scroll bar, 2 pages', value: 0%, hitPoint: {384.0, 437.0}
+        Other, {{396.0, 65.0}, {3.0, 743.0}}, hitPoint: {397.5, 436.5}
