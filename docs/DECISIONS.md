@@ -1830,3 +1830,6 @@ The ready-to-look tail (STEP-5.14 §5.1) is one raster drawn seven times, each c
 
 The landing (STEP-5.14 §5.3) starts its loop at t = 0 as the entrance lands. With §5.1's formula as written, joint `i` samples `tailTrack(t − lag × loop × i/6)`, which wraps to the end of the loop for t below the delay, so on the first animated frame the landing tip would jump to about −5° from the still. `IllustrationTailBend.angle` now clamps the delayed time at 0: each joint stays at rest until the base's motion reaches it, and then follows §5.1 exactly. 1k is unaffected because it runs on absolute time. Reduce Motion, flex 0 / lag 0 and the steady-state lag are unchanged (tested). The landing's vector tail reuses the clear-then-draw aliased bands unchanged; its slice stays vector and is only masked.
 
+## 2026-10-16: Landing tail second pass — faster whole-tail ripple (Tessa)
+
+After seeing the retune on device, Tessa smoothed the onboarding tail: loop 1.40 s (was 4.05 s), swing ±11.7° (was ±13.8°), whole-tail bend 100% (was 80%), tip lag 44% (was 15%). Curve stays per-segment ease-in-out. Head and paw keep 9.30 s / ±3.2°. Ready-to-look unchanged. Spec: STEP-5.14 §5.3 and §5.5. Documentation only; implementation pending.

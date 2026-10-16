@@ -164,7 +164,7 @@ Band height = span ÷ 7. Joint `i` (1…6) sits at `y = spanBottom − i × band
 
 ### 5.3 Onboarding landing (searching) cat
 
-- **Tail:** loop **4.05 s**; base swing 0 / +13.8 / 0 / −13.8 / 0° at offsets 0 / .25 / .5 / .75 / 1; **flex 0.80, lag 0.15**.
+- **Tail (retuned 2026-10-16, second pass):** loop **1.40 s**; base swing 0 / +11.7 / 0 / −11.7 / 0° at offsets 0 / .25 / .5 / .75 / 1; **flex 1.00, lag 0.44**; per-segment ease-in-out as before. A quick, rippling whole-tail sway: the swing is shared evenly along the 7 bands and the tip trails the base by 44% of the loop. _Was loop 4.05 s, ±13.8°, flex 0.80, lag 0.15 (first pass)._ The joint-holds-rest-until-its-lag rule from Run 2 still applies (the loop starts at rest as the entrance lands).
 - **Head and paw** (the combined look layer): loop **9.30 s**; 0 / −3.2 / −3.2 / 0 / +3.3 / +3.3 / 0° at offsets 0 / .14 / .36 / .50 / .64 / .86 / 1; pivot (237, 268) viewBox. A gentle look left and right ("look-around lite"). Still no scan, signal rings or tail flick.
 - Replaces §1's "head/paw stay still" and "calm 1a tail sway (0 → +4° → 0 → −3° → 0 over 4.2 s)".
 
@@ -217,3 +217,9 @@ Run ready-to-look first. If it lands the bendable tail, the landing run reuses i
 - Remaining: phone feel (calm on first launch), Reduce Motion and VoiceOver on device, and frame pacing.
 
 Acceptance: the tail reads as one flexing piece with no visible seams at its extreme poses; the ear flick is clearly livelier but still a flick, not a twitch loop; the landing head/paw look is gentle (±3°) and the cat still reads as calm on first launch; Reduce Motion shows the still pose; no regression in the other four causes or the landing layout.
+
+### 5.5 Run 3: landing tail second pass
+
+Only the landing tail numbers change (§5.3). Head and paw keep 9.30 s / ±3.2°. The ready-to-look cat is not touched.
+
+> Read `CLAUDE.md` and `docs/STEP-5.14-ONBOARDING-CAT-AND-LOAD-IN.md` (§5.1 and §5.3). Change only the landing cat's tail constants to the values now in §5.3: loop 1.40 s, base swing ±11.7° (0 / +11.7 / 0 / −11.7 / 0 at .25 steps), flex 1.00, lag 0.44. Keep the head/paw track, the ready-to-look cat, the start-at-rest rule, Reduce Motion, pausing and layout as they are. With flex 1.00 and lag 0.44, check the tail at its extreme poses for seams and gaps at default size and SE 3 (the largest single-joint turn changes), and check the first second of the loop starts at rest with no jump. Update the existing tests that assert the old tail constants and add a check that the tip trails the base by lag × loop. Run focused illustration and onboarding tests first, then one full suite and a build. Known pre-existing failures: 25 SentenceTokenTests and the PlaceChangeLayoutTests blank-ink case. Update spec §5 result, STATUS and reports, then stop. No push, upload or phone install.
