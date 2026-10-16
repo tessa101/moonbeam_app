@@ -1,3 +1,16 @@
+# 5.14 ready-to-look — telescope replaced by 1k; tests blocked (2026-10-16)
+
+Permission off (launch and explicit) draws the 1k ready-to-look cat. The `rtl-*` rasters are byte-identical and
+native, the moon disc is vector, and the stack is tail, body, head, ear. The ear nests in the head and the breath
+wraps all, with the handoff's pivots and independent loops. 1h's star is kept, unchanged, at **(370, 118)**. The halo
+is hidden, as in the source (Tessa to confirm). `build-for-testing` succeeds. **No tests ran**: `Pseudo Terminal
+Setup Error` from xcodebuild, and the Xcode action fails on signing (phone destination); stopped without retries.
+Simulator stills and a 16 s idle recording are in `.agent-reports/5.14-ready-to-look/`. Next: focused, then full
+suite, from Xcode or Terminal; Reduce Motion, AX4+ and VoiceOver; phone review. No install, push or upload.
+Code: `ff355b0` (not pushed). Findings: `.agent-reports/5.14-ready-to-look/findings.md`.
+
+---
+
 # 5.14.0 — searching cat implemented; verification checkpoint (2026-10-16)
 
 The landing now uses the existing D2 searching vector as five full-canvas slices: halo, disc, tail, body and a

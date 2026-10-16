@@ -604,3 +604,8 @@
 2026-10-16 11:37 PDT 5.14.0 checkpoint: bounded focused retry also stalled; preview cancelled before rendering; documented outstanding full-suite and device matrix, then stopped. No install/push/upload.
 2026-10-16 11:48 PDT 5.14.0 resume: read handoff/findings; retrying focused tests via xcodebuild CLI with timeout.
 2026-10-16 12:12 PDT 5.14.0 (Claude chat, Tessa ran Terminal): focused pass; full 894/28 issues; AX5 landing assertion relaxed for tall phones (test-only), rerun green; SentenceTokenTests fail identically on clean HEAD via CLI, not 5.14.0; docs updated; uncommitted.
+2026-10-16 12:33 PDT 5.14 ready-to-look: read spec/handoff, inspected illustration system; compositing rtl layers to place star
+2026-10-16 12:36 PDT 5.14 ready-to-look: assets added (rtl PNGs byte-identical, vector disc), spec/motion/renderer edited; checking diagnostics
+2026-10-16 12:37 PDT 5.14 ready-to-look: tests updated, diagnostics clean; build-for-testing via guarded CLI
+2026-10-16 12:39 PDT 5.14 ready-to-look: TEST BUILD SUCCEEDED; focused tests blocked: xcodebuild 'Pseudo Terminal Setup Error' (sandboxed and unsandboxed), Xcode action fails signing (device destination). No retries; moving to simulator stills
+2026-10-16 12:45 PDT 5.14 ready-to-look: committed ff355b0 (code/assets/tests); stills + 16 s idle recording captured; docs/reports updated; committing docs, then stop. Tests NOT run (PTY error). No install/push/upload.

@@ -2,7 +2,7 @@
 
 _Tessa, 2026-10-15. Reconciled for the next agent run, 2026-10-16. Partly built: 5.14.1 landed the
 landing/upsell load-ins and page fades, and 5.14.0 now integrates the landing searching cat. The
-ready-to-look replacement and declined-screen load-in remain. Search/cancel
+ready-to-look replacement is implemented (tests pending); the declined-screen load-in remains. Search/cancel
 design (5.13.1–.2) stays with Tessa; do not implement that flow here._
 
 ## Current baseline and newer art
@@ -103,6 +103,23 @@ simulator stills.
 Agent prompt:
 
 > Implement only the 1k Ready-to-look replacement described in this spec's current baseline and `design/1.10-ready-to-look/ILLUSTRATIONS_MOTION.md`. Replace the existing permission-off telescope art in the shared illustrated cause presentation, so launch and explicit permission failures use the same new cat. Use the supplied layered animation art, preserve its raster cat layers at their native resolution and vector moon, and match the handoff's pivots, transforms, nested breath/head/ear motion, independent loop durations and stack order. Reuse the current IllustrationSpec/LocationIllustration system; extend it narrowly where the approved nested transforms require it. Do not use the still vector exports as an animation rig or change First ask/onboarding upsell/launch moon routing. Keep cause copy, actions, chips, recovery, search/cancel behavior and other causes intact. Respect responsive art sizing, decorative accessibility, off-screen/background pausing and a static offset-zero Reduce Motion pose. Run focused illustration and permission-failure regression checks, then one full suite and build. Compare a default-size still against the reference, inspect SE 3 and representative large text, and capture a short idle recording if possible. Report actual results, asset fidelity and remaining phone checks; update status/reports and stop. No push/upload or phone install.
+
+### Ready-to-look implementation result — 2026-10-16
+
+- Permission off (launch and explicit) now draws 1k: vector disc, then the supplied `rtl-*` rasters, byte-identical
+  and at native 800 × 860, placed at the foreground rect (40.225, 131.48, 332 × 356.9). Stack: tail, body, head,
+  ear; ear nested in head; breath wraps all. Pivots, keyframes and loops (4.47 / 8.82 / 6.24 / 4.94 s; disc 5.88 s)
+  are as the handoff gives them. Reduce Motion, background and off-screen show offset 0.
+- Tessa's addition: 1h's star and its 6.59 s loop are kept, re-placed at (370, 118) to clear the full disc, the head
+  and the tube.
+- System extensions: per-axis scale tracks, an optional raster `placement` on `Layer`, and inside-out composition of
+  nested transforms (unchanged output for the existing art).
+- **Halo is not shown**: the 1k source sets `display="none"` on it and the reference renders none, though the prose
+  says "shared breathing". Awaiting Tessa.
+- Test build succeeds. **Tests not run**: `test-without-building` hits `Pseudo Terminal Setup Error` in the agent
+  environment, and the Xcode action fails on signing (phone destination). Simulator stills (iPhone 17 default, launch
+  and explicit; SE 3 default; xxxLarge) and a 16 s idle recording are in `.agent-reports/5.14-ready-to-look/`.
+  Remaining: focused and full suites, Reduce Motion/AX4+/VoiceOver/light-mode checks, and phone review.
 
 ### Subsequent run — 5.14.2 declined-screen load-in
 
