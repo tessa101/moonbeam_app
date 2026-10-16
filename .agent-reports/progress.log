@@ -550,3 +550,6 @@
 2026-10-15 17:04 5.13.3 finish: start; verifying resume edits (Close .inline, guide row .row, ‹› 100 ms)
 2026-10-15 17:05 5.13.3 finish: resume edits reviewed (Close keeps gray, preview OK; guide row press shifts reported avatar centre ~5 pt for ≤250 ms -> phone check); full suite
 2026-10-15 17:06 5.13.3 finish: full suite 1298/1298, Close preview OK; committing resume edits (A)
+2026-10-15 17:09 5.13.3 part 3: committed 7090bc0 (A); ButtonStyleDriftTests written (source scan, allowlist MadlibSentence a11y tokens -> 5.13.4); building
+2026-10-15 17:09 5.13.3 part 3: drift suite 3/3; mutation (guide row -> .plain) fails at CompassGuideRow.swift:56 as expected, reverted; full suite
+2026-10-15 17:10 5.13.3 part 3: full suite 1301/1301; docs + latest.md; committing; then stop

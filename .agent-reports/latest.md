@@ -1,9 +1,22 @@
-# Build 5.13.3 finish: resume edits + drift test (STEP-5.13 §4): 2026-10-15 (in progress)
+# Build 5.13.3 finish: resume edits + drift test (STEP-5.13 §4): 2026-10-15 (done; stopped)
 
-- Commit A (this one): the resume edits. Dialog Close `.plain` → `.inline` (keeps its gray, 44 pt; preview checked),
-  compass guide row `.plain` → `.row`, ‹ › hold 90 → 100 ms (`PressHold.minimum`) + its test. Full suite in Xcode
-  (iPhone 17) 1298/1298.
-- Next: part 3, the drift test.
+Done (not pushed):
+- `7090bc0` part 2b: the resume edits, verified. Dialog Close `.plain` → `.inline` (keeps its gray and 44 pt;
+  preview checked), compass guide row `.plain` → `.row`, ‹ › hold 90 → 100 ms (`PressHold.minimum`) + its test.
+- Part 3 (this commit): `ButtonStyleDriftTests` (3). Scans the app sources; every `Button` must get its innermost
+  `.buttonStyle` from a style whose body applies `.pressFeedback` (derived, not listed), or `DayStepButtonStyle`
+  (own look, hold = `PressHold.minimum`, asserted). Allowlist: exactly 1 in `MadlibSentence.swift`, the tokens'
+  VoiceOver stand-in Buttons in `.accessibilityChildren` (the drawn tokens are Text links), comment → 5.13.4. The
+  exact count makes the entry fail once 5.13.4 lands. Tokens, copy and the search flow not touched.
+
+Verify: full suite in Xcode (iPhone 17) **1298/1298** before part 3, **1301/1301** after. Mutation check: guide row
+back on `.plain` → the drift test fails with `Features/Compass/CompassGuideRow.swift: line 56: .plain`; reverted.
+
+For Tessa (phone): the guide row's press scale (0.96) moves the avatar centre the ring swap reads live, about 5 pt
+in x, for the 100 ms hold + 150 ms spring after tapping the row. The ring's travel may start ~5 pt off and correct.
+Small, but worth a look on the T2 (not installed this run; the T2 still has `4a2f142` + these edits from before).
+
+Next: 5.13.4 (sentence tokens' pressed look; remove the allowlist entry). 5.13.1/.2 still on hold (cancel-search).
 
 ---
 

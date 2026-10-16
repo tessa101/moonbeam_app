@@ -1718,3 +1718,14 @@ count, and fires only after one more request. No tolerances or timings changed. 
   started), so it no longer fires while the old page is still up.
 - "That's okay for now" keeps the instant swap and instant announce until 5.14.2 gives it a load-in (the fade-out
   would otherwise end on a page that pops in).
+
+## 2026-10-15: 5.13.3 part 3, the button style drift test (agent)
+
+- `ButtonStyleDriftTests` reads the app's sources, not a view tree: a style can come from any container above a
+  button, and a test can't walk a SwiftUI hierarchy. For each `Button` it takes the innermost `.buttonStyle(…)` up
+  the modifier chains of the button and its enclosing views. Comments and strings are blanked first.
+- "Shared" is derived, not listed: any `ButtonStyle` whose body applies `.pressFeedback(…)`, by type or by its
+  static name. `DayStepButtonStyle` keeps its own look and is allowed because its hold is `PressHold.minimum`.
+- Allowlist: one unstyled Button in `MadlibSentence` (the tokens' VoiceOver stand-ins, never drawn) until 5.13.4.
+  Counts are exact, so the entry fails once 5.13.4 lands and must be removed.
+- Checked by mutation: putting the guide row back on `.plain` fails with `CompassGuideRow.swift line 56: .plain`.
