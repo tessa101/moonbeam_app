@@ -143,12 +143,41 @@ private struct LocationIllustrationLayer: View {
             result * item.1.brightness
         }
 
-        slice
-            .frame(width: canvasSize.width, height: canvasSize.height)
+        if let bands = spec.tailBands(of: layer, at: time, canvasScale: canvasScale) {
+            // A bending tail: the one slice, clipped into bands that each
+            // turn on their own joint, base to tip. Each band first clears
+            // its own rect, then draws, so the overlap that closes a turned
+            // joint replaces the band below instead of doubling its alpha
+            // (1k's tail base is translucent where it fades into the body).
+            // Clear and mask are one aliased fill so they cover the same
+            // pixels; two antialiased edges on one line would leave a
+            // see-through seam, and a clip rounds its edge row differently.
+            ZStack {
+                ForEach(bands.indices, id: \.self) { index in
+                    let band = bands[index]
+                    Path(band.clip)
+                        .fill(.black, style: Self.bandEdge)
+                        .transformEffect(band.transform)
+                        .blendMode(.destinationOut)
+                    slice
+                        .frame(width: canvasSize.width, height: canvasSize.height)
+                        .mask { Path(band.clip).fill(.black, style: Self.bandEdge) }
+                        .transformEffect(band.transform)
+                }
+            }
+            .compositingGroup()
             .brightness(brightness - 1)
             .opacity(opacity)
-            .transformEffect(transform)
+        } else {
+            slice
+                .frame(width: canvasSize.width, height: canvasSize.height)
+                .brightness(brightness - 1)
+                .opacity(opacity)
+                .transformEffect(transform)
+        }
     }
+
+    private static let bandEdge = FillStyle(antialiased: false)
 
     /// A full-canvas vector slice, or a raster drawn at its own viewBox
     /// rect on the canvas, so its pixels are only scaled once.

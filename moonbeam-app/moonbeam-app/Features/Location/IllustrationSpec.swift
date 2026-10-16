@@ -91,6 +91,14 @@ nonisolated struct IllustrationSpec: Equatable, Sendable {
 
     var spark: IllustrationSpark?
     var star: Star?
+    /// When set, the tail layer is drawn as bending bands (STEP-5.14 §5.1).
+    var tailBend: IllustrationTailBend?
+
+    /// One band of a bending tail: its clip on the slice, and its move.
+    struct TailBand: Equatable, Sendable {
+        let clip: CGRect
+        let transform: CGAffineTransform
+    }
 
     // MARK: - Canvas
 
@@ -112,10 +120,32 @@ nonisolated struct IllustrationSpec: Equatable, Sendable {
     /// part's move first, then each parent's, as nested SVG groups apply
     /// them. 1k's ear turns on the tilted head, which rides the breath.
     func transform(of layer: Layer, at time: TimeInterval?, canvasScale: CGFloat = 1) -> CGAffineTransform {
-        layer.parts.reduce(CGAffineTransform.identity) { outer, part in
+        transform(of: layer.parts, at: time, canvasScale: canvasScale)
+    }
+
+    private func transform(of parts: [Part], at time: TimeInterval?, canvasScale: CGFloat) -> CGAffineTransform {
+        parts.reduce(CGAffineTransform.identity) { outer, part in
             pose(of: part, at: time)
                 .scaledTransform(pivot: pivots[part], canvasScale: canvasScale)
                 .concatenating(outer)
+        }
+    }
+
+    /// `layer` as bending bands, base first, if it is the tail and the
+    /// spec bends it: each band's clip in canvas points, and its joints'
+    /// turns inside the tail's parents (1k's breath). `nil` otherwise.
+    func tailBands(of layer: Layer, at time: TimeInterval?, canvasScale: CGFloat = 1) -> [TailBand]? {
+        guard let tailBend, layer.parts.last == .tail,
+              let track = motions[.tail]?.rotation else { return nil }
+        let outer = transform(of: Array(layer.parts.dropLast()), at: time, canvasScale: canvasScale)
+        let toCanvas = CGAffineTransform(scaleX: canvasScale, y: canvasScale)
+        return tailBend.bands.indices.map { index in
+            TailBand(
+                clip: tailBend.bands[index].applying(toCanvas),
+                transform: tailBend
+                    .transform(throughBand: index, track: track, at: time, canvasScale: canvasScale)
+                    .concatenating(outer)
+            )
         }
     }
 
@@ -171,6 +201,24 @@ nonisolated struct IllustrationSpec: Equatable, Sendable {
         width: 800 * readyToLookCatScale,
         height: 860 * readyToLookCatScale
     )
+    /// The cat group's image space (the rasters at (215, 250), 1 unit per
+    /// pixel), where §5.1's tail geometry is measured, to the viewBox.
+    private static let readyToLookImageArt = CGRect(x: 215, y: 250, width: 800, height: 860)
+    private static let readyToLookImageToViewBox = CGAffineTransform(scaleX: readyToLookCatScale, y: readyToLookCatScale)
+        .concatenating(CGAffineTransform(translationX: -49, y: 27.73))
+    /// 1k's tail root, which is also its base joint: (351.8, 932) in image space.
+    private static let readyToLookTailPivot = CGPoint(x: 97, y: 414.5)
+
+    /// 1k's bending tail (STEP-5.14 §5.1–5.2, Tessa, 2026-10-16), in image
+    /// space. The table's band-0 x (338.4) is unused: joint 0 is the pivot.
+    private static let readyToLookTailFlex = 0.95
+    private static let readyToLookTailLag = 0.30
+    private static let readyToLookTailJointX = [350.5, 365.0, 366.1, 356.4, 324.7, 311.1]
+    private static let readyToLookTailSpan = 639.0...902.0
+    /// About 4 image pixels, so the turned joints stay closed.
+    private static let readyToLookTailOverlap = 4.0
+    private static let readyToLookTailDuration: TimeInterval = 2.25
+    private static let readyToLookEarDuration: TimeInterval = 5.35
     /// The star's loop: 1h's telescope loop, kept for the carried-over star.
     private static let starDuration: TimeInterval = 6.59
 
@@ -280,8 +328,8 @@ nonisolated struct IllustrationSpec: Equatable, Sendable {
 
     /// 1k "Ready to look" (replaces 1h, Tessa, 2026-10-16): the cat holds
     /// the telescope, breathes, lifts its head as if about to peek, flicks
-    /// an ear and sways its tail, each on its own loop so the mix rarely
-    /// repeats. The disc breathes; the art's halo is hidden in the source
+    /// an ear and sways a bending tail, each on its own loop so the mix
+    /// rarely repeats (ear and tail retuned in STEP-5.14 §5.2). The disc breathes; the art's halo is hidden in the source
     /// (`display="none"`), so there's none. The cat layers are the supplied
     /// rasters at native size; the moon stays vector.
     static let readyToLook = IllustrationSpec(
@@ -297,7 +345,7 @@ nonisolated struct IllustrationSpec: Equatable, Sendable {
             .breath: CGPoint(x: 200, y: 478),
             .head: CGPoint(x: 205, y: 277),
             .ear: CGPoint(x: 163.5, y: 193),
-            .tail: CGPoint(x: 97, y: 414.5),
+            .tail: readyToLookTailPivot,
         ],
         motions: [
             .moonDisc: discBreath,
@@ -310,13 +358,15 @@ nonisolated struct IllustrationSpec: Equatable, Sendable {
                     (0, 0), (0.22, -3.2), (0.40, -2.2), (0.58, -3.6), (0.80, -1), (1, 0),
                 ])
             ),
+            // §5.2's retune: a quick, larger flick, then a settle.
             .ear: IllustrationMotion(
-                rotation: IllustrationKeyframes(duration: 6.24, [
-                    (0, 0), (0.62, 0), (0.66, -9), (0.70, 3), (0.74, -4), (0.80, 0), (1, 0),
+                rotation: IllustrationKeyframes(duration: readyToLookEarDuration, [
+                    (0, 0), (0.55, 0), (0.60, -21), (0.65, 7), (0.70, -8.7), (0.76, 0), (1, 0),
                 ])
             ),
+            // §5.2's base swing, spread over the bending tail's joints.
             .tail: IllustrationMotion(
-                rotation: IllustrationKeyframes(duration: 4.94, values: [0, 4, 0, -3, 0])
+                rotation: IllustrationKeyframes(duration: readyToLookTailDuration, values: [0, 20, 0, -15, 0])
             ),
         ],
         star: Star(
@@ -336,6 +386,16 @@ nonisolated struct IllustrationSpec: Equatable, Sendable {
                     (0, 0), (0.26, 0), (0.36, 1), (0.46, 0.8), (0.54, 1), (0.66, 0), (1, 0),
                 ])
             )
+        ),
+        tailBend: IllustrationTailBend(
+            flex: readyToLookTailFlex,
+            lag: readyToLookTailLag,
+            basePivot: readyToLookTailPivot,
+            jointX: readyToLookTailJointX,
+            span: readyToLookTailSpan,
+            overlap: readyToLookTailOverlap,
+            art: readyToLookImageArt,
+            toViewBox: readyToLookImageToViewBox
         )
     )
 

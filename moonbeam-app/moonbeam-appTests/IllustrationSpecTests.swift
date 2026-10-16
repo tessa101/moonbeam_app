@@ -123,7 +123,7 @@ struct IllustrationSpecTests {
         let spec = IllustrationSpec.readyToLook
         let ear = spec.layers[4]
         // Mid flick, mid lift, mid breath, so all three are off rest.
-        let time = 6.24 * 0.66
+        let time = 5.35 * 0.62
         let expected = spec.pose(of: .ear, at: time).transform(pivot: spec.pivots[.ear])
             .concatenating(spec.pose(of: .head, at: time).transform(pivot: spec.pivots[.head]))
             .concatenating(spec.pose(of: .breath, at: time).transform(pivot: spec.pivots[.breath]))

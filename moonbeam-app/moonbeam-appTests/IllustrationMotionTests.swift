@@ -39,13 +39,13 @@ struct IllustrationMotionTests {
     }
 
     @Test(
-        "1k's ear rests, then flicks",
-        arguments: [(0.0, 0.0), (0.62, 0.0), (0.66, -9.0), (0.70, 3.0), (0.74, -4.0), (0.80, 0.0), (1.0, 0.0)]
+        "1k's ear rests, then flicks hard and settles (STEP-5.14 §5.2)",
+        arguments: [(0.0, 0.0), (0.55, 0.0), (0.60, -21.0), (0.65, 7.0), (0.70, -8.7), (0.76, 0.0), (1.0, 0.0)]
     )
     func readyToLookEar(offset: Double, degrees: Double) throws {
         let ear = try #require(IllustrationSpec.readyToLook.motions[.ear]?.rotation)
-        #expect(ear.duration == 6.24)
-        #expect(abs(ear.value(at: 6.24 * offset) - degrees) < Self.tolerance)
+        #expect(ear.duration == 5.35)
+        #expect(abs(ear.value(at: 5.35 * offset) - degrees) < Self.tolerance)
     }
 
     @Test("1k breathes taller than wide, and sways its tail, each on its own loop")
@@ -56,9 +56,11 @@ struct IllustrationMotionTests {
         #expect(abs(breath.scaleY - 1.014) < Self.tolerance)
         #expect(breath.scale == 1)
         let tail = try #require(spec.motions[.tail]?.rotation)
-        #expect(tail.duration == 4.94)
-        #expect(abs(tail.value(at: 4.94 * 0.25) - 4) < Self.tolerance)
-        #expect(abs(tail.value(at: 4.94 * 0.75) - -3) < Self.tolerance)
+        // STEP-5.14 §5.2: the base swing the bending tail spreads.
+        #expect(tail.duration == 2.25)
+        #expect(abs(tail.value(at: 2.25 * 0.25) - 20) < Self.tolerance)
+        #expect(abs(tail.value(at: 2.25 * 0.5)) < Self.tolerance)
+        #expect(abs(tail.value(at: 2.25 * 0.75) - -15) < Self.tolerance)
         // Four independent lengths, so the mix rarely repeats.
         let durations = [
             spec.motions[.breath]?.scaleY?.duration, spec.motions[.head]?.rotation?.duration,
@@ -110,6 +112,11 @@ struct IllustrationMotionTests {
         for layer in spec.layers {
             #expect(spec.transform(of: layer, at: nil) == .identity, "\(layer.asset)")
         }
+        // Every tail joint too.
+        let tail = spec.layers[1]
+        let bands = spec.tailBands(of: tail, at: nil)
+        #expect(bands?.count == IllustrationTailBend.bandCount)
+        #expect(bands?.allSatisfy { $0.transform == .identity } == true)
         // The star's still frame is its first stop: hidden.
         #expect(spec.star?.motion.pose(at: 0).opacity == 0)
         #expect(spec.star?.motion.pose(at: 0).scale == 0)
