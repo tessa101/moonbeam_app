@@ -35,7 +35,7 @@ Placed directly under the city name, above the moon table (sketch #3).
 
 ## 2. Calendar sheet
 
-- Bottom sheet, **medium detent** (large if Dynamic Type needs it), drag indicator visible.
+- Bottom sheet, fitted to the calendar content and navigation area, with a large detent fallback when it does not fit. Taller content scrolls; scrolling never changes the sheet height. Drag indicator visible (5.13.3e follow-up, 2026-10-16).
 - Contents: a month calendar (`DatePicker` with `.graphical` style, date-only), limited to the §1 range. Today is marked by the system style.
 - **Tapping a date sets it and closes the sheet.** ~~Tapping the date that's already selected also closes it.~~ *As built:* the graphical picker doesn't report a tap on the current selection, so Cancel or a drag closes the sheet then (DECISIONS.md 2026-09-26).
 - **Month/year wheel** (added 2026-09-26): turning the picker's wheel changes its selection, which would pick a day and close the sheet. So a change that keeps the day number, or clamps it to the month's last day, only moves the highlight, and a **Done** button appears to confirm it. Cancel drops it. A tap on the same day number in another month looks the same and also waits for Done.

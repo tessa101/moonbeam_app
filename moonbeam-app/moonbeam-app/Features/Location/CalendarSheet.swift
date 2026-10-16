@@ -19,11 +19,9 @@ struct CalendarSheet: View {
 
     @Environment(\.dismiss) private var dismiss
 
-    /// The first frame stays at `.large` until both global edges are known.
-    /// Their difference includes the navigation bar without depending on a
-    /// fixed toolbar height.
-    @State private var sheetTop: CGFloat?
-    @State private var calendarBottom: CGFloat?
+    /// Stay at `.large` until the calendar and navigation area are measured.
+    /// Content size is independent of scrolling; global edges are not.
+    @State private var contentHeight: CGFloat?
 
     var body: some View {
         NavigationStack {
@@ -39,11 +37,11 @@ struct CalendarSheet: View {
                 .environment(\.timeZone, viewModel.calendarTimeZone)
                 .environment(\.calendar, pickerCalendar)
                 .padding(.horizontal)
-                .onGeometryChange(for: CGFloat.self) { proxy in
-                    proxy.frame(in: .global).maxY
-                } action: { bottom in
-                    calendarBottom = bottom
-                }
+            }
+            .onScrollGeometryChange(for: CGFloat.self) { geometry in
+                Self.fittedContentHeight(geometry)
+            } action: { _, height in
+                contentHeight = height
             }
             .scrollBounceBehavior(.basedOnSize)
             .navigationTitle("Choose a date")
@@ -73,11 +71,6 @@ struct CalendarSheet: View {
                 }
             }
         }
-        .onGeometryChange(for: CGFloat.self) { proxy in
-            proxy.frame(in: .global).minY
-        } action: { top in
-            sheetTop = top
-        }
         // Fit the calendar when it fits. Small screens fall back to the
         // system's large detent, and the ScrollView handles taller content.
         .presentationDetents([fittedDetent])
@@ -87,14 +80,19 @@ struct CalendarSheet: View {
     private var fittedDetent: PresentationDetent {
         guard
             maximumHeight > 0,
-            let sheetTop,
-            let calendarBottom
+            let contentHeight,
+            contentHeight > 0
         else {
             return .large
         }
-        let contentHeight = calendarBottom - sheetTop
         guard contentHeight < maximumHeight else { return .large }
         return .height(contentHeight)
+    }
+
+    /// Include the navigation bar's inset, but leave the bottom safe area
+    /// to `.height`, which adds it itself. Never include the scroll offset.
+    static func fittedContentHeight(_ geometry: ScrollGeometry) -> CGFloat {
+        geometry.contentSize.height + geometry.contentInsets.top
     }
 
     /// The user's own calendar, in the place's zone.

@@ -565,3 +565,6 @@
 2026-10-15 18:28 5.13.3c: after round iPhone 17 9/9 + search 4; SE3 0/9 (location failure on sim); NEW: disabled Today = enabled look, labels cream; investigating
 2026-10-15 18:31 5.13.3c: probe-3: root .foregroundStyle(textPrimary) (app root, since 5.1) makes system toolbar items cream + undimmed when disabled; same in build 10 -> flag for Tessa; SE3 location re-set, SE3 round
 2026-10-15 18:45 5.13.3c: after 17/18 + search 4; findings, DECISIONS/STATUS (my hunks), latest.md; committing
+
+2026-10-16 08:33 PDT 5.13.3e follow-up: saved AX1 evidence confirms calendar collapses on scroll; replaced global-edge measurement with scroll content size + top inset; regression cases added; Xcode full suite started (shell simulator connection unavailable).
+2026-10-16 08:38 PDT 5.13.3e follow-up: Xcode full suite 878 tests / 1307 cases pass; large-text iPhone 17 + SE3 complete grid and repeated scroll attempts checked in Device Hub; scheme restored; docs/report updated; physical phone + overflow matrix pending; uncommitted.

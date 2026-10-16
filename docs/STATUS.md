@@ -1,5 +1,7 @@
 # Status & Handoff
 
+_5.13.3e follow-up, 2026-10-16 (approved for commit): fixed calendar sheet collapsing on scroll by sizing from content height plus navigation inset. Full suite in Xcode: 878 tests / 1307 cases pass. Large-text iPhone 17 and SE3 simulator checks show the complete month; full matrix, overflowing-scroll and physical phone review remain. Report: `.agent-reports/5.13.3e/scroll-height-followup.md`._
+
 _Build 5.13.3c, 2026-10-15 (`5b80b71` + follow-up; not pushed): the calendar sheet's Today, Cancel and Done are back on the system style ("Tod…" fixed); the drift test requires toolbar buttons to have no custom style. Full suite 1301/1301. Open for Tessa: disabled Today looks enabled (root foreground style, same in build 10); the headline overlaps at AX sizes; the SE's calendar sheet is clipped._
 
 _Build 5.13.3 done, 2026-10-15 (`7090bc0` part 2b, part 3 in the next commit; not pushed; STEP-5.13 §4): dialog Close → `.inline`, guide row → `.row`, ‹ › hold 100 ms; `ButtonStyleDriftTests` fails if any Button lacks a shared style (sentence tokens allowlisted until 5.13.4). Full suite in Xcode (iPhone 17) 1301/1301. Phone check pending: guide row press vs the ring swap._

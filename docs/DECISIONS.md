@@ -1739,3 +1739,13 @@ count, and fires only after one more request. No tolerances or timings changed. 
   regression fails the test.
 - Open (Tessa): disabled Today looks enabled, because the app root's `.foregroundStyle(textPrimary)` reaches sheets
   and overrides the toolbar's tint and disabled gray. The same in build 10. See `.agent-reports/5.13.3c/findings.md`.
+
+
+## 2026-10-16: 5.13.3e calendar height must not depend on scroll position
+
+The saved SE AX1 after-scroll evidence for `f6bc5b1` shows a 105.8 pt sheet, down from 393.9 pt. Global calendar-bottom minus sheet-top incorporates the scroll offset. Replace it with scroll content height plus its top inset (navigation area); the system supplies the bottom safe area. Keep the existing large fallback and all selection/toolbar behavior. Regression cases cover offsets, overscroll and content growth. Xcode full suite: 878 tests / 1307 cases pass. Initial large-text iPhone 17/SE3 visual checks pass; full matrix, actual overflowing-scroll and phone checks remain. See `.agent-reports/5.13.3e/scroll-height-followup.md`.
+
+
+## 2026-10-16: Queue clarification (Tessa)
+
+5.13.1/.2 search-flow design remains Tessa's pending work. Replace the telescope with the ready-to-look cat animation; the older telescope redraw/replacement-art plan is superseded. Next substantial implementation task remains 5.5a. Disabled Today appearance is under visual review, with no appearance change authorized yet.

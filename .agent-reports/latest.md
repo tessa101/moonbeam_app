@@ -1,3 +1,9 @@
+# 5.13.3e calendar scroll-height follow-up — 2026-10-16
+
+The headline and initial calendar fixes are committed as `87028cc` and `f6bc5b1`. Review found the calendar sheet collapsing on scroll in the saved SE AX1 evidence. Follow-up code now fits from scroll content size plus its top inset, never global edges. Six sizing regression cases added; Xcode full suite **878 tests / 1307 cases pass**. iPhone 17 and SE3 large-text fixtures show the complete month; repeated scroll attempts do not collapse the settled sheet. Full matrix, overflowing-scroll and physical phone checks remain. Calendar follow-up approved for commit; no device installation or push. Details: `.agent-reports/5.13.3e/scroll-height-followup.md`.
+
+---
+
 # Build 5.13.3c: calendar toolbar buttons back on the system style: 2026-10-15 (done)
 
 Commits (not pushed): `5b80b71` checkpoint (fix + drift-test toolbar rule + before shots), then the follow-up with
