@@ -1,5 +1,7 @@
 # Status & Handoff
 
+_5.5a.1 scrolling follow-up, 2026-10-16: fixed main-screen content constrained to one viewport, which prevented scrolling to enlarged text. Full-screen tests reproduced all six AX1/3/5 failures; six reachability plus two prompt-transition cases now pass. Full suite 881 tests / 1324 cases pass. No phone installation. Report: `.agent-reports/5.5a/scrolling-followup.md`._
+
 _5.5a first card pass, 2026-10-16: AX glyph/text/controls reflow, 60 pt equal day buttons, locale-ordered time/day-period rows, natural status height. Full suite 879 tests / 1316 cases pass. Card renders reviewed at both phone widths, standard + AX1/2/3/5; phone, scrolling and VoiceOver checks pending. Next: 5.5b. See `docs/STEP-5.5-ACCESSIBILITY.md` and `.agent-reports/5.5a/findings.md`._
 
 _5.13.3e follow-up, 2026-10-16 (approved for commit): fixed calendar sheet collapsing on scroll by sizing from content height plus navigation inset. Full suite in Xcode: 878 tests / 1307 cases pass. Large-text iPhone 17 and SE3 simulator checks show the complete month; full matrix, overflowing-scroll and physical phone review remain. Report: `.agent-reports/5.13.3e/scroll-height-followup.md`._

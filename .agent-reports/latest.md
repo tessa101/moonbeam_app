@@ -1,3 +1,9 @@
+# 5.5a.1 — large-text scrolling restored (2026-10-16)
+
+Reproduced Tessa's scrolling report in the actual LocationScreen: all six AX1/AX3/AX5 cases at SE/iPhone 17 dimensions failed because the scroll content was fixed to one viewport. Changed that to a viewport minimum so longer content has its natural scroll range. Six bottom-reachability cases and two prompt collapse/expand cases now pass; full suite **881 tests / 1324 cases pass**. Report: `.agent-reports/5.5a/scrolling-followup.md`. No phone installation or push. Next remains 5.5b, followed by compass/whole-flow accessibility review.
+
+---
+
 # 5.5a — moon card accessibility, first pass (2026-10-16)
 
 AX card header now has a 64 pt glyph above text and equal-width 60 pt day buttons in their own row. AX time/day-period rows allow the rise/set pair to fit through AX3 for the reviewed fixture; AX5 stacks it. Status grows with its actual content. Final full suite: **879 tests / 1316 cases pass**. Ten hosted geometry checks and ten full-height card renders reviewed. Findings: `.agent-reports/5.5a/findings.md`. Next: 5.5b event/status edge cases and SE connector, then compass and whole-flow review. Phone, scrolling and VoiceOver checks pending; no device install or push.

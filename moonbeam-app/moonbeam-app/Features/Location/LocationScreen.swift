@@ -33,6 +33,9 @@ struct LocationScreen: View {
     /// The compass block's scroll target for the pinned bar's Compass ↓.
     private static let compassScrollID = "compass"
     private static let contentSpace = "locationContent"
+    /// Keep short states scrollable across the prompt/row transition.
+    private static let minimumScrollOverflow: CGFloat = 1
+    @State private var scrollViewportHeight: CGFloat = 0
 
     /// For the pinned bar's rule (COMPASS-1.1.md §9.6), both in global
     /// coordinates: the dial's centre, and the fold (the bottom of the
@@ -248,12 +251,10 @@ struct LocationScreen: View {
             .padding(.horizontal, Theme.Metrics.screenMargin)
             .padding(.top, Theme.Metrics.contentTopSpacing)
             .padding(.bottom, Theme.Metrics.screenMargin)
-            // A short state still fills the viewport, so crossing between a
-            // scrollable prompt and a shorter row doesn't change the scroll
-            // view's alignment model mid-transition.
-            .containerRelativeFrame(.vertical, alignment: .top) { length, _ in
-                length + 1
-            }
+            // A minimum preserves the short prompt/row transition's scroll
+            // model without fixing the content extent to one screen. At AX
+            // sizes the full stack must contribute its natural height.
+            .frame(minHeight: scrollViewportHeight + Self.minimumScrollOverflow, alignment: .top)
         }
         // Child cards animate their own height. Preserve the reader's exact
         // offset while layout changes so content above a card doesn't move.
@@ -278,10 +279,11 @@ struct LocationScreen: View {
         // The fold: the scroll view's frame already stops at the home
         // indicator, or at the bottom bar's top when a note shows (its
         // safe-area inset); subtracting the insets again counted them twice.
-        .onGeometryChange(for: CGFloat.self) { proxy in
-            proxy.frame(in: .global).maxY
-        } action: { fold in
-            foldY = fold
+        .onGeometryChange(for: CGRect.self) { proxy in
+            proxy.frame(in: .global)
+        } action: { frame in
+            foldY = frame.maxY
+            scrollViewportHeight = frame.height
             updatePinnedBar()
         }
         // COMPASS-1.1.md §9.4: the compass's note in a bar fixed above the

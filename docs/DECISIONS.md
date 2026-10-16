@@ -1754,3 +1754,8 @@ The saved SE AX1 after-scroll evidence for `f6bc5b1` shows a 105.8 pt sheet, dow
 ## 2026-10-16: 5.5a first moon-card accessibility pass
 
 Implement DESIGN-1.1 §4: AX glyph 64 pt above date/phase text, separate equal-width 60 pt day controls; existing press/disabled/Reduce Motion behavior retained. At AX sizes keep time runs in locale order with the day period on its own line, so the rise/set fit test can retain a readable pair before stacking. The AX status grows with actual text; remove its hidden longest-status reservation. Standard-size height stability remains tested; AX no longer promises equal up/down heights. Full suite 879 tests / 1316 cases pass; ten hosted control-layout cases and full-height card renders at both phone widths reviewed. Whole-screen/VoiceOver/phone checks and event/status edge cases remain in 5.5b–d. Spec/tracking: `docs/STEP-5.5-ACCESSIBILITY.md`. Disabled Today stays unchanged per Tessa.
+
+
+## 2026-10-16: 5.5a.1 scrolling uses a viewport minimum, not a fixed content extent
+
+Tessa's large-text scrolling failure reproduces in the full LocationScreen at both phone sizes, AX1/3/5. The viewport-relative fixed content frame from `fb16d962` lets text draw beyond it without extending the scroll range. Replace it with a minimum height measured from the scroll viewport, retaining the one-point overflow and disabled automatic offset adjustment used by prompt/guide transitions. Six bottom-reachability cases plus two default-size prompt-collapse/expand cases pass; full suite 881 tests / 1324 cases pass. This closes the reported scroll-extent bug; physical gesture/VoiceOver and broader whole-flow review remain.
