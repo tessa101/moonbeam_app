@@ -1833,3 +1833,8 @@ The landing (STEP-5.14 §5.3) starts its loop at t = 0 as the entrance lands. Wi
 ## 2026-10-16: Landing tail second pass — faster whole-tail ripple (Tessa)
 
 After seeing the retune on device, Tessa smoothed the onboarding tail: loop 1.40 s (was 4.05 s), swing ±11.7° (was ±13.8°), whole-tail bend 100% (was 80%), tip lag 44% (was 15%). Curve stays per-segment ease-in-out. Head and paw keep 9.30 s / ±3.2°. Ready-to-look unchanged. Spec: STEP-5.14 §5.3 and §5.5. Documentation only; implementation pending.
+
+## 2026-10-16: Cat motion retune closed (Tessa)
+
+The STEP-5.14 §5 cat motion retune is closed. Tessa verified both cats on her phone: ready-to-look's tail and ear (§5.2) and the landing's bending tail and look-around (§5.3), including frame pacing. The landing tail's final values are the §5.5 second pass (1.40 s, ±11.7°, flex 1.00, lag 0.44). Reduce Motion and VoiceOver weren't re-checked on device. Further motion changes need a new issue. Remaining 5.14 work is only the declined-screen load-in, held for the 5.13 search/cancel design.
+

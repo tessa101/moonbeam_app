@@ -1,3 +1,12 @@
+# 5.14 cat motion — closed (2026-10-16)
+
+Documentation-only closeout. Ready-to-look retune (§5.2) and landing retune (§5.3/§5.5; final tail 1.40 s second pass)
+are done. Tessa verified both on her phone: tail and ear feel, whole-tail bend, landing look-around, frame pacing.
+Reduce Motion and VoiceOver not re-checked on device. Remaining 5.14: only the declined-screen load-in (5.14.2), held
+for the 5.13 search/cancel design. No code, build or test runs; no install, push or upload.
+
+---
+
 # 5.14 §5.5 Run 3 — landing tail second pass (2026-10-16)
 
 Done: the landing tail is now 1.40 s, ±11.7°, flex 1.00, lag 0.44 (STEP-5.14 §5.3); nothing else changed. Flag for

@@ -5,6 +5,10 @@ landing/upsell load-ins and page fades, and 5.14.0 now integrates the landing se
 ready-to-look replacement is implemented; the declined-screen load-in remains. Search/cancel
 design (5.13.1–.2) stays with Tessa; do not implement that flow here._
 
+**Status, 2026-10-16: both cat animations are done and closed** (see §5.6). The ready-to-look retune (§5.2) and
+the landing retune (§5.3, final values from the §5.5 second pass) were verified by Tessa on her phone. The only
+remaining 5.14 work is the declined-screen load-in (§2, 5.14.2), which waits on the 5.13 search/cancel design.
+
 ## Current baseline and newer art
 
 - Read `.agent-reports/5.14-handoff.md` first. 5.5a–d and 5.13.4 are closed; do not reopen them without a new issue.
@@ -243,4 +247,17 @@ Only the landing tail numbers change (§5.3). Head and paw keep 9.30 s / ±3.2°
   alone (8/8; also seen in Run 1). Build succeeds. No in-app recording this run. Files:
   `.agent-reports/5.14-retune-landing-2/`.
 - Remaining: phone feel (is ±5.7° net enough; does 1.40 s still read as calm), Reduce Motion and VoiceOver on device.
+
+### 5.6 Closeout — 2026-10-16 (documentation only)
+
+- **Done:** ready-to-look retune (§5.2, Run 1, `a7d3941`) and landing retune (§5.3, Run 2 `e9a96bf`, and the §5.5
+  second pass, Run 3 `1e9bc53`).
+- **Landing tail final values:** the §5.5 second pass: 1.40 s, 0 / +11.7 / 0 / −11.7 / 0°, flex 1.00, lag 0.44. The
+  first-pass values (4.05 s, ±13.8°, flex 0.80, lag 0.15) are superseded. Head/paw stays 9.30 s, −3.2 / +3.3°.
+- **Verified on Tessa's phone, 2026-10-16:** tail and ear feel, the whole-tail bend, the landing look-around and frame
+  pacing. That covers the motion-feel and frame-pacing checks listed as remaining in the Run 1–3 results.
+- **Not re-checked on device:** Reduce Motion and VoiceOver. The Reduce Motion still pose is covered by tests (every
+  joint at identity), and the art remains `accessibilityHidden`.
+- **Remaining 5.14 work:** only the declined-screen load-in (§2, 5.14.2), held until Tessa finalizes the 5.13
+  search/cancel design.
 
