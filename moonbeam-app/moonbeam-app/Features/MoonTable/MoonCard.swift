@@ -939,7 +939,8 @@ struct DayStepButtonStyle: ButtonStyle {
     static let disabledOpacity = 0.35
     static let pressedScale: CGFloat = 0.88
     static let pressedFillOpacity = 0.10
-    static let minimumPressedDuration = Duration.milliseconds(90)
+    /// The same minimum as every other control (STEP-5.13 §4).
+    static let minimumPressedDuration = PressHold.minimum
     static let releaseAnimation = Animation.spring(duration: 0.15)
 
     init(

@@ -1,3 +1,13 @@
+# Build 5.13.3 finish: resume edits + drift test (STEP-5.13 §4): 2026-10-15 (in progress)
+
+- Commit A (this one): the resume edits. Dialog Close `.plain` → `.inline` (keeps its gray, 44 pt; preview checked),
+  compass guide row `.plain` → `.row`, ‹ › hold 90 → 100 ms (`PressHold.minimum`) + its test. Full suite in Xcode
+  (iPhone 17) 1298/1298.
+- Next: part 3, the drift test.
+
+---
+
+
 # Build 5.14.1: onboarding load-ins, landing and upsell (STEP-5.14 §2): 2026-10-15
 
 **5.13.3 is not done.** Parts 1-2 are committed (`98f1d93`, `7b03608`). The resume edits (dialog Close → `.inline`,
@@ -21,6 +31,10 @@ measured frame by frame: fade-out 0.18-0.19 s; blocks start ≈ 0.15 s apart in 
 Caveats: the recordings are **simulator** (iPhone 17), not device: the T2 can't be recorded from here. The `.mov`s
 are on disk, not committed (as before). VoiceOver timing is unit-tested, not heard. The tree's uncommitted 5.13.3
 edits were present for the tests, recordings and T2 build.
+
+Commit: `4a2f142`. Device: Debug build of `4a2f142` installed on the T2 iPhone (devicectl, generic iOS build; the
+first install hit "connection reset by peer", the retry worked). It also contains the uncommitted 5.13.3 edits.
+This line is uncommitted (one commit was asked for).
 
 Next: Tessa's phone check (feel of the 0.2 s fade + stagger, VoiceOver lands on the upsell title, device recording).
 Then 5.14.2 ("That's okay for now" load-in) or the cat (needs `d2-searching` sliced). Blocked: 5.13.3 part 3 waits

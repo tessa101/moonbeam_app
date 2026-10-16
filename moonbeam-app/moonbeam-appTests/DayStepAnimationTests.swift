@@ -74,7 +74,7 @@ struct DayStepAnimationTests {
     func arrowFeedbackValuesAndHapticTrigger() {
         #expect(DayStepButtonStyle.pressedScale == 0.88)
         #expect(DayStepButtonStyle.pressedFillOpacity == 0.10)
-        #expect(DayStepButtonStyle.minimumPressedDuration == .milliseconds(90))
+        #expect(DayStepButtonStyle.minimumPressedDuration == .milliseconds(100))
         #expect(MoonCard.dayStepHapticIntensity == 0.5)
 
         var hapticCount = 0
@@ -148,7 +148,7 @@ struct DayStepAnimationTests {
         guard let released = releasedEvent else { return }
         #expect(
             pressed.instant.duration(to: released.instant) >= DayStepButtonStyle.minimumPressedDuration,
-            "Quick tap on \(direction) held for less than 90 ms entering \(target)"
+            "Quick tap on \(direction) held for less than 100 ms entering \(target)"
         )
     }
 

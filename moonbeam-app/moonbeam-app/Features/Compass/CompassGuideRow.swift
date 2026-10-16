@@ -99,7 +99,9 @@ struct CompassGuideRow: View {
             .frame(maxWidth: .infinity, minHeight: Theme.Metrics.minimumHitTarget)
             .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        // The shared held press (STEP-5.13 §4). The press scale also moves the
+        // avatar centre reported above for up to 100 ms after a tap.
+        .buttonStyle(.row)
         // The button is the one element; this replaces its read-out text.
         .accessibilityLabel(row.accessibilityLabel)
         .accessibilityHint(LocationOffGuideFormatter.rowHint)

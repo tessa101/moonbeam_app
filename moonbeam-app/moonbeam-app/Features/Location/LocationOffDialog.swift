@@ -180,7 +180,8 @@ struct LocationOffDialog: View {
                 .frame(width: Theme.Metrics.minimumHitTarget, height: Theme.Metrics.minimumHitTarget)
                 .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        // The shared held press (STEP-5.13 §4); the label keeps its own gray.
+        .buttonStyle(.inline)
         .padding(.top, closeOuterInset)
         .padding(.trailing, closeOuterInset)
         .accessibilityLabel("Close")
