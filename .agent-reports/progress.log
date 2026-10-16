@@ -612,3 +612,9 @@
 2026-10-16 12:45 PDT 5.14 ready-to-look: per memory, switched Xcode destination to iPhone 17; running focused suites via RunSomeTests
 2026-10-16 12:46 PDT 5.14 ready-to-look: focused 210/210 pass (Xcode, iPhone 17); running full suite
 2026-10-16 12:48 PDT 5.14 ready-to-look: full suite 1502/1528 (26 pre-existing: SentenceToken 25, PlaceChange timing 1, passes alone); destination restored to T2 iPhone; docs corrected; committing, then stop
+2026-10-16 13:55 PDT 5.14 §5.4 Run 1 (ready-to-look retune): started; reading spec, handoff, findings, illustration code
+2026-10-16 13:57 PDT Run 1: design done (IllustrationTailBend, 7 clipped raster bands of one tail layer); implementing
+2026-10-16 14:00 PDT Run 1: code + tests written, diagnostics clean; destination -> iPhone 17; running focused illustration suites
+2026-10-16 14:05 PDT Run 1: focused 86/86 pass; seam stills rendered (no gaps; 23-px 1-row edge residue at rest after 2 fixes, stopped there); running full suite
+2026-10-16 14:11 PDT Run 1: full suite 1514/1543 (25 SentenceToken known; 4 others pass alone); build OK; idle recording done; destination restored to T2 iPhone; committed a7d3941 (code/tests); updating docs
+2026-10-16 14:11 PDT Run 1: docs/reports updated (spec §5.4 result, STATUS, DECISIONS, handoff, latest, findings); committing docs, then stop

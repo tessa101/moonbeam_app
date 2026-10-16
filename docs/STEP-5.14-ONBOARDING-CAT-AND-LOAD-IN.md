@@ -174,6 +174,22 @@ Run ready-to-look first. If it lands the bendable tail, the landing run reuses i
 
 > Read `CLAUDE.md`, `.agent-reports/5.14-handoff.md`, `.agent-reports/5.14-ready-to-look/findings.md` and `docs/STEP-5.14-ONBOARDING-CAT-AND-LOAD-IN.md` (§5.1 and §5.2). Implement only the ready-to-look tail and ear retune described there, using its numbers exactly: the new ear keyframes and the bendable tail (7 raster bands from `rtl-tail.png` at native resolution, per-joint rotation with weights and lag as written). Extend IllustrationSpec / IllustrationMotion narrowly; keep spec constants named; flex 0 / lag 0 must reproduce the old rigid swing (test it). Preserve the shipped rig otherwise: stack order, head, breath, disc, star, Reduce Motion offset-zero still (every joint identity), pausing, accessibility-hidden art, other causes, copy, routing and onboarding. Run focused illustration tests first (new keyframes, joint weights, lag shift, rigid case), then one full suite and a build. The 25 SentenceTokenTests failures and the PlaceChange timing case are known and pre-existing. Render stills at the tail's extremes (+20° and −15° at peak) and inspect joints for seams at default size and SE 3; fix overlap rather than hide any seam. Capture a short idle recording if possible. Report actual results, seams, frame cost if measurable and remaining phone checks; update spec, STATUS and reports, then stop. No push, upload or phone install.
 
+**Run 1 result — 2026-10-16 (`a7d3941`, not pushed)**
+
+- Ear and tail use §5.2's numbers exactly. The bendable tail is `IllustrationTailBend` (7 bands, weights and lag as
+  in §5.1, constants named in `IllustrationSpec`), drawn as 7 clipped copies of the native `rtl-tail.png` raster.
+  Joint 0 is the existing pivot, so the table's band-0 x (338.4) is unused. Flex 0 / lag 0 reproduces the rigid swing
+  (tested), and the Reduce Motion still has every joint at identity (tested).
+- Seams: the tail base is translucent where it fades into the body, so a plain overlap would double its alpha. Each
+  band therefore clears its own rect before drawing, and clear and mask share one aliased fill, so there's no
+  see-through line. No gaps at the extreme poses (base +20° / −15°, tip-sum max/min) at 3× or 2×. Residual: 23 px
+  on one device row per joint, only on the antialiased outline, max 37/255; stopped after two fixes, flagged for the
+  phone.
+- Focused 86/86. Full suite 1543: 1514 pass. 25 are the known `SentenceTokenTests`; 4 others
+  (`LocationScreenScrollingTests` ×3, `PlaceChangeLayoutTests` blank-ink ×1) pass when rerun alone, and are newly
+  seen. Build succeeds. Frame cost not measured. Stills and a 12 s idle recording are in
+  `.agent-reports/5.14-retune-rtl/`. Run 2 can reuse the bend.
+
 **Run 2: landing retune**
 
 > Read `CLAUDE.md`, `.agent-reports/5.14-handoff.md`, `.agent-reports/5.14.0-findings.md` and `docs/STEP-5.14-ONBOARDING-CAT-AND-LOAD-IN.md` (§1, §5.1 and §5.3). Implement only the landing cat's tail and head/paw retune described in §5.3, using its numbers exactly. Reuse the bendable tail from the ready-to-look run if it has landed; otherwise build it once per §5.1, keeping the tail vector (clip or mask the existing tail layer, no rasterizing). Update §1's superseded motion text to point at §5. Preserve the entrance and idle-starts-as-it-lands rule, halo and disc breath, Reduce Motion (still art, joints identity), pausing, responsive sizing (240 × 312 default, shrinking at large text, hidden at AX4+) and the rest of the landing, upsell, loader, declined screen and search flow. Run focused tests first (new keyframes, joint weights, lag, head/paw track), then one full suite and a build. Inspect extreme-pose stills for seams at default size, SE 3, one large-text size, AX4+ and Reduce Motion; confirm Get started still fits above the fold on SE 3. Capture a short entrance-and-idle recording if possible. Report actual results, seams, frame cost if measurable and remaining phone checks; update spec, STATUS and reports, then stop. No push, upload or phone install.

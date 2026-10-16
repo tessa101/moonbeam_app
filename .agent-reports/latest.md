@@ -1,3 +1,17 @@
+# 5.14 §5.4 Run 1 — ready-to-look tail and ear retune (2026-10-16)
+
+Done: the ear flicks to −21° over 5.35 s, and the tail bends (7 nested raster bands of `rtl-tail.png`, flex 0.95, lag 0.30,
+0/+20/0/−15/0° over 2.25 s), per STEP-5.14 §5.1–5.2. Flex 0 / lag 0 equals the rigid swing (tested); Reduce Motion keeps
+every joint at identity. The bands clear-then-draw with aliased edges, so there's no doubled alpha at the translucent
+tail base and no see-through seams. No gaps at the extreme poses; a one-row outline residual (23 px, ≤37/255) is flagged.
+Focused **86/86**. Full suite **1543: 1514 pass**: 25 known `SentenceTokenTests`, plus 4 newly seen
+(`LocationScreenScrollingTests` ×3, `PlaceChangeLayoutTests` blank-ink) that pass alone. Build succeeds. Frame cost not
+measured. Stills and a 12 s recording are in `.agent-reports/5.14-retune-rtl/`.
+Next: Run 2 (landing retune, reuses `IllustrationTailBend`). Phone: motion feel, outline residual, frame pacing.
+Blocked: nothing. No install, push or upload. Code `a7d3941` (not pushed). Findings: `.agent-reports/5.14-retune-rtl/findings.md`.
+
+---
+
 # 5.14 ready-to-look — telescope replaced by 1k (2026-10-16)
 
 Permission off (launch and explicit) draws the 1k ready-to-look cat. The `rtl-*` rasters are byte-identical and
