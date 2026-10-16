@@ -1825,3 +1825,8 @@ Tessa picked and tuned cat motion in a side-by-side preview. Ready-to-look: tail
 ## 2026-10-16: Bending tail drawn as cleared, aliased raster bands
 
 The ready-to-look tail (STEP-5.14 §5.1) is one raster drawn seven times, each copy masked to a band and turned on its joint chain, inside one compositing group. The plain "overlap the band below" in §5.1 would double alpha where 1k's tail base fades translucently into the body, leaving a visible stripe. So each band first clears its own (transformed) rect, then draws. The clear and the mask use the same aliased fill: antialiased edges on a shared line leave a see-through seam. The overlap stays 4 image px as specified, and turned joints show no gaps. A 1-device-row outline residual (≤37/255) remains after two fixes and is flagged for phone review. Joint 0 is the existing pivot, so §5.1's band-0 x (338.4) is unused. The track is shared with the rigid case: flex 0 / lag 0 reproduces it exactly (tested).
+
+## 2026-10-16: Bending-tail joints hold rest until their lag has passed
+
+The landing (STEP-5.14 §5.3) starts its loop at t = 0 as the entrance lands. With §5.1's formula as written, joint `i` samples `tailTrack(t − lag × loop × i/6)`, which wraps to the end of the loop for t below the delay, so on the first animated frame the landing tip would jump to about −5° from the still. `IllustrationTailBend.angle` now clamps the delayed time at 0: each joint stays at rest until the base's motion reaches it, and then follows §5.1 exactly. 1k is unaffected because it runs on absolute time. Reduce Motion, flex 0 / lag 0 and the steady-state lag are unchanged (tested). The landing's vector tail reuses the clear-then-draw aliased bands unchanged; its slice stays vector and is only masked.
+

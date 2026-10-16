@@ -30,13 +30,15 @@ design (5.13.1–.2) stays with Tessa; do not implement that flow here._
 - **Art:** the awake searching cat with the moon disc halo behind it (D2 "searching", the 1a "Look-around" still),
   replacing the 150 pt moon glyph on the landing. Title, tagline and Get started stay.
 - **Motion (Tessa):** the halo's slow pulse stays, and the **tail sways** (the motion study's tail sway, about ±3°).
-  _Tail and head/paw numbers below are superseded by §5._
+  _Tail and head/paw motion below is superseded by §5.3 (built in §5.4 Run 2): a bending tail, ±13.8° over 4.05 s,
+  and a gentle ±3° head/paw look over 9.30 s. The halo/disc breath and Reduce Motion rules here still apply._
   Both come from the illustration system, not new code: `haloBreath` (shared by the cat states) and the `tail`
   move. Today's landing halo is a static glow (`OnboardingMoon`, 18% accent blur); the pulse is the illustration's.
   Under Reduce Motion: still art, no sway, no pulse.
 - **As built in 5.14.0:** `searching.svg` is sliced into full-canvas vector halo, disc, tail, body and combined
-  head/paw layers. The shared illustration renderer runs `haloBreath`, disc breathing and the calm 1a tail loop
-  (0 → +4° → 0 → −3° → 0 over 4.2 s); head/paw stay still. Motion starts after the art's 300 ms load-in lands.
+  head/paw layers. The shared illustration renderer runs `haloBreath`, disc breathing and, as first built, the calm 1a
+  tail loop (0 → +4° → 0 → −3° → 0 over 4.2 s) with head/paw still. _Since Run 2 (§5.4), the tail and head/paw use
+  §5.3's motion instead._ Motion starts after the art's 300 ms load-in lands.
   Reduce Motion, an inactive/background scene and disappearance select still art/no timeline.
 - **Size and layout:** use the failure screens' art frame rules (240 × 312 at default, shrinking at large text,
   hidden at AX4+ like the cause screens). The landing's first impression should still fit above the button on SE 3.
@@ -193,5 +195,25 @@ Run ready-to-look first. If it lands the bendable tail, the landing run reuses i
 **Run 2: landing retune**
 
 > Read `CLAUDE.md`, `.agent-reports/5.14-handoff.md`, `.agent-reports/5.14.0-findings.md` and `docs/STEP-5.14-ONBOARDING-CAT-AND-LOAD-IN.md` (§1, §5.1 and §5.3). Implement only the landing cat's tail and head/paw retune described in §5.3, using its numbers exactly. Reuse the bendable tail from the ready-to-look run if it has landed; otherwise build it once per §5.1, keeping the tail vector (clip or mask the existing tail layer, no rasterizing). Update §1's superseded motion text to point at §5. Preserve the entrance and idle-starts-as-it-lands rule, halo and disc breath, Reduce Motion (still art, joints identity), pausing, responsive sizing (240 × 312 default, shrinking at large text, hidden at AX4+) and the rest of the landing, upsell, loader, declined screen and search flow. Run focused tests first (new keyframes, joint weights, lag, head/paw track), then one full suite and a build. Inspect extreme-pose stills for seams at default size, SE 3, one large-text size, AX4+ and Reduce Motion; confirm Get started still fits above the fold on SE 3. Capture a short entrance-and-idle recording if possible. Report actual results, seams, frame cost if measurable and remaining phone checks; update spec, STATUS and reports, then stop. No push, upload or phone install.
+
+**Run 2 result — 2026-10-16 (`e9a96bf`, not pushed)**
+
+- Tail and head/paw use §5.3's numbers exactly. The tail reuses Run 1's `IllustrationTailBend` with §5.1's landing
+  geometry (constants named in `IllustrationSpec`): 7 bands of the existing vector `searching_tail` slice, each masked,
+  never rasterized, overlap 1.5 art units. Joint 0 is the existing pivot (117, 452) viewBox = (132, 582) art space, so
+  the table's band-0 x (117.5) is unused. The `searching_look` layer now moves as `.head` about (237, 268).
+- One narrow change to the shared bend: a joint holds its rest pose until its lag has passed. The landing loop starts
+  at t = 0 as the entrance lands, and without this the upper joints would sample the track before 0, so the tip would
+  jump to about −5° on the first frame. This has no effect on 1k, which runs on absolute time (DECISIONS.md).
+- Seams (`ImageRenderer`, 240 pt art, 3× and 2×): no gaps at base +13.8° / −13.8°, at tip-sum ±12.5°, or at the
+  head/paw look extremes (neck and raised paw stay joined). The largest single upper-joint turn is 1.6°. In the still,
+  banded vs unbent differs on 1074 channels at 3× (565 at 2×), max 19/255, on the outline only. Not visible at 100%.
+- Focused 82/82. Full suite 1564: 1538 pass. The failures are the 25 known `SentenceTokenTests` and
+  `PlaceChangeLayoutTests` blank-ink, which passes alone (also seen in Run 1). Build succeeds. Frame cost not measured.
+- Simulator (in-app, `-forceOnboarding`): SE 3 default, Get started above the fold; iPhone 17 default; SE 3 xxxLarge
+  (160 pt art); AX3 (96 pt); AX4 art hidden with Get started reachable. A 12 s entrance-and-idle recording is on
+  iPhone 17. Reduce Motion was **not** observed in the simulator: setting it with `defaults` didn't reach the app
+  (one try). The still pose is covered by tests. Files: `.agent-reports/5.14-retune-landing/`.
+- Remaining: phone feel (calm on first launch), Reduce Motion and VoiceOver on device, and frame pacing.
 
 Acceptance: the tail reads as one flexing piece with no visible seams at its extreme poses; the ear flick is clearly livelier but still a flick, not a twitch loop; the landing head/paw look is gentle (±3°) and the cat still reads as calm on first launch; Reduce Motion shows the still pose; no regression in the other four causes or the landing layout.

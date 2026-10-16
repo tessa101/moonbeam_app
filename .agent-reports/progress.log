@@ -618,3 +618,10 @@
 2026-10-16 14:05 PDT Run 1: focused 86/86 pass; seam stills rendered (no gaps; 23-px 1-row edge residue at rest after 2 fixes, stopped there); running full suite
 2026-10-16 14:11 PDT Run 1: full suite 1514/1543 (25 SentenceToken known; 4 others pass alone); build OK; idle recording done; destination restored to T2 iPhone; committed a7d3941 (code/tests); updating docs
 2026-10-16 14:11 PDT Run 1: docs/reports updated (spec §5.4 result, STATUS, DECISIONS, handoff, latest, findings); committing docs, then stop
+2026-10-16 14:12 PDT Run 1: done; commits a7d3941 (code), 9a13fb3 (Tessa's §5 spec), 790d803 (result docs); stopping. No install/push/upload.
+2026-10-16 14:19 PDT 5.14 §5.4 Run 2 (landing retune): started; reading spec, handoff, Run 1 findings, illustration code
+2026-10-16 14:19 PDT Run 2: design done (reuse IllustrationTailBend with §5.1 landing geometry; head track on look layer; joints hold rest until their lag passes so the landing loop starts at rest); implementing
+2026-10-16 14:21 PDT Run 2: spec + bend start-at-rest + tests written, diagnostics clean; destination -> iPhone 17; running focused suites
+2026-10-16 14:22 PDT Run 2: focused 82/82 pass; extreme-pose stills rendered (no gaps; still residual 1074 ch max 19/255 @3x); running full suite
+2026-10-16 14:26 PDT Run 2: full 1538/1564 (25 SentenceToken known + PlaceChange blank-ink, passes alone); build OK; sim stills (SE3/17 default, xxxL, AX3, AX4) + 12 s recording; Reduce Motion sim toggle ineffective (1 try); destination restored to T2 iPhone; committing code
+2026-10-16 14:27 PDT Run 2: docs/reports updated (spec §1 + §5.4 result, STATUS, DECISIONS, handoff, latest, findings); committing docs, then stop

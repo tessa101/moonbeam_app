@@ -1,3 +1,16 @@
+# 5.14 §5.4 Run 2 — landing tail and head/paw retune (2026-10-16)
+
+Done: the landing cat's vector tail bends (Run 1's `IllustrationTailBend`, 7 masked bands, flex 0.80, lag 0.15,
+0/+13.8/0/−13.8/0° over 4.05 s), and the head/paw looks −3.2/+3.3° over 9.30 s, per STEP-5.14 §5.3. Joints hold rest
+until their lag passes, so the loop still starts at rest as the entrance lands (1k unaffected). No seams at the
+extreme poses; still residual max 19/255. Focused **82/82**. Full **1564: 1538 pass** (25 known SentenceToken +
+PlaceChange blank-ink, which passes alone). Build succeeds. Simulator: SE 3 default fits Get started; xxxLarge, AX3,
+AX4 look right; 12 s recording. Reduce Motion not observed in the simulator (toggle didn't apply). Frame cost not measured.
+Next: phone review (calm feel, Reduce Motion, VoiceOver, pacing). 5.14.2 stays held for search/cancel design.
+Blocked: nothing. No install, push or upload. Code `e9a96bf` (not pushed). Findings: `.agent-reports/5.14-retune-landing/findings.md`.
+
+---
+
 # 5.14 §5.4 Run 1 — ready-to-look tail and ear retune (2026-10-16)
 
 Done: the ear flicks to −21° over 5.35 s, and the tail bends (7 nested raster bands of `rtl-tail.png`, flex 0.95, lag 0.30,
