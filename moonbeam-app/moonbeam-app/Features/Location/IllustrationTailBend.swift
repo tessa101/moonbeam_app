@@ -75,11 +75,13 @@ nonisolated struct IllustrationTailBend: Equatable, Sendable {
 
     /// Joint `index`'s own turn, in degrees, at `time`: the track, delayed
     /// toward the tip, times its weight. `nil` time is the Reduce Motion
-    /// still, with every joint at the track's first stop.
+    /// still, with every joint at the track's first stop. A joint holds that
+    /// first stop until its delay has passed, so a loop that starts at 0
+    /// (the landing's, as its entrance lands) starts at rest.
     func angle(of index: Int, track: IllustrationKeyframes, at time: TimeInterval?) -> Double {
         guard let time else { return track.value(at: 0) * weight(of: index) }
         let delay = lag * track.duration * Double(index) / Double(Self.bandCount - 1)
-        return track.value(at: time - delay) * weight(of: index)
+        return track.value(at: max(time - delay, 0)) * weight(of: index)
     }
 
     /// Band `index`'s move: its own joint's turn first, then each band

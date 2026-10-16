@@ -46,7 +46,7 @@ struct IllustrationTailBendTests {
         #expect(bend.flex == 0.95)
         #expect(bend.lag == 0.30)
         #expect(IllustrationTailBend.bandCount == 7)
-        for spec in [IllustrationSpec.searching, .locationNotFound, .servicesOff, .restricted] {
+        for spec in [IllustrationSpec.locationNotFound, .servicesOff, .restricted] {
             #expect(spec.tailBend == nil)
             #expect(spec.layers.allSatisfy { spec.tailBands(of: $0, at: 1) == nil })
         }
@@ -151,6 +151,17 @@ struct IllustrationTailBendTests {
             // Inner first: this joint, then the chain below it.
             expected = joint.concatenating(expected)
             expectClose(bands[index].transform, expected.concatenating(breath), "band \(index)")
+        }
+    }
+
+    @Test("A joint holds its rest pose until its lag has passed")
+    func lagStartsAtRest() throws {
+        let bend = try bend()
+        let track = try track()
+        for index in 1..<7 {
+            let delay = 0.30 * 2.25 * Double(index) / 6
+            #expect(bend.angle(of: index, track: track, at: delay * 0.5) == 0)
+            #expect(bend.angle(of: index, track: track, at: delay) == 0)
         }
     }
 

@@ -153,15 +153,30 @@ struct IllustrationSpecTests {
         #expect(star.centre.x + starRadius < IllustrationSpec.viewBox.width)
     }
 
-    @Test("Landing searching art keeps head and paw still with the calm tail sway")
+    @Test("Landing searching art: §5.3's look-around lite, bending tail and shared moon breath")
     func landingSearchingMotion() throws {
         let spec = IllustrationSpec.searching
-        #expect(spec.motions[.head] == nil)
-        #expect(spec.layers.first { $0.asset == "searching_look" }?.parts == [])
+        #expect(spec.layers.first { $0.asset == "searching_look" }?.parts == [.head])
+        #expect(spec.pivots[.head] == CGPoint(x: 237, y: 268))
         let tail = try #require(spec.motions[.tail]?.rotation)
-        #expect(tail.duration == 4.2)
-        #expect(tail.value(at: 4.2 * 0.25) == 4)
-        #expect(tail.value(at: 4.2 * 0.75) == -3)
+        #expect(tail.duration == 4.05)
+        #expect(tail.stops.map(\.value) == [0, 13.8, 0, -13.8, 0])
+        #expect(tail.stops.map(\.offset) == [0, 0.25, 0.5, 0.75, 1])
+        #expect(spec.tailBend != nil)
         #expect(spec.motions[.moonHalo] != nil)
+        #expect(spec.motions[.moonDisc] != nil)
+        // No scan, signal rings or flick parts.
+        #expect(Set(spec.motions.keys) == [.moonHalo, .moonDisc, .tail, .head])
+        #expect(spec.spark == nil)
+        #expect(spec.star == nil)
+    }
+
+    @Test("Landing head and paw stops (§5.3)", arguments: [
+        (0.0, 0.0), (0.14, -3.2), (0.25, -3.2), (0.36, -3.2), (0.50, 0.0), (0.64, 3.3), (0.86, 3.3), (1.0, 0.0),
+    ])
+    func landingLook(offset: Double, degrees: Double) throws {
+        let look = try #require(IllustrationSpec.searching.motions[.head]?.rotation)
+        #expect(look.duration == 9.30)
+        #expect(abs(look.value(at: 9.30 * offset) - degrees) < 0.000_001)
     }
 }

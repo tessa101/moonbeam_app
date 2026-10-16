@@ -222,6 +222,33 @@ nonisolated struct IllustrationSpec: Equatable, Sendable {
     /// The star's loop: 1h's telescope loop, kept for the carried-over star.
     private static let starDuration: TimeInterval = 6.59
 
+    /// The landing's bending tail (STEP-5.14 §5.1, §5.3, Tessa, 2026-10-16),
+    /// in the searching art's own space, inside its `translate(-15 -130)`.
+    /// The table's band-0 x (117.5) is unused: joint 0 is the pivot.
+    private static let searchingArtOffset = CGPoint(x: -15, y: -130)
+    private static let searchingArt = CGRect(
+        x: -searchingArtOffset.x,
+        y: -searchingArtOffset.y,
+        width: viewBox.width,
+        height: viewBox.height
+    )
+    private static let searchingArtToViewBox = CGAffineTransform(
+        translationX: searchingArtOffset.x,
+        y: searchingArtOffset.y
+    )
+    /// The tail's root, which is also its base joint: (132, 582) in art space.
+    private static let searchingTailPivot = CGPoint(x: 117, y: 452)
+    private static let searchingTailFlex = 0.80
+    private static let searchingTailLag = 0.15
+    private static let searchingTailJointX = [110.9, 97.9, 96.9, 102.0, 105.2, 93.3]
+    private static let searchingTailSpan = 402.2...588.0
+    /// About 1.5 art units, so the turned joints stay closed.
+    private static let searchingTailOverlap = 1.5
+    private static let searchingTailDuration: TimeInterval = 4.05
+    /// The combined head and paw ("look-around lite") and where it turns.
+    private static let searchingLookDuration: TimeInterval = 9.30
+    private static let searchingLookPivot = CGPoint(x: 237, y: 268)
+
     /// Not found's empty moon: the ring turns around it.
     private static let emptyMoonCentre = CGPoint(x: 173, y: 202)
 
@@ -252,28 +279,46 @@ nonisolated struct IllustrationSpec: Equatable, Sendable {
         }
     }
 
-    /// 1a "Look-around", simplified for the landing: shared moon breathing
-    /// and only the calm independent tail sway. The head and paw stay still.
+    /// 1a "Look-around", simplified for the landing: shared moon breathing,
+    /// a bending tail sway and a gentle look left and right of the head and
+    /// paw (retuned in STEP-5.14 §5.3). No scan, signal rings or tail flick.
     static let searching = IllustrationSpec(
         layers: [
             Layer("searching_moonHalo", moves: [.moonHalo]),
             Layer("searching_moonDisc", moves: [.moonDisc]),
             Layer("searching_tail", moves: [.tail]),
             Layer("searching_body"),
-            Layer("searching_look"),
+            Layer("searching_look", moves: [.head]),
         ],
         pivots: [
             .moonHalo: CGPoint(x: 215, y: 202),
             .moonDisc: CGPoint(x: 215, y: 202),
-            .tail: CGPoint(x: 117, y: 452),
+            .tail: searchingTailPivot,
+            .head: searchingLookPivot,
         ],
         motions: [
             .moonHalo: haloBreath,
             .moonDisc: discBreath,
+            // §5.3's base swing, spread over the bending tail's joints.
             .tail: IllustrationMotion(
-                rotation: IllustrationKeyframes(duration: 4.2, values: [0, 4, 0, -3, 0])
+                rotation: IllustrationKeyframes(duration: searchingTailDuration, values: [0, 13.8, 0, -13.8, 0])
             ),
-        ]
+            .head: IllustrationMotion(
+                rotation: IllustrationKeyframes(duration: searchingLookDuration, [
+                    (0, 0), (0.14, -3.2), (0.36, -3.2), (0.50, 0), (0.64, 3.3), (0.86, 3.3), (1, 0),
+                ])
+            ),
+        ],
+        tailBend: IllustrationTailBend(
+            flex: searchingTailFlex,
+            lag: searchingTailLag,
+            basePivot: searchingTailPivot,
+            jointX: searchingTailJointX,
+            span: searchingTailSpan,
+            overlap: searchingTailOverlap,
+            art: searchingArt,
+            toViewBox: searchingArtToViewBox
+        )
     )
 
     /// 1g "Huh?": no halo; the ring turns, the head tilts, the question
