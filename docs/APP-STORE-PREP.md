@@ -60,3 +60,15 @@ cities) plus whatever the new flow changes.
 - **Search cancel flow (MVP blocker):** being designed in a separate chat. Quiet compass row after a decline and
   keyboard vs the suggested cities are two of its open questions (STEP-5.13 §6).
 - Final name and primary persona (DESIGN-REVIEW "Brand").
+
+## Status refresh (2026-10-17)
+
+Done since this doc was drafted: 5.5 AX reflow, 5.13.2/5.13.3/5.13.4, ready-to-look cat (telescope replaced), 5.14 cat motion, persisted noCity, Got it moon entry (Run 2, committed 18f7e6c), root handover moved into RootScreen. Full suite via `xcodebuild`: only the 25 known SentenceTokenTests failures plus the PlaceChangeLayoutTests blank-ink flake (passes alone).
+
+Still open, in order:
+1. Search/cancel flow decision (MVP blocker), then 5.13 build.
+2. Housekeeping: gate `MoonTableSpike.run()` under `#if DEBUG` (moonbeam_appApp.swift); Sendable warning at LocationScreen.swift:348; Release build, compare warnings with build 10.
+3. **Release-build check (TestFlight 0.1 (11), launched from the icon):** first Got it → noCity transition, first cat-tail landing, and the searching cat. Debug/Xcode-attached first runs stall (about 1.8 s frozen moon on the first Got it); launched from the home screen it is smooth. If it still stutters in Release, write the warm-up prompt (pre-render the noCity headline and loader moon during "That's okay").
+4. On-device persistence check: delete app, both scheme arguments off, Don't Allow → That's okay → Got it, quit, relaunch from the icon, expect noCity.
+5. Reduce Motion on the phone (Got it should cross-fade, not fly). SE 3 at AX3: declined moon starts off-screen when scrolled (about 67 ms still); decide A top-edge start / B scroll to top / C leave.
+6. Fresh-install checks, TestFlight-only tool removal, version 1.0, App Store Connect, USNO rows: as listed above.
