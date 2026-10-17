@@ -365,6 +365,9 @@ struct LocationScreen: View {
         .animation(reduceMotion ? nil : Self.bottomBarAnimation, value: viewModel.compass.bottomNote)
         .animation(reduceMotion ? nil : Self.bottomBarAnimation, value: viewModel.isNoCity)
         .animation(reduceMotion ? nil : Self.bottomBarAnimation, value: viewModel.noCityAction)
+        // STEP-5.15: over the content so the headline fades under the status
+        // bar; under the Back chevron's inset so it never dims the chevron.
+        .statusBarScrim()
         // Back to the upsell while no city is set (ONBOARDING-MOD-MAIN.md).
         .safeAreaInset(edge: .top, spacing: 0) {
             if showsBackToOnboarding {

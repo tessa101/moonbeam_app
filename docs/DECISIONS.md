@@ -5,6 +5,17 @@
 
 ---
 
+### 2026-10-17 · 5.15: status bar scrim timing, colour and z-placement (STEP-5.15)
+- **Decision:** the scrim's opacity maps straight from scroll offset (0 → 1 over `rampDistance` 40 pt), with no
+  animation, so a finger scroll can't lag or pop. A jump bigger than the whole ramp (a programmatic scroll, a content
+  reset) cross-fades with `ContentLoadIn.duration` ease-out. That's the existing shared timing, so there are no new motion
+  constants. The scrim never moves, so Reduce Motion gets the same opacity-only behaviour with no special case.
+- **Colour:** flat `Theme.Colors.bg` → clear, per spec. `ScreenBackground`'s faint amber glow behind the status bar is
+  covered once scrolled (glow returns at rest). Considered: masking `ScreenBackground` itself (keeps the glow, but
+  differs from the spec and ties the scrim to one screen's backdrop).
+- **Placement:** above the main ScrollView, but below the `noCity` Back chevron's top inset, so it never dims the
+  chevron. The native `.scrollEdgeEffectStyle(.soft, for: .top)` stays; the scrim sits over it.
+
 ### 2026-10-12 · 5.5: keep the rise/set pair when it fits; status and guidance below
 - **Decision (Tessa):** keep rise and set side by side while complete content fits. Today's status occupies
   a full-width section below, with wrapping guidance beneath it. Stack rise/set only when needed for
