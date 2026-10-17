@@ -547,11 +547,10 @@ final class CompassViewModel {
         // Before granting clears the prompt's state (§5.2).
         let previousBlock = locationOffBlock
         let previousGeneration = entrance.generation
-        // §12.4: new information for the dial is a reload; a permission or
-        // Precise Location refresh with the same place and day isn't.
+        // §12.4: a new place is a genuine compass entrance. A date-only
+        // update changes the rise/set/moon markers in place; replaying the
+        // settle there makes a steady, already-loaded compass twitch.
         let reloads = context.place != self.context.place
-            || context.moonDay != self.context.moonDay
-            || context.isToday != self.context.isToday
         self.context = context
         let glyph = context.moonDay.map {
             PhaseGlyphGeometry(illumination: $0.illumination, phaseAngle: $0.phaseAngle)
@@ -967,8 +966,8 @@ final class CompassViewModel {
 
     // MARK: - Entrance (LOADER.md §12.4)
 
-    /// A reload: with a heading already in hand (a place or date change
-    /// while sensing), straight to the settle; otherwise wait for one, up
+    /// A reload: with a heading already in hand (a place change while
+    /// sensing), straight to the settle; otherwise wait for one, up
     /// to `CompassEntrance.headingWait`.
     private func beginEntrance() {
         entranceTask?.cancel()

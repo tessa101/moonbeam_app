@@ -82,13 +82,17 @@ struct CompassEntranceTests {
         )
     }
 
-    private static func context(place: Place? = detectedLosAngeles, moonDay: MoonDay = moonDay()) -> CompassContext {
+    private static func context(
+        place: Place? = detectedLosAngeles,
+        moonDay: MoonDay = moonDay(),
+        isToday: Bool = true
+    ) -> CompassContext {
         CompassContext(
             place: place,
             detectedPlace: detectedLosAngeles,
             authState: .authorized,
             moonDay: moonDay,
-            isToday: true
+            isToday: isToday
         )
     }
 
@@ -314,17 +318,36 @@ struct CompassEntranceTests {
 
     // MARK: - Triggers, compass level
 
-    @Test("Date step while sensing: a new entrance, settling from the heading in hand")
-    func dateStepBeginsEntrance() async {
+    @Test("Repeated date steps update markers in place without restarting a settled compass")
+    func dateStepsKeepSettledCompassSteady() async throws {
         let harness = Self.makeRunningHarness()
         await settle(harness, at: 185)
-        let before = harness.viewModel.entrance.generation
+        let entrance = harness.viewModel.entrance
+        let starts = harness.heading.startCount
+        let stops = harness.heading.stopCount
 
-        harness.viewModel.update(Self.context(moonDay: Self.moonDay(rise: Self.riseAzimuth + 3)))
+        harness.viewModel.update(Self.context(
+            moonDay: Self.moonDay(rise: Self.riseAzimuth + 3),
+            isToday: false
+        ))
 
-        #expect(harness.viewModel.entrance.generation == before + 1)
-        #expect(harness.viewModel.entrance.phase == .settling)
-        #expect(harness.viewModel.readoutOpacity == 0)
+        #expect(harness.viewModel.entrance == entrance)
+        #expect(harness.viewModel.heading == 185)
+        #expect(harness.viewModel.readoutOpacity == 1)
+        #expect(try #require(harness.viewModel.targets.first { $0.kind == .moonrise }).azimuth == Self.riseAzimuth + 3)
+        #expect(!harness.viewModel.targets.map(\.kind).contains(.moon))
+
+        harness.viewModel.update(Self.context(
+            moonDay: Self.moonDay(rise: Self.riseAzimuth - 4),
+            isToday: true
+        ))
+
+        #expect(harness.viewModel.entrance == entrance)
+        #expect(harness.viewModel.heading == 185)
+        #expect(try #require(harness.viewModel.targets.first { $0.kind == .moonrise }).azimuth == Self.riseAzimuth - 4)
+        #expect(harness.viewModel.targets.map(\.kind).contains(.moon))
+        #expect(harness.heading.startCount == starts)
+        #expect(harness.heading.stopCount == stops)
         harness.entrance.cancelAll()
     }
 
@@ -434,15 +457,20 @@ struct CompassEntranceTests {
         #expect(Self.awaitingHeading.contains(harness.viewModel.compass.entrance.phase))
     }
 
-    @Test("Date step: a new entrance, settling")
-    func dateStepEndToEnd() async {
+    @Test("Date step through LocationViewModel keeps the settled compass entrance")
+    func dateStepEndToEndKeepsEntrance() async {
         let harness = await launchedWithHeading()
-        let before = harness.viewModel.compass.entrance.generation
+        let before = harness.viewModel.compass.entrance
 
         harness.viewModel.nextDay()
 
-        #expect(harness.viewModel.compass.entrance.generation == before + 1)
-        #expect(harness.viewModel.compass.entrance.phase == .settling)
+        #expect(harness.viewModel.compass.entrance == before)
+        #expect(harness.viewModel.compass.heading == 185)
+
+        harness.viewModel.previousDay()
+
+        #expect(harness.viewModel.compass.entrance == before)
+        #expect(harness.viewModel.compass.heading == 185)
     }
 
     @Test("Return to the foreground: a new entrance, waiting for a heading")

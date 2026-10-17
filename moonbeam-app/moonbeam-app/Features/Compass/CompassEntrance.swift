@@ -6,7 +6,7 @@
 import Foundation
 
 /// How the compass comes in each time it reloads with new information
-/// (LOADER.md §12.4, STEP-5.10a.3): launch, a place or date change, a
+/// (LOADER.md §12.4, STEP-5.10a.3): launch, a place change, a
 /// return to the foreground, a heading or location arriving late, recovery
 /// from a failure screen. One entrance for all of them, so the dial never
 /// shows north-up first and never counts up to the real heading.
