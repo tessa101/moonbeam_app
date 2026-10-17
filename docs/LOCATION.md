@@ -4,6 +4,7 @@
 **Depends on:** Astronomy Engine spike (`MoonService`, `AstronomyEngineMoonService`), which is done
 **Feeds:** Task #4, the SwiftUI moon table (design-led)
 **Amended by:** [SEARCH-RECENTS.md](SEARCH-RECENTS.md) (Step 2.1, 2026-09-26): search moves into a bottom sheet with recent cities, and the "Back to {City}" chip is removed. Where the two disagree, SEARCH-RECENTS.md wins; superseded text below is struck through.
+**Also amended by:** [ONBOARDING-MOD-MAIN.md](ONBOARDING-MOD-MAIN.md) (2026-10-16): first-run behavior (the "First launch" block in §3) is replaced by the `noCity` state of the main screen; closing Search always returns there. Everything else here still applies.
 
 ---
 

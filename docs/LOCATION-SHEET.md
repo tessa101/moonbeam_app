@@ -70,3 +70,7 @@ Follow-ups outside this item: the full test suite is still to run in Terminal; a
 ## 7. Agent prompt
 
 > Build 5.12a, the location sheet restyle, per `docs/LOCATION-SHEET.md` (§1–§5). Layout and style of `LocationOffDialog` only; copy and actions stay on the shared `LocationFailure` definitions, apart from the secondary title in §2. Don't touch the compass teaser, telescope art, or `LocationFailure+Copy.swift` values. Findings + screenshots: `.agent-reports/5.12a-location-sheet/`. Before changing anything, screenshot the current dialog in all three variants and list the differences from the spec. Add a DECISIONS entry and update latest.md. One commit. Run the focused `LocationViewModel*` / `CompassViewModel*` tests, then install a Debug build on the T2 iPhone. Stop there.
+
+## 8. Interaction with the onboarding rework (2026-10-16)
+
+This sheet is unchanged. It stays the post-onboarding surface (compass "Turn On Location" and the failure paths). In the first-run `noCity` state, an OS-level denial does not open this sheet: the main screen's CTA becomes "Open Settings" instead (see [ONBOARDING-MOD-MAIN.md](ONBOARDING-MOD-MAIN.md)). "Search for a city instead" here still reopens search; if no city has been set when search closes, the app lands on `noCity`.

@@ -5,9 +5,10 @@ landing/upsell load-ins and page fades, and 5.14.0 now integrates the landing se
 ready-to-look replacement is implemented; the declined-screen load-in remains. Search/cancel
 design (5.13.1–.2) stays with Tessa; do not implement that flow here._
 
-**Status, 2026-10-16: both cat animations are done and closed** (see §5.6). The ready-to-look retune (§5.2) and
-the landing retune (§5.3, final values from the §5.5 second pass) were verified by Tessa on her phone. The only
-remaining 5.14 work is the declined-screen load-in (§2, 5.14.2), which waits on the 5.13 search/cancel design.
+**Status, 2026-10-16: both cat animations and 5.14.2 are done in the current worktree** (see §5.6 and the
+5.14.2 result below). The ready-to-look retune (§5.2) and landing retune (§5.3, final values from the §5.5 second
+pass) were verified by Tessa on her phone. The declined screen now uses the same page exit, indexed load-in and
+VoiceOver timing as the other app-owned onboarding screens.
 
 ## Current baseline and newer art
 
@@ -138,6 +139,24 @@ Agent prompt:
 
 > Once Tessa has finalized the relevant 5.13 search/cancel flow, implement only the remaining declined-screen presentation in STEP-5.14 §2 against that finalized code. Reuse indexed ContentLoadIn for moon, title, body, primary action and secondary action in that order. Extend the existing OnboardingScreenChange handover to the declined screen: 0.2 s outgoing fade, incoming stagger, and ScreenChanged after the title starts. Preserve existing transition cancellation/reentrancy handling and avoid changing the view model's permission/search decisions. Retain the dimmed moon unless Tessa has explicitly approved sleeping-cat placement; if approved, the supplied sleeping composite stays still, with tail animation deferred. Keep the system permission prompt and sheet motion native. Verify deny/Settings return and the finalized search/cancel/pick paths, including fast repeated actions and Reduce Motion; run focused onboarding tests, then one full suite and build. Record a short continuous flow if available and state any physical-device VoiceOver/motion checks still needed. Update spec/status/reports and stop. No push/upload or phone install.
 
+### 5.14.2 result — 2026-10-16 (current uncommitted worktree)
+
+- The declined screen's dimmed moon, title, body, Got it and Enable location are indexed blocks 0–4. They use the
+  established 300 ms ease-out fade/rise and 150 ms stagger; Reduce Motion keeps the fade and removes the 8 pt rise.
+- `OnboardingScreenChange` now includes the declined step, so its incoming title starts at 150 ms and
+  `ScreenChanged` follows then. The outgoing page uses the existing 0.2 s skeleton-exit fade.
+- The app-root onboarding/main handover now trails the model by that same 0.2 s exit, so Search instead, Got it and
+  Back no longer remove the outgoing screen immediately. Incoming onboarding/main content retains its existing
+  block load-in rather than receiving a new whole-layout animation.
+- The no-city actions use the indexed load-in on arrival and retain their scoped opacity transition when a city is
+  selected. Start with city remains a normal city pick: it bumps the place-change load-in and never shows GPS Aha.
+- Focused transition and location-recovery validation: 19/19 cases pass; build-for-testing succeeds. A broader
+  three-suite run was cancelled when the simulator visual session took control of Xcode, so it was not counted as a
+  result. iPhone 17 simulator review found the declined stagger, Got it → noCity, Back → upsell, Search instead →
+  noCity and Start with city destinations correct and uncropped. Start with used the normal city-content load-in and
+  no GPS/Aha. The specified sequential exit/entrance leaves a brief background-only beat; phone feel remains to be
+  reviewed. Physical-device Reduce Motion and VoiceOver timing remain to be checked.
+
 ## 5. Motion retune: ready-to-look and landing cats (Tessa, 2026-10-16)
 
 Tessa compared options in a side-by-side preview (real art, handoff pivots, shared easing) and tuned both cats. **These numbers replace the earlier tail, ear and head/paw numbers** for the two cats, including ILLUSTRATIONS_MOTION.md 1k and §1's "calm ±3° sway, head/paw still". Easing for every segment stays `cubic-bezier(.42, 0, .58, 1)`. Everything not listed here is unchanged: head, breath, moon disc and star on ready-to-look; halo breath, disc breath, load-in timing and "idle starts as the entrance lands" on the landing. Reduce Motion, off-screen/background pausing, responsive sizing and decorative accessibility are unchanged.
@@ -261,3 +280,89 @@ Only the landing tail numbers change (§5.3). Head and paw keep 9.30 s / ±3.2°
 - **Remaining 5.14 work:** only the declined-screen load-in (§2, 5.14.2), held until Tessa finalizes the 5.13
   search/cancel design.
 
+### 5.7 Sleeping-cat placement: decided (Tessa, 2026-10-16)
+
+Leave it alone for now. "That's okay for now" (onboarding screen 4) **keeps its dimmed moon**. The sleeping cat stays where it is already used: the "Maybe later" location-allowance prompt on the main screen. Any other placement is a post-launch question. The 5.14.2 declined-screen load-in therefore keeps the dimmed moon, with no sleeping-cat variant to build.
+
+## 6. Got it → moon entry, and a noCity that survives relaunch (Tessa, 2026-10-16)
+
+### 6.1 What the recording showed
+
+Source: Tessa's screen recording of 2026-10-16 20:06, frame-measured (30 fps luminance).
+
+- **Got it → noCity takes about 0.95 s and reads as an error.** A hard cut to pure black (RGB 0,0,0) for 0.23 s, about 0.1 s of empty app background, then the noCity blocks load in over about 0.6 s.
+- **Cause (code read, not yet profiled).** `moonbeam_appApp.swift` `handOverRootScreen` takes the whole root group to opacity 0 for `OnboardingScreenChange.exitDuration` (0.2 s) with nothing behind it but the window's black. The new `LocationScreen` then starts in `.waiting` (`Color.clear`) until `start()` has awaited `refreshAuthorizationState()`, then `settleOnNoCity()` and the staggered load-in. One thing is unexplained: a plain opacity fade would ramp down over several frames, but the clip jumps to black in one. Verify the mechanism when fixing it.
+- **Relaunch after not allowing lands on different screens.** `OnboardingViewModel.shouldShow` needs no saved place, onboarding not completed, and permission `.notDetermined`. The completed flag is set only by Got it, Search instead and Allow, never by quitting on "That's okay". `isNoCity` is set only by `onboardingDidFinish` and is not stored. So: denied (completed or not) → the permission-off cat; not determined and not completed → onboarding from the landing screen; not determined and completed → first-ask; and **after Got it, a relaunch loses noCity** and shows the cat.
+
+### 6.2 Decisions (Tessa)
+
+1. **Got it enters the main screen through the moon, not a blank.** The small moon on "That's okay" grows to the loader's mid-screen moon, runs the same phase ride as the location search, then the noCity screen loads in with the usual transition. It is the Aha flight in reverse. The blank screen goes away entirely: it looks like an error.
+2. **noCity persists across relaunch.** If the user chose Got it or Search instead (no city, no location), relaunching with no saved city and no location access lands on noCity, not the permission-off cat. Quitting on "That's okay" before Got it keeps today's behavior (denied → the cat).
+3. **No root handover may ever show the window's black.** The app background sits behind every root fade, so Search instead and Back to upsell are fixed even though they don't get the moon.
+
+Defaults Tessa hasn't settled (tunable, flag after the phone check):
+- **The moon's end.** Tessa is unsure what the moon does at the end. Default: it fades out in place as the noCity blocks load in, the loader's normal exit (`LaunchStage.phaseCycleFadeOutDuration`). There is no card on noCity for it to land in.
+- **No label.** The loader's "Finding your location…" does not show here, since nothing is being located.
+- **Scope.** Got it only. Search instead keeps its current handover plus the background fix.
+- **Length.** There is nothing real to wait for on this path, so the moon time is a deliberate beat. Starting values: text exit 0.2 s, flight 0.85 s (`LocationLoader.flightDuration`, `AhaFlight.curve`, reversed), hold 0.6 s after landing, exit fade 0.25 s, then the usual stagger. That is longer than today's 0.95 s on purpose. If it feels slow on the phone, shorten the hold first, then the flight.
+
+### 6.3 Spec: the moon entry
+
+Visible sequence on Got it:
+
+1. The title, body and both buttons fade out over 0.2 s (the existing exit). The moon stays exactly where it is, same size and dimming.
+2. The moon travels from its 64 pt position on "That's okay" to the loader moon's resting frame (140 pt, or 96 pt compact, per `LaunchPhaseCycle`), over the flight duration. Its dimming (0.6 → 1) and the loader glow come in during the flight.
+3. On landing it runs the loader's phase ride for at least the hold. It starts from the phase the declined moon shows now; the agent checks the two match and flags any jump.
+4. The loader exits with its normal fade while the noCity blocks load in, staggered as usual.
+5. At no frame is the window black, and no frame is a bare background with nothing animating.
+
+Rules:
+- **Persist first.** `finish()` stores the outcome before any animation starts, so a quit mid-transition relaunches into noCity.
+- **Backgrounding mid-transition.** The transition finishes on return; it does not restart.
+- **Reduce Motion.** No flight. The text fades out, the moon cross-fades to the loader's resting frame, a shortened hold, then the normal exit. Opacity only, like the existing loader.
+- **VoiceOver.** No "Finding your location" announcement. `ScreenChanged` posts on the noCity screen as it does today.
+- **Reuse.** Reuse `AhaFlight`, `LocationLoader` and `LaunchPhaseCycle`'s moon. Do not add a second moon implementation or a parallel loader.
+
+### 6.4 Persisted noCity
+
+- Store the outcome in the onboarding store (protocol, `UserDefaultsOnboardingStore`, `InMemoryOnboardingStore`) when `finish()` runs for Got it or Search instead on a non-forced run.
+- **At launch**, if the flag is set, there is no saved place, and permission is not authorized: `start()` enters noCity (`isNoCity = true`) and settles on it, with no loader.
+- **Authorized:** clear the flag and launch normally (locate).
+- **Cleared when** a city is picked or saved (where `isNoCity` already goes false) and when permission becomes authorized.
+- `restricted` and `servicesOff` use the existing noCity CTA rules. Debug replay keeps its current rules and never persists.
+- `OnboardingViewModel.shouldShow` does not change.
+
+### 6.5 Agent prompts (two runs, in order)
+
+**Run 1: persisted noCity and the root background.**
+
+```
+You are the implementation agent for Moonbeam. Work in the existing Xcode project.
+
+Read STEP-5.14 §6 (docs/STEP-5.14-ONBOARDING-CAT-AND-LOAD-IN.md) and docs/ONBOARDING-MOD-MAIN.md. Do 6.4 and the root background of 6.2 item 3 only. Do not start the moon entry (Run 2).
+
+1. Persisted noCity per §6.4. The onboarding store protocol, UserDefaultsOnboardingStore and InMemoryOnboardingStore get the stored outcome. OnboardingViewModel.finish() records it for Got it and Search instead on a non-forced run, before onFinish and before isPresented flips. LocationViewModel.start() enters noCity for a persisted flag with no saved place and no authorization, and clears it when authorized, when a city is picked or saved, and when permission becomes authorized.
+2. Root background. In moonbeam_appApp.swift mainContent, put ScreenBackground() behind the root group, outside the opacity, so handOverRootScreen's fade never reveals the window's black. Check for any other whole-screen opacity 0 swap that can show the window and fix those the same way.
+
+Tests: store round trip; Got it and Search instead persist, Allow and forced runs do not; start() routing for flag set + no place + denied → noCity, + authorized → normal launch and flag cleared, + saved place → normal, pick clears it; quit-on-That's-okay (no Got it) leaves the cat path unchanged. Adjust tests that assert the old behavior.
+
+Match existing patterns and tokens, add no dependencies, smallest change. Run focused suites with build-for-testing then test-without-building; one full suite after they pass (25 known SentenceTokenTests failures expected on the command line). Do not commit, push or install. Do not touch DECISIONS.md. Append one line per milestone to .agent-reports/progress.log.
+
+Report: files changed, anything you interpreted, the exact test command, and what Tessa should check on the phone: relaunch after Got it lands on noCity; relaunch after quitting on "That's okay" still shows the cat; no pure-black frame in Search instead or Back to upsell.
+```
+
+**Run 2: the moon entry** (after Run 1 is checked on the phone).
+
+```
+You are the implementation agent for Moonbeam. Work in the existing Xcode project.
+
+Read STEP-5.14 §6.2 and §6.3 (docs/STEP-5.14-ONBOARDING-CAT-AND-LOAD-IN.md). Build the Got it moon entry exactly as §6.3 describes, reusing AhaFlight, LocationLoader and LaunchPhaseCycle's moon; reversed Aha flight from the declined screen's OnboardingMoon frame to the loader's resting frame. Get the declined moon's global frame from the onboarding screen to the root and into LocationScreen's loader; the incoming loader starts at that frame. All durations are named constants in one place (text exit, flight, hold, exit fade), starting at the §6.2 values.
+
+Persistence is already done in Run 1; keep it. Only Got it gets the moon. Search instead and Back to upsell keep their handovers. Check that the declined moon's phase matches the loader's starting phase and flag any jump.
+
+Tests: the sequence's stage order and the minimum hold; Reduce Motion path (no flight); quit or background mid-transition still ends in noCity; no loader label on this path. Then record the simulator on iPhone 17 and SE 3 at default, AX3 and Reduce Motion, and extract frames across Got it: confirm no frame is pure black and none is a bare background with nothing moving. Report the frame check.
+
+Smallest change, no new dependencies, match existing patterns. Focused suites first (build-for-testing then test-without-building), one full suite after. Do not commit, push or install. Do not touch DECISIONS.md. Append one line per milestone to .agent-reports/progress.log. Checkpoint after two unsuccessful fixes or about ten minutes of debugging.
+
+Report: files changed, anything you interpreted, the exact test command, the frame-check result, and what Tessa should check on the phone: the moon's size, position and dimming continuity at Got it, the hold's feel, and the end of the moon.
+```

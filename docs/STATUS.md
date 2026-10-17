@@ -245,8 +245,21 @@ Rule: finish what changes the card before the AX reflow, or the reflow is done t
    Use my location first with the pin, five suggested cities with no recents; every control shows a pressed state on
    a normal tap. Three small runs: 5.13.1 → .2 → .3. Not built. **5.13.1/.2 on hold** until the cancel-search flow is
    decided (MVP blocker, separate chat); .3 parts 1-2 done 2026-10-15 (`98f1d93`, `7b03608`), part 2b + 3 done 2026-10-15 (`7090bc0` + drift test).
-6c. [ ] **5.14 cat on the landing + onboarding load-ins** (`docs/STEP-5.14-ONBOARDING-CAT-AND-LOAD-IN.md`): the awake
-   searching cat with halo pulse and tail sway; `ContentLoadIn` on all screens. Needs `d2-searching` sliced. After 5.13.
+6c. [~] **5.14 cat on the landing + onboarding load-ins** (`docs/STEP-5.14-ONBOARDING-CAT-AND-LOAD-IN.md`): cat motion
+   is closed; 5.14.2 is implemented in the current uncommitted worktree. The declined screen now uses indexed
+   `ContentLoadIn`, the shared 0.2 s outgoing fade and delayed ScreenChanged. Root onboarding/main handovers wait for
+   the exit fade; no-city actions load/fade with established tokens. Focused transition/recovery checks 19/19 and
+   build-for-testing pass. iPhone 17 simulator flow review passed without clipping; the specified sequential
+   exit/entrance has a brief background-only beat. Physical-device motion feel, Reduce Motion, VoiceOver and Settings
+   recovery remain. Debug onboarding replay now clears stale displayed/lookup state without deleting the saved place
+   or recents, blocks saved-city restoration and authorized stand-ins while noCity, and permits only an explicit
+   LocationAllowed outcome to enter the GPS loader/Aha path. Replay/returning-user regressions pass in two focused
+   selections (41/41 and 85/85); build-for-testing passes.
+   Follow-up visual fixes: the searching halo now completes its transparent falloff inside its canvas at maximum
+   breath, and the shared background continues through the status-bar safe area with no opaque app-owned backing.
+   iPhone 17 and SE 3 simulator landing/upsell checks passed; illustration/layout selection 156/156.
+   Separately, date arrows now update compass markers without replaying the entrance settle; fixed-heading repeated
+   off-today/back coverage plus existing genuine-entrance coverage passes 51/51.
 6d. [ ] **App Store prep checklist** (2026-10-15, `docs/APP-STORE-PREP.md`): proposed cut line A, ordered work, store
    assets, open decisions. Draft; cut line not yet confirmed by Tessa.
 6. [x] **5.12 location off:** the cartoon-compass teaser (option 1b, 2026-10-12) is superseded by 5.12b and removed in 5.12b.1. Still open from it: confirming that restricted keeps the chip (carried into 5.12b). See DECISIONS 2026-10-12 "5.12 location-off teaser" and 2026-10-13 "5.12b".
@@ -304,8 +317,8 @@ Rule: finish what changes the card before the AX reflow, or the reflow is done t
      device QA at default / AX1 / AX5.
    - [x] **5.1 theme (2026-09-30):** `Theme/Theme.swift` (color tokens, type scale, bundled font names),
      `Theme/ScreenBackground.swift` (`bg` + top amber glow), fonts in `Resources/Fonts` + `UIAppFonts`,
-     forced dark (`UIUserInterfaceStyle`), `AccentColor` = `accent`, iOS 26 status bar backing is solid
-     `bg`. App root defaults to the body font and `textPrimary`. `ThemeTests`: fonts register, §2
+     forced dark (`UIUserInterfaceStyle`), `AccentColor` = `accent`; the former iOS 26 solid status-bar
+     backing was removed by Tessa's 2026-10-16 design revision. App root defaults to the body font and `textPrimary`. `ThemeTests`: fonts register, §2
      contrast table holds.
    - [x] **5.2 moon card (2026-09-30):** `Features/MoonTable/` (`MoonCard`, `MoonTableViewModel`,
      `PhaseGlyph` + `PhaseGlyphGeometry`), `Formatting/MoonTableFormatter`. Header "Today · Wed, Sep 30"
@@ -621,7 +634,8 @@ Rule: finish what changes the card before the AX reflow, or the reflow is done t
       - [x] **4.15** built. Status bar: main-screen content must not slide under the clock. Use the iOS 26 top
         scroll edge effect (system fade/blur); solid bar background as fallback. One commit.
         *As built:* `.scrollEdgeEffectStyle(.soft, for: .top)` on the main `ScrollView`, plus the
-        system bar material behind the status bar **before iOS 27 only** (`StatusBarBackdrop`). Your
+        system bar material behind the status bar **before iOS 27 only** (`StatusBarBackdrop`; removed by
+        Tessa's 2026-10-16 design revision so the shared background now continues into the safe area). Your
         iOS 26.6.2 screenshot 03 shows no edge effect at all for this bare `ScrollView`, and only an
         iOS 27 simulator is installed here, so the iOS 26 path is the documented fallback, checked on
         the simulator by forcing it. Both paths checked in light and dark: the clock stays readable.

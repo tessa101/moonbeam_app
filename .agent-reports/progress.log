@@ -634,3 +634,22 @@
 2026-10-16 15:07 PDT Run 3: done; commits 6f584e8 (Tessa spec), 1e9bc53 (code), b229db9 (docs); stopping. No install/push/upload.
 2026-10-16 15:39 PDT 5.14 cat motion closeout (docs only): started
 2026-10-16 15:40 PDT 5.14 cat motion closeout: spec §5.6 + header, STATUS, DECISIONS, handoff, latest updated; committing docs, then stop
+2026-10-16 15:40 PDT 5.14 cat motion closeout: committed 98222f0; stopping. No install/push/upload.
+16:32 onboarding mod-main: read docs, locating main/search/upsell code
+16:34 onboarding mod-main: design settled, editing view models
+16:45 onboarding mod-main: code + tests written, diagnostics clean; not built/run (Tessa runs tests)
+16:50 onboarding mod-main fix: Don't Allow → That's okay restored, tests updated; not built/run
+17:40 noCity headline: fill-scaling + centred layout, tests written; not built/run
+17:51 5.13.2: sheet location row + five cities + keyboard rule, tests written; not built/run
+2026-10-16 18:29 PDT onboarding transitions/recovery: 5.14.2 declined load-in, root 0.2 s handover, noCity action entrance and explicit noCity loader/Aha pipeline implemented; build succeeds; focused 19/19 pass; simulator visual check in progress; no commit/push/release.
+2026-10-16 18:34 PDT onboarding transitions/recovery: iPhone 17 simulator declined/Got it/Back/Search instead/Start with flows reviewed; destinations correct, no clipping; brief spec-consistent background beat; Reduce Motion and phone recovery remain; session closed.
+2026-10-16 19:15 PDT debug onboarding replay: noCity now clears/cancels transient display and lookup state, suppresses saved/authorized auto-resolution, preserves persisted places/recents, and allows only explicit LocationAllowed GPS; build-for-testing passed; focused selections 41/41 and 85/85; no commit/push/release.
+2026-10-16 19:26 PDT landing halo/status bar: halo vector now reaches zero alpha before its viewBox edge; removed the app-owned opaque status-bar backing while retaining native scroll-edge behavior; build-for-testing passed; focused 156/156; iPhone 17 and SE 3 simulator landing/upsell visual checks clean across sampled breath phases; no physical-phone claim, commit/push/release.
+2026-10-16 19:28 PDT compass date-step: date-only MoonDay/today changes now rebuild markers in place without incrementing CompassEntrance or replaying its 10-degree settle; fixed-heading repeated off-today/back regressions added; focused 51/51 and build-for-testing pass; no physical-phone check, commit/push/release.
+2026-10-16 19:42 PDT bug-fix continuation (Claude): reviewed Codex queue; Settings/notDetermined fix present + tested; running full build+test on uncommitted worktree
+2026-10-16 21:03 PDT 5.14 §6 Run 1: store flag endedOnNoCity, finish() persists, start() routing + clears, root ScreenBackground behind fade; writing tests
+21:05 5.14 §6 Run 1: tests written; running build-for-testing
+21:15 5.14 §6 Run 1: build-for-testing OK; CLI test-without-building blocked by sandbox (pseudo-terminal EPERM), stopped at 10 min; switching to Xcode test runner
+21:16 5.14 §6 Run 1: focused (Xcode runner) 119 run, 1 old-behavior assertion updated (pageAloneStillWrites writeCount 1→2), rerun 65/65; running full suite
+21:18 5.14 §6 Run 1: full 1652/1678 (25 SentenceToken known + PlaceChangeLayout blank-ink, passes alone 1/1); destination restored to T2 iPhone; no commit/push/install; reporting
+21:18 5.14 §6 Run 1: correction: T2 iPhone not listed (disconnected?); destination left on iPhone 17

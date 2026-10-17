@@ -12,9 +12,10 @@ Tessa's phone recording, 2026-10-12 (launch, Irvine, CA): `compass_on_launch_bug
 Total ~0.7 s; ends correct. The city-change case was already fixed and looks right on the phone.
 
 ## Contract
-- Same entrance (§12.4) for every reload trigger: launch, place change, date step, return to foreground, heading or
+- Same entrance (§12.4) for every genuine entrance trigger: launch, place change, return to foreground, heading or
   location arriving late, recovery from a failure screen. List the triggers actually found in code and say which
   already share the path.
+- Revised 2026-10-16: a date-only change updates markers in place and does not replay the settle.
 - Wait for the first heading (≤ 0.5 s), then load in aligned or ~10° off and settle over 0.5 s. Never show north-up
   first. No heading in 0.5 s: no-heading look, turn when it arrives.
 - Dial, letters, numbers and targets rotate as **one piece**, shortest path, unwrapped angle. No independent

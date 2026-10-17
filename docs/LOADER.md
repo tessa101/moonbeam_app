@@ -642,6 +642,8 @@ sharp). Report: `.agent-reports/5.9.3/findings.md`.
 - **Settle (Tessa):** the dial loads in ~10° off true and eases into the real heading over 0.5 s
   (`.spring(duration: 0.5, bounce: 0)` or ease-out, proposed). Direction of the offset: against the last heading
   change, so it reads as "finding" north.
+- **Date-only changes:** update rise, set and live-Moon markers in place. They do not restart the entrance or its
+  settle once the compass is loaded; moving off today and back also leaves the heading steady.
 - Reduce Motion: fade in, already aligned; no settle.
 
 ### 12.4.1 Compass polish from build 8 testing (Tessa, 2026-10-07), built with 12.4

@@ -32,7 +32,7 @@ confirms or changes them in §11 before the agent builds the step that uses them
 ### Colors (dark)
 | Token | Hex | Use | Contrast |
 |---|---|---|---|
-| `bg` | `#1B1519` | Screen background, status bar backing | |
+| `bg` | `#1B1519` | Screen background | |
 | `surface` | `#1E171C` | Moon card | |
 | `surfaceRaised` | `#2A2127` | ‹ › buttons, secondary buttons | |
 | `stroke` | `#3D3139` | Card border, hairlines, onboarding info box border | |
@@ -84,8 +84,8 @@ The status bar stays the system's (SF).
 - Primary button: height **56**, capsule, `accent` fill, `onAccent` text, glow `accent` 25% radius 30.
 - Secondary button: height **52**, capsule, `surfaceRaised` fill, `strokeRaised` border, `textPrimary` text.
 - Background: a faint amber radial glow at the top (`accent` 8% → 0, ~520 × 420, centred, top −120).
-- Status bar: solid `bg` behind it (replaces 4.15's system material on iOS 26; keep the iOS 27 soft
-  edge effect, check it still reads on `bg`).
+- Status bar: the screen background and its top glow continue behind the system icons; no app-owned opaque
+  backing. Keep the native soft scroll edge behavior for scrolling content.
 
 ## 3. Main screen (3b)
 
@@ -348,7 +348,7 @@ Loading and failed-fetch states keep their current copy; style them with the not
 
 ## 7. Build order (one commit each)
 5.1 **Theme:** color tokens, bundled fonts + `UIAppFonts`, type scale (`Theme.swift`), screen
-    background + top glow, solid status bar backing. App forced dark (§11 Q1).
+    background + top glow continuing through the status-bar safe area. App forced dark (§11 Q1).
 5.2 **Moon card:** header row (moves ‹ › out of `DateControl`), phase glyph + row, rise/set row.
     Delete the spike `ContentView` / `SpikeMoonTableViewModel` once nothing uses them, and the
     "Spike UI" line.

@@ -859,6 +859,11 @@
 - **Considered:** a solid bar color (fine fallback if the edge effect doesn't apply to a bare
   `ScrollView`); pinning the prompt + search field as a header (bigger layout change, design pass).
 
+### 2026-10-16 · Status bar background continues through the safe area
+- **Tessa:** remove the app-owned opaque status-bar backing. The shared screen background, including its top
+  glow, continues behind the clock, signal and battery on onboarding and Main. Keep the native scroll-edge
+  treatment; do not move content or hide the system icons. This supersedes the solid fallback from 4.15.
+
 ### 2026-09-30 · 4.14: one Precise button; Step 2.2 search quality
 - **4.14 (Tessa):** two CTAs ("Use Precise Location" + "Always use Precise Location") felt wrong.
   One button now. The temporary alert only offers Don't Allow / Allow Once; that's iOS, and there's
@@ -1532,6 +1537,8 @@ Tessa's launch recording shows the compass fading in north-up with a stale reado
   appear ~0.25 s before the dial finishes its last degrees.
 - **Date step gets the compass entrance** (Tessa's widening) but not a block load-in: §12.1's "no load-in on a date
   change" still holds for the card and the compass block; only the dial settles (heading already in hand).
+  **Superseded 2026-10-16:** phone review found this settle reads as an unintended twitch. Date-only changes now
+  update markers in place without restarting the entrance; genuine initial, re-entry and place-change entrances remain.
 - **Ambient animations no longer move marks.** Side effect: the arc's travelled part switches between dots and a
   hairline without a fade on lock.
 
@@ -1838,3 +1845,12 @@ After seeing the retune on device, Tessa smoothed the onboarding tail: loop 1.40
 
 The STEP-5.14 §5 cat motion retune is closed. Tessa verified both cats on her phone: ready-to-look's tail and ear (§5.2) and the landing's bending tail and look-around (§5.3), including frame pacing. The landing tail's final values are the §5.5 second pass (1.40 s, ±11.7°, flex 1.00, lag 0.44). Reduce Motion and VoiceOver weren't re-checked on device. Further motion changes need a new issue. Remaining 5.14 work is only the declined-screen load-in, held for the 5.13 search/cancel design.
 
+
+
+## 2026-10-16: Sleeping cat stays out of the declined onboarding screen (Tessa)
+
+"That's okay for now" keeps its dimmed moon. The sleeping cat remains only in the main-screen "Maybe later" location-allowance prompt. Revisit other placements after launch. Spec: STEP-5.14 §5.7. Documentation only.
+
+## 2026-10-16: Got it enters the main screen through the moon; noCity survives relaunch (Tessa)
+
+From a recording of Got it → noCity (0.23 s of pure black, then an empty beat, about 0.95 s in all, reading as an error): (1) Got it now grows the small "That's okay" moon to the loader's mid-screen moon, runs the same phase ride, then loads noCity in as usual (a reversed Aha flight). No blank frame at any point. (2) noCity persists: after Got it or Search instead, a relaunch with no saved city and no location lands on noCity, not the permission-off cat; quitting on "That's okay" keeps the cat. (3) The app background sits behind every root fade so the window's black never shows. Open defaults: the moon fades out at the end, no label, Got it only, durations tunable on the phone. Spec: STEP-5.14 §6. Documentation only.
