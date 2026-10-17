@@ -16,7 +16,7 @@ protocol OnboardingStore: AnyObject {
 
     /// The first "Aha" ride after install has run, with its extra lap
     /// (LOADER.md §11.2.2). First-run state like onboarding, so it lives
-    /// here, and the DEBUG reset and Show onboarding clear it too.
+    /// here, and the DEBUG reset and forced onboarding clear it too.
     var hasSeenFirstFindPass: Bool { get set }
 
     /// The location-off prompt's Maybe later was tapped (LOCATION-OFF-FLOW.md

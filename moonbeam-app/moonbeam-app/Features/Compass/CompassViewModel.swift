@@ -224,8 +224,7 @@ final class CompassViewModel {
     /// screen and the bar flickered in and out.
     private(set) var heldBottomNote: CompassBottomNote?
 
-    /// From the context: something has been detected this session. Only the
-    /// DEBUG readout uses it, to tell "Nothing detected" apart (4.8).
+    /// From the context: something has been detected this session.
     private(set) var hasDetectedPlace = false
 
     /// Goes up by one each time a lock is acquired, including a switch
@@ -678,32 +677,6 @@ final class CompassViewModel {
             guard !Task.isCancelled else { return }
             self?.preciseConfirmation = nil
         }
-    }
-
-    // MARK: - Debug readout (device diagnosis, 4.8/4.9)
-
-    /// Plain lines for the readout in `DebugPanel`, so a device test shows
-    /// why the compass is in the state it's in. Built in every build, since
-    /// TestFlight testers see it too; the screen only shows it when the
-    /// debug tools are passed in (`BuildChannel`).
-    var debugReadout: [String] {
-        let heading = reading?.trueHeading.map { String(format: "%.1f° true", $0) } ?? "none"
-        let accuracy = reading?.accuracy.map { String(format: "±%.1f°", $0) } ?? "unknown"
-        let targetList = targets.isEmpty
-            ? "none"
-            : targets.map { "\(Self.name(of: $0.kind).lowercased()) \(Int($0.azimuth.rounded()))" }
-                .joined(separator: ", ")
-        return [
-            "heading: \(heading)",
-            "accuracy: \(accuracy)\(isLowAccuracy ? " (low)" : "")",
-            "accuracyAuthorization: \(isPreciseLocationOff ? "reduced" : "full")",
-            "reason: \(lowAccuracyReason.map { "\($0)" } ?? "none")",
-            "visibility: \(visibility)",
-            "detected: \(hasDetectedPlace ? "yes" : "no")",
-            "targets: \(targetList)",
-            "lock: \(lockedKind.map { Self.name(of: $0).lowercased() } ?? "none")",
-            "sensors: \(isSensing ? "running" : "stopped")",
-        ]
     }
 
     // MARK: - Visibility (COMPASS.md §2)

@@ -17,15 +17,6 @@ struct LocationScreen: View {
 
     @Bindable var viewModel: LocationViewModel
 
-    /// The Show onboarding button (DECISIONS.md 2026-10-01): the forced
-    /// onboarding flow. The app passes it in DEBUG and TestFlight builds
-    /// only (`BuildChannel`); `nil` hides the button. Temporary.
-    var onShowOnboarding: (() -> Void)? = nil
-
-    /// The Forget saved place button, beside Show onboarding: same builds,
-    /// same removal before 1.0 (DECISIONS.md 2026-10-06). `nil` hides it.
-    var onForgetSavedPlace: (() -> Void)? = nil
-
     /// Back from the `noCity` state to the onboarding upsell
     /// (ONBOARDING-MOD-MAIN.md flow 3). Offered only while the view model
     /// says no city is set; `nil` hides it.
@@ -94,8 +85,8 @@ struct LocationScreen: View {
 
     var body: some View {
         // LOADER.md: while the launch fetch runs, plain background and then
-        // the phase cycle. The real screen (with its compass, pinned bar,
-        // DEBUG readout and Show onboarding) isn't built until it's ready.
+        // the phase cycle. The real screen (with its compass and pinned bar)
+        // isn't built until it's ready.
         ZStack {
             switch viewModel.launchStage {
             case .waiting, .phaseCycle:
@@ -268,20 +259,9 @@ struct LocationScreen: View {
                             .padding(.top, Theme.Metrics.cardToCompass)
                     }
 
-                    // At the very bottom, under the compass: Show onboarding,
-                    // Forget saved place and the compass readout, which
-                    // testers can hide together. Out of the design's way.
-                    if onShowOnboarding != nil || onForgetSavedPlace != nil {
-                        DebugPanel(
-                            readoutLines: viewModel.compass.debugReadout,
-                            onShowOnboarding: onShowOnboarding,
-                            onForgetSavedPlace: onForgetSavedPlace
-                        )
-                        .padding(.top)
-                    }
                 }
                 // Held out while a replacement is pending, so nothing in it
-                // (the debug panel included) shows under an empty slot.
+                // shows under an empty slot.
                 .contentLoadIn(
                     .compass,
                     generation: viewModel.loadInGeneration,

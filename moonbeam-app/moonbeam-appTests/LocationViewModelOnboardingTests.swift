@@ -184,7 +184,7 @@ struct OnboardingMainScreenTests {
         #expect(!location.didRequestAuthorization)
     }
 
-    @Test("Show onboarding from a displayed and saved city → Search instead: fresh noCity, saved data intact")
+    @Test("Forced onboarding from a displayed and saved city → Search instead: fresh noCity, saved data intact")
     func replaySearchInsteadClearsDisplayedCity() async {
         let store = InMemoryPlaceStore(lastViewed: Self.sydney, recents: [Self.sydney])
         let location = FakeLocationService(authorizationState: .denied)
@@ -201,7 +201,7 @@ struct OnboardingMainScreenTests {
         #expect(location.currentPlaceCount == 0)
     }
 
-    @Test("Show onboarding with only a persisted city → Got it: saved city is not restored into noCity")
+    @Test("Forced onboarding with only a persisted city → Got it: saved city is not restored into noCity")
     func replayDeclinedIgnoresPersistedOnlyCity() async {
         let store = InMemoryPlaceStore(lastViewed: Self.sydney, recents: [Self.sydney])
         let viewModel = Self.makeLocationViewModel(

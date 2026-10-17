@@ -550,7 +550,7 @@ struct OnboardingViewModelTests {
 
     // MARK: - Forced run, Release too (DECISIONS.md 2026-10-01 "TestFlight")
 
-    /// What the Show onboarding button does in a TestFlight build: not
+    /// What forced onboarding does: not
     /// DEBUG-only, so tested here as well as in `OnboardingDebugTriggerTests`.
     @Test("A forced run from the button shows it and finishes without writing the completed flag")
     func forceShowWritesNothing() {

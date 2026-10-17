@@ -9,8 +9,8 @@ import Testing
 @testable import moonbeam_app
 
 /// The DEBUG onboarding trigger (DECISIONS.md 2026-10-01): `-forceOnboarding`,
-/// `-onboardingPage`, and the main screen's Show onboarding button
-/// (`forceShow`). A forced run shows whatever the stored state says, and
+/// `-onboardingPage`, and `forceShow`. A forced run shows whatever the stored
+/// state says, and
 /// never writes the store. DEBUG only, like the trigger.
 @Suite("Onboarding DEBUG trigger")
 @MainActor
@@ -84,7 +84,7 @@ struct OnboardingDebugTriggerTests {
         #expect(harness.viewModel.isPresented)
         #expect(harness.viewModel.step == .landing)
         #expect(harness.store.writeCount == 0)
-        // Show onboarding makes the next "Aha" a first one (LOADER.md §11.2.2).
+        // Forced onboarding makes the next "Aha" a first one (LOADER.md §11.2.2).
         #expect(!harness.store.hasSeenFirstFindPass)
         // And the location-off prompt shows again (LOCATION-OFF-FLOW.md §4).
         #expect(!harness.store.locationPromptDismissed)
@@ -187,9 +187,9 @@ struct OnboardingDebugTriggerTests {
         #expect(store.writeCount == 2)
     }
 
-    // MARK: - The Show onboarding button
+    // MARK: - Forced onboarding
 
-    @Test("Show onboarding reopens it after it was left, from the landing")
+    @Test("Forced onboarding reopens it after it was left, from the landing")
     func buttonReopens() {
         let harness = Self.makeExistingInstall()
         harness.viewModel.forceShow()

@@ -24,7 +24,6 @@ nonisolated struct CompassContext {
     var authState: LocationAuthState
 
     /// Precise Location is off (`accuracyAuthorization == .reducedAccuracy`).
-    /// Shown in the DEBUG readout; explains low accuracy (4.10).
     var isPreciseLocationOff = false
 
     /// The moon table for the selected day: where moonrise and moonset

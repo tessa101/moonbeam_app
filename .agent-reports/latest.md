@@ -1,3 +1,22 @@
+# Chunk 2 — TestFlight debug tools removed (2026-10-17)
+
+Removed the temporary Show onboarding / Forget saved place debug panel and compass data readout, their `BuildChannel`
+gate and unused wiring, plus only their directly associated tests. The DEBUG launch-argument onboarding path remains.
+The undecided fake services and preview data are unchanged.
+
+Validation: Xcode’s completed full-suite result has **26 failed assertions in 25 `SentenceTokenTests` cases**:
+24 parameterized `layout(fixture:size:)` cases each fail one Date-label lookup, and `pendingPlace()` fails two Place-label
+expectations. This is the same measurement documented previously as 25 known failing cases, including the prior clean-HEAD
+comparison, so the removal introduced no additional test regression. The latest Xcode build completed successfully.
+
+Release build limitation: two generic-iOS Release attempts finished in under ten minutes but the sandboxed command-line
+Xcode process failed because `swift-plugin-server` returned malformed responses for standard SwiftUI, Observation and
+Preview macros. The resulting source errors are cascading macro-expansion failures across unchanged files. An unrestricted
+retry is unavailable under the workspace approval policy; no scheme, project setting, app behavior, version or bundle ID
+was changed to bypass it. No archive, push, upload or phone installation was performed.
+
+---
+
 # 5.14 cat motion — closed (2026-10-16)
 
 Documentation-only closeout. Ready-to-look retune (§5.2) and landing retune (§5.3/§5.5; final tail 1.40 s second pass)

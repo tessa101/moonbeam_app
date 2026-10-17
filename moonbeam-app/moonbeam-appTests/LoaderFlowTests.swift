@@ -251,29 +251,6 @@ struct LoaderFlowTests {
         #expect(harness.viewModel.failureScreen == nil)
     }
 
-    // MARK: - Forget saved place (DEBUG / TestFlight, temporary)
-
-    @Test("Forget saved place: last-viewed and recents cleared, then the launch's failure screen")
-    func forgetSavedPlaceShowsFailure() async {
-        let harness = Self.makeHarness(.denied, lastViewed: Place.marVista)
-        harness.store.addRecent(Place.marVista)
-        await harness.viewModel.start()
-        #expect(harness.viewModel.launchStage == .ready)
-        harness.onboardingStore.locationPromptDismissed = true
-
-        await harness.viewModel.forgetSavedPlace()
-
-        // The location-off prompt shows again (LOCATION-OFF-FLOW.md §4).
-        #expect(!harness.onboardingStore.locationPromptDismissed)
-
-        #expect(harness.store.lastViewed == nil)
-        #expect(harness.store.recents.isEmpty)
-        #expect(harness.viewModel.place == nil)
-        #expect(harness.viewModel.moonTable == nil)
-        #expect(harness.viewModel.launchStage == .ready)
-        #expect(harness.viewModel.failureScreen == .permissionDenied)
-    }
-
     // MARK: - Chunk 2c item 3: two device checks
 
     /// 3a: First ask never needs the network or a fix. The cat there needs
@@ -307,56 +284,6 @@ struct LoaderFlowTests {
         let harness = Self.makeHarness(.authorized, placeResult: .failure(LocationError.couldNotIdentifyPlace))
         await harness.viewModel.start()
         #expect(harness.viewModel.failureScreen == .noFix)
-    }
-
-    /// 3b order 1: Never already set, then Forget saved place (or a launch
-    /// with no saved city): the telescope at once, never First ask.
-    @Test("3b order 1: Never set first, then Forget saved place: the telescope directly")
-    func neverThenForgetIsTelescope() async {
-        let harness = Self.makeHarness(.denied, lastViewed: Place.marVista)
-        await harness.viewModel.start()
-
-        await harness.viewModel.forgetSavedPlace()
-
-        #expect(harness.viewModel.failureScreen == .permissionDenied)
-        #expect(harness.viewModel.loaderIssue == nil)
-        // The loader never stopped on a message on the way.
-        #expect(harness.viewModel.loader.content == .searching)
-        #expect(!harness.sleeper.durations.contains(Self.searchMinimum))
-        #expect(!harness.viewModel.failureFollowsLoader)
-    }
-
-    /// 3b order 2: First ask is up (Ask Next Time, or an expired Allow
-    /// Once), then Never in Settings, then back: First ask until the
-    /// return, then the telescope.
-    @Test("3b order 2: Forget saved place on First ask, then Never in Settings, back: the telescope")
-    func forgetThenNeverIsTelescope() async {
-        let harness = Self.makeHarness(.notDetermined, lastViewed: Place.marVista)
-        await harness.viewModel.start()
-
-        await harness.viewModel.forgetSavedPlace()
-        #expect(harness.viewModel.loaderIssue == .firstAsk)
-
-        harness.location.authorizationState = .denied
-        await harness.viewModel.sceneDidBecomeActive()
-
-        #expect(harness.viewModel.failureScreen == .permissionDenied)
-        #expect(harness.viewModel.loaderIssue == nil)
-        #expect(!harness.location.didRequestAuthorization)
-    }
-
-    @Test("Forget saved place, authorized: the launch finds you again")
-    func forgetSavedPlaceRelocates() async {
-        let harness = Self.makeHarness(.authorized, lastViewed: Place.marVista)
-        await harness.viewModel.start()
-        let fixesBefore = harness.location.currentPlaceCount
-
-        await harness.viewModel.forgetSavedPlace()
-
-        #expect(harness.location.currentPlaceCount == fixesBefore + 1)
-        #expect(harness.viewModel.launchStage == .ready)
-        #expect(harness.viewModel.place == Self.detected)
-        #expect(harness.store.recents.isEmpty)
     }
 
     // MARK: - First ask (§10.3; §3 rows 4 and 11)

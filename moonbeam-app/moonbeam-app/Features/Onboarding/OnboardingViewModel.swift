@@ -21,8 +21,7 @@ import Observation
 /// screen starts in the right state.
 ///
 /// It can also be forced (DECISIONS.md 2026-10-01 "DEBUG onboarding trigger",
-/// "Show onboarding button also in TestFlight builds"): the main screen's
-/// Show onboarding button in DEBUG and TestFlight builds, and in DEBUG the
+/// DEBUG launch tools can force onboarding and choose its opening page.
 /// `-forceOnboarding` / `-onboardingPage` launch arguments. A forced run
 /// writes no stored state.
 @Observable
@@ -280,10 +279,9 @@ final class OnboardingViewModel {
     }
     #endif
 
-    // MARK: - Forced run (DEBUG and TestFlight)
+    // MARK: - Forced run (DEBUG)
 
-    /// The forced flow, from the Show onboarding button (DEBUG and
-    /// TestFlight) or `-forceOnboarding`. Changes nothing stored: no flag,
+    /// The forced flow from `-forceOnboarding`. Changes nothing stored: no flag,
     /// place or permission. Temporary: remove before the 1.0 App Store
     /// build.
     func forceShow(startingAt page: Step = .landing) {

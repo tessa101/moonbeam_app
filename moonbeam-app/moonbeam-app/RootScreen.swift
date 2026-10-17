@@ -41,16 +41,8 @@ struct RootScreen: View {
                     .environment(\.onboardingLeavesAroundMoon, isLeavingAroundMoon)
             } else {
                 // The chosen place drives the moon card.
-                // Show onboarding and Forget saved place: DEBUG and TestFlight
-                // only, temporary (DECISIONS.md 2026-10-01, 2026-10-06).
                 LocationScreen(
                     viewModel: locationViewModel,
-                    onShowOnboarding: BuildChannel.showsOnboardingButton
-                        ? { onboardingViewModel.forceShow() }
-                        : nil,
-                    onForgetSavedPlace: BuildChannel.showsOnboardingButton
-                        ? { Task { await locationViewModel.forgetSavedPlace() } }
-                        : nil,
                     // Back from `noCity` to the upsell (ONBOARDING-MOD-MAIN.md);
                     // the screen offers it only until a city is set.
                     onReturnToOnboarding: { onboardingViewModel.returnToUpsell() },

@@ -283,7 +283,7 @@ final class LocationViewModel {
     @ObservationIgnored private var detectionOnlyAfterSettings = false
 
     /// LOADER.md §4: the announcement is made once per launch, however many
-    /// times the phase cycle shows (Show onboarding brings it back).
+    /// times the phase cycle shows (forced onboarding brings it back).
     @ObservationIgnored private var hasAnnouncedPhaseCycle = false
 
     /// The last "Aha" line, so the next is a different one (LOADER.md
@@ -660,27 +660,6 @@ final class LocationViewModel {
         detectionOnlyAfterSettings = false
 
         updateCompass()
-    }
-
-    /// The Forget saved place button: DEBUG and TestFlight only, temporary,
-    /// removed with Show onboarding before 1.0 (DECISIONS.md 2026-10-06).
-    /// Clears the last-viewed place and recents, then runs the launch flow
-    /// again, so the no-saved-place loader and its messages can be tried
-    /// without reinstalling. Permission and onboarding are left alone; the
-    /// location-off prompt shows again (LOCATION-OFF-FLOW.md §4).
-    func forgetSavedPlace() async {
-        stopLocating()
-        onboardingStore.locationPromptDismissed = false
-        placeStore.lastViewed = nil
-        placeStore.recents = []
-        lastViewed = nil
-        place = nil
-        detectedPlace = nil
-        locationFailed = false
-        locationFailure = nil
-        daySelection = .today
-        reloadMoonTable()
-        await start()
     }
 
     /// The loader's clock: the phase cycle at 400 ms, then its 1.1 s hold.
