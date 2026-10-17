@@ -1,3 +1,31 @@
+# Step 5.16 Chunk 3 — Release binary check (2026-10-17)
+
+Xcode’s manual Build for Profiling completed successfully with no build errors. Configuration: `Release-iphonesimulator`,
+universal arm64/x86_64, signed and validated. App:
+`/Users/tc/Library/Developer/Xcode/DerivedData/moonbeam-app-fzggunietkvmwhgoyscjktxvsfny/Build/Products/Release-iphonesimulator/moonbeam-app.app`.
+Executable: the app’s `moonbeam-app` file (11,492,320 bytes; modified 2026-10-17 16:38:43 -0700).
+
+Binary checks: `strings -a -n 1` (so the 15-byte `Show onboarding` label was included) and arm64 `nm` found none of
+`Show onboarding`, `Forget saved place`, `Show debug tools`, `Hide debug tools`, `BuildChannel`, `sandboxReceipt`,
+`DebugPanel`, `debugReadout`, `forgetSavedPlace`, `-forceOnboarding`, `-onboardingPage`, `applyDebugLaunchArguments`,
+`debugPage`, `forceShow`, or the DEBUG launch-argument property names. This confirms the removed tools and the retained
+source-level DEBUG launch path are absent from the optimized Release executable.
+
+Undecided items still ship and were not changed: strings and symbols are present for `FakeConnectivityService`,
+`FakeHeadingService`, `FakeLocationService`, `FakePlaceSearchService`, `FakeMoonService`, `InMemoryPlaceStore`, and
+`InMemoryOnboardingStore`. `DebugScreenState` and `-screenState` are absent from Release.
+
+Simulator UI hierarchy and screenshots on the normal Los Angeles main screen, at the top and the scroll view’s reported
+100% bottom, contained no Show/Hide debug tools, Show onboarding, Forget saved place, or diagnostic readout panel. Normal
+date/place and moon-card content remained visible with no layout issue. Runtime limitation: Xcode’s interaction installer
+rebuilt and launched `Debug-iphonesimulator`; the restricted `simctl` process could not connect to CoreSimulatorService to
+install the already-built Release app. The Release-specific conclusion therefore rests on the successful Xcode Release
+build plus direct executable string/symbol inspection; the UI run confirms the same committed removal in Debug.
+
+No version or bundle-ID change, archive, push, upload, or phone installation was performed.
+
+---
+
 # Chunk 2 — TestFlight debug tools removed (2026-10-17)
 
 Removed the temporary Show onboarding / Forget saved place debug panel and compass data readout, their `BuildChannel`
