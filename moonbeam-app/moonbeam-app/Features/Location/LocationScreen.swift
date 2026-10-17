@@ -50,7 +50,8 @@ struct LocationScreen: View {
     private static let scrollToCompassAnimation = Animation.easeInOut(duration: 0.4)
     /// The compass block's scroll target for the pinned bar's Compass ↓.
     private static let compassScrollID = "compass"
-    private static let contentSpace = "locationContent"
+    /// `nonisolated` so `.onGeometryChange`'s Sendable transform can read it.
+    nonisolated private static let contentSpace = "locationContent"
     /// Keep short states scrollable across the prompt/row transition.
     private static let minimumScrollOverflow: CGFloat = 1
     @State private var scrollViewportHeight: CGFloat = 0

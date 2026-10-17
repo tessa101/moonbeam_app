@@ -27,10 +27,13 @@ struct moonbeam_appApp: App {
         let appInit = signposter.beginInterval("App.init")
         defer { signposter.endInterval("App.init", appInit) }
 
+        #if DEBUG
         // Astronomy Engine spike scaffolding; remove with MoonTableSpike.
+        // Debug only: Release builds don't compile or run it.
         let spike = signposter.beginInterval("MoonTableSpike.run")
         MoonTableSpike.run()
         signposter.endInterval("MoonTableSpike.run", spike)
+        #endif
 
         let locationService = CoreLocationService()
         let placeStore = UserDefaultsPlaceStore()

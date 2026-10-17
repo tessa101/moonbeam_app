@@ -8,6 +8,10 @@
 //  test target (STATUS.md "Next" #3) covers this.
 //
 
+// Debug only: the one caller (App.init) is DEBUG-gated, so Release doesn't
+// compile this file's contents.
+#if DEBUG
+
 import Foundation
 
 /// Prints one day's moon table to the console for a fixed place and date.
@@ -85,3 +89,5 @@ enum MoonTableSpike {
         return "\(time) · \(degrees)° \(compass.abbreviation(for: event.azimuth))"
     }
 }
+
+#endif
