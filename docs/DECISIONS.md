@@ -1854,3 +1854,10 @@ The STEP-5.14 §5 cat motion retune is closed. Tessa verified both cats on her p
 ## 2026-10-16: Got it enters the main screen through the moon; noCity survives relaunch (Tessa)
 
 From a recording of Got it → noCity (0.23 s of pure black, then an empty beat, about 0.95 s in all, reading as an error): (1) Got it now grows the small "That's okay" moon to the loader's mid-screen moon, runs the same phase ride, then loads noCity in as usual (a reversed Aha flight). No blank frame at any point. (2) noCity persists: after Got it or Search instead, a relaunch with no saved city and no location lands on noCity, not the permission-off cat; quitting on "That's okay" keeps the cat. (3) The app background sits behind every root fade so the window's black never shows. Open defaults: the moon fades out at the end, no label, Got it only, durations tunable on the phone. Spec: STEP-5.14 §6. Documentation only.
+
+## 2026-10-17: Got it moon entry built (Run 2); root handover moved into RootScreen
+- Got it enters noCity through the moon (STEP-5.14 §6.3). Constants live in MoonEntry: text exit 0.2 s, flight 0.85 s, hold 0.6 s, exit fade 0.25 s; Reduce Motion cross-fades with a 0.3 s hold.
+- The onboarding/main handover moved from moonbeam_appApp.swift into RootScreen.swift: App-level @State dropped the fade's animation, so the text cut in one frame. It now fades over about 5 frames.
+- Simulator frame checks (iPhone 17, SE 3, default and AX3): no pure-black frames; sequence continuous. Reduce Motion recordings not analysed; check on the phone.
+- Open (Tessa's call): SE 3 at AX3, the page is scrolled to reach Got it, so the declined moon is off screen and about 2 frames (~67 ms) pass with nothing moving before the flight. Options: start from the top edge (recommended), scroll back to top, or leave.
+- Full suite via xcodebuild: only the 25 known SentenceTokenTests failures plus the PlaceChangeLayoutTests blank-ink flake (passes alone).

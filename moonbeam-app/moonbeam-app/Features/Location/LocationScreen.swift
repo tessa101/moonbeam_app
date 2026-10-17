@@ -31,6 +31,10 @@ struct LocationScreen: View {
     /// says no city is set; `nil` hides it.
     var onReturnToOnboarding: (() -> Void)? = nil
 
+    /// The declined screen's moon, in global coordinates, for Got it's moon
+    /// entry to fly up from (STEP-5.14 §6.3).
+    var moonEntryStartFrame: CGRect? = nil
+
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.openURL) private var openURL
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -72,8 +76,18 @@ struct LocationScreen: View {
     /// §11.2.7 (proposed): a light tap as the moon lands in the card.
     private static let landingHapticIntensity = 0.6
 
-    private static func launchStageAnimation(to stage: LaunchStage, showingFailure: Bool) -> Animation {
-        let readyDuration = showingFailure ? ContentLoadIn.duration : LaunchStage.phaseCycleFadeOutDuration
+    private static func launchStageAnimation(
+        to stage: LaunchStage,
+        showingFailure: Bool,
+        afterMoonEntry: Bool
+    ) -> Animation {
+        let readyDuration = if showingFailure {
+            ContentLoadIn.duration
+        } else if afterMoonEntry {
+            MoonEntry.exitFadeDuration
+        } else {
+            LaunchStage.phaseCycleFadeOutDuration
+        }
         return .easeOut(duration: stage == .ready ? readyDuration : LaunchStage.fadeDuration)
     }
 
@@ -130,7 +144,8 @@ struct LocationScreen: View {
                         onSearch: viewModel.presentSearch,
                         searchAvailable: viewModel.offersCitySearch,
                         landingSlot: slot.map { globalFrame(of: $0, in: proxy) },
-                        landingGlyph: viewModel.moonTable?.glyph
+                        landingGlyph: viewModel.moonTable?.glyph,
+                        entryStartFrame: moonEntryStartFrame
                     )
                     .allowsHitTesting(!isAhaFlying)
                     .transition(.asymmetric(insertion: .identity, removal: .opacity))
@@ -141,7 +156,8 @@ struct LocationScreen: View {
         .animation(
             Self.launchStageAnimation(
                 to: viewModel.launchStage,
-                showingFailure: viewModel.failureScreen != nil
+                showingFailure: viewModel.failureScreen != nil,
+                afterMoonEntry: viewModel.loader.entryStartedAt != nil
             ),
             value: viewModel.launchStage
         )

@@ -431,6 +431,12 @@ final class LocationViewModel {
         let interval = signposter.beginInterval("start")
         defer { signposter.endInterval("start", interval) }
 
+        // Got it's moon is already on the loader (STEP-5.14 §6.3).
+        if entersThroughMoon {
+            await finishMoonEntry()
+            return
+        }
+
         launchStage = .waiting
         let loader = startLoaderClock()
 
@@ -515,11 +521,36 @@ final class LocationViewModel {
     /// The screen goes back to waiting, so `start()`'s fetch after onboarding
     /// gets the launch loader too (LOADER.md §1), and a forced onboarding
     /// doesn't flash the old screen first.
+    ///
+    /// Got it enters through the moon instead (STEP-5.14 §6.3): the loader is
+    /// already up when the screen arrives, so the declined screen's moon
+    /// hands straight over to it with no blank frame.
     func onboardingDidFinish(_ outcome: OnboardingViewModel.Outcome) {
         isNoCity = true
         resetForNoCity()
         locatesAfterOnboarding = outcome == .locationAllowed
-        launchStage = .waiting
+        if outcome == .locationDeclined {
+            loader.enterFromOnboarding()
+            launchStage = .phaseCycle
+        } else {
+            launchStage = .waiting
+        }
+    }
+
+    /// Got it's moon entry is under way (STEP-5.14 §6.3): the app keeps the
+    /// declined screen's moon through its text exit.
+    var entersThroughMoon: Bool {
+        launchStage == .phaseCycle && loader.entryStartedAt != nil
+    }
+
+    /// The moon entry's flight and hold, then `noCity` loads in as the
+    /// loader fades. Backgrounding meanwhile doesn't restart it: the wait
+    /// just ends on return.
+    private func finishMoonEntry() async {
+        lastSeenAuthState = await locationService.refreshAuthorizationState()
+        guard await loader.finishEntry(reducesMotion: reducesMotion()) else { return }
+        guard isNoCity, entersThroughMoon else { return }
+        settleOnNoCity()
     }
 
     // MARK: - No city (ONBOARDING-MOD-MAIN.md)
@@ -885,7 +916,8 @@ final class LocationViewModel {
     /// Call when the phase cycle comes on screen. Returns what VoiceOver
     /// should announce the first time per launch, `nil` after (LOADER.md §4).
     func phaseCycleDidAppear() -> String? {
-        guard !hasAnnouncedPhaseCycle else { return nil }
+        // Got it's moon entry locates nothing (STEP-5.14 §6.3).
+        guard !hasAnnouncedPhaseCycle, loader.entryStartedAt == nil else { return nil }
         hasAnnouncedPhaseCycle = true
         return Self.phaseCycleAnnouncement
     }

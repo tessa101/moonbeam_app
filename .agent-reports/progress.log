@@ -653,3 +653,12 @@
 21:16 5.14 §6 Run 1: focused (Xcode runner) 119 run, 1 old-behavior assertion updated (pageAloneStillWrites writeCount 1→2), rerun 65/65; running full suite
 21:18 5.14 §6 Run 1: full 1652/1678 (25 SentenceToken known + PlaceChangeLayout blank-ink, passes alone 1/1); destination restored to T2 iPhone; no commit/push/install; reporting
 21:18 5.14 §6 Run 1: correction: T2 iPhone not listed (disconnected?); destination left on iPhone 17
+22:04 5.14 §6 Run 2 (Got it moon entry): started; reading spec + loader/flight/onboarding moon code
+22:08 Run 2: design settled (MoonEntry constants; loader enterFromOnboarding/finishEntry; root keeps moon on Got it; LaunchPhaseCycle reversed flight from declined frame); implementing
+22:11 Run 2: code + MoonEntryTests written; build-for-testing
+22:31 Run 2: build-for-testing OK; running focused suites (Xcode runner, iPhone 17)
+22:31 Run 2: focused 198 run, 1 float-tolerance test fix, MoonEntryTests 14/14; running full suite
+22:32 Run 2: full 1667/1692 (25 known SentenceToken only); destination restored to T2 iPhone; checkpoint before simulator recordings; no commit/push/install
+2026-10-17 09:34 Run 2: recordings started (iPhone 17 + SE3 × default/AX3/Reduce Motion)
+09:41 Run 2: rec 1 (i17 default): no black frames, sequence OK, but text exit cuts in 1 frame (same as §6.1). Fix 1: root handover moved from App @State into RootScreen view; rebuilding
+09:48 Run 2: fix 1 works (text fades ~5 frames); 4 recordings: 0 pure-black; SE3 AX3 scrolled: ~2 frames no moon (moon off-screen); now Reduce Motion runs

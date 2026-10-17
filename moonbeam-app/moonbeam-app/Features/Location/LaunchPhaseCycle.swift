@@ -32,6 +32,10 @@ struct LaunchPhaseCycle: View {
     var landingSlot: CGRect?
     var landingGlyph: PhaseGlyphGeometry?
 
+    /// Got it's moon entry (STEP-5.14 §6.3): the declined screen's moon, in
+    /// global coordinates, which the moon flies up from. `nil` otherwise.
+    var entryStartFrame: CGRect?
+
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.openURL) private var openURL
 
@@ -93,7 +97,7 @@ struct LaunchPhaseCycle: View {
     private static let labelOutForAhaDuration: TimeInterval = 0.35
     private static let labelOutForAhaDrift: CGFloat = 6
     /// Reduce Motion (§10.6): every step cross-fades over 0.3 s.
-    private static let reduceMotionFade: TimeInterval = 0.3
+    static let reduceMotionFade: TimeInterval = 0.3
 
     // MARK: - Body
 
@@ -112,10 +116,20 @@ struct LaunchPhaseCycle: View {
             let moonSize = layout == .regular ? Self.moonSize : Self.compactMoonSize
             let moonRise = layout == .regular ? 0 : Self.compactMoonRise
             let moonTop = screenHeight / 2 - Self.moonCentreAboveScreenCentre - moonSize / 2 - top - moonRise
+            // Worked out rather than measured, so the moon entry's first
+            // frame already knows where it's flying to.
+            let origin = proxy.frame(in: .global).origin
+            let restingFrame = CGRect(
+                x: origin.x + (proxy.size.width - moonSize) / 2,
+                y: origin.y + max(0, moonTop),
+                width: moonSize,
+                height: moonSize
+            )
 
             VStack(spacing: 0) {
                 Color.clear.frame(height: max(0, moonTop))
-                moon(size: moonSize)
+                moon(size: moonSize, restingFrame: restingFrame)
+                    .overlay { reduceMotionEntryMoon(restingFrame: restingFrame) }
                 ZStack(alignment: .top) {
                     label
                         .padding(.top, Self.moonToText)
@@ -151,13 +165,16 @@ struct LaunchPhaseCycle: View {
 
     // MARK: - Moon
 
-    private func moon(size: CGFloat) -> some View {
-        Group {
+    private func moon(size: CGFloat, restingFrame: CGRect) -> some View {
+        // The moon entry's moon is on screen from its first frame, in
+        // place of the declined screen's.
+        let isFlyingIn = entry != nil && !reduceMotion
+        return Group {
             if reduceMotion {
                 stillMoon(size: size)
             } else {
                 TimelineView(.animation) { context in
-                    moon(at: context.date, size: size)
+                    moon(at: context.date, size: size, restingFrame: restingFrame)
                 }
             }
         }
@@ -167,9 +184,34 @@ struct LaunchPhaseCycle: View {
         } action: { frame in
             moonFrame = frame
         }
-        .opacity(moonIsIn ? 1 : 0)
-        .offset(y: moonHasRisen || reduceMotion ? 0 : Self.entranceRise)
+        .opacity(moonIsIn || isFlyingIn ? 1 : 0)
+        .offset(y: moonHasRisen || reduceMotion || isFlyingIn ? 0 : Self.entranceRise)
         .accessibilityHidden(true)
+    }
+
+    // MARK: - Moon entry (STEP-5.14 §6.3)
+
+    /// When the entry began and where its moon starts.
+    private var entry: (start: Date, frame: CGRect)? {
+        guard let start = loader.entryStartedAt, let entryStartFrame, entryStartFrame.width > 0 else {
+            return nil
+        }
+        return (start, entryStartFrame)
+    }
+
+    /// Reduce Motion: no flight. The declined screen's moon, where it was,
+    /// fades out as the loader's fades in on its resting frame.
+    @ViewBuilder
+    private func reduceMotionEntryMoon(restingFrame: CGRect) -> some View {
+        if reduceMotion, let entry {
+            OnboardingMoon(size: entry.frame.width)
+                .offset(
+                    x: entry.frame.midX - restingFrame.midX,
+                    y: entry.frame.midY - restingFrame.midY
+                )
+                .opacity(moonIsIn ? 0 : MoonEntry.startOpacity)
+                .allowsHitTesting(false)
+        }
     }
 
     /// Reduce Motion (§10.6, §11.2.2): the glyph holds at the hold phase
@@ -205,7 +247,7 @@ struct LaunchPhaseCycle: View {
 
     /// The moon at `date`: the month, or after "Aha" the ride to the real
     /// phase (§11.2.2), then the flight into the card.
-    private func moon(at date: Date, size: CGFloat) -> some View {
+    private func moon(at date: Date, size: CGFloat, restingFrame: CGRect) -> some View {
         var geometry = PhaseCycle.geometry(at: loader.moon.elapsed(at: date))
         if let ride = loader.ride, date >= ride.startDate {
             geometry = ride.geometry(at: date)
@@ -217,6 +259,23 @@ struct LaunchPhaseCycle: View {
         var discColor = Theme.Colors.moonEarthshine
         var scale: CGFloat = 1
         var offset: CGSize = .zero
+        var dimming = 1.0
+
+        // STEP-5.14 §6.3: Got it's moon flies up from the declined screen's,
+        // the Aha flight in reverse. It starts as `OnboardingMoon` drew it
+        // (its glow, its dimming) and gains the loader's glow on the way.
+        if let entry, restingFrame.width > 0 {
+            let progress = MoonEntry.flightProgress(since: entry.start, at: date)
+            let frame = AhaFlight.frame(from: entry.frame, to: restingFrame, progress: progress)
+            look.opacity *= progress
+            // Drawn before the scale, so it starts as the small moon's glow.
+            let startBlur = OnboardingMoon.glowBlurPerPoint * restingFrame.width
+            glowBlur = startBlur + (glowBlur - startBlur) * progress
+            glyphGlow = AhaFlight.interpolate(PhaseGlyph.cardGlowOpacity, glyphGlow, progress)
+            dimming = AhaFlight.interpolate(MoonEntry.startOpacity, 1, progress)
+            scale = frame.width / restingFrame.width
+            offset = CGSize(width: frame.midX - restingFrame.midX, height: frame.midY - restingFrame.midY)
+        }
 
         // §10.4: flying into the card, already at the day's phase.
         if let flight = flight(at: date) {
@@ -239,6 +298,7 @@ struct LaunchPhaseCycle: View {
                     .opacity(look.opacity)
                     .scaleEffect(look.scale)
             }
+            .opacity(dimming)
             .scaleEffect(scale)
             .offset(offset)
     }

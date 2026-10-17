@@ -13,6 +13,9 @@ struct OnboardingView: View {
 
     let viewModel: OnboardingViewModel
 
+    /// "That's okay"'s moon frame, for Got it's moon entry (STEP-5.14 §6.3).
+    let onDeclinedMoonFrame: (CGRect) -> Void
+
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.openURL) private var openURL
 
@@ -22,8 +25,9 @@ struct OnboardingView: View {
     /// The outgoing page is fading out.
     @State private var isLeaving = false
 
-    init(viewModel: OnboardingViewModel) {
+    init(viewModel: OnboardingViewModel, onDeclinedMoonFrame: @escaping (CGRect) -> Void = { _ in }) {
         self.viewModel = viewModel
+        self.onDeclinedMoonFrame = onDeclinedMoonFrame
         _displayedStep = State(initialValue: viewModel.step)
     }
 
@@ -40,7 +44,8 @@ struct OnboardingView: View {
             case .locationDeclined:
                 OnboardingDeclinedScreen(
                     onGotIt: viewModel.gotIt,
-                    onEnableLocation: openSettings
+                    onEnableLocation: openSettings,
+                    onMoonFrame: onDeclinedMoonFrame
                 )
             }
         }

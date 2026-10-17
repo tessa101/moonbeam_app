@@ -25,8 +25,8 @@ struct OnboardingMoon: View {
     static let geometry = PhaseGlyphGeometry(illumination: 0.83, phaseAngle: 120)
 
     /// The HTML's glyph glow grows with the glyph (CSS blur 27 at 64 pt, 63
-    /// at 150 pt).
-    private static let glowBlurPerPoint: CGFloat = 0.42
+    /// at 150 pt). Got it's moon entry starts its flight from this glow.
+    static let glowBlurPerPoint: CGFloat = 0.42
 
     /// Landing halo, CSS `0 0 120px 30px` `accent` 18%. SwiftUI's blur
     /// radius is about half a CSS blur.

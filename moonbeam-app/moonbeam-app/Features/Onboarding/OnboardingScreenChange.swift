@@ -36,3 +36,9 @@ enum OnboardingScreenChange {
         loadsIn(step) ? ContentLoadIn.delay(forIndex: announcedBlockIndex) : 0
     }
 }
+
+extension EnvironmentValues {
+    /// Got it's moon entry (STEP-5.14 §6.3): the page's text and buttons
+    /// fade out and its moon stays, for the loader to take over.
+    @Entry var onboardingLeavesAroundMoon = false
+}

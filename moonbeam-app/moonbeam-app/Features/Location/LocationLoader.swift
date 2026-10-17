@@ -127,6 +127,10 @@ final class LocationLoader {
     /// view's haptic trigger (§11.2.7). Never on a launch without "Aha".
     private(set) var landingCount = 0
 
+    /// When Got it's moon entry began (STEP-5.14 §6.3, `MoonEntry`): the moon
+    /// flies in from the declined screen's. `nil` for every other loader.
+    private(set) var entryStartedAt: Date?
+
     // MARK: - Dependencies
 
     @ObservationIgnored private let now: () -> Date
@@ -159,6 +163,38 @@ final class LocationLoader {
         glow = .breathing
         showsLabel = true
         flightStartedAt = nil
+        entryStartedAt = nil
+    }
+
+    /// Got it's moon entry (STEP-5.14 §6.3), from the tap: the declined
+    /// screen's moon flies in at its phase, which is the hold phase, and
+    /// rides the month once it lands. No label: nothing is being located.
+    func enterFromOnboarding() {
+        generation += 1
+        let date = now()
+        appearedAt = date
+        searchStartedAt = date
+        sessionStartedAt = date
+        ride = nil
+        flightStartedAt = nil
+        content = .searching
+        let landing = date.addingTimeInterval(MoonEntry.landingTime(reducesMotion: false))
+        moon = MoonMotion.held(at: PhaseCycle.holdElapsed, since: date).running(from: landing)
+        glow = .breathing
+        showsLabel = false
+        entryStartedAt = date
+    }
+
+    /// Waits out the moon entry's flight and hold.
+    ///
+    /// - Returns: false if another step took over meanwhile, or there's no
+    ///   entry.
+    func finishEntry(reducesMotion: Bool) async -> Bool {
+        generation += 1
+        let step = generation
+        guard let entryStartedAt else { return false }
+        let remaining = MoonEntry.duration(reducesMotion: reducesMotion) - now().timeIntervalSince(entryStartedAt)
+        return await wait(remaining, step: step)
     }
 
     /// Search → message (§10.3): searching for at least 1.2 s, then the moon
@@ -212,6 +248,7 @@ final class LocationLoader {
         sessionStartedAt = date
         ride = nil
         flightStartedAt = nil
+        entryStartedAt = nil
         moon = .held(at: PhaseCycle.holdElapsed, since: date)
         glow = glow.switching(to: .pulse, at: date, elapsed: moon.elapsed(at: date))
         showsLabel = false
