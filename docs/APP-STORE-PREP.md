@@ -57,8 +57,7 @@ cities) plus whatever the new flow changes.
 
 - Confirm cut line A (or B/C).
 - Telescope: decided 2026-10-16, replaced by the ready-to-look cat.
-- **Search cancel flow (MVP blocker):** being designed in a separate chat. Quiet compass row after a decline and
-  keyboard vs the suggested cities are two of its open questions (STEP-5.13 §6).
+- ~~Search cancel flow (MVP blocker)~~: decided 2026-10-16 and built; see the status refresh below.
 - Final name and primary persona (DESIGN-REVIEW "Brand").
 
 ## Status refresh (2026-10-17)
@@ -66,7 +65,7 @@ cities) plus whatever the new flow changes.
 Done since this doc was drafted: 5.5 AX reflow, 5.13.2/5.13.3/5.13.4, ready-to-look cat (telescope replaced), 5.14 cat motion, persisted noCity, Got it moon entry (Run 2, committed 18f7e6c), root handover moved into RootScreen. Full suite via `xcodebuild`: only the 25 known SentenceTokenTests failures plus the PlaceChangeLayoutTests blank-ink flake (passes alone).
 
 Still open, in order:
-1. Search/cancel flow decision (MVP blocker), then 5.13 build.
+1. ~~Search/cancel flow decision~~ **Done:** decided 2026-10-16 (ONBOARDING-MOD-MAIN.md) and built (noCity state, search sheet, persisted noCity, Got it moon entry). Still to confirm on the phone: search sheet Cancel and pick from each onboarding screen and from noCity. The "on hold" notes in STATUS.md and STEP-5.13 header are stale.
 2. Housekeeping: gate `MoonTableSpike.run()` under `#if DEBUG` (moonbeam_appApp.swift); Sendable warning at LocationScreen.swift:348; Release build, compare warnings with build 10.
 3. **Release-build check (TestFlight 0.1 (11), launched from the icon):** first Got it → noCity transition, first cat-tail landing, and the searching cat. Debug/Xcode-attached first runs stall (about 1.8 s frozen moon on the first Got it); launched from the home screen it is smooth. If it still stutters in Release, write the warm-up prompt (pre-render the noCity headline and loader moon during "That's okay").
 4. On-device persistence check: delete app, both scheme arguments off, Don't Allow → That's okay → Got it, quit, relaunch from the icon, expect noCity.
