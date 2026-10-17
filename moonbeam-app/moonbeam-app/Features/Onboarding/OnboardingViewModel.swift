@@ -7,7 +7,10 @@ import Foundation
 import Observation
 
 /// First-launch onboarding (DESIGN-1.1.md §5): Landing → Location upsell →
-/// the iOS prompt → "That's okay" (only after Don't Allow).
+/// the iOS prompt → "That's okay" (only after Don't Allow). Got it there, and
+/// the upsell's Search for a city instead, end on the main screen's `noCity`
+/// state (ONBOARDING-MOD-MAIN.md flow 2), whose Back returns to the upsell
+/// until a city is set.
 ///
 /// Decides whether onboarding shows at all, which screen is up, and how it
 /// ends. The system prompt only ever comes from the upsell's Use my location
@@ -43,9 +46,11 @@ final class OnboardingViewModel {
         /// Settings while "That's okay" was up: the normal launch flow
         /// finds the city.
         case locationAllowed
-        /// Got it, after Don't Allow: the empty "a city" state.
+        /// Got it, after Don't Allow: the `noCity` state, its CTA reading
+        /// Open Settings.
         case locationDeclined
-        /// Search for a city instead: the search sheet opens, no prompt.
+        /// Search for a city instead: the `noCity` state, no prompt. Search
+        /// doesn't open by itself; the user taps the city token.
         case searchInstead
     }
 
@@ -80,6 +85,10 @@ final class OnboardingViewModel {
     /// Shown by `forceShow`, not by `shouldShow`: finishing leaves the
     /// completed flag alone.
     @ObservationIgnored private var isForced = false
+
+    /// The run that last finished was forced, so a Back from `noCity` into
+    /// it stays forced and still writes no flag.
+    @ObservationIgnored private var lastRunWasForced = false
 
     /// "That's okay" was forced on screen with location already allowed.
     /// Its Settings-return rule would close it the moment the scene became
@@ -159,18 +168,19 @@ final class OnboardingViewModel {
         case .denied, .restricted:
             // Don't Allow at the prompt. Restricted (parental controls,
             // MDM) can't be fixed in Settings, so it keeps "That's okay".
+            // Got it then lands on `noCity` (ONBOARDING-MOD-MAIN.md flow 2).
             step = .locationDeclined
             isDeclinedForcedWhileAuthorized = false
         }
     }
 
-    /// The upsell's Search for a city instead. No prompt.
+    /// The upsell's Search for a city instead. No prompt; lands on `noCity`.
     func searchInstead() {
         guard step == .locationUpsell else { return }
         finish(.searchInstead)
     }
 
-    /// "That's okay"'s Got it.
+    /// "That's okay"'s Got it: on to `noCity`.
     func gotIt() {
         guard step == .locationDeclined else { return }
         finish(.locationDeclined)
@@ -197,15 +207,35 @@ final class OnboardingViewModel {
         settingsRequestCount += 1
     }
 
+    /// Back (chevron or swipe) from the main screen's `noCity` state
+    /// (ONBOARDING-MOD-MAIN.md flow 3). The main screen only offers it while
+    /// no city is set; once one is, onboarding history is gone. The completed
+    /// flag stays as `finish` left it.
+    func returnToUpsell() {
+        guard !isPresented else { return }
+        isForced = lastRunWasForced
+        isRequestingPermission = false
+        isAwaitingSettingsFromUpsell = false
+        isDeclinedForcedWhileAuthorized = false
+        step = .locationUpsell
+        isPresented = true
+    }
+
     // MARK: - Finishing
 
     private func finish(_ outcome: Outcome) {
         guard isPresented else { return }
         let marksCompleted = !isForced
+        lastRunWasForced = isForced
         isForced = false
         isDeclinedForcedWhileAuthorized = false
         if marksCompleted {
             onboardingStore.isOnboardingCompleted = true
+            // Stored before the main screen hears of it, so a quit during
+            // the handover still relaunches into `noCity` (STEP-5.14 §6.3).
+            if outcome == .locationDeclined || outcome == .searchInstead {
+                onboardingStore.endedOnNoCity = true
+            }
         }
         isAwaitingSettingsFromUpsell = false
         // The main screen is told first, so it starts in the right state.

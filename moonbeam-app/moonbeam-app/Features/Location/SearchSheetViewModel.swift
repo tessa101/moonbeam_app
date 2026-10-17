@@ -21,11 +21,21 @@ final class SearchSheetViewModel {
 
     /// What the list under the field shows.
     enum ListState: Equatable {
-        case recents([Place])               // 0 chars; empty → location row only
+        case recents([Place])               // 0 chars; empty → location row and the five cities
         case filteredRecents([Place])       // 1 char; empty → blank list, no error copy
         case suggestions([PlaceSuggestion]) // 2+ chars
         case noResults
         case failed                         // search or resolve failed
+    }
+
+    /// The 0-character view's sections, top to bottom (STEP-5.13 §3).
+    enum ZeroStateSection: Equatable {
+        /// Use my location, with the place pin.
+        case useMyLocation
+        /// Recent, when there are recents.
+        case recents
+        /// "Search for your city or choose one of these", with no recents.
+        case suggestedCities
     }
 
     // MARK: - Constants
@@ -33,6 +43,12 @@ final class SearchSheetViewModel {
     /// Shorter queries never reach the search service. One constant so the
     /// threshold can move to 3 after device testing (§2, §7).
     static let searchMinimumCharacters = 2
+
+    /// The location row's icon: the main page's place-token pin, not the
+    /// arrow (STEP-5.13 §3).
+    static let locationRowSymbol = MadlibFormatter.placeSymbol
+
+    static let suggestedCitiesTitle = "Search for your city or choose one of these"
 
     // MARK: - Observed state
 
@@ -47,12 +63,29 @@ final class SearchSheetViewModel {
     /// detected location (Decision B).
     let showsUseMyLocation: Bool
 
+    /// SEARCH-RECENTS.md §2 opens with the keyboard up, but with no recents
+    /// it would cover the suggested cities (STEP-5.13 §6), so the field
+    /// waits for a tap then. Decided once, as the sheet opens.
+    let autoFocusesField: Bool
+
+    /// The five fixed cities, offered while there are no recents.
+    let suggestedCities = SuggestedCity.all
+
+    /// Goes up by one each time the location row can't show a prompt
+    /// (denied, Location Services off): the view opens the app's Settings
+    /// page and the sheet stays, as on the onboarding upsell.
+    private(set) var settingsRequestCount = 0
+
     // MARK: - Dependencies
 
     private let placeSearch: any PlaceSearchService
     private let placeStore: any PlaceStore
     private let onPick: (Place) -> Void
     private let onUseMyLocation: () -> Void
+    /// Asked at each location-row tap: true when no prompt can show, so the
+    /// row opens Settings instead of closing the sheet. The owner records
+    /// the trip so a return authorized can finish as Allow.
+    private let locationRowOpensSettings: () -> Bool
 
     // MARK: - Bookkeeping
 
@@ -67,14 +100,34 @@ final class SearchSheetViewModel {
         placeStore: any PlaceStore,
         showsUseMyLocation: Bool,
         onPick: @escaping (Place) -> Void,
-        onUseMyLocation: @escaping () -> Void
+        onUseMyLocation: @escaping () -> Void,
+        locationRowOpensSettings: @escaping () -> Bool = { false }
     ) {
         self.placeSearch = placeSearch
         self.placeStore = placeStore
         self.showsUseMyLocation = showsUseMyLocation
         self.onPick = onPick
         self.onUseMyLocation = onUseMyLocation
+        self.locationRowOpensSettings = locationRowOpensSettings
+        autoFocusesField = !placeStore.recents.isEmpty
         listState = .recents(placeStore.recents)
+    }
+
+    // MARK: - 0-character view (STEP-5.13 §3)
+
+    /// What the 0-character view shows, in order: the location row first,
+    /// then Recent, or the five cities when there are no recents. Typing
+    /// leaves this view, so the cities go with it.
+    var zeroStateSections: [ZeroStateSection] {
+        guard case .recents(let recents) = listState else { return [] }
+        var sections: [ZeroStateSection] = []
+        if showsUseMyLocation { sections.append(.useMyLocation) }
+        if recents.isEmpty {
+            if !suggestedCities.isEmpty { sections.append(.suggestedCities) }
+        } else {
+            sections.append(.recents)
+        }
+        return sections
     }
 
     // MARK: - Picking
@@ -98,11 +151,23 @@ final class SearchSheetViewModel {
         }
     }
 
-    /// The location row. The owner closes the sheet before running the
-    /// main-screen flow (Decision A), so this only reports the tap.
+    /// The location row. Where no prompt can show, Settings opens and the
+    /// sheet stays (STEP-5.13 §3). Otherwise the owner closes the sheet
+    /// before running the main-screen flow (Decision A), so this only
+    /// reports the tap.
     func useMyLocation() {
         searchTask?.cancel()
-        onUseMyLocation()
+        if locationRowOpensSettings() {
+            settingsRequestCount += 1
+        } else {
+            onUseMyLocation()
+        }
+    }
+
+    /// One of the five cities: a fixed place, picked like a recent, so it
+    /// becomes one (the owner adds it).
+    func pick(_ city: SuggestedCity) {
+        pick(city.place)
     }
 
     // MARK: - Removing recents

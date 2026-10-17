@@ -165,7 +165,7 @@ struct OnboardingViewModelTests {
         #expect(outcomes.received.isEmpty)
     }
 
-    @Test("Got it goes to the main screen's empty state and marks onboarding completed")
+    @Test("Got it goes to the main screen's noCity state and marks onboarding completed")
     func gotItFinishes() async {
         let location = FakeLocationService()
         location.stateAfterRequest = .denied
@@ -219,6 +219,96 @@ struct OnboardingViewModelTests {
         let relaunched = Self.makeViewModel(location: location, placeStore: placeStore, onboardingStore: store)
 
         #expect(!relaunched.isPresented)
+    }
+
+    // MARK: - Persisted noCity (STEP-5.14 §6.4)
+
+    /// What the store and the screen looked like when `onFinish` ran.
+    private final class FinishSnapshot {
+        var endedOnNoCity: Bool?
+        var wasPresented: Bool?
+    }
+
+    @Test("Got it and Search instead store noCity before onFinish and before onboarding closes", arguments: [
+        OnboardingViewModel.Outcome.locationDeclined, .searchInstead
+    ])
+    func noCityOutcomesPersistFirst(outcome: OnboardingViewModel.Outcome) async {
+        let location = FakeLocationService()
+        location.stateAfterRequest = .denied
+        let store = InMemoryOnboardingStore()
+        let snapshot = FinishSnapshot()
+        var viewModel: OnboardingViewModel?
+        viewModel = OnboardingViewModel(
+            locationService: location,
+            placeStore: InMemoryPlaceStore(),
+            onboardingStore: store,
+            onFinish: { _ in
+                snapshot.endedOnNoCity = store.endedOnNoCity
+                snapshot.wasPresented = viewModel?.isPresented
+            }
+        )
+        guard let viewModel else { return }
+        viewModel.getStarted()
+
+        if outcome == .locationDeclined {
+            await viewModel.useMyLocation()
+            viewModel.gotIt()
+        } else {
+            viewModel.searchInstead()
+        }
+
+        #expect(snapshot.endedOnNoCity == true)
+        #expect(snapshot.wasPresented == true)
+        #expect(store.endedOnNoCity)
+        #expect(!viewModel.isPresented)
+    }
+
+    @Test("Allow doesn't store noCity")
+    func allowDoesNotPersistNoCity() async {
+        let location = FakeLocationService()
+        location.stateAfterRequest = .authorized
+        let store = InMemoryOnboardingStore()
+        let viewModel = Self.makeViewModelAtUpsell(location: location, onboardingStore: store)
+
+        await viewModel.useMyLocation()
+
+        #expect(!viewModel.isPresented)
+        #expect(!store.endedOnNoCity)
+    }
+
+    @Test("A forced run's Got it and Search instead store nothing", arguments: [
+        OnboardingViewModel.Step.locationDeclined, .locationUpsell
+    ])
+    func forcedRunDoesNotPersistNoCity(page: OnboardingViewModel.Step) {
+        let store = InMemoryOnboardingStore(isOnboardingCompleted: true)
+        let viewModel = Self.makeViewModel(
+            location: FakeLocationService(authorizationState: .denied),
+            onboardingStore: store
+        )
+        viewModel.forceShow(startingAt: page)
+
+        if page == .locationDeclined {
+            viewModel.gotIt()
+        } else {
+            viewModel.searchInstead()
+        }
+
+        #expect(!viewModel.isPresented)
+        #expect(!store.endedOnNoCity)
+    }
+
+    @Test("Quitting on That's okay, before Got it, stores nothing")
+    func quitOnDeclinedDoesNotPersistNoCity() async {
+        let location = FakeLocationService()
+        location.stateAfterRequest = .denied
+        let store = InMemoryOnboardingStore()
+        let viewModel = Self.makeViewModelAtUpsell(location: location, onboardingStore: store)
+
+        await viewModel.useMyLocation()
+
+        #expect(viewModel.step == .locationDeclined)
+        #expect(!store.endedOnNoCity)
+        #expect(!store.isOnboardingCompleted)
     }
 
     // MARK: - Back from Settings (Enable location)
@@ -392,6 +482,70 @@ struct OnboardingViewModelTests {
 
         #expect(viewModel.isPresented)
         #expect(viewModel.step == .locationUpsell)
+    }
+
+    // MARK: - Back from noCity (ONBOARDING-MOD-MAIN.md flow 3)
+
+    @Test("Back from noCity shows the upsell again, completed flag unchanged", arguments: [
+        OnboardingViewModel.Outcome.searchInstead, .locationDeclined,
+    ])
+    func returnToUpsellShowsUpsell(outcome: OnboardingViewModel.Outcome) async {
+        let location = FakeLocationService()
+        location.stateAfterRequest = .denied
+        let store = InMemoryOnboardingStore()
+        let outcomes = Outcomes()
+        let viewModel = Self.makeViewModelAtUpsell(location: location, onboardingStore: store, outcomes: outcomes)
+        if outcome == .searchInstead {
+            viewModel.searchInstead()
+        } else {
+            // Don't Allow shows "That's okay"; Got it lands on noCity.
+            await viewModel.useMyLocation()
+            #expect(viewModel.step == .locationDeclined)
+            viewModel.gotIt()
+        }
+        #expect(!viewModel.isPresented)
+
+        viewModel.returnToUpsell()
+
+        #expect(viewModel.isPresented)
+        #expect(viewModel.step == .locationUpsell)
+        #expect(store.isOnboardingCompleted)
+        #expect(outcomes.received == [outcome])
+    }
+
+    @Test("Back does nothing while onboarding is already up")
+    func returnToUpsellWhilePresentedIgnored() {
+        let viewModel = Self.makeViewModel()
+
+        viewModel.returnToUpsell()
+
+        #expect(viewModel.step == .landing)
+    }
+
+    @Test("Leaving the upsell again after Back reports the new outcome")
+    func returnToUpsellThenFinishAgain() {
+        let outcomes = Outcomes()
+        let viewModel = Self.makeViewModelAtUpsell(location: FakeLocationService(), outcomes: outcomes)
+        viewModel.searchInstead()
+        viewModel.returnToUpsell()
+
+        viewModel.searchInstead()
+
+        #expect(outcomes.received == [.searchInstead, .searchInstead])
+        #expect(!viewModel.isPresented)
+    }
+
+    @Test("Back into a forced run stays forced: no completed flag")
+    func returnToUpsellKeepsForcedRun() {
+        let store = InMemoryOnboardingStore()
+        let viewModel = Self.makeViewModel(onboardingStore: store)
+        viewModel.forceShow(startingAt: .locationUpsell)
+        viewModel.searchInstead()
+
+        viewModel.returnToUpsell()
+        viewModel.searchInstead()
+
+        #expect(!store.isOnboardingCompleted)
     }
 
     // MARK: - Forced run, Release too (DECISIONS.md 2026-10-01 "TestFlight")

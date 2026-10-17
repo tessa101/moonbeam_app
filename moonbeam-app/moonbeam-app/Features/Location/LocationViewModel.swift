@@ -49,6 +49,16 @@ final class LocationViewModel {
         var offersSettings: Bool { failure.primaryAction == .openSettings }
     }
 
+    /// The `noCity` state's bottom CTA (ONBOARDING-MOD-MAIN.md).
+    enum NoCityAction: Equatable {
+        /// "Enable location": the OS prompt over this screen, or a fresh
+        /// fix when access is already on.
+        case enableLocation
+        /// "Open Settings": denied or Location Services off, where no prompt
+        /// can show, so never a dead CTA.
+        case openSettings
+    }
+
     // MARK: - Constants
 
     /// §3: how long a launch waits for a fix before falling back to the
@@ -166,6 +176,13 @@ final class LocationViewModel {
         return showsPlaceSkeleton ? .finding : nil
     }
 
+    /// The main screen's `noCity` state (ONBOARDING-MOD-MAIN.md): first run,
+    /// no city set yet. Set when onboarding ends; cleared for good the first
+    /// time any place lands, which is also what clears onboarding history
+    /// (Back to the upsell is offered only while this is true). The telescope
+    /// and First ask never show meanwhile.
+    private(set) var isNoCity = false
+
     /// Settable so the view's sheet binding can dismiss it.
     var locationOffDialog: LocationOffVariant?
 
@@ -215,6 +232,11 @@ final class LocationViewModel {
     @ObservationIgnored private var locateTask: Task<Void, Never>?
     @ObservationIgnored private var placeSkeletonTask: Task<Void, Never>?
 
+    /// Onboarding's Use my location was explicitly accepted. It is consumed
+    /// once by `start()` and uses the no-city recovery pipeline; Search instead
+    /// and Got it never restore or detect a city on their own.
+    @ObservationIgnored private var locatesAfterOnboarding = false
+
     /// Decision A: the search sheet's location row closes the sheet, and the
     /// flow runs once it has gone, because the Location Off dialog can't
     /// present over a sheet that's still up.
@@ -228,13 +250,26 @@ final class LocationViewModel {
     /// for the same reason in reverse.
     @ObservationIgnored private var presentSearchAfterDialog = false
 
+    /// The search sheet's location row opened Settings, with the sheet left
+    /// up (STEP-5.13 §3). Coming back authorized closes it and finishes as
+    /// Allow; a dismissal ends the wait.
+    @ObservationIgnored private var isAwaitingSettingsFromSearch = false
+
     /// The system prompt briefly deactivates the scene. Its return to active
     /// mustn't count as "back from Settings" and start a second fetch.
     @ObservationIgnored private var isRequestingPermission = false
 
     /// The state last seen, so a return to the foreground can tell "newly
-    /// authorized" (fetch) from "still authorized" (leave alone).
-    @ObservationIgnored private var lastSeenAuthState: LocationAuthState
+    /// authorized" (fetch) from "still authorized" (leave alone). Observed,
+    /// because the `noCity` CTA's title follows it.
+    ///
+    /// Every read of the permission passes through here, so this is where a
+    /// grant ends the stored `noCity` (STEP-5.14 §6.4).
+    private var lastSeenAuthState: LocationAuthState {
+        didSet {
+            if lastSeenAuthState.isAuthorized { onboardingStore.endedOnNoCity = false }
+        }
+    }
 
     /// The last place a location fix found this session. A searched city
     /// matching it counts as "where you are" for the compass
@@ -246,10 +281,6 @@ final class LocationViewModel {
     /// searched city (COMPASS.md §2, 4.6). The main "Use my location" button
     /// clears it.
     @ObservationIgnored private var detectionOnlyAfterSettings = false
-
-    /// Onboarding ended with "Search for a city instead" (DESIGN-1.1.md §5):
-    /// the screen opens with the search sheet up.
-    @ObservationIgnored private var presentsSearchOnStart = false
 
     /// LOADER.md §4: the announcement is made once per launch, however many
     /// times the phase cycle shows (Show onboarding brings it back).
@@ -274,7 +305,7 @@ final class LocationViewModel {
     ///   - placeChangeSleep: the card skeleton's 400 ms threshold during a
     ///     place replacement (LOADER.md §12.2), so tests can decide it.
     ///   - onboardingStore: first-run state, for the first "Aha" ride's
-    ///     extra lap.
+    ///     extra lap and the `noCity` that survives a relaunch.
     ///   - reducesMotion: the Reduce Motion setting; the app passes
     ///     `UIAccessibility`'s.
     ///   - loaderNow: the loader's own clock. Its moon is drawn against the
@@ -371,10 +402,18 @@ final class LocationViewModel {
     /// A tap on a madlib token: the date opens the calendar, the place opens
     /// the search sheet (§3.1, SEARCH-RECENTS.md §1).
     func open(_ token: MadlibFormatter.Token.Kind) {
+        guard opens(token) else { return }
         switch token {
         case .date: presentCalendar()
         case .place: presentSearch()
         }
+    }
+
+    /// Whether a token opens anything. On `noCity` the date ("today") is
+    /// shown but not a control: there's no moon table to change the day of
+    /// yet (ONBOARDING-MOD-MAIN.md). The place token always opens search.
+    func opens(_ token: MadlibFormatter.Token.Kind) -> Bool {
+        token == .place || !isNoCity
     }
 
     // MARK: - Launch (§3)
@@ -397,12 +436,36 @@ final class LocationViewModel {
 
         let state = await locationService.refreshAuthorizationState()
         lastSeenAuthState = state
-        lastViewed = placeStore.lastViewed
 
-        if presentsSearchOnStart {
-            presentsSearchOnStart = false
-            presentSearch()
+        // A replayed onboarding run deliberately starts with no displayed
+        // city even though the persistent store still remembers one. Only an
+        // explicit Allow from this run may start GPS; Search instead and Got
+        // it settle immediately on "a city".
+        if isNoCity {
+            loader.cancel()
+            if locatesAfterOnboarding, state.isAuthorized {
+                locatesAfterOnboarding = false
+                launchStage = .ready
+                await locateFromNoCity()
+            } else {
+                locatesAfterOnboarding = false
+                settleOnNoCity()
+            }
+            return
         }
+
+        // A relaunch after Got it or Search instead, with still no city and
+        // no access, returns to `noCity` with no loader (STEP-5.14 §6.4).
+        // Authorized already cleared the flag above and locates as usual;
+        // a saved place opens normally.
+        if onboardingStore.endedOnNoCity, placeStore.lastViewed == nil {
+            loader.cancel()
+            isNoCity = true
+            settleOnNoCity()
+            return
+        }
+
+        lastViewed = placeStore.lastViewed
 
         if state.isAuthorized {
             let fetch = signposter.beginInterval("locateAtLaunch")
@@ -418,6 +481,12 @@ final class LocationViewModel {
         // (STEP-5.10a-LOCATION-CONSOLIDATION.md §2–3).
         if place == nil {
             loader.cancel()
+            // First run: the "a city" screen with its CTA, never First ask
+            // or a failure screen (ONBOARDING-MOD-MAIN.md flow 5).
+            if isNoCity {
+                settleOnNoCity()
+                return
+            }
             if state == .notDetermined {
                 await showLoaderMessage(.firstAsk)
                 return
@@ -439,15 +508,127 @@ final class LocationViewModel {
     }
 
     /// Call before the screen appears, with how onboarding ended (§5).
-    /// Allowed and declined need nothing extra: `start()`'s normal launch
-    /// flow finds the city, or stops the loader on a message (LOADER.md §10).
+    /// Every outcome enters a fresh `noCity` (ONBOARDING-MOD-MAIN.md). Allow
+    /// carries one explicit GPS request into `start()`; Got it and Search
+    /// instead do not restore the saved city or detect automatically.
     ///
     /// The screen goes back to waiting, so `start()`'s fetch after onboarding
     /// gets the launch loader too (LOADER.md §1), and a forced onboarding
     /// doesn't flash the old screen first.
     func onboardingDidFinish(_ outcome: OnboardingViewModel.Outcome) {
-        presentsSearchOnStart = outcome == .searchInstead
+        isNoCity = true
+        resetForNoCity()
+        locatesAfterOnboarding = outcome == .locationAllowed
         launchStage = .waiting
+    }
+
+    // MARK: - No city (ONBOARDING-MOD-MAIN.md)
+
+    /// The CTA under the "a city" sentence, or `nil` when it's hidden: no
+    /// `noCity`, a fix in flight, or restricted (Settings can't fix it, so a
+    /// button would be dead).
+    var noCityAction: NoCityAction? {
+        guard isNoCity, !isLocating else { return nil }
+        switch lastSeenAuthState {
+        case .notDetermined, .authorized: return .enableLocation
+        case .denied, .servicesOff: return .openSettings
+        case .restricted: return nil
+        }
+    }
+
+    /// "Start with [city]": the device time zone's major city, or `nil` (link
+    /// hidden) when the zone has none mapped or `noCity` is over.
+    var noCityStartCity: Place? {
+        guard isNoCity, !isLocating else { return nil }
+        return TimeZoneCity.city(for: deviceTimeZone)
+    }
+
+    /// Back to the upsell: only while no city is set (flow 3–4).
+    var canReturnToOnboarding: Bool { isNoCity }
+
+    /// "Enable location": iOS's prompt over this screen when it can show;
+    /// Allow (or access already on) fills the city in place. Deny leaves the
+    /// screen as it is, its CTA now Open Settings.
+    func enableLocationFromNoCity() async {
+        guard isNoCity, !isLocating, !isRequestingPermission else { return }
+        var state = await locationService.refreshAuthorizationState()
+        if state == .notDetermined {
+            isRequestingPermission = true
+            state = await locationService.requestAuthorization()
+            isRequestingPermission = false
+        }
+        lastSeenAuthState = state
+        updateCompass()
+        guard state.isAuthorized else { return }
+        await locateFromNoCity()
+    }
+
+    /// "Start with [city]": that city, in place, as a pick (it becomes the
+    /// last-viewed place and a recent).
+    func startWithSuggestedCity() {
+        guard let city = noCityStartCity else { return }
+        select(city)
+    }
+
+    /// An explicit fix from `noCity`: the existing searching moon, Aha and
+    /// flight pipeline leads into the resolved main screen. A miss returns to
+    /// `noCity` with its CTA, never the telescope (`performLocate` leaves no
+    /// failure meanwhile).
+    private func locateFromNoCity() async {
+        guard isNoCity, launchStage == .ready else { return }
+        locationFailure = nil
+        locationFailed = false
+        showLoader()
+        await locate(userInitiated: true)
+        guard launchStage == .phaseCycle else { return }
+        if let place {
+            await finishWithAha(for: place)
+        } else {
+            settleOnNoCity()
+        }
+    }
+
+    /// Ends the launch on the `noCity` screen, with no failure behind it.
+    private func settleOnNoCity() {
+        locationFailure = nil
+        locationFailed = false
+        finishLoader()
+    }
+
+    /// A debug/TestFlight onboarding replay is a new unresolved run, not an
+    /// ordinary returning-user launch. Clear every transient display and
+    /// lookup result, while leaving `placeStore` (last viewed and recents)
+    /// untouched for future normal launches.
+    private func resetForNoCity() {
+        stopLocating()
+        placeSkeletonTask?.cancel()
+        placeSkeletonTask = nil
+        loader.end()
+
+        place = nil
+        moonTable = nil
+        daySelection = .today
+        lastViewed = nil
+        detectedPlace = nil
+        locationFailed = false
+        locationFailure = nil
+        isReplacingPlace = false
+        showsPlaceSkeleton = false
+        skeletonLayoutTable = nil
+        replacedTimeZone = nil
+
+        isCalendarPresented = false
+        calendarDraft = nil
+        locationOffDialog = nil
+        isSearchPresented = false
+        searchSheet = nil
+        useMyLocationAfterSearch = false
+        failureSearchInProgress = false
+        presentSearchAfterDialog = false
+        isAwaitingSettingsFromSearch = false
+        detectionOnlyAfterSettings = false
+
+        updateCompass()
     }
 
     /// The Forget saved place button: DEBUG and TestFlight only, temporary,
@@ -830,6 +1011,19 @@ final class LocationViewModel {
         compass.sceneDidBecomeActive()
 
         guard !isRequestingPermission else { return }
+        // Back from Settings opened by the search sheet's location row, sheet
+        // still up: authorized continues to the fix; Ask Next Time makes the
+        // permission requestable again, so it continues to the system prompt.
+        // In both cases the row's flow starts only once the sheet has gone
+        // (STEP-5.13 §3). Denied and restricted leave the sheet in place.
+        if isAwaitingSettingsFromSearch,
+           isSearchPresented,
+           (state.isAuthorized || state == .notDetermined) {
+            isAwaitingSettingsFromSearch = false
+            lastSeenAuthState = state
+            useMyLocationFromSearch()
+            return
+        }
         if loaderIssue != nil {
             await loaderDidBecomeActive(state: state)
             return
@@ -838,6 +1032,17 @@ final class LocationViewModel {
         // launch's own fetch decides the place then; a retry here would
         // cancel it, and the launch would open with no place (LOADER.md §9).
         guard launchStage == .ready else { return }
+
+        // Back from Settings on `noCity`: the CTA follows the new state, and
+        // newly granted access fills the city in place.
+        if isNoCity {
+            let wasAuthorized = lastSeenAuthState.isAuthorized
+            lastSeenAuthState = state
+            if state.isAuthorized, !wasAuthorized, !isLocating {
+                await locateFromNoCity()
+            }
+            return
+        }
 
         if let failure = failureScreen {
             await failureScreenDidBecomeActive(on: failure, state: state)
@@ -902,9 +1107,12 @@ final class LocationViewModel {
         searchSheet = SearchSheetViewModel(
             placeSearch: placeSearch,
             placeStore: placeStore,
+            // STEP-5.13 §3: on every sheet, `noCity` and the failure
+            // screens included; denied or off opens Settings from the row.
             showsUseMyLocation: showsUseMyLocation,
             onPick: { [weak self] place in self?.select(place) },
-            onUseMyLocation: { [weak self] in self?.useMyLocationFromSearch() }
+            onUseMyLocation: { [weak self] in self?.useMyLocationFromSearch() },
+            locationRowOpensSettings: { [weak self] in self?.locationRowOpensSettings() ?? false }
         )
         isSearchPresented = true
     }
@@ -913,9 +1121,26 @@ final class LocationViewModel {
     /// the sheet was closed by its location row (Decision A); Cancel, a drag
     /// and a pick all land here too and do nothing further.
     func searchDidDismiss() async {
+        isAwaitingSettingsFromSearch = false
         guard useMyLocationAfterSearch else { return }
         useMyLocationAfterSearch = false
-        await useMyLocation()
+        // From `noCity`: Enable location's flow, so a miss stays here.
+        if isNoCity {
+            await enableLocationFromNoCity()
+        } else {
+            await useMyLocation()
+        }
+    }
+
+    /// The sheet's location row with no prompt possible (denied, Location
+    /// Services off): Settings instead, and the sheet stays (STEP-5.13 §3).
+    /// Before this, the row closed the sheet and the flow ended on the same
+    /// failure screen it was opened from. Restricted never gets here: the
+    /// row is hidden (`showsUseMyLocation`), since Settings can't help.
+    private func locationRowOpensSettings() -> Bool {
+        guard lastSeenAuthState == .denied || lastSeenAuthState == .servicesOff else { return false }
+        isAwaitingSettingsFromSearch = true
+        return true
     }
 
     private func useMyLocationFromSearch() {
@@ -1242,6 +1467,9 @@ final class LocationViewModel {
                 // A launch with a saved place opens it, with no failure.
                 // A quiet detection-only retry (4.8) never touches the place.
                 show(lastViewed, remember: false)
+            } else if isNoCity, !detectionOnly {
+                // First run: a miss stays on `noCity` with its CTA, never a
+                // failure screen (ONBOARDING-MOD-MAIN.md flow 5).
             } else if userInitiated || !detectionOnly {
                 // A search the user is waiting on, or a launch with nothing
                 // to fall back to. Detection only (the compass) has no
@@ -1319,6 +1547,10 @@ final class LocationViewModel {
         reloadMoonTable()
         locationFailed = false
         locationFailure = nil
+        // A city is set: `noCity` and its Back to onboarding end for good,
+        // across relaunches too (STEP-5.14 §6.4).
+        isNoCity = false
+        onboardingStore.endedOnNoCity = false
 
         if changesWhere, launchStage == .ready || wasReplacingPlace {
             loadInGeneration += 1

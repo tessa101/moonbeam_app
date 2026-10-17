@@ -14,7 +14,9 @@ struct SentenceLine: View {
     @ScaledMetric(relativeTo: .title) private var fullSize = Theme.Fonts.sentenceSize
     @State private var fragments: [CGRect] = []
 
-    private var fullLineHeight: CGFloat { fullSize * Theme.Fonts.sentenceLineHeightMultiple }
+    /// The line box at this scale. It grows with a scale above 1 (the
+    /// `noCity` headline) and keeps full size when shrinking, as before.
+    private var fullLineHeight: CGFloat { fullSize * max(1, scale) * Theme.Fonts.sentenceLineHeightMultiple }
 
     private var ink: some View {
         text.font(Theme.Fonts.sentence(fixedSize: fullSize * scale))
@@ -23,7 +25,9 @@ struct SentenceLine: View {
 
     var body: some View {
         ink
-            .textRenderer(SentenceTokenRenderer(mode: fragments.isEmpty ? .all : .words, knownFragments: fragments) { rects in
+            // With no token button (a token that opens nothing), the line
+            // draws its token ink itself.
+            .textRenderer(SentenceTokenRenderer(mode: fragments.isEmpty || token == nil ? .all : .words, knownFragments: fragments) { rects in
                 if fragments != rects { fragments = rects }
             })
             .accessibilityHidden(true)

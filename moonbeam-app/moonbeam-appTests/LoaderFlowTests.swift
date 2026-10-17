@@ -183,10 +183,10 @@ struct LoaderFlowTests {
         #expect(explicit.viewModel.locationOffDialog == nil)
     }
 
+    /// Denied and Location Services off no longer close the sheet: the row
+    /// opens Settings instead (STEP-5.13 §3, `searchRowBlockedOpensSettings`).
     @Test("Search row dismissal reaches the matching destination without a dialog", arguments: [
-        (LocationAuthState.denied, LocationFailure.permissionDenied),
-        (.servicesOff, .servicesOff),
-        (.authorized, .noFix),
+        (LocationAuthState.authorized, LocationFailure.noFix),
     ])
     func searchRowBlockedDestinations(state: LocationAuthState, failure: LocationFailure) async throws {
         let harness = Self.makeHarness(state, lastViewed: Place.marVista,
@@ -203,6 +203,26 @@ struct LoaderFlowTests {
         #expect(harness.viewModel.locationOffDialog == nil)
         #expect(harness.viewModel.place == nil)
         #expect(harness.viewModel.loaderIssue == nil)
+    }
+
+    @Test("Search row with no prompt possible: Settings, the sheet and the place stay", arguments: [
+        LocationAuthState.denied, .servicesOff,
+    ])
+    func searchRowBlockedOpensSettings(state: LocationAuthState) async throws {
+        let harness = Self.makeHarness(state, lastViewed: Place.marVista)
+        await harness.viewModel.start()
+        harness.viewModel.presentSearch()
+        let sheet = try #require(harness.viewModel.searchSheet)
+        #expect(sheet.showsUseMyLocation)
+
+        sheet.useMyLocation()
+
+        #expect(sheet.settingsRequestCount == 1)
+        #expect(harness.viewModel.isSearchPresented)
+        #expect(harness.viewModel.place == Place.marVista)
+        #expect(!harness.viewModel.isReplacingPlace)
+        #expect(harness.viewModel.locationOffDialog == nil)
+        #expect(harness.location.requestAuthorizationCount == 0)
     }
 
     @Test(
@@ -715,7 +735,10 @@ struct LoaderFlowTests {
         #expect(harness.location.currentPlaceCount == 1)
     }
 
-    @Test("The search row from a failure screen: the screen stays while the sheet closes, then its flow runs")
+    /// STEP-5.13 §3: denied can't prompt, so the row opens Settings with the
+    /// sheet still up, rather than closing it and bouncing back to the same
+    /// failure screen. Cancel then leaves the screen as it was.
+    @Test("The search row from the denied failure screen: Settings, the sheet and the screen stay")
     func searchRowKeepsFailureScreenUntilDismissed() async throws {
         let harness = Self.makeHarness(.denied)
         await harness.viewModel.start()
@@ -724,17 +747,136 @@ struct LoaderFlowTests {
 
         sheet.useMyLocation()
 
-        // Under the closing sheet: no empty main screen or skeleton.
-        #expect(!harness.viewModel.isSearchPresented)
+        #expect(sheet.settingsRequestCount == 1)
+        #expect(harness.viewModel.isSearchPresented)
         #expect(harness.viewModel.failureScreen == .permissionDenied)
         #expect(!harness.viewModel.isReplacingPlace)
         #expect(harness.viewModel.cardPlaceholder == nil)
 
+        harness.viewModel.isSearchPresented = false
         await harness.viewModel.searchDidDismiss()
 
         #expect(harness.viewModel.failureScreen == .permissionDenied)
         #expect(harness.viewModel.locationOffDialog == nil)
         #expect(!harness.viewModel.isReplacingPlace)
+    }
+
+    @Test("Telescope search → Settings → Ask Next Time → Allow: dismisses, prompts once, then resolves")
+    func searchSettingsRequestableThenAllow() async throws {
+        let harness = Self.makeHarness(.denied)
+        await harness.viewModel.start()
+        harness.viewModel.presentSearch()
+        let sheet = try #require(harness.viewModel.searchSheet)
+        sheet.useMyLocation()
+
+        harness.location.authorizationState = .notDetermined
+        harness.location.stateAfterRequest = .authorized
+        harness.location.holdsFixes = true
+        await harness.viewModel.sceneDidBecomeActive()
+
+        #expect(!harness.viewModel.isSearchPresented)
+        #expect(harness.location.requestAuthorizationCount == 0)
+        let dismissal = Task { await harness.viewModel.searchDidDismiss() }
+        await Self.settle { harness.location.heldFixCount == 1 }
+
+        #expect(harness.viewModel.launchStage == .phaseCycle)
+        #expect(harness.viewModel.loader.content == .searching)
+        #expect(harness.viewModel.loader.flightStartedAt == nil)
+        // A foreground activation from the system prompt cannot stack a fix.
+        await harness.viewModel.sceneDidBecomeActive()
+        #expect(harness.location.heldFixCount == 1)
+
+        harness.location.releaseFixes()
+        await dismissal.value
+
+        #expect(harness.location.requestAuthorizationCount == 1)
+        #expect(harness.location.currentPlaceCount == 1)
+        #expect(harness.viewModel.place == Self.detected)
+        #expect(harness.viewModel.failureScreen == nil)
+        #expect(harness.viewModel.loader.flightStartedAt != nil)
+    }
+
+    @Test("Telescope search → Settings → Ask Next Time → Don't Allow: dismisses, prompts once, then returns to telescope")
+    func searchSettingsRequestableThenDeny() async throws {
+        let harness = Self.makeHarness(.denied)
+        await harness.viewModel.start()
+        harness.viewModel.presentSearch()
+        try #require(harness.viewModel.searchSheet).useMyLocation()
+
+        harness.location.authorizationState = .notDetermined
+        harness.location.stateAfterRequest = .denied
+        await harness.viewModel.sceneDidBecomeActive()
+        #expect(!harness.viewModel.isSearchPresented)
+        await harness.viewModel.searchDidDismiss()
+
+        #expect(harness.location.requestAuthorizationCount == 1)
+        #expect(harness.location.currentPlaceCount == 0)
+        #expect(harness.viewModel.place == nil)
+        #expect(harness.viewModel.failureScreen == .permissionDenied)
+    }
+
+    @Test("Telescope search → Settings → authorized: dismisses and resolves without prompting")
+    func searchSettingsAuthorizedReturn() async throws {
+        let harness = Self.makeHarness(.denied)
+        await harness.viewModel.start()
+        harness.viewModel.presentSearch()
+        try #require(harness.viewModel.searchSheet).useMyLocation()
+
+        harness.location.authorizationState = .authorized
+        harness.location.holdsFixes = true
+        await harness.viewModel.sceneDidBecomeActive()
+        #expect(!harness.viewModel.isSearchPresented)
+        let dismissal = Task { await harness.viewModel.searchDidDismiss() }
+        await Self.settle { harness.location.heldFixCount == 1 }
+
+        #expect(harness.viewModel.launchStage == .phaseCycle)
+        #expect(harness.viewModel.loader.content == .searching)
+        #expect(harness.viewModel.loader.flightStartedAt == nil)
+        harness.location.releaseFixes()
+        await dismissal.value
+
+        #expect(harness.location.requestAuthorizationCount == 0)
+        #expect(harness.location.currentPlaceCount == 1)
+        #expect(harness.viewModel.place == Self.detected)
+        #expect(harness.viewModel.loader.flightStartedAt != nil)
+    }
+
+    @Test("Telescope search → Settings still blocked: Search stays open and no request starts", arguments: [
+        LocationAuthState.denied, .restricted,
+    ])
+    func searchSettingsStillBlocked(state: LocationAuthState) async throws {
+        let harness = Self.makeHarness(.denied)
+        await harness.viewModel.start()
+        harness.viewModel.presentSearch()
+        try #require(harness.viewModel.searchSheet).useMyLocation()
+
+        harness.location.authorizationState = state
+        await harness.viewModel.sceneDidBecomeActive()
+
+        #expect(harness.viewModel.isSearchPresented)
+        #expect(harness.location.requestAuthorizationCount == 0)
+        #expect(harness.location.currentPlaceCount == 0)
+        let expectedFailure: LocationFailure = state == .restricted ? .restricted : .permissionDenied
+        #expect(harness.viewModel.failureScreen == expectedFailure)
+    }
+
+    @Test("Dismissing Search while Settings is open cancels its pending location request")
+    func dismissedSearchCancelsSettingsRequest() async throws {
+        let harness = Self.makeHarness(.denied)
+        await harness.viewModel.start()
+        harness.viewModel.presentSearch()
+        try #require(harness.viewModel.searchSheet).useMyLocation()
+
+        harness.viewModel.isSearchPresented = false
+        await harness.viewModel.searchDidDismiss()
+        harness.location.authorizationState = .notDetermined
+        harness.location.stateAfterRequest = .authorized
+        await harness.viewModel.sceneDidBecomeActive()
+
+        #expect(!harness.viewModel.isSearchPresented)
+        #expect(harness.location.requestAuthorizationCount == 0)
+        #expect(harness.location.currentPlaceCount == 0)
+        #expect(harness.viewModel.place == nil)
     }
 
     @Test("Restricted: the button is the search")

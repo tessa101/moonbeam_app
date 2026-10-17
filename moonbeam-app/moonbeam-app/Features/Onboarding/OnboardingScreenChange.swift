@@ -9,8 +9,8 @@ import SwiftUI
 /// outgoing page fades out in 0.2 s, then the incoming page loads in with
 /// `ContentLoadIn`'s stagger. No slide or push.
 ///
-/// 5.14.1 covers the landing and the upsell only. "That's okay for now"
-/// has no load-in yet, so a change to it stays an instant swap until 5.14.2.
+/// All three app-owned onboarding pages use the same handover. The system
+/// permission prompt and sheets keep their native presentation motion.
 enum OnboardingScreenChange {
 
     /// The skeleton-exit value, so every fade-out in the app matches.
@@ -26,8 +26,7 @@ enum OnboardingScreenChange {
     /// one in, or swaps at once as before.
     static func loadsIn(_ step: OnboardingViewModel.Step) -> Bool {
         switch step {
-        case .landing, .locationUpsell: true
-        case .locationDeclined: false
+        case .landing, .locationUpsell, .locationDeclined: true
         }
     }
 

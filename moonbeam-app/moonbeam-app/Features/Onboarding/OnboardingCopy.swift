@@ -30,4 +30,17 @@ nonisolated enum OnboardingCopy {
     static let declinedBody = "You can still look up locations, but to use the advanced features, like the compass, you'd need to enable location"
     static let gotIt = "Got it"
     static let enableLocation = "Enable location"
+
+    // MARK: - Main screen, no city (ONBOARDING-MOD-MAIN.md)
+
+    /// The CTA once no prompt can show (denied, Location Services off).
+    static let openSettings = "Open Settings"
+    /// Back (chevron) to the upsell, while no city is set.
+    static let back = "Back"
+    static let backHint = "Returns to the location screen"
+
+    /// "Start with Los Angeles", under the CTA.
+    static func startWith(_ city: String) -> String {
+        "Start with \(city)"
+    }
 }

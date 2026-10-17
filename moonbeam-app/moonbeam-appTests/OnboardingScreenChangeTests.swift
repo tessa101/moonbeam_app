@@ -40,23 +40,30 @@ struct OnboardingScreenChangeTests {
         #expect(OnboardingScreenChange.exitDuration == ContentLoadIn.skeletonExitDuration)
     }
 
-    @Test("5.14.1 covers the landing and upsell; That's okay for now swaps as before")
+    @Test("5.14.2 gives all app-owned onboarding screens the shared load-in")
     func scope() {
         #expect(OnboardingScreenChange.loadsIn(.landing))
         #expect(OnboardingScreenChange.loadsIn(.locationUpsell))
-        #expect(!OnboardingScreenChange.loadsIn(.locationDeclined))
+        #expect(OnboardingScreenChange.loadsIn(.locationDeclined))
     }
 
-    @Test("VoiceOver: ScreenChanged once the title has started; at once for That's okay for now")
+    @Test("VoiceOver: ScreenChanged once each screen's title has started")
     func announce() {
         #expect(abs(OnboardingScreenChange.announceDelay(for: .locationUpsell) - 0.15) < Self.tolerance)
         #expect(abs(OnboardingScreenChange.announceDelay(for: .landing) - 0.15) < Self.tolerance)
-        #expect(OnboardingScreenChange.announceDelay(for: .locationDeclined) == 0)
+        #expect(abs(OnboardingScreenChange.announceDelay(for: .locationDeclined) - 0.15) < Self.tolerance)
         // Announced after the stagger starts, and before the title has finished.
         #expect(OnboardingScreenChange.announceDelay(for: .locationUpsell) > 0)
         #expect(
             OnboardingScreenChange.announceDelay(for: .locationUpsell)
                 < ContentLoadIn.delay(forIndex: OnboardingScreenChange.announcedBlockIndex) + ContentLoadIn.duration
         )
+    }
+
+    @Test("That's okay uses five blocks: moon through Enable location")
+    func declinedTotal() {
+        let lastIndex = 4
+        let last = ContentLoadIn.delay(forIndex: lastIndex) + ContentLoadIn.duration
+        #expect(abs(last - 0.9) < Self.tolerance)
     }
 }

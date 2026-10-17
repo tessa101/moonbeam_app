@@ -40,4 +40,35 @@ nonisolated enum MadlibScale {
             .min() ?? 1
         return min(1, max(minimum, needed))
     }
+
+    /// The `noCity` headline (ONBOARDING-MOD-MAIN.md): `shared`'s scale, but
+    /// grown past full size until the widest line fills `availableWidth` or
+    /// the lines fill `availableHeight`, up to `maximum`. Where the sentence
+    /// doesn't fit at full size it's `shared` unchanged (shrink at `.large`,
+    /// wrap elsewhere). Accessibility sizes never grow: the text is already
+    /// large, and wrapping keeps it readable.
+    ///
+    /// - Parameter naturalHeight: the three lines' total height at full size.
+    static func filling(
+        naturalWidths: [CGFloat],
+        naturalHeight: CGFloat,
+        availableWidth: CGFloat,
+        availableHeight: CGFloat,
+        minimum: CGFloat,
+        maximum: CGFloat,
+        dynamicTypeSize: DynamicTypeSize
+    ) -> CGFloat {
+        let fitted = shared(
+            naturalWidths: naturalWidths,
+            availableWidth: availableWidth,
+            minimum: minimum,
+            dynamicTypeSize: dynamicTypeSize
+        )
+        guard !dynamicTypeSize.isAccessibilitySize,
+              availableWidth > 0, availableHeight > 0, naturalHeight > 0,
+              let widest = naturalWidths.max(), widest > 0
+        else { return fitted }
+        let grown = min(availableWidth / widest, availableHeight / naturalHeight, maximum)
+        return grown > 1 ? grown : fitted
+    }
 }

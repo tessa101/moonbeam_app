@@ -34,6 +34,9 @@ struct OnboardingDebugTriggerTests {
         }
         var hasSeenFirstFindPass = true
         var locationPromptDismissed = true
+        var endedOnNoCity = false {
+            didSet { writeCount += 1 }
+        }
 
         init(isOnboardingCompleted: Bool) {
             self.isOnboardingCompleted = isOnboardingCompleted
@@ -178,8 +181,10 @@ struct OnboardingDebugTriggerTests {
 
         viewModel.searchInstead()
 
+        // Completed, and the `noCity` that survives a relaunch (STEP-5.14 §6.4).
         #expect(store.isOnboardingCompleted)
-        #expect(store.writeCount == 1)
+        #expect(store.endedOnNoCity)
+        #expect(store.writeCount == 2)
     }
 
     // MARK: - The Show onboarding button

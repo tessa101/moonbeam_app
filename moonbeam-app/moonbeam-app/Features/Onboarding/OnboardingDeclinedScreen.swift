@@ -20,6 +20,11 @@ struct OnboardingDeclinedScreen: View {
     private static let moonOpacity = 0.6
     private static let spacing: CGFloat = 22
 
+    /// Load-in order, top to bottom (STEP-5.14 §2 / 5.14.2).
+    private enum LoadInBlock: Int {
+        case moon, title, body, gotIt, enableLocation
+    }
+
     // MARK: - Body
 
     var body: some View {
@@ -27,20 +32,25 @@ struct OnboardingDeclinedScreen: View {
             VStack(alignment: .leading, spacing: Self.spacing) {
                 OnboardingMoon(size: Self.moonSize)
                     .opacity(Self.moonOpacity)
+                    .contentLoadIn(index: LoadInBlock.moon.rawValue)
 
                 Text(OnboardingCopy.declinedTitle)
                     .font(Theme.Fonts.onboardingTitle)
                     .accessibilityAddTraits(.isHeader)
+                    .contentLoadIn(index: LoadInBlock.title.rawValue)
 
                 Text(OnboardingCopy.declinedBody)
                     .font(Theme.Fonts.body)
                     .foregroundStyle(Theme.Colors.textBody)
+                    .contentLoadIn(index: LoadInBlock.body.rawValue)
             }
         } actions: {
             Button(OnboardingCopy.gotIt, action: onGotIt)
                 .buttonStyle(.primary)
+                .contentLoadIn(index: LoadInBlock.gotIt.rawValue)
             Button(OnboardingCopy.enableLocation, action: onEnableLocation)
                 .buttonStyle(.secondary)
+                .contentLoadIn(index: LoadInBlock.enableLocation.rawValue)
         }
     }
 }

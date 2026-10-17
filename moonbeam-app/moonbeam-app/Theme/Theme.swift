@@ -141,6 +141,10 @@ nonisolated enum Theme {
         /// At the default size the sentence's lines shrink together this
         /// far (about 19 pt) before one wraps (§3.1a).
         static let sentenceMinimumScale: CGFloat = 0.7
+        /// The `noCity` headline grows to fill its space, at most this far
+        /// (about 68 pt at the default size), so a wide screen doesn't
+        /// blow it up past a headline (ONBOARDING-MOD-MAIN.md).
+        static let sentenceMaximumFillScale: CGFloat = 2.5
         /// The sentence at an exact size: its three lines share one scale,
         /// applied by the view to the Dynamic Type size of `sentenceSize`
         /// (scaled relative to `.title`, like `sentence`).

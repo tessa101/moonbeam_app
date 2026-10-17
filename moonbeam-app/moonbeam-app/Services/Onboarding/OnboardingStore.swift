@@ -23,4 +23,10 @@ protocol OnboardingStore: AnyObject {
     /// §4): the compass guide row shows instead. Cleared when location is
     /// granted, and by the same DEBUG resets as `hasSeenFirstFindPass`.
     var locationPromptDismissed: Bool { get set }
+
+    /// Onboarding ended on `noCity` (Got it or Search for a city instead) on
+    /// a non-forced run, so a relaunch with no saved place and no location
+    /// access lands there again rather than on the permission-off screen
+    /// (STEP-5.14 §6.4). Cleared once a city is set or location is granted.
+    var endedOnNoCity: Bool { get set }
 }

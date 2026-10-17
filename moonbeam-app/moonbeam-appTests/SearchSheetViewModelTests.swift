@@ -91,12 +91,139 @@ struct SearchSheetViewModelTests {
         #expect(search.searchedQueries.isEmpty)
     }
 
-    @Test("Empty query with no recents shows only the location row")
+    /// STEP-5.13 §3: no longer the location row alone.
+    @Test("Empty query with no recents: the location row, then the five cities")
     func emptyQueryNoRecents() {
         let viewModel = Self.makeViewModel()
 
         #expect(viewModel.listState == .recents([]))
         #expect(viewModel.showsUseMyLocation)
+        #expect(viewModel.zeroStateSections == [.useMyLocation, .suggestedCities])
+    }
+
+    // MARK: - Suggested cities and the location row (STEP-5.13 §3)
+
+    @Test("The five cities, in the §3 order and with the §3 values")
+    func suggestedCitiesMatchTable() {
+        let cities = Self.makeViewModel().suggestedCities
+
+        #expect(cities.map(\.title) == ["Los Angeles, CA", "New York, NY", "Paris", "London", "Tokyo"])
+        #expect(cities.map(\.detail) == ["United States", "United States", "France", "United Kingdom", "Japan"])
+        #expect(cities.map(\.place.timeZone.identifier) == [
+            "America/Los_Angeles", "America/New_York", "Europe/Paris", "Europe/London", "Asia/Tokyo",
+        ])
+        #expect(cities[0].place.latitude == 34.0522)
+        #expect(cities[0].place.longitude == -118.2437)
+        #expect(cities[4].place.latitude == 35.6762)
+        #expect(cities[4].place.longitude == 139.6503)
+        #expect(cities.allSatisfy { !$0.place.isCurrentLocation })
+    }
+
+    @Test("Rows read in full words for VoiceOver")
+    func suggestedCitiesAccessibilityLabels() {
+        let labels = Self.makeViewModel().suggestedCities.map(\.accessibilityLabel)
+
+        #expect(labels == [
+            "Los Angeles, California, United States",
+            "New York, New York, United States",
+            "Paris, France",
+            "London, United Kingdom",
+            "Tokyo, Japan",
+        ])
+    }
+
+    @Test("Recents hide the five cities")
+    func recentsHideSuggestedCities() {
+        let viewModel = Self.makeViewModel(recents: [Self.sydney])
+
+        #expect(viewModel.zeroStateSections == [.useMyLocation, .recents])
+    }
+
+    @Test("Typing hides the five cities", arguments: ["L", "Lo", "Lon"])
+    func typingHidesSuggestedCities(query: String) async {
+        let viewModel = Self.makeViewModel()
+
+        await Self.type(query, into: viewModel)
+
+        #expect(viewModel.zeroStateSections.isEmpty)
+    }
+
+    @Test("Clearing the field brings the five cities back")
+    func clearingShowsSuggestedCitiesAgain() async {
+        let viewModel = Self.makeViewModel()
+        await Self.type("Lon", into: viewModel)
+
+        await Self.type("", into: viewModel)
+
+        #expect(viewModel.zeroStateSections == [.useMyLocation, .suggestedCities])
+    }
+
+    @Test("A suggested city picks its fixed place, in its own time zone, with no search")
+    func pickingASuggestedCity() throws {
+        let search = FakePlaceSearchService()
+        let recorder = PickRecorder()
+        let viewModel = Self.makeViewModel(search: search, recorder: recorder)
+        let paris = try #require(viewModel.suggestedCities.first { $0.place.name == "Paris" })
+
+        viewModel.pick(paris)
+
+        #expect(recorder.picked == [paris.place])
+        #expect(recorder.picked.first?.timeZone.identifier == "Europe/Paris")
+        #expect(search.searchedQueries.isEmpty)
+    }
+
+    @Test("The location row is first and uses the place pin")
+    func locationRowFirstWithPin() {
+        #expect(Self.makeViewModel().zeroStateSections.first == .useMyLocation)
+        #expect(Self.makeViewModel(recents: [Self.sydney]).zeroStateSections.first == .useMyLocation)
+        #expect(SearchSheetViewModel.locationRowSymbol == MadlibFormatter.placeSymbol)
+    }
+
+    @Test("Without the location row, the cities come first")
+    func noLocationRow() {
+        #expect(Self.makeViewModel(showsUseMyLocation: false).zeroStateSections == [.suggestedCities])
+    }
+
+    @Test("Denied or off: the row opens Settings and the sheet stays, nothing reported")
+    func deniedRowOpensSettings() {
+        let recorder = PickRecorder()
+        let viewModel = SearchSheetViewModel(
+            placeSearch: FakePlaceSearchService(),
+            placeStore: InMemoryPlaceStore(),
+            showsUseMyLocation: true,
+            onPick: { recorder.picked.append($0) },
+            onUseMyLocation: { recorder.useMyLocationCount += 1 },
+            locationRowOpensSettings: { true }
+        )
+
+        viewModel.useMyLocation()
+
+        #expect(viewModel.settingsRequestCount == 1)
+        #expect(recorder.useMyLocationCount == 0)
+        #expect(recorder.picked.isEmpty)
+    }
+
+    @Test("A prompt can show: the row reports the tap and opens no Settings")
+    func promptableRowReports() {
+        let recorder = PickRecorder()
+        let viewModel = Self.makeViewModel(recorder: recorder)
+
+        viewModel.useMyLocation()
+
+        #expect(viewModel.settingsRequestCount == 0)
+        #expect(recorder.useMyLocationCount == 1)
+    }
+
+    // MARK: - Keyboard (STEP-5.13 §6)
+
+    @Test("No recents: the field isn't auto-focused, so the keyboard doesn't cover the cities")
+    func noRecentsNoAutoFocus() {
+        #expect(!Self.makeViewModel().autoFocusesField)
+    }
+
+    @Test("With recents: the field auto-focuses, as before")
+    func recentsAutoFocus() {
+        #expect(Self.makeViewModel(recents: [Self.sydney]).autoFocusesField)
     }
 
     @Test("showsUseMyLocation passes through", arguments: [true, false])

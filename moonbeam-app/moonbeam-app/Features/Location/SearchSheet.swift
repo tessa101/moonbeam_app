@@ -4,6 +4,7 @@
 //
 
 import SwiftUI
+import UIKit
 
 /// The city search sheet: a field pinned at the top, then the location row
 /// and recents, or type-ahead suggestions (SEARCH-RECENTS.md §2).
@@ -15,6 +16,7 @@ struct SearchSheet: View {
     @Bindable var viewModel: SearchSheetViewModel
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.openURL) private var openURL
 
     @FocusState private var isFieldFocused: Bool
 
@@ -25,8 +27,15 @@ struct SearchSheet: View {
             list
         }
         .onAppear {
-            // §2: the sheet opens with the keyboard up.
-            isFieldFocused = true
+            // §2: the sheet opens with the keyboard up, except with no
+            // recents, where it would cover the five cities (STEP-5.13 §6).
+            isFieldFocused = viewModel.autoFocusesField
+        }
+        // The location row with no prompt possible: the app's Settings
+        // page, sheet still up (STEP-5.13 §3).
+        .onChange(of: viewModel.settingsRequestCount) {
+            guard let url = URL(string: UIApplication.openSettingsURLString) else { return }
+            openURL(url)
         }
     }
 
@@ -63,17 +72,13 @@ struct SearchSheet: View {
         List {
             switch viewModel.listState {
             case .recents(let recents):
-                if viewModel.showsUseMyLocation {
-                    Section {
-                        Button("Use my location", systemImage: "location") {
-                            viewModel.useMyLocation()
-                        }
-                        // The row style leaves the color to the label; keep the tint.
-                        .foregroundStyle(.tint)
-                        .buttonStyle(.row)
+                ForEach(viewModel.zeroStateSections, id: \.self) { section in
+                    switch section {
+                    case .useMyLocation: useMyLocationSection
+                    case .recents: recentsSection(recents)
+                    case .suggestedCities: suggestedCitiesSection
                     }
                 }
-                recentsSection(recents)
             case .filteredRecents(let recents):
                 recentsSection(recents)
             case .suggestions(let suggestions):
@@ -88,8 +93,44 @@ struct SearchSheet: View {
         }
     }
 
-    /// Empty recents show no header at all: the 0-character view is then
-    /// just the location row, and 1 character with no match is a blank list.
+    /// First in the 0-character view, with the place pin (STEP-5.13 §3).
+    private var useMyLocationSection: some View {
+        Section {
+            Button {
+                viewModel.useMyLocation()
+            } label: {
+                Label {
+                    Text("Use my location")
+                } icon: {
+                    Image(SearchSheetViewModel.locationRowSymbol)
+                }
+            }
+            // The row style leaves the color to the label; keep the tint.
+            .foregroundStyle(.tint)
+            .buttonStyle(.row)
+        }
+    }
+
+    /// The five fixed cities, with no recents (STEP-5.13 §3).
+    private var suggestedCitiesSection: some View {
+        Section {
+            ForEach(viewModel.suggestedCities, id: \.self) { city in
+                Button {
+                    viewModel.pick(city)
+                } label: {
+                    placeLabel(title: city.title, detail: city.detail)
+                }
+                .buttonStyle(.row)
+                .accessibilityLabel(city.accessibilityLabel)
+            }
+        } header: {
+            Text(SearchSheetViewModel.suggestedCitiesTitle)
+                .accessibilityAddTraits(.isHeader)
+        }
+    }
+
+    /// Empty recents show no header at all: the 0-character view then has
+    /// the five cities instead, and 1 character with no match is a blank list.
     @ViewBuilder
     private func recentsSection(_ recents: [Place]) -> some View {
         if !recents.isEmpty {
@@ -135,6 +176,18 @@ struct SearchSheet: View {
             }
         }
     }
+}
+
+#Preview("No recents") {
+    SearchSheet(
+        viewModel: SearchSheetViewModel(
+            placeSearch: FakePlaceSearchService(),
+            placeStore: InMemoryPlaceStore(),
+            showsUseMyLocation: true,
+            onPick: { _ in },
+            onUseMyLocation: {}
+        )
+    )
 }
 
 #Preview("Recents") {

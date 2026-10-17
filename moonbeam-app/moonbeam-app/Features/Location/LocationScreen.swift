@@ -5,6 +5,7 @@
 
 import os
 import SwiftUI
+import UIKit
 
 /// Picks the place, then shows its moon table (LOCATION.md §3).
 ///
@@ -25,10 +26,23 @@ struct LocationScreen: View {
     /// same removal before 1.0 (DECISIONS.md 2026-10-06). `nil` hides it.
     var onForgetSavedPlace: (() -> Void)? = nil
 
+    /// Back from the `noCity` state to the onboarding upsell
+    /// (ONBOARDING-MOD-MAIN.md flow 3). Offered only while the view model
+    /// says no city is set; `nil` hides it.
+    var onReturnToOnboarding: (() -> Void)? = nil
+
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.openURL) private var openURL
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private static let bottomBarAnimation = Animation.easeInOut(duration: 0.3)
+    /// The Back swipe: it starts this close to the leading edge and travels
+    /// at least this far, like the system's edge swipe.
+    private static let backSwipeEdgeWidth: CGFloat = 24
+    private static let backSwipeMinimumTravel: CGFloat = 80
+    /// The `noCity` headline fills at most this share of the height between
+    /// the Back chevron and the CTA, leaving air above and below it.
+    private static let noCityHeadlineHeightFraction: CGFloat = 0.8
     private static let scrollToCompassAnimation = Animation.easeInOut(duration: 0.4)
     /// The compass block's scroll target for the pinned bar's Compass ↓.
     private static let compassScrollID = "compass"
@@ -91,6 +105,12 @@ struct LocationScreen: View {
                     ScrollViewReader { scrollProxy in
                         scrollView(scrollProxy)
                     }
+                    .modifier(BackToOnboarding(
+                        isEnabled: showsBackToOnboarding,
+                        edgeWidth: Self.backSwipeEdgeWidth,
+                        minimumTravel: Self.backSwipeMinimumTravel,
+                        action: returnToOnboarding
+                    ))
                     .environment(\.contentArrivesAfterAha, isAhaFlying)
                     .environment(\.hidesCardPhaseGlyph, isAhaFlying)
                     .transition(.identity)
@@ -196,7 +216,13 @@ struct LocationScreen: View {
             VStack(alignment: .leading, spacing: 0) {
                 // DESIGN-1.1.md §3.1: the sentence is the header; its tokens
                 // open the calendar and the search sheet.
-                MadlibSentence(viewModel: viewModel)
+                // ONBOARDING-MOD-MAIN.md: on `noCity` the same sentence
+                // grows to fill the screen and sits centred between the Back
+                // chevron and the CTA; the empty card and the debug panel
+                // follow below the fold, so they can't move it. A minimum,
+                // not a fixed height, so AX sizes scroll instead of clipping.
+                MadlibSentence(viewModel: viewModel, fillHeight: noCityHeadlineFillHeight)
+                    .frame(minHeight: noCityHeadlineRegionHeight, alignment: .leading)
                     // LOADER.md §12.9: loads in with the screen only; a
                     // place change cross-fades its city token in place.
                     .contentLoadIn(.sentence)
@@ -293,6 +319,19 @@ struct LocationScreen: View {
             // The compass's note loads in with the compass (§2.1); the stack
             // is always there, so a note arriving later only slides in.
             VStack(spacing: 0) {
+                // ONBOARDING-MOD-MAIN.md: the `noCity` CTA and "Start with",
+                // fading out as a city fills in.
+                if viewModel.isNoCity {
+                    NoCityActions(
+                        action: viewModel.noCityAction,
+                        startCity: viewModel.noCityStartCity,
+                        onEnableLocation: { Task { await viewModel.enableLocationFromNoCity() } },
+                        onOpenSettings: openSettings,
+                        onStartWithCity: viewModel.startWithSuggestedCity
+                    )
+                    .contentLoadIn(index: 1)
+                    .transition(.opacity)
+                }
                 if let note = viewModel.compass.bottomNote {
                     CompassBottomBar(note: note) {
                         Task { await viewModel.usePreciseLocationForCompass() }
@@ -307,11 +346,26 @@ struct LocationScreen: View {
             )
         }
         .animation(reduceMotion ? nil : Self.bottomBarAnimation, value: viewModel.compass.bottomNote)
-        // 4.15: content mustn't slide under the clock unreadably. The
-        // system's soft edge effect, as in system apps; styling is the
-        // design pass.
+        .animation(reduceMotion ? nil : Self.bottomBarAnimation, value: viewModel.isNoCity)
+        .animation(reduceMotion ? nil : Self.bottomBarAnimation, value: viewModel.noCityAction)
+        // Back to the upsell while no city is set (ONBOARDING-MOD-MAIN.md).
+        .safeAreaInset(edge: .top, spacing: 0) {
+            if showsBackToOnboarding {
+                Button(action: returnToOnboarding) {
+                    Image(systemName: "chevron.left")
+                        .font(Theme.Fonts.body)
+                }
+                .buttonStyle(.inline(Theme.Colors.accent))
+                .accessibilityLabel(OnboardingCopy.back)
+                .accessibilityHint(OnboardingCopy.backHint)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, Theme.Metrics.screenMargin)
+                .transition(.opacity)
+            }
+        }
+        // Keep the native soft scroll edge treatment, while the shared
+        // ScreenBackground remains visible behind the status bar.
         .scrollEdgeEffectStyle(.soft, for: .top)
-        .modifier(StatusBarBackdrop())
     }
 
     // MARK: - Compass
@@ -421,30 +475,66 @@ struct LocationScreen: View {
     private func searchDidDismiss() {
         Task { await viewModel.searchDidDismiss() }
     }
+
+    // MARK: - No city (ONBOARDING-MOD-MAIN.md)
+
+    /// The visible height the `noCity` headline is centred in: the scroll
+    /// view's frame (already inside the chevron and CTA insets) less the gap
+    /// under the status bar. `nil` once a city is set.
+    private var noCityHeadlineRegionHeight: CGFloat? {
+        guard viewModel.isNoCity else { return nil }
+        return max(0, scrollViewportHeight - Theme.Metrics.contentTopSpacing)
+    }
+
+    private var noCityHeadlineFillHeight: CGFloat? {
+        noCityHeadlineRegionHeight.map { $0 * Self.noCityHeadlineHeightFraction }
+    }
+
+    private var showsBackToOnboarding: Bool {
+        viewModel.canReturnToOnboarding && onReturnToOnboarding != nil
+    }
+
+    private func returnToOnboarding() {
+        guard showsBackToOnboarding else { return }
+        onReturnToOnboarding?()
+    }
+
+    /// The `noCity` CTA's Open Settings: the app's own page. The view model
+    /// checks again on the way back.
+    private func openSettings() {
+        guard let url = URL(string: UIApplication.openSettingsURLString) else { return }
+        openURL(url)
+    }
 }
 
-// MARK: - Status bar (4.15)
+// MARK: - Back to onboarding
 
-/// The fallback for iOS 26 (DECISIONS.md 2026-09-30): the device test on
-/// iOS 26.6.2 showed no edge effect at all for this bare `ScrollView` under
-/// the status bar, so the date control sat crisp behind the clock. There the
-/// status bar gets a solid `bg` backing, as in the design (DESIGN-1.1.md §2;
-/// it replaced 4.15's system bar material). iOS 27 draws the soft edge effect
-/// itself, so it's left alone.
-private struct StatusBarBackdrop: ViewModifier {
+/// The `noCity` state's Back by swipe from the leading edge, and VoiceOver's
+/// escape gesture. The chevron is the visible way; this screen has no
+/// navigation stack, so the system swipe isn't there to borrow.
+private struct BackToOnboarding: ViewModifier {
 
+    let isEnabled: Bool
+    let edgeWidth: CGFloat
+    let minimumTravel: CGFloat
+    let action: () -> Void
+
+    /// No `if`/`else` on `isEnabled`: that would swap the screen's identity
+    /// as a city lands and reset its scroll and load-ins.
     func body(content: Content) -> some View {
-        if #available(iOS 27, *) {
-            content
-        } else {
-            content.safeAreaInset(edge: .top, spacing: 0) {
-                // Zero height: the backing fills only the status bar, since
-                // a background extends into the safe area it touches.
-                Color.clear
-                    .frame(height: 0)
-                    .background(Theme.Colors.bg)
+        content
+            .simultaneousGesture(
+                DragGesture().onEnded { drag in
+                    guard drag.startLocation.x <= edgeWidth,
+                          drag.translation.width >= minimumTravel else { return }
+                    action()
+                },
+                including: isEnabled ? .all : .none
+            )
+            .accessibilityAction(.escape) {
+                guard isEnabled else { return }
+                action()
             }
-        }
     }
 }
 

@@ -22,6 +22,10 @@ import SwiftUI
 struct MadlibSentence: View {
 
     let viewModel: LocationViewModel
+    /// The `noCity` state's headline height (ONBOARDING-MOD-MAIN.md): the
+    /// sentence grows to fill the width and this height
+    /// (`MadlibScale.filling`). `nil`, the resolved screen, never grows.
+    var fillHeight: CGFloat? = nil
     var onTokenFrames: (MadlibFormatter.Token.Kind, [CGRect]) -> Void = { _, _ in }
 
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
@@ -29,6 +33,8 @@ struct MadlibSentence: View {
     /// Each line's one-line width at full size, by line index, and the width
     /// the lines get: the inputs to the shared scale.
     @State private var naturalWidths: [Int: CGFloat] = [:]
+    /// Each line's height at full size, for `fillHeight`'s budget.
+    @State private var naturalHeights: [Int: CGFloat] = [:]
     @State private var availableWidth: CGFloat = 0
     /// False from the start of detection until the city line has been let
     /// back in (a beat after the city is known).
@@ -61,14 +67,27 @@ struct MadlibSentence: View {
             allowsBreaksInsideTokens: !MadlibScale.shrinks(at: dynamicTypeSize)
         )
 
-        let scale = MadlibScale.shared(
-            naturalWidths: Array(naturalWidths.values),
-            // A little slack: glyph widths don't scale exactly with point
-            // size, and a line scaled to fit to the point can still wrap.
-            availableWidth: availableWidth - Self.fitTolerance,
-            minimum: Theme.Fonts.sentenceMinimumScale,
-            dynamicTypeSize: dynamicTypeSize
-        )
+        // A little slack: glyph widths don't scale exactly with point size,
+        // and a line scaled to fit to the point can still wrap.
+        let fitWidth = availableWidth - Self.fitTolerance
+        let scale = if let fillHeight {
+            MadlibScale.filling(
+                naturalWidths: Array(naturalWidths.values),
+                naturalHeight: naturalHeights.values.reduce(0, +),
+                availableWidth: fitWidth,
+                availableHeight: fillHeight,
+                minimum: Theme.Fonts.sentenceMinimumScale,
+                maximum: Theme.Fonts.sentenceMaximumFillScale,
+                dynamicTypeSize: dynamicTypeSize
+            )
+        } else {
+            MadlibScale.shared(
+                naturalWidths: Array(naturalWidths.values),
+                availableWidth: fitWidth,
+                minimum: Theme.Fonts.sentenceMinimumScale,
+                dynamicTypeSize: dynamicTypeSize
+            )
+        }
 
         VStack(alignment: .leading, spacing: 0) {
             ForEach(sentence.lines.indices, id: \.self) { index in
@@ -77,8 +96,10 @@ struct MadlibSentence: View {
                     text: text,
                     scale: scale,
                     usesFixedHeight: MadlibScale.shrinks(at: dynamicTypeSize),
+                    // A token that can't open anything (the date on `noCity`)
+                    // is drawn as text, with no button.
                     token: sentence.lines[index].compactMap { part in
-                        if case let .token(token) = part { return token }
+                        if case let .token(token) = part, viewModel.opens(token.kind) { return token }
                         return nil
                     }.first,
                     onOpen: viewModel.open,
@@ -94,8 +115,9 @@ struct MadlibSentence: View {
                             .font(Theme.Fonts.sentence)
                             .fixedSize()
                             .hidden()
-                            .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { width in
-                                naturalWidths[index] = width
+                            .onGeometryChange(for: CGSize.self) { $0.size } action: { size in
+                                naturalWidths[index] = size.width
+                                naturalHeights[index] = size.height
                             }
                     }
             }

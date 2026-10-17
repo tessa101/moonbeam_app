@@ -13,6 +13,7 @@ final class UserDefaultsOnboardingStore: OnboardingStore {
     private static let completedKey = "onboardingCompleted"
     private static let firstFindPassKey = "hasSeenFirstFindPass"
     private static let locationPromptDismissedKey = "locationPromptDismissed"
+    private static let endedOnNoCityKey = "onboardingEndedOnNoCity"
 
     // MARK: - State
 
@@ -44,6 +45,12 @@ final class UserDefaultsOnboardingStore: OnboardingStore {
         set { defaults.set(newValue, forKey: Self.locationPromptDismissedKey) }
     }
 
+    /// Absent reads as `false`: a new install hasn't ended on `noCity`.
+    var endedOnNoCity: Bool {
+        get { defaults.bool(forKey: Self.endedOnNoCityKey) }
+        set { defaults.set(newValue, forKey: Self.endedOnNoCityKey) }
+    }
+
     // MARK: - DEBUG reset (DESIGN-1.1.md §5)
 
     #if DEBUG
@@ -58,6 +65,7 @@ final class UserDefaultsOnboardingStore: OnboardingStore {
         isOnboardingCompleted = false
         hasSeenFirstFindPass = false
         locationPromptDismissed = false
+        endedOnNoCity = false
     }
     #endif
 }

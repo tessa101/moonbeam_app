@@ -53,7 +53,24 @@ final class OnboardingStoreTests {
         #expect(!UserDefaultsOnboardingStore(defaults: defaults).locationPromptDismissed)
     }
 
+    @Test("Ended on noCity starts unset and survives a relaunch (STEP-5.14 §6.4)")
+    func endedOnNoCitySurvivesRelaunch() {
+        #expect(!UserDefaultsOnboardingStore(defaults: defaults).endedOnNoCity)
+        UserDefaultsOnboardingStore(defaults: defaults).endedOnNoCity = true
+        #expect(UserDefaultsOnboardingStore(defaults: defaults).endedOnNoCity)
+        UserDefaultsOnboardingStore(defaults: defaults).endedOnNoCity = false
+        #expect(!UserDefaultsOnboardingStore(defaults: defaults).endedOnNoCity)
+    }
+
     #if DEBUG
+    @Test("The DEBUG reset clears ended on noCity too")
+    func debugResetClearsEndedOnNoCity() {
+        let store = UserDefaultsOnboardingStore(defaults: defaults)
+        store.endedOnNoCity = true
+        store.resetIfRequested(by: ["moonbeam-app", UserDefaultsOnboardingStore.resetLaunchArgument])
+        #expect(!store.endedOnNoCity)
+    }
+
     @Test("The DEBUG reset clears Maybe later too")
     func debugResetClearsLocationPromptDismissed() {
         let store = UserDefaultsOnboardingStore(defaults: defaults)
