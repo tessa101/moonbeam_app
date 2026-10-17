@@ -1,31 +1,27 @@
 # TestFlight 0.1 (11)
 
 Prepared October 17, 2026. App display name: **Hello Luna** (renamed from Moon Signal; bundle ID unchanged,
-`com.t-alien.moonbeam-app`). Previous build: 0.1 (10). Uploaded by Tessa from Xcode Organizer; out for friends' testing.
+`com.t-alien.moonbeam-app`). Previous build: 0.1 (10).
 
 ## Release scope
 
-Everything since 0.1 (10), shipped as is. The SE 3 AX3 moon-start decision is still open and not in this build.
+Everything since 0.1 (10): 5.13.3 shared pressed state, 5.13.4 sentence token buttons, 5.14 onboarding cat and
+load-ins, the ready-to-look cat replacing the permission-off telescope, 5.5 accessibility reflow, the noCity flow
+with the search sheet (cancel flow decided and built), the "Got it" moon entry, the compass date-step fix, and
+the pre-launch housekeeping (MoonTableSpike gated behind DEBUG, `contentSpace` Sendable warning fixed). The app
+rename to Hello Luna is in this build.
 
-- Rename Moon Signal to Hello Luna: display name, location usage string, `AppInfo.name`, tests, docs (`df37726`).
-- Housekeeping (`daae061`): `MoonTableSpike` gated behind `#if DEBUG` (Release no longer runs or compiles it);
-  `contentSpace` made `nonisolated`, which clears the one new build-10 warning.
-- Search/cancel flow, noCity state (persisted across relaunch), search sheet with location row and five cities.
-- "Got it" enters noCity through the moon animation (5.14 section 6); root handover moved into `RootScreen`.
-- Ready-to-look cat replaces the permission-off telescope; landing cat and tail motion retunes (5.14).
-- Shared pressed state on every button (5.13.3), accessibility reflow (5.5), sentence token buttons (5.13.4).
-- Compass: date-only changes no longer replay the entrance.
+Not in this build: the SE 3 AX3 moon-start decision (shipped as is), the app icon redesign.
 
 ## Verification
 
-- Focused suites pass: `LocationScreenScrollingTests`, `LoaderFlowTests`, `LocationFailureScreenTests`,
-  `PlaceChangeLayoutTests` (rerun alone).
-- Full suite from Terminal: 27 issues, all known: 26 in "Sentence token buttons" (command-line only, pass in Xcode)
-  and one `PlaceChangeLayoutTests` timing bound that passes alone.
-- Release build: succeeded; the `contentSpace` warning is gone; no new warnings against build 10.
-- Version: `MARKETING_VERSION` 0.1, `CURRENT_PROJECT_VERSION` 11. If App Store Connect rejects 11 as a duplicate, bump to 12.
+- Full suite in Terminal (iPhone 17 simulator): only the known failures. 25 to 26 SentenceTokenTests
+  (command-line-only) and one PlaceChangeLayout timing flake that passes alone.
+- Rename suites (LoaderFlowTests, LocationFailureScreenTests) and LocationScreenScrollingTests: pass.
+- Release build: succeeded, contentSpace warning gone, no new warnings versus build 10.
+- Version: `MARKETING_VERSION` 0.1, build 11.
 
-## What to Test (TestFlight text)
+## What to Test (pasted into TestFlight)
 
 ```
 Hello Luna 0.1 (11)
@@ -56,10 +52,3 @@ TELL ME ABOUT
 
 To reset: "Forget saved place" at the bottom of the main screen. Thank you!
 ```
-
-## Remaining
-
-- SE 3 AX3 moon start (recommended: start the flight from the screen's top edge).
-- App icon redesign (needed by 1.0).
-- Remove TestFlight-only tools (Show onboarding, Forget saved place, debug panel, BuildChannel) in the submission build only.
-- Version 1.0 and the App Store Connect checklist.
