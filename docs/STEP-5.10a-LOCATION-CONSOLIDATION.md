@@ -22,7 +22,7 @@ Use **one cause-specific presentation regardless of entry point**: launch withou
 
 | Cause | Illustration | Headline | Body | Primary / secondary | Settings chip |
 |---|---|---|---|---|---|
-| Permission off | Existing telescope | Can’t see your location *(Chunk 2c)* | Allow location access to see where the moon is from here. | Open Settings / Search for a city instead | Settings › Moon Signal › Location *(Chunk 2b)* |
+| Permission off | Existing telescope | Can’t see your location *(Chunk 2c)* | Allow location access to see where the moon is from here. | Open Settings / Search for a city instead | Settings › Hello Luna › Location *(Chunk 2b)* |
 | Services off | Existing map | Location Services are off | Turn them on to see where the moon is from here. | Open Settings / Search for a city instead | Back to Settings › Privacy & Security › Location Services *(Chunk 2c)* |
 | Restricted | Existing locked map | Can’t see your location *(Chunk 2c)* | Location access is limited on this iPhone. You can still search for a city. | Search for a city / none | None |
 | No fix | Existing calico | Couldn’t find your location | Check your cellular or Wi-Fi connection. We’ll look again when you come back. *(Chunk 2b)* | none (room kept) / Search for a city instead *(Chunk 2b; was Try again)* | None |

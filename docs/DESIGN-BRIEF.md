@@ -1,4 +1,4 @@
-# Moon Signal: Design Brief (visual exploration)
+# Hello Luna: Design Brief (visual exploration)
 
 > For the first visual pass: take this to Claude Design (and the design partner).
 > Behavior is decided and built. This pass decides **how it looks and feels**.
@@ -12,7 +12,7 @@ Tell me **when and where** to look for the moon tonight, from where I am, and po
 
 - **Primary user (working assumption):** the *moon chaser*, who wants to catch a moonrise over the ocean or a skyline. Also photographers (planning around direction + brightness) and curious lookers (quick glance at phase).
 - **When it's used:** outside, often at dusk or night, phone held up, sometimes one-handed.
-- **Name:** "Moon Signal" (working name).
+- **Name:** "Hello Luna" (working name).
 
 ## 2. What to design first
 

@@ -50,7 +50,7 @@ cities) plus whatever the new flow changes.
     - Age rating questionnaire; category
     - Review notes: why location is used, how to test with it denied, that a city can be searched instead
     - Export compliance (already `ITSAppUsesNonExemptEncryption` false)
-    - App name availability for "Moon Signal"; display name vs repo name `moonbeam`
+    - App name availability for "Hello Luna"; display name vs repo name `moonbeam`
 11. [ ] **USNO reference rows** (Reykjavík, Sydney, Mar Vista no-rise): fill in from the Mac. Not blocking.
 
 ## Decisions still open (Tessa)

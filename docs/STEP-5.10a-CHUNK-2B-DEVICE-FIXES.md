@@ -31,7 +31,7 @@ Why: "Ask Next Time Or When I Share" is not determined, and iOS can still show t
 
 - **Replaces §3 row 9, at launch and for explicit requests:** a return from Settings with status not determined goes to **First ask** (stopped moon, "Use my location", which triggers the system prompt on tap). No automatic prompt.
 - Unchanged: unchanged blocked state keeps its guidance; a different blocked cause switches; newly authorized fetches once.
-- **Permission-off chip** becomes **"Settings › Moon Signal › Location"** (set the two-line break and the VoiceOver label). The compass-only dialog uses the same text through the shared cause definition.
+- **Permission-off chip** becomes **"Settings › Hello Luna › Location"** (set the two-line break and the VoiceOver label). The compass-only dialog uses the same text through the shared cause definition.
 - "Never" in Settings is the app's own denial, so it stays the telescope. The map is only for the device-wide Location Services switch. No change.
 - **Tests:** denied, then Ask Next Time in Settings, then return: First ask, then tap: prompt; no telescope loop. Rewrite the old "services on keeps guidance" test to the new rule.
 

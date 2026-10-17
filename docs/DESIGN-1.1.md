@@ -62,7 +62,7 @@ Dynamic Type through `Font.custom(_:size:relativeTo:)`; put them in one place (`
 | Role | Font | Default pt | relativeTo |
 |---|---|---|---|
 | Madlib sentence | Young Serif | 27, line height 1.5 | `.title` |
-| Onboarding hero ("Moon Signal") | Young Serif | 40 | `.largeTitle` |
+| Onboarding hero ("Hello Luna") | Young Serif | 40 | `.largeTitle` |
 | Onboarding title | Young Serif | 30 | `.title` |
 | Time (9:10 PM), heading readout, lock pill | Young Serif | 24 | `.title2` |
 | Phase name | Nunito Sans 600 | 17 | `.headline` |
@@ -307,10 +307,10 @@ the note. At AX sizes the button shortens to "↓" when "Compass ↓" doesn't fi
 ## 5. Onboarding (3d)
 Four full screens, `bg` background, 28 pt margins, buttons pinned to the bottom.
 
-1. **Landing:** 150 pt moon glyph with a big soft glow, "Moon Signal" (Young Serif 40), tagline
+1. **Landing:** 150 pt moon glyph with a big soft glow, "Hello Luna" (Young Serif 40), tagline
    "When and where to find the moon, and which way to look." (`textSecondary`, max width 280).
    **Get started** (primary).
-2. **Location upsell (ours):** 64 pt glyph; title "Find the moon from where you are"; body "Moon Signal
+2. **Location upsell (ours):** 64 pt glyph; title "Find the moon from where you are"; body "Hello Luna
    uses your location to show when and where the moon rises and sets, and to point the compass
    toward it."; an info box (1 pt `stroke`, radius 18, location icon) "Keep Precise Location on so the
    compass can find the moon." **Use my location** (primary) → the system prompt.

@@ -297,7 +297,7 @@ the lines run edge to edge. Fix:
 
 | Message | Headline | Body |
 |---|---|---|
-| First ask | Find the moon / from where you are | Moon Signal uses your location to show / when and where the moon rises and sets. |
+| First ask | Find the moon / from where you are | Hello Luna uses your location to show / when and where the moon rises and sets. |
 | App permission off | Can't see / your location | Allow location access to see / where the moon is from here. |
 | Services off | Location / Services are off | Turn them on to see where / the moon is from here. |
 | No fix | Couldn't find / your location | Check your cellular or Wi-Fi / connection. We’ll look again / when you come back. |

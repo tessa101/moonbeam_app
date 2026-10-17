@@ -1087,7 +1087,7 @@ struct LoaderFlowTests {
     func messageLineBreaks() {
         #expect(LocationIssue.firstAsk.headlineLines == ["Find the moon", "from where you are"])
         #expect(LocationIssue.firstAsk.bodyLines == [
-            "Moon Signal uses your location to show",
+            "Hello Luna uses your location to show",
             "when and where the moon rises and sets."
         ])
         #expect(LocationIssue.appDenied.headlineLines == ["Can’t see", "your location"])

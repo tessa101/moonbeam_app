@@ -1861,3 +1861,7 @@ From a recording of Got it → noCity (0.23 s of pure black, then an empty beat,
 - Simulator frame checks (iPhone 17, SE 3, default and AX3): no pure-black frames; sequence continuous. Reduce Motion recordings not analysed; check on the phone.
 - Open (Tessa's call): SE 3 at AX3, the page is scrolled to reach Got it, so the declined moon is off screen and about 2 frames (~67 ms) pass with nothing moving before the flight. Options: start from the top edge (recommended), scroll back to top, or leave.
 - Full suite via xcodebuild: only the 25 known SentenceTokenTests failures plus the PlaceChangeLayoutTests blank-ink flake (passes alone).
+
+## 2026-10-17: App renamed "Moon Signal" → "Hello Luna" for TestFlight 11 (Tessa)
+- Display name (`INFOPLIST_KEY_CFBundleDisplayName`, Debug and Release), the location purpose string's opening name, and `AppInfo.name` are now "Hello Luna". Supersedes the 2026-09-28 working name.
+- Unchanged: bundle ID `com.t-alien.moonbeam-app`, `PRODUCT_NAME`, target, module, folder and file names. The design files under `design/` keep their "Moon Signal …" filenames, and historical entries and TestFlight build notes keep the old name.

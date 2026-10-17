@@ -759,7 +759,7 @@ Design-pass items (visuals, copy, a11y) are tracked in **[DESIGN-REVIEW.md](DESI
 - ~~Show illumination for the current time or for local midnight?~~ **Settled 2026-09-23:** tonight's
   local midnight, i.e. the end of the selected day. See DECISIONS.md and PRODUCT FR5
 - Primary persona (confirm with design partner)
-- Display name "Moon Signal" for now, was "Moonbeam" (project name stays `moonbeam-app`). `AppInfo.name` and home-screen name updated (8ed1750)
+- Display name "Hello Luna" (2026-10-17; was "Moon Signal" (8ed1750), before that "Moonbeam"). Project name stays `moonbeam-app`. `AppInfo.name` and home-screen name both updated
 
 
 _5.11.3 mock spacing follow-up, 2026-10-12: removed the standard-size hidden second middle-column detail line; guidance now sits closer to the bearing row. Amber bullet with 6 pt gap added to match the mock. Actual long copy may grow the card. Build and 11 layout/height checks passed; SE highlighted tile preview reviewed; phone check pending._

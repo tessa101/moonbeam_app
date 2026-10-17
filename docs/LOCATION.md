@@ -187,7 +187,7 @@ The three services are **main-actor isolated** (the project default): they drive
 - `var isPreciseLocationOff: Bool { get }` (4.10) and `func requestTemporaryPreciseLocation(purposeKey: String) async` (4.12, COMPASS.md §1): `requestTemporaryFullAccuracyAuthorization`; a refusal changes nothing
 - `func currentPlace() async throws -> Place` (one-shot fix → reverse geocode → `Place`)
 - Implementation notes:
-  - Info.plist: `NSLocationWhenInUseUsageDescription` = ~~"Moonbeam uses your location to show when and where the moon rises and sets near you."~~ **Amended 2026-09-30 (COMPASS.md 4.12):** "Moon Signal uses your location to show when and where the moon rises and sets, and to point the compass. Keep Precise Location on so the compass can find the moon." (placeholder)
+  - Info.plist: `NSLocationWhenInUseUsageDescription` = ~~"Moonbeam uses your location to show when and where the moon rises and sets near you."~~ **Amended 2026-09-30 (COMPASS.md 4.12):** "Hello Luna uses your location to show when and where the moon rises and sets, and to point the compass. Keep Precise Location on so the compass can find the moon." (placeholder)
   - Info.plist: ~~`NSLocationDefaultAccuracyReduced` = `YES` (defaults the Precise toggle off; city-level is enough)~~ **Removed 2026-09-30 (4.12):** the compass needs Precise Location, so the prompt defaults it on; users can opt out
   - Info.plist: `NSLocationTemporaryUsageDescriptionDictionary` with key `Compass` (4.12; text in COMPASS.md §1 Accuracy)
   - One-shot request; no continuous updates, no background mode

@@ -152,7 +152,7 @@ nonisolated enum Theme {
             .custom(FontName.youngSerif, fixedSize: size)
         }
 
-        /// Onboarding hero ("Moon Signal").
+        /// Onboarding hero ("Hello Luna").
         static let onboardingHero = Font.custom(FontName.youngSerif, size: 40, relativeTo: .largeTitle)
         /// Onboarding screen titles.
         static let onboardingTitle = Font.custom(FontName.youngSerif, size: 30, relativeTo: .title)

@@ -31,7 +31,7 @@ final class OnboardingViewModel {
     // MARK: - Types
 
     enum Step: Equatable {
-        /// "Moon Signal" and Get started.
+        /// "Hello Luna" and Get started.
         case landing
         /// "Find the moon from where you are": Use my location / Search
         /// for a city instead.

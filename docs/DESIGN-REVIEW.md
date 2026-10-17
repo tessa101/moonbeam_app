@@ -103,7 +103,7 @@ _Started: 2026-09-26_
 - [ ] **Polish transitions everywhere (Tessa, 2026-10-02, later):** screen changes, sheet open/close, state swaps (lock, notes, Up now, loader → main screen) should feel soft and consistent. One shared set of durations/curves, Reduce Motion versions. LOADER.md §2.1's values are the interim ones.
 
 ## Brand / product
-- [ ] Display name: **"Moon Signal"** for now (was "Moonbeam"; DECISIONS.md 2026-09-28). Lives in `AppInfo.name`; confirm final name with design partner
+- [ ] Display name: **"Hello Luna"** (was "Moon Signal", DECISIONS.md 2026-10-17; before that "Moonbeam", 2026-09-28). Lives in `AppInfo.name`; confirm final name with design partner
 - [ ] Primary persona (confirm with design partner)
 - [ ] **Voice A (Tessa, 2026-10-08, after the design review):** an always-on one-line answer under the sentence ("Look southwest, about 40° up. Hard to miss."), reusing 5.11.3's `MoonVoice` table. Tone: facts first, one wry aside at most (the pre-app ChatGPT moon digest is the reference)
 - [ ] **Daily Moon Report** widget / morning push in the digest format (later)

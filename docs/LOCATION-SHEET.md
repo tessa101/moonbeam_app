@@ -23,7 +23,7 @@ Everything on the sheet still comes from `variant.failure.copy` (`LocationFailur
 |---|---|---|---|
 | Title | Can’t see your location | Location Services are off | Can’t see your location |
 | Body | Allow location access to see where the moon is from here. | Turn them on to see where the moon is from here. | Location access is limited on this iPhone. You can still search for a city. |
-| Path | Settings › Moon Signal › Location | Back to Settings › Privacy & Security › Location Services | none |
+| Path | Settings › Hello Luna › Location | Back to Settings › Privacy & Security › Location Services | none |
 | Primary | Open Settings | Open Settings | Search for a city |
 | Secondary | Search for a city instead | Search for a city instead | none |
 

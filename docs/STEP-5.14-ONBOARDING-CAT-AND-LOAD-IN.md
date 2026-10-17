@@ -57,7 +57,7 @@ the fade and drops the rise. Give it a generic block index for onboarding rather
 
 | Screen | Order (each 150 ms after the last) |
 |---|---|
-| 1 Landing | cat + halo, "Moon Signal", tagline, Get started |
+| 1 Landing | cat + halo, "Hello Luna", tagline, Get started |
 | 2 Upsell | moon, title, body, Precise Location box, Use my location, Search for a city instead |
 | 3 iOS prompt | not ours; the upsell stays as it is under the dim |
 | 4 That's okay for now | moon, title, body, Got it, Enable location |
