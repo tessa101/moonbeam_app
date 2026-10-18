@@ -1876,3 +1876,7 @@ From a recording of Got it → noCity (0.23 s of pure black, then an empty beat,
 ## 2026-10-17: App renamed "Moon Signal" → "Hello Luna" for TestFlight 11 (Tessa)
 - Display name (`INFOPLIST_KEY_CFBundleDisplayName`, Debug and Release), the location purpose string's opening name, and `AppInfo.name` are now "Hello Luna". Supersedes the 2026-09-28 working name.
 - Unchanged: bundle ID `com.t-alien.moonbeam-app`, `PRODUCT_NAME`, target, module, folder and file names. The design files under `design/` keep their "Moon Signal …" filenames, and historical entries and TestFlight build notes keep the old name.
+
+## 2026-10-17: Test doubles are DEBUG-only (Step 5.16, Tessa)
+- The Fake*Service and InMemory*Store types (connectivity, heading, location, place search, moon, place store, onboarding store) are wrapped in `#if DEBUG`, and so are the previews that use them. They no longer ship in Release; `strings -a -n 1` and `nm` confirm none of them are in the Release binary.
+- `LocationViewModel` and `CompassViewModel` no longer default `onboardingStore` or `connectivity` to a double. Production and preview code must pass every service explicitly. The test target's `TestDependencyDefaults.swift` restores the old defaults for tests only.

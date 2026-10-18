@@ -266,6 +266,7 @@ struct DebugScreenState: View {
                 onboardingStore: InMemoryOnboardingStore(
                     locationPromptDismissed: state == .locationOffDismissed || state.isLocationGuide
                 ),
+                connectivity: FakeConnectivityService(),
                 deviceTimeZone: Self.zone,
                 now: { now }
             )

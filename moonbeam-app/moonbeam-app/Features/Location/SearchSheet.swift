@@ -178,6 +178,7 @@ struct SearchSheet: View {
     }
 }
 
+#if DEBUG
 #Preview("No recents") {
     SearchSheet(
         viewModel: SearchSheetViewModel(
@@ -201,3 +202,4 @@ struct SearchSheet: View {
         )
     )
 }
+#endif

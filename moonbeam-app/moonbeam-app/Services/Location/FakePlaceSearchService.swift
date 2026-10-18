@@ -5,6 +5,7 @@
 
 import Foundation
 
+#if DEBUG
 /// Scriptable `PlaceSearchService` for tests and SwiftUI previews.
 ///
 /// Reaches all three suggestion-list states from LOCATION.md §3: results
@@ -72,3 +73,4 @@ final class FakePlaceSearchService: PlaceSearchService {
         return place
     }
 }
+#endif

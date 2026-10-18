@@ -5,6 +5,7 @@
 
 import Foundation
 
+#if DEBUG
 /// Scriptable `LocationService` for tests and SwiftUI previews.
 ///
 /// Every permission state in LOCATION.md §4 is reachable by setting
@@ -136,3 +137,4 @@ final class FakeLocationService: LocationService {
         return try placeResult.get()
     }
 }
+#endif

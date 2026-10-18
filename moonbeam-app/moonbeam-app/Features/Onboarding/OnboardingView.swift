@@ -107,6 +107,7 @@ struct OnboardingView: View {
     }
 }
 
+#if DEBUG
 #Preview("Landing") {
     OnboardingView(
         viewModel: OnboardingViewModel(
@@ -116,3 +117,4 @@ struct OnboardingView: View {
         )
     )
 }
+#endif

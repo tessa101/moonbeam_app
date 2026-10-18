@@ -5,6 +5,7 @@
 
 import Foundation
 
+#if DEBUG
 /// `PlaceStore` that forgets everything on deinit, for tests and previews.
 ///
 /// Note that `UserDefaultsPlaceStore` is itself testable (it takes a suite),
@@ -20,3 +21,4 @@ final class InMemoryPlaceStore: PlaceStore {
         self.recents = recents
     }
 }
+#endif

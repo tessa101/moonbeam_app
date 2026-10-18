@@ -1103,6 +1103,7 @@ private struct DayStepPressedBody: View {
 
 // MARK: - Previews
 
+#if DEBUG
 #Preview("Today, Los Angeles") {
     previewCard(place: .marVista, dayOffset: 0)
 }
@@ -1199,6 +1200,8 @@ private struct UpNowPreview: View {
             placeStore: InMemoryPlaceStore(),
             moonService: moon,
             headingService: headingService,
+            onboardingStore: InMemoryOnboardingStore(),
+            connectivity: FakeConnectivityService(),
             deviceTimeZone: zone,
             now: { now }
         )
@@ -1215,7 +1218,9 @@ private func previewCard(place: Place, dayOffset: Int) -> some View {
         placeSearch: FakePlaceSearchService(),
         placeStore: InMemoryPlaceStore(),
         moonService: AstronomyEngineMoonService(),
-        headingService: FakeHeadingService()
+        headingService: FakeHeadingService(),
+        onboardingStore: InMemoryOnboardingStore(),
+        connectivity: FakeConnectivityService()
     )
     viewModel.select(place)
     for _ in 0..<dayOffset {
@@ -1231,3 +1236,4 @@ private func previewCard(place: Place, dayOffset: Int) -> some View {
     .background(Theme.Colors.bg)
     .font(Theme.Fonts.body)
 }
+#endif

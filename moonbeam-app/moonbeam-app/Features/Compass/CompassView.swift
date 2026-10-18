@@ -390,6 +390,7 @@ struct CompassView: View {
 
 // MARK: - Previews
 
+#if DEBUG
 /// A compass fed from fakes: the simulator has no compass.
 private struct CompassPreview: View {
 
@@ -419,7 +420,8 @@ private struct CompassPreview: View {
                 moonService: FakeMoonService(
                     position: MoonPosition(azimuth: moonAzimuth, altitude: 23, isUp: isMoonUp),
                     pass: Self.pass
-                )
+                ),
+                onboardingStore: InMemoryOnboardingStore()
             )
             viewModel.update(context)
             viewModel.setOnScreen(true)
@@ -561,3 +563,4 @@ private let waningGibbous = CompassPreview.context(phase: .waningGibbous, phaseA
 #Preview("Location off, restricted") {
     CompassPreview(context: CompassPreview.context(auth: .restricted), reading: nil)
 }
+#endif

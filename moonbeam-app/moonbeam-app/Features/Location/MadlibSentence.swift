@@ -204,6 +204,7 @@ struct MadlibSentence: View {
 
 // MARK: - Previews
 
+#if DEBUG
 #Preview("Today") {
     MadlibSentence(viewModel: previewViewModel(place: Place.marVista, dayOffset: 0))
         .padding()
@@ -264,7 +265,9 @@ private func previewViewModel(place: Place?, dayOffset: Int) -> LocationViewMode
         placeSearch: FakePlaceSearchService(),
         placeStore: InMemoryPlaceStore(),
         moonService: FakeMoonService(),
-        headingService: FakeHeadingService()
+        headingService: FakeHeadingService(),
+        onboardingStore: InMemoryOnboardingStore(),
+        connectivity: FakeConnectivityService()
     )
     if let place {
         viewModel.select(place)
@@ -274,3 +277,4 @@ private func previewViewModel(place: Place?, dayOffset: Int) -> LocationViewMode
     }
     return viewModel
 }
+#endif

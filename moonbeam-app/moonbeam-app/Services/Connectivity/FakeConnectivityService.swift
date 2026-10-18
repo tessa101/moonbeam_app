@@ -5,6 +5,7 @@
 
 import Foundation
 
+#if DEBUG
 /// Scriptable `ConnectivityService` for tests, previews and DEBUG screen
 /// states: online unless told otherwise. `isOnline` changes reach every
 /// open stream, as a real path change would.
@@ -37,3 +38,4 @@ final class FakeConnectivityService: ConnectivityService {
         return stream
     }
 }
+#endif

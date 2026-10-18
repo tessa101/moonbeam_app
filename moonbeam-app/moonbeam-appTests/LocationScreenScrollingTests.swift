@@ -23,7 +23,7 @@ struct LocationScreenScrollingTests {
         let window = UIWindow(windowScene: scene)
         window.frame = CGRect(origin: .zero, size: phone)
         let host = UIHostingController(rootView:
-            LocationScreen(viewModel: model, onShowOnboarding: {})
+            LocationScreen(viewModel: model)
                 .environment(\.dynamicTypeSize, size)
         )
         window.rootViewController = host

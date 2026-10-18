@@ -321,7 +321,7 @@ final class CompassViewModel {
     init(
         headingService: any HeadingService,
         moonService: any MoonService,
-        onboardingStore: any OnboardingStore = InMemoryOnboardingStore(),
+        onboardingStore: any OnboardingStore,
         now: @escaping () -> Date = Date.init,
         moonRefreshInterval: Duration = CompassViewModel.defaultMoonRefreshInterval,
         sleep: @escaping @Sendable (Duration) async throws -> Void = { try await Task.sleep(for: $0) },

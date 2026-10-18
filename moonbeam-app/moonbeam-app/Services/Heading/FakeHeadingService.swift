@@ -5,6 +5,7 @@
 
 import Foundation
 
+#if DEBUG
 /// Scriptable `HeadingService` for tests and SwiftUI previews. The simulator
 /// has no compass, so this is how lock, release and low accuracy get
 /// exercised (COMPASS.md §6).
@@ -73,3 +74,4 @@ final class FakeHeadingService: HeadingService {
         stop()
     }
 }
+#endif

@@ -5,6 +5,7 @@
 
 import Foundation
 
+#if DEBUG
 /// `OnboardingStore` that forgets everything on deinit, for tests and
 /// previews.
 final class InMemoryOnboardingStore: OnboardingStore {
@@ -26,3 +27,4 @@ final class InMemoryOnboardingStore: OnboardingStore {
         self.endedOnNoCity = endedOnNoCity
     }
 }
+#endif

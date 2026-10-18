@@ -538,6 +538,7 @@ private struct BackToOnboarding: ViewModifier {
     }
 }
 
+#if DEBUG
 #Preview("First launch") {
     LocationScreen(
         viewModel: LocationViewModel(
@@ -545,7 +546,9 @@ private struct BackToOnboarding: ViewModifier {
             placeSearch: FakePlaceSearchService(),
             placeStore: InMemoryPlaceStore(),
             moonService: AstronomyEngineMoonService(),
-            headingService: FakeHeadingService()
+            headingService: FakeHeadingService(),
+            onboardingStore: InMemoryOnboardingStore(),
+            connectivity: FakeConnectivityService()
         )
     )
 }
@@ -557,7 +560,10 @@ private struct BackToOnboarding: ViewModifier {
             placeSearch: FakePlaceSearchService(),
             placeStore: InMemoryPlaceStore(lastViewed: Place.marVista),
             moonService: AstronomyEngineMoonService(),
-            headingService: FakeHeadingService()
+            headingService: FakeHeadingService(),
+            onboardingStore: InMemoryOnboardingStore(),
+            connectivity: FakeConnectivityService()
         )
     )
 }
+#endif

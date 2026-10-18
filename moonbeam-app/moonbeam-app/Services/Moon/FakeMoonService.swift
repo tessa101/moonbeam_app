@@ -5,6 +5,7 @@
 
 import Foundation
 
+#if DEBUG
 /// Scriptable `MoonService` for tests and SwiftUI previews.
 ///
 /// Records every date it's asked for, so a test can check which day reached
@@ -103,3 +104,4 @@ nonisolated final class FakeMoonService: MoonService {
         return nextRise
     }
 }
+#endif
