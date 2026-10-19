@@ -662,3 +662,37 @@
 2026-10-17 09:34 Run 2: recordings started (iPhone 17 + SE3 × default/AX3/Reduce Motion)
 09:41 Run 2: rec 1 (i17 default): no black frames, sequence OK, but text exit cuts in 1 frame (same as §6.1). Fix 1: root handover moved from App @State into RootScreen view; rebuilding
 09:48 Run 2: fix 1 works (text fades ~5 frames); 4 recordings: 0 pure-black; SE3 AX3 scrolled: ~2 frames no moon (moon off-screen); now Reduce Motion runs
+2026-10-17 11:16 Housekeeping: started (spike gate, contentSpace Sendable warning, Release build)
+11:16 Housekeeping: 1/3 spike gated (#if DEBUG in App.init + whole MoonTableSpike.swift); Release build (pre-fix) to capture contentSpace warning
+11:17 Housekeeping: 2/3 contentSpace marked nonisolated (warning was LocationScreen.swift:420:41); Release build post-fix
+11:18 Housekeeping: Release post-fix BUILD SUCCEEDED, contentSpace warning gone; build-for-testing (Debug) then LocationScreenScrollingTests
+11:19 Housekeeping: done. Tests not run (runner launch blocked by sandbox, pty EPERM); report in .agent-reports/app-store-housekeeping.md; no commit
+11:52 start: rename Moon Signal -> Hello Luna (TF 11)
+11:52 pbxproj display name + location string updated (Debug+Release)
+11:53 code + tests renamed; starting docs
+11:53 docs + DECISIONS updated; building Debug
+11:54 build-for-testing succeeded; running touched suites
+12:04 Hello Luna rename: CLI test-without-building hung ~10 min (known sandbox pty issue); killed; rerunning LoaderFlowTests + LocationFailureScreenTests via Xcode runner
+13:57 5.15 scrim: started; read spec; step 1 survey
+13:58 5.15: step 1 survey done (no scroll offset read today; no central motion token; Theme.Colors.bg)
+13:59 5.15: StatusBarScrim modifier + tests written, wired in LocationScreen; build-for-testing (iPhone 18 Pro Max)
+14:02 5.15: before-default captured (Pro Max, LA)
+14:02 5.15: before-ax5 captured; re-enabling scrim, reinstall
+14:03 5.15: after-ax5 captured, scrim shows first run; default next
+14:04 5.15: default after + at-rest OK; Reduce Motion check (AX5, pinned-bar jump)
+14:06 5.15: verify done (default, AX5, RM, bottom, onboarding); sim restored; running full suite
+14:11 5.15: committed 56bb0ad (1/1); latest.md updated; done
+2026-10-17 17:12 5.16 gating: started; inventory of test-double references in app target
+17:12 5.16 gating: no production refs; 6 files' preview sections need #if DEBUG
+17:13 5.16 gating: previews wrapped; Release build (sim)
+17:13 5.16 gating: Release build OK, no new warnings; binary check
+17:14 5.16 gating: binary check clean (23/23 absent, positive control found); Debug build + full suite (iPhone 17)
+17:24 5.16 gating: CLI test run killed at ~10 min (hung; known sandbox runner issue); switching to Xcode runner
+17:26 5.16 gating: full suite 1656/1682 (25 known SentenceToken + PlaceChangeLayout flake, passes alone); committing
+17:26 5.16 gating: committed 28413c5; latest.md updated; done
+2026-10-17 17:31 5.17 archive: started; step 1 version/build/bundle check
+17:31 5.17 archive: STOPPED at step 1, app MARKETING_VERSION is 0.1 (Debug+Release), not 1.0; build 11 and bundle ID match; nothing changed, no archive
+2026-10-17 17:32 5.17 archive: started; step 1 set MARKETING_VERSION 1.0 (app target only)
+17:32 5.17 archive: step 1-2 done, version 1.0 (11) committed; step 3 archive (generic iOS, Release)
+17:33 5.17 archive: step 3 ARCHIVE SUCCEEDED; step 4 inspection
+17:34 5.17 archive: step 4 inspection clean (1.0/11/bundle OK, Apple Development signed, 0/23 names in exe+dSYM); latest.md updated; done

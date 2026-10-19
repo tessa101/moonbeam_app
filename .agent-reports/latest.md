@@ -1,3 +1,67 @@
+# Step 5.17: Hello Luna 1.0 (11) signed Release archive (2026-10-17)
+
+Done: `2c4d29e` "Set version 1.0 (11)" (not pushed). Only the app target's MARKETING_VERSION changed, 0.1 to 1.0, in
+Debug and Release. The test target, scheme, build number and bundle ID are unchanged.
+
+Archive: `~/Library/Developer/Xcode/Archives/2026-10-17/Hello Luna 1.0 (11).xcarchive`. It should appear in Organizer.
+`xcodebuild archive`, Release, generic iOS, automatic signing (`-allowProvisioningUpdates`); ARCHIVE SUCCEEDED in under
+10 minutes. The only app warning is the existing MoonTableFormatter `attributed` deprecation.
+
+Inspection:
+- App Info.plist: Hello Luna, 1.0, 11, `com.t-alien.moonbeam-app`, MinimumOSVersion 26.0,
+  ITSAppUsesNonExemptEncryption false. PrivacyInfo.xcprivacy and the 4 fonts are bundled. arm64 only.
+- Signing: `Apple Development: tessa101@gmail.com (Q6GW5GL832)`, team J6EBT8G77E, profile
+  "iOS Team Provisioning Profile: com.t-alien.moonbeam-app" (development, get-task-allow true). `codesign --verify
+  --deep --strict` OK. This is normal for an Xcode archive: Organizer's Distribute App (App Store Connect) re-signs
+  with Apple Distribution and an App Store profile.
+- Removed names: 0 hits for all 23 in `strings -a -n 1` and `nm` of the executable. The executable is stripped (1,633
+  symbols), so the dSYM (14,729 symbols, UUID matches) was checked as well: 0 hits. Controls found:
+  AstronomyEngineMoonService and UserDefaultsOnboardingStore.
+
+No push, upload or install. Next (Tessa): Organizer → Distribute App to the Hello Luna record. The bundle-ID ownership
+question from the 5.16 spec still applies.
+
+---
+
+# Step 5.17: archive stopped at step 1, version mismatch (2026-10-17)
+
+Stopped as instructed. The app target's `MARKETING_VERSION` is **0.1** in both Debug and Release
+(project.pbxproj lines 341 and 380), not 1.0. Matching: `CURRENT_PROJECT_VERSION` 11 and bundle ID
+`com.t-alien.moonbeam-app`. Signing is Automatic, team J6EBT8G77E, minimum iOS 26.0. Only the test target reads 1.0.
+Git history shows the app went to 0.1 in `d9eba76` (TestFlight 0.1 build 9), and the version has not been bumped since.
+The 5.16 spec's chunk 4 (set 1.0, build 12 proposed) was never run.
+
+Also checked (read-only): `git status` shows nothing modified under moonbeam-app/ (HEAD `56d74c4`).
+Nothing changed: no version edit, no build, no archive, push, upload or install.
+Needs Tessa: whether to set MARKETING_VERSION to 1.0, and whether build 11 is still right for the 1.0 train (spec
+default was 12, since 1.0 (1) to (8 or 9) already exist in App Store Connect).
+
+---
+
+# Step 5.16: test doubles gated behind DEBUG (2026-10-17)
+
+Done: `28413c5` "Step 5.16: gate test doubles and their previews behind DEBUG" (not pushed). Seven doubles are wrapped
+in `#if DEBUG`: FakeConnectivityService, FakeHeadingService, FakeLocationService, FakePlaceSearchService,
+FakeMoonService, InMemoryPlaceStore and InMemoryOnboardingStore. The preview sections that use them are wrapped too, in
+MoonCard, LocationScreen, SearchSheet, MadlibSentence, CompassView and OnboardingView (DebugScreenState was already
+gated). The `onboardingStore`/`connectivity` defaults are removed from the view-model inits; tests get them from
+`TestDependencyDefaults.swift`. The `LocationScreenScrollingTests` fix (drop `onShowOnboarding:`) is now committed;
+HEAD's test target didn't compile without it. DECISIONS entry added. No production code referenced the doubles.
+
+Validation: the Release build (generic simulator, CLI) succeeded. The only app warning is the existing `attributed`
+deprecation in MoonTableFormatter; the rest are Vendor `-Wcomma` warnings. The Debug build has nothing new: the same
+MoonTableFormatter warning, plus the existing DayStepAnimationTests `init(frame:)` warning. Release binary
+(`strings -a -n 1` and arm64 `nm`, demangled too): all 23 names are absent, both the earlier removed names and the seven
+doubles. A control check found `AstronomyEngineMoonService` and `UserDefaultsOnboardingStore`. Full suite via the Xcode
+runner (iPhone 17): 1656/1682. The 26 failures are the 25 known SentenceToken cases plus the PlaceChangeLayout timing
+flake, which passes alone. The CLI test runner hit the sandbox pty error and was stopped at about 10 minutes.
+
+Not touched: the scheme, app icon (now committed separately as `cc5d30b`, not by this run), token SVGs, READMEs.
+No version or bundle-ID change, archive, push, upload or install. Next: chunk 4 (version), after Tessa's OK and the
+bundle-ID question. Blocked: nothing.
+
+---
+
 # Step 5.16 Chunk 3 — Release binary check (2026-10-17)
 
 Xcode’s manual Build for Profiling completed successfully with no build errors. Configuration: `Release-iphonesimulator`,
@@ -42,6 +106,22 @@ Xcode process failed because `swift-plugin-server` returned malformed responses 
 Preview macros. The resulting source errors are cascading macro-expansion failures across unchanged files. An unrestricted
 retry is unavailable under the workspace approval policy; no scheme, project setting, app behavior, version or bundle ID
 was changed to bypass it. No archive, push, upload or phone installation was performed.
+
+---
+
+# 5.15 status bar scrim (2026-10-17)
+
+Done: `56bb0ad` "Step 5.15: status bar scrim on main screen" (not pushed). `StatusBarScrim` modifier
+(`Theme/StatusBarScrim.swift`): `Theme.Colors.bg` → clear, top inset + `extraHeight` 24 pt, opacity over
+`rampDistance` 40 pt, no hit testing. Wired above the main ScrollView, below the noCity chevron. Showed on the first run.
+Pro Max default + AX5 before/after, at-rest, Reduce Motion: `.agent-reports/5.15-scrim/`. Tests: new 5/5; full
+1697: 1671 pass (25 known SentenceToken + PlaceChangeLayout timing, passes alone). Build succeeds.
+Report-only: search sheet has no status-bar collision (it's a sheet below the status bar; not checked on screen).
+Onboarding landing at AX5 stays clear of it. Other onboarding pages and the failure screen's message scroller weren't checked
+on screen. Main bottom padding is 20 pt (`screenMargin`) above the home-indicator safe area and bottom-note inset. The
+pinned compass pill is an overlay, and it hides once the dial is on screen, so at max scroll it isn't over the last
+content. Next: Tessa's review; the "Related" banner/pill overlap stays undecided. Blocked: nothing. Spec doc
+`docs/STEP-5.15-STATUS-BAR-SCRIM.md` left untracked (Tessa's). Staged app-icon changes left as found.
 
 ---
 
@@ -2514,3 +2594,25 @@ Your `DESIGN-REVIEW.md` status-bar edit is in this commit.
 # Chunk 2c test confirmation (Tessa, 2026-10-12)
 
 Tessa ran the full suite twice in Terminal after Chunk 2c. Both runs passed: **754 tests in 59 suites**, `TEST SUCCEEDED`; the first took 36.440 seconds and the second 37.632 seconds.
+
+## App Store framed screenshots — 2026-10-17
+Created five framed exports from the supplied iPhone 17 Pro captures; originals unchanged. Dark background, phone frame, identical 9:41 time, captions below. Used compass for main and city prompt for search without location, as confirmed by user. City search retains its captured keyboard. No app code, tests, or docs changed; no commits.
+
+Final Figma: https://www.figma.com/design/9NbClhK0eSgA2suqplUTzn
+All final PNGs are 1320 × 2868, RGB without alpha:
+- output/app-store-screenshots/framed/01-onboarding.png
+- output/app-store-screenshots/framed/02-main.png
+- output/app-store-screenshots/framed/03-date-picker.png
+- output/app-store-screenshots/framed/04-city-search.png
+- output/app-store-screenshots/framed/05-search-without-location.png
+Contact sheet: output/app-store-screenshots/framed/contact-sheet.png — 1650 × 717.
+ZIP: output/app-store-screenshots/hello-luna-app-store-pngs.zip
+SVGs in framed/ are initial import sources; Figma and final PNGs use Libre Baskerville Bold captions after correcting import font substitution.
+
+## User Figma export added — 2026-10-17
+Imported the five PNGs from the user-provided Downloads ZIP into output/app-store-screenshots/app-store-ready/, with clear numbered filenames. Verified each is 1320 × 2868; flattened alpha where present for App Store upload. Earlier framed exports retained.
+- 01-onboarding-landing.png — 1320 × 2868
+- 02-main-screen.png — 1320 × 2868
+- 03-date-picker.png — 1320 × 2868
+- 04-city-search.png — 1320 × 2868
+- 05-search-without-location.png — 1320 × 2868
