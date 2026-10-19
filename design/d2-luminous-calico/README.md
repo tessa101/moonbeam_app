@@ -1,6 +1,6 @@
 # D2 luminous calico
 
-Five transparent still SVGs and fifteen motion studies for Moon Signal.
+Five transparent still SVGs and fifteen motion studies for Hello Luna.
 
 ## Stills
 

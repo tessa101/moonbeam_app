@@ -1,4 +1,4 @@
-# Handoff: Location loader + location-off flow (Moon Signal, iOS)
+# Handoff: Location loader + location-off flow (Hello Luna, iOS)
 
 ## Overview
 This flow replaces the placeholder "Where can I find the moon today in a city?" screen. On every launch, the app shows the onboarding moon loader while it gets a location fix. If it can't get one, because permission was never asked, permission is denied, Location Services are off, or the fix timed out, the moon stops and pulses, and a message explains what to do. Once that's fixed, the search resumes, then "Aha! There you are.", then the city screen.
@@ -31,8 +31,8 @@ The moon stays exactly in place, finishes its phase, stops at the onboarding pha
 
 | Scenario | Condition | Headline | Body | Button → action |
 |---|---|---|---|---|
-| First ask | `authorizationStatus == .notDetermined` | Find the moon from where you are | Moon Signal uses your location to show when and where the moon rises and sets. | **Use my location** → `requestWhenInUseAuthorization()` |
-| App permission off | `.denied` and services enabled | Moon Signal can’t see your location | Allow location access to see where the moon is from here. | **Open Settings** → `UIApplication.openSettingsURLString` |
+| First ask | `authorizationStatus == .notDetermined` | Find the moon from where you are | Hello Luna uses your location to show when and where the moon rises and sets. | **Use my location** → `requestWhenInUseAuthorization()` |
+| App permission off | `.denied` and services enabled | Hello Luna can’t see your location | Allow location access to see where the moon is from here. | **Open Settings** → `UIApplication.openSettingsURLString` |
 | Location Services off | `CLLocationManager.locationServicesEnabled() == false` | Location Services are off | Turn them on to see where the moon is from here. | **Open Settings** → same URL (iOS can't deep-link to the system switch) |
 | No fix | Authorized, no fix after 10 s | Couldn’t find your location | Check your signal and try again, or search for a city. | **Try again** → restart the search in place |
 
@@ -41,7 +41,7 @@ The moon stays exactly in place, finishes its phase, stops at the onboarding pha
 
 ### 3. System prompt (first ask only)
 This is the native CoreLocation alert, drawn over the paused loader with the message still visible underneath (see `reference/system-permission-prompt.png`). The purpose string (`NSLocationWhenInUseUsageDescription`) is:
-> Moon Signal uses your location to show when and where the moon rises and sets, and to point the compass. Keep Precise Location on so the compass can find the moon.
+> Hello Luna uses your location to show when and where the moon rises and sets, and to point the compass. Keep Precise Location on so the compass can find the moon.
 
 ### 4. Searching again
 Same as state 1.
