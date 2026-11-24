@@ -22,19 +22,23 @@ final class MoonMapViewModel {
 
     // MARK: - Types
 
-    /// The map's look (MAP.md §3.2, Tessa 2026-11-24). 3D joins in 6.2.
+    /// The map's look (MAP.md §3.2, §4; Tessa 2026-11-24).
     nonisolated enum Style: CaseIterable, Hashable, Sendable {
         /// Satellite imagery with labels: the default, easiest for reading
         /// a coast or a ridge.
         case satellite
         /// Apple's standard map.
         case explore
+        /// Satellite imagery over real terrain, with 3D buildings where
+        /// Apple has them, tilted (MAP.md §4, step 6.2).
+        case threeD
 
         /// The style switch's label.
         var title: String {
             switch self {
             case .satellite: "Satellite"
             case .explore: "Explore"
+            case .threeD: "3D"
             }
         }
     }
@@ -73,6 +77,10 @@ final class MoonMapViewModel {
     /// The camera's starting distance from the ground, in metres: a few
     /// kilometres across, enough to see the neighbourhood the line leaves.
     static let initialCameraDistance: Double = 6_000
+
+    /// The tilt, in degrees from straight down, that switching to 3D gives
+    /// the camera, so the terrain reads as 3D at once (MAP.md §4).
+    static let threeDPitch = 60.0
 
     /// How far along a line its tag sits, as a fraction of the camera's
     /// distance: near enough to stay on screen at any zoom.

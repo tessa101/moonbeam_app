@@ -73,6 +73,12 @@ struct MoonMapViewModelTests {
         #expect(model.isOnline)
     }
 
+    @Test("The style switch reads Satellite, Explore, 3D")
+    func styles() {
+        #expect(MoonMapViewModel.Style.allCases == [.satellite, .explore, .threeD])
+        #expect(MoonMapViewModel.Style.allCases.map(\.title) == ["Satellite", "Explore", "3D"])
+    }
+
     @Test("Rise then set, each from the pin at its own bearing, 30 km long")
     func linesFromPin() {
         let model = Self.makeViewModel()

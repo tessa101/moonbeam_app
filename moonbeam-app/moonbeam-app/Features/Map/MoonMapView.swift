@@ -21,6 +21,10 @@ struct MoonMapView: View {
 
     @State private var position: MapCameraPosition
 
+    /// The camera as last reported, so switching to or from 3D can tilt it
+    /// in place.
+    @State private var lastCamera: MapCamera?
+
     @Environment(\.dismiss) private var dismiss
 
     // MARK: - Constants
@@ -71,6 +75,28 @@ struct MoonMapView: View {
         .onChange(of: viewModel.returnToPlaceCount) {
             position = .camera(Self.placeCamera(for: viewModel))
         }
+        .onChange(of: viewModel.style) { old, new in
+            tiltForStyle(from: old, to: new)
+        }
+    }
+
+    /// Switching to 3D tilts the camera where it is, so the terrain reads
+    /// as 3D straight away; leaving 3D lays it flat again. While following
+    /// you the camera is MapKit's, so it's left alone (the pitch control
+    /// still works).
+    private func tiltForStyle(from old: MoonMapViewModel.Style, to new: MoonMapViewModel.Style) {
+        guard !position.followsUserLocation, let lastCamera, (old == .threeD) != (new == .threeD) else { return }
+        let pitch = new == .threeD ? MoonMapViewModel.threeDPitch : 0
+        withAnimation {
+            position = .camera(
+                MapCamera(
+                    centerCoordinate: lastCamera.centerCoordinate,
+                    distance: lastCamera.distance,
+                    heading: lastCamera.heading,
+                    pitch: pitch
+                )
+            )
+        }
     }
 
     /// North up over the place, a few kilometres across.
@@ -106,9 +132,11 @@ struct MoonMapView: View {
         .mapStyle(mapStyle)
         .mapControls {
             MapCompass()
+            MapPitchToggle()
             MapScaleView()
         }
         .onMapCameraChange(frequency: .continuous) { context in
+            lastCamera = context.camera
             viewModel.cameraChanged(
                 center: BearingLine.Coordinate(context.camera.centerCoordinate),
                 heading: context.camera.heading,
@@ -148,6 +176,7 @@ struct MoonMapView: View {
         switch viewModel.style {
         case .satellite: .hybrid(elevation: .flat)
         case .explore: .standard(elevation: .flat)
+        case .threeD: .hybrid(elevation: .realistic)
         }
     }
 

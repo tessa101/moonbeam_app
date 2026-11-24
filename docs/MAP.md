@@ -69,7 +69,9 @@ draws the selected day's bearing from wherever you put the pin, and you look at 
 
 1. **3D** joins the style switch (Satellite / Explore / 3D) and turns on `.realistic` elevation (terrain, and 3D
    buildings where Apple has them), plus MapKit's pitch control. The pin and lines stay.
-2. Whether 3D sits on satellite imagery or the standard map: try both on the phone.
+2. Built (2026-11-24) on satellite imagery (`.hybrid(elevation: .realistic)`); try the standard map on the phone if
+   satellite reads badly in 3D. Switching to 3D tilts the camera to 60° where it is (`threeDPitch`); leaving 3D lays it
+   flat. While following you the camera is MapKit's, so the tilt comes from the pitch control or a two-finger drag.
 3. Where Apple has no 3D data, the map just tilts flat. There's no reliable public way to ask "is 3D available
    here?", so the toggle is always shown. **Check on the phone** whether that's confusing.
 
