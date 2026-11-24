@@ -99,9 +99,10 @@ struct MoonMapView: View {
                 Annotation(line.mapLabel, coordinate: line.mapLabelCoordinate.location, anchor: .center) {
                     lineTag(line)
                 }
+                // The tag already shows the text; hide MapKit's own title.
+                .annotationTitles(.hidden)
             }
         }
-        .annotationTitles(.hidden)
         .mapStyle(mapStyle)
         .mapControls {
             MapCompass()
@@ -239,7 +240,7 @@ struct MoonMapView: View {
 
     private func cellTraits(_ line: MoonMapViewModel.Line) -> AccessibilityTraits {
         var traits: AccessibilityTraits = .isButton
-        if line.isSelected { traits.insert(.isSelected) }
+        if line.isSelected { traits.formUnion(.isSelected) }
         return traits
     }
 
