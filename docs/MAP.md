@@ -1,6 +1,6 @@
 # Map: where to stand to see the moonrise
 
-Status: planned 2026-11-24 (Tessa agreed the approach in chat; entry, line length and style settled the same day). Flat map first, then a 3D view, tried in sequence on
+Status: 6.1 built 2026-11-24, awaiting Xcode build and phone check. Planned 2026-11-24 (Tessa agreed the approach in chat; entry, line length and style settled the same day). Flat map first, then a 3D view, tried in sequence on
 the phone. Terrain-obstruction maths, Look Around and AR are parked (§8).
 
 _Last updated: 2026-11-24_
@@ -30,17 +30,20 @@ draws the selected day's bearing from wherever you put the pin, and you look at 
 3. **"Stand here" pin.** A fixed pin at the centre of the map; you pan the map under it (like ride-share pickup
    pins). That avoids custom drag code and is easy to use one-handed. It starts at the place's coordinate.
 4. **Bearing lines** from the pin:
-   - Moonrise: amber (`Theme` accent), labelled at the far end "Moonrise 4:42 PM · 58° ENE".
-   - Moonset: dimmer secondary line, same label format.
+   - Moonrise: amber (`Theme` accent); moonset: a dimmer light line. The tapped one is drawn thicker.
+   - Their times and bearings sit in a legend card at the bottom of the sheet ("↑ Moonrise / 4:42 PM · 58° ENE"),
+     not at the lines' far ends, which are usually off screen at the starting zoom (6 km camera distance).
    - Length: `bearingLineLength` = 30 km (a named constant; Tessa agreed 2026-11-24, tune on the phone). Drawn as a geodesic, since
      an azimuth is the starting direction of a great circle.
    - Times use the **place's** time zone, as everywhere.
    - The lines are for the **selected day** (the card's ‹ › date), not always today.
    - If the day has no rise or set (FR2), that line uses the next one, the same event the card shows, and the label
-     says its day ("Moonrise Sun 12:20 AM").
-5. **Follow me.** A button that switches to your GPS position with the map **turning with your phone** (MapKit's
+     says its day ("Sun 12:20 AM"). While the moon is up, the card shows the current pass ("↑ Rose"), so the map
+     uses that pass's rise and set.
+5. **Follow me.** A button (top left) that switches to your GPS position with the map **turning with your phone** (MapKit's
    heading-following user location). The pin is then you. Panning the map leaves Follow me; the button brings it
-   back. Hidden when location is off or not allowed, and the map still works on the searched place.
+   back. Hidden when location is off or not allowed, and the map still works on the searched place. When the place
+   already is your detected location, the map opens following you.
 6. **North / heading.** Outside Follow me the map is north-up with MapKit's compass control; rotating with two
    fingers works as usual.
 7. **No connection.** Uses the existing `ConnectivityService`. With no network the sheet says the map needs a

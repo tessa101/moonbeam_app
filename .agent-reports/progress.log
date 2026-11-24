@@ -701,3 +701,5 @@
 22:55 6.0 map spec: Tessa's answers recorded (entry = rise/set cells, 30 km, satellite default); committing
 22:55 6.1a bearing line: code + tests written, NOT built (no Xcode here); committing
 23:05 6.1a: Tessa ran BearingLineTests on Mac, pass; docs updated
+23:10 6.1b/c map: view model, sheet, cell taps and tests written, NOT built (no Xcode here); committing 2 commits
+23:10 6.1c map sheet + cell taps committed; awaiting Tessa's build

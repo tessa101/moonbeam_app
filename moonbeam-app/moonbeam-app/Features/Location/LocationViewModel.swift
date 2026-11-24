@@ -194,6 +194,13 @@ final class LocationViewModel {
     /// (SEARCH-RECENTS.md §1).
     private(set) var searchSheet: SearchSheetViewModel?
 
+    /// Settable so the view's sheet binding can dismiss it (Done, drag).
+    var isMapPresented = false
+
+    /// The open (or most recently open) map sheet's model (MAP.md §3).
+    /// Rebuilt on every `presentMap(_:)`, so the pin starts on the place.
+    private(set) var mapSheet: MoonMapViewModel?
+
     /// The compass under the moon table (COMPASS.md). Fed a
     /// `CompassContext` on every place, day or permission change, so this
     /// stays the only owner of that state.
@@ -1110,6 +1117,27 @@ final class LocationViewModel {
         guard presentSearchAfterDialog else { return }
         presentSearchAfterDialog = false
         presentSearch()
+    }
+
+    // MARK: - Map sheet (MAP.md §3)
+
+    /// Opens the map from a tapped Moonrise or Moonset cell, with that
+    /// event's line emphasised. The lines are the events the card shows:
+    /// the current pass's while the moon is up ("↑ Rose"), otherwise the
+    /// selected day's, or the next one on a day without.
+    func presentMap(_ event: MoonTableFormatter.Event) {
+        guard let place, let moonTable else { return }
+        let pass: MoonPass? = if case .up(_, _, _?) = compass.upNow?.state { compass.currentPass } else { nil }
+        mapSheet = MoonMapViewModel(
+            place: place,
+            day: moonTable.day,
+            rise: pass?.rise ?? moonTable.shownRise,
+            set: pass?.set ?? moonTable.shownSet,
+            emphasised: event,
+            canFollowUser: lastSeenAuthState.isAuthorized,
+            connectivity: connectivity
+        )
+        isMapPresented = true
     }
 
     // MARK: - Search sheet (SEARCH-RECENTS.md §2)

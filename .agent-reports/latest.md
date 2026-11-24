@@ -1,3 +1,22 @@
+# Step 6.1b–c: map sheet (2026-11-24)
+
+Done (two commits): `MoonMapViewModel` + tests (6.1b); `MoonMapView`, rise/set cell taps, `presentMap(_:)`, the sheet
+in `LocationScreen`, `MoonTableViewModel.shownRise/shownSet`, `CompassViewModel.currentPass`, and
+`LocationViewModelMapTests` (6.1c). MAP.md, ARCHITECTURE.md, DECISIONS.md and STATUS.md updated.
+
+**Not built or tested here** (no Xcode in the cloud session). To check on the Mac:
+1. Pull `claude/youthful-darwin-8q98xy`, build and run (⌘R, iPhone 17 simulator or the phone).
+2. Tap Moonrise on the card: the satellite map should open on the place with an amber line at the rise bearing.
+3. Tests: `-only-testing:moonbeam-appTests/MoonMapViewModelTests -only-testing:moonbeam-appTests/LocationViewModelMapTests -only-testing:moonbeam-appTests/BearingLineTests`, then the full suite.
+
+Things to watch: whether the centre pin lines up with the map's true centre under the navigation bar; whether making
+the cells buttons for VoiceOver changes any accessibility-tree test; Follow me in the simulator needs a simulated
+location (Features → Location).
+
+Next: fix whatever the build turns up, then 6.2 (3D in the style switch).
+
+---
+
 # Step 6.1a: bearing line maths (2026-11-24)
 
 Done: `Features/Map/BearingLine.swift` (great-circle destination point, longitude wrap, 30 km default) and

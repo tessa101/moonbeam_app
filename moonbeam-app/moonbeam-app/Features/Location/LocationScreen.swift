@@ -217,6 +217,13 @@ struct LocationScreen: View {
         .sheet(isPresented: $viewModel.isCalendarPresented) {
             CalendarSheet(viewModel: viewModel, maximumHeight: viewportHeight ?? 0)
         }
+        .sheet(isPresented: $viewModel.isMapPresented) {
+            if let mapSheet = viewModel.mapSheet {
+                MoonMapView(viewModel: mapSheet)
+                    .presentationDetents([.large])
+                    .presentationDragIndicator(.visible)
+            }
+        }
     }
 
     private func scrollView(_ scrollProxy: ScrollViewProxy) -> some View {

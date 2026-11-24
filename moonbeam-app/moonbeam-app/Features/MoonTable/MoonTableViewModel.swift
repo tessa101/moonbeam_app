@@ -52,6 +52,13 @@ final class MoonTableViewModel {
     let rise: Column
     let set: Column
 
+    /// The moonrise the rise column shows: the day's, or the next one on a
+    /// day without (`nil` when that's more than a day away). The map draws
+    /// its line (MAP.md §3.4).
+    let shownRise: MoonEvent?
+    /// Likewise for moonset.
+    let shownSet: MoonEvent?
+
     /// "Waning Gibbous".
     let phaseName: String
     /// "75% lit"; VoiceOver's label still says "at midnight".
@@ -88,6 +95,8 @@ final class MoonTableViewModel {
         } else {
             nil
         }
+        shownRise = moonDay.rise ?? nextDay?.rise
+        shownSet = moonDay.set ?? nextDay?.set
         rise = Self.column(
             .rise,
             moonDay.rise,

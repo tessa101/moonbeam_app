@@ -1894,3 +1894,9 @@ From a recording of Got it → noCity (0.23 s of pure black, then an empty beat,
 - Map opens in satellite (hybrid, with labels); a switch offers Explore (standard map), and 3D once step 6.2 lands.
 - Considered: a Map button in the compass block, and the lock pill (only visible while pointing at a target).
 
+## 2026-11-24: Map 6.1 as built
+- The rise/set cells open the map with a tap gesture plus a VoiceOver button trait, hint and action, not a `Button`, so the cells' layout and look are untouched.
+- Times and bearings go in a legend card at the bottom of the sheet, not labels at the lines' far ends: at the 6 km starting view the ends (30 km away) are off screen.
+- The pin is the camera's centre, an overlay that ignores touches. The camera stays view state (MapKit's); the model only hears where the centre is.
+- While the moon is up, the map uses the current pass's rise and set, as the card does ("↑ Rose"). `CompassViewModel.currentPass` exposes it read-only.
+

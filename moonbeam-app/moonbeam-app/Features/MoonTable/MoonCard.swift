@@ -401,8 +401,8 @@ struct MoonCard: View {
     /// in height.
     private var idealWidthEventPair: some View {
         HStack(alignment: .top, spacing: Self.columnGap) {
-            column(displayedRise, isHighlighted: viewModel.highlightedCardCell == .moonrise)
-            column(displayedSet, isHighlighted: viewModel.highlightedCardCell == .moonset)
+            column(displayedRise, event: .rise, isHighlighted: viewModel.highlightedCardCell == .moonrise)
+            column(displayedSet, event: .set, isHighlighted: viewModel.highlightedCardCell == .moonset)
         }
         .fixedSize(horizontal: true, vertical: false)
     }
@@ -410,8 +410,8 @@ struct MoonCard: View {
     /// Narrow-width fallback. Each complete event gets the card's full width.
     private var stackedEventPair: some View {
         VStack(alignment: .leading, spacing: Self.columnGap) {
-            column(displayedRise, isHighlighted: viewModel.highlightedCardCell == .moonrise, fills: true)
-            column(displayedSet, isHighlighted: viewModel.highlightedCardCell == .moonset, fills: true)
+            column(displayedRise, event: .rise, isHighlighted: viewModel.highlightedCardCell == .moonrise, fills: true)
+            column(displayedSet, event: .set, isHighlighted: viewModel.highlightedCardCell == .moonset, fills: true)
         }
         .fixedSize(horizontal: false, vertical: true)
     }
@@ -455,13 +455,13 @@ struct MoonCard: View {
     /// centred between them.
     private func threeColumns(detail: String, connector: RiseSetLayout.Connector, rung: Rung) -> some View {
         HStack(alignment: .top, spacing: 0) {
-            column(displayedRise, isHighlighted: viewModel.highlightedCardCell == .moonrise, rung: rung)
+            column(displayedRise, event: .rise, isHighlighted: viewModel.highlightedCardCell == .moonrise, rung: rung)
                 .layoutPriority(1)
             joint(connector == .travelled ? .travelled : .dim, shows: rung.showsConnector)
             middleColumn(detail: detail, rung: rung)
                 .layoutPriority(1)
             joint(connector == .travelled ? .remaining : .dim, shows: rung.showsConnector)
-            column(displayedSet, isHighlighted: viewModel.highlightedCardCell == .moonset, rung: rung)
+            column(displayedSet, event: .set, isHighlighted: viewModel.highlightedCardCell == .moonset, rung: rung)
                 .layoutPriority(1)
         }
         .fixedSize(horizontal: false, vertical: true)
@@ -471,10 +471,10 @@ struct MoonCard: View {
     /// dotted line between them. Set is where it is with the moon up.
     private var joinedColumns: some View {
         HStack(alignment: .top, spacing: 0) {
-            column(displayedRise, isHighlighted: viewModel.highlightedCardCell == .moonrise)
+            column(displayedRise, event: .rise, isHighlighted: viewModel.highlightedCardCell == .moonrise)
                 .layoutPriority(1)
             joint(.dim, shows: true)
-            column(displayedSet, isHighlighted: viewModel.highlightedCardCell == .moonset)
+            column(displayedSet, event: .set, isHighlighted: viewModel.highlightedCardCell == .moonset)
                 .layoutPriority(1)
         }
         .fixedSize(horizontal: false, vertical: true)
@@ -485,9 +485,9 @@ struct MoonCard: View {
     /// 5.4.6c row, for when the cells don't fit hugging their ends.
     private func halfColumns(sortsForVoiceOver: Bool = false) -> some View {
         HStack(alignment: .top, spacing: Self.columnGap) {
-            column(displayedRise, isHighlighted: viewModel.highlightedCardCell == .moonrise, fills: true)
+            column(displayedRise, event: .rise, isHighlighted: viewModel.highlightedCardCell == .moonrise, fills: true)
                 .accessibilitySortPriority(sortsForVoiceOver ? Self.firstSortPriority : 0)
-            column(displayedSet, isHighlighted: viewModel.highlightedCardCell == .moonset, fills: true)
+            column(displayedSet, event: .set, isHighlighted: viewModel.highlightedCardCell == .moonset, fills: true)
         }
         .fixedSize(horizontal: false, vertical: true)
     }
@@ -560,10 +560,12 @@ struct MoonCard: View {
     /// next one ("Sun 12:20 AM") where the direction goes.
     ///
     /// - Parameters:
+    ///   - event: which map line a tap opens (MAP.md §3.1).
     ///   - rung: the three columns' text step; `nil` as built.
     ///   - fills: takes half the row (as built) rather than hugging.
     private func column(
         _ column: MoonTableViewModel.Column,
+        event: MoonTableFormatter.Event,
         isHighlighted: Bool,
         rung: Rung? = nil,
         fills: Bool = false
@@ -608,9 +610,20 @@ struct MoonCard: View {
         // cell, which set its label ~5 pt low.
         .frame(maxWidth: fills ? .infinity : nil, maxHeight: .infinity, alignment: .topLeading)
         .modifier(CellStyle(isHighlighted: isHighlighted, restingFill: .clear))
+        // MAP.md §3.1 (Tessa, 2026-11-24): a tap opens the map. A gesture
+        // rather than a Button, so the cell's layout and look don't change.
+        .contentShape(.rect)
+        .onTapGesture { viewModel.presentMap(event) }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(column.accessibilityLabel)
+        .accessibilityAddTraits(.isButton)
+        .accessibilityHint(Self.opensMapHint)
+        .accessibilityAction { viewModel.presentMap(event) }
     }
+
+    /// VoiceOver's hint on the Moonrise and Moonset cells.
+    static let opensMapHint = "Opens the map"
+
 
     /// The middle column (7a): the phase glyph in the label's slot, on the
     /// connector; "Up now" a step under the times; the live bearing. Locked

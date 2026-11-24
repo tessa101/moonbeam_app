@@ -292,6 +292,11 @@ final class CompassViewModel {
     /// along it, and only looks the pass up again when the moon rises or sets.
     @ObservationIgnored private var pass: MoonPass?
 
+    /// The pass the arc is drawn from, for the map: while the moon is up the
+    /// card shows this pass's rise and set ("↑ Rose"), so the map's lines
+    /// must use them too (MAP.md §3.4). Not observed, like `pass`.
+    var currentPass: MoonPass? { pass }
+
     /// The next moonrise while the moon is down, for Up now. Kept so the
     /// tick only looks it up again once it has passed.
     @ObservationIgnored private var nextRise: MoonEvent?

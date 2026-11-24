@@ -31,7 +31,7 @@ moonbeam-app/moonbeam-app/
 │   ├── Location/        # LocationViewModel, LocationScreen, MadlibSentence, LocationOffDialog, CalendarSheet
 │   ├── Compass/         # CompassView, CompassDial, CompassNote, CompassViewModel, CompassLock, CompassTarget, CompassContext
 │   ├── MoonTable/       # MoonCard, MoonTableViewModel, PhaseGlyph, PhaseGlyphGeometry
-│   ├── Map/             # BearingLine (great-circle line from the pin); map sheet to come (MAP.md, 6.1)
+│   ├── Map/             # MoonMapView (sheet), MoonMapViewModel, BearingLine (MAP.md)
 │   └── Onboarding/      # OnboardingViewModel, OnboardingView + one view per screen, OnboardingPage, OnboardingCopy
 ├── Services/
 │   ├── Moon/            # MoonService protocol + AstronomyEngineMoonService
@@ -188,7 +188,7 @@ DESIGN-1.1.md §5), set on any exit from onboarding.
 |---|---|
 | SwiftUI | UI |
 | Observation | `@Observable` view models |
-| MapKit | City search (`MKLocalSearchCompleter`, `MKLocalSearch`) and reverse geocoding (`MKReverseGeocodingRequest`). **Settled 2026-09-25:** `CLGeocoder` and `MKMapItem.placemark` are deprecated in iOS 26 |
+| MapKit | The map sheet (SwiftUI `Map`, MAP.md). City search (`MKLocalSearchCompleter`, `MKLocalSearch`) and reverse geocoding (`MKReverseGeocodingRequest`). **Settled 2026-09-25:** `CLGeocoder` and `MKMapItem.placemark` are deprecated in iOS 26 |
 | CoreLocation | One-shot current location via `CLLocationUpdate.liveUpdates()`; authorization via `CLLocationManager` |
 | Swift Testing | Unit tests |
 
