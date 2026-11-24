@@ -23,7 +23,7 @@ final class MoonMapViewModel {
     // MARK: - Types
 
     /// The map's look (MAP.md §3.2, Tessa 2026-11-24). 3D joins in 6.2.
-    enum Style: CaseIterable, Hashable {
+    nonisolated enum Style: CaseIterable, Hashable, Sendable {
         /// Satellite imagery with labels: the default, easiest for reading
         /// a coast or a ridge.
         case satellite
@@ -40,7 +40,7 @@ final class MoonMapViewModel {
     }
 
     /// One bearing line and its legend text.
-    struct Line: Equatable, Identifiable {
+    nonisolated struct Line: Equatable, Identifiable, Sendable {
         let event: MoonTableFormatter.Event
         let bearingLine: BearingLine
         /// "↑ Moonrise".
@@ -105,8 +105,8 @@ final class MoonMapViewModel {
 
     // MARK: - Dependencies
 
-    @ObservationIgnored private let rise: MoonEvent?
-    @ObservationIgnored private let set: MoonEvent?
+    @ObservationIgnored private let riseEvent: MoonEvent?
+    @ObservationIgnored private let setEvent: MoonEvent?
     @ObservationIgnored private let day: Date
     @ObservationIgnored private let connectivity: any ConnectivityService
     @ObservationIgnored private let formatter: MoonTableFormatter
@@ -134,8 +134,8 @@ final class MoonMapViewModel {
     ) {
         self.place = place
         self.day = day
-        self.rise = rise
-        self.set = set
+        riseEvent = rise
+        setEvent = set
         self.emphasised = emphasised
         self.canFollowUser = canFollowUser
         self.connectivity = connectivity
@@ -161,11 +161,11 @@ final class MoonMapViewModel {
     // MARK: - Lines
 
     private var riseLine: Line? {
-        rise.map { line(for: .rise, $0) }
+        riseEvent.map { line(for: .rise, $0) }
     }
 
     private var setLine: Line? {
-        set.map { line(for: .set, $0) }
+        setEvent.map { line(for: .set, $0) }
     }
 
     private func line(for event: MoonTableFormatter.Event, _ moonEvent: MoonEvent) -> Line {
