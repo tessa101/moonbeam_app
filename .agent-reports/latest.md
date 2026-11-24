@@ -1,3 +1,16 @@
+# Step 6.0: map feature spec (2026-11-24)
+
+Done: `docs/MAP.md` (new), PRODUCT.md (feature row, NFR3 now excludes the map), DECISIONS.md entry, STATUS.md line.
+Documentation only. No code, build or tests: this cloud session has no Xcode.
+
+Next: 6.1a, `BearingLine` (great-circle destination point) and `MoonMapViewModel` with Swift Testing tests, no UI.
+Then 6.1b the sheet, pin and lines; 6.1c entry button and follow-me heading. Each needs a build and test run on
+Tessa's Mac.
+
+Blocked / needs Tessa: entry button placement, line length (30 km to start), default map style, offline copy.
+
+---
+
 # Step 5.17: Hello Luna 1.0 (11) signed Release archive (2026-10-17)
 
 Done: `2c4d29e` "Set version 1.0 (11)" (not pushed). Only the app target's MARKETING_VERSION changed, 0.1 to 1.0, in

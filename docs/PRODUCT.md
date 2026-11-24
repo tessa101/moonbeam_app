@@ -4,7 +4,7 @@
 > If code and this doc disagree, one of them is wrong, so fix it on purpose.
 > Items marked **TBD** are open questions to resolve before they block work.
 
-_Last updated: 2026-09-26_
+_Last updated: 2026-11-24_
 
 ---
 
@@ -62,6 +62,7 @@ to catch a moonrise over the ocean or a skyline, you need the **time** and the
 | Current location (GPS) | ➖ | V1.1, needs permission UX |
 | Date picker | ✅ | Built in Step 3 (DATE.md): ‹ / › by day, month calendar, Today chip; today ±366 days in the place's time zone |
 | Saved locations | ➖ | Later |
+| Map: where to stand | ➖ | Planned, step 6.x (MAP.md): rise/set bearing lines from a movable pin, follow-me heading, then 3D |
 
 ## 7. Requirements
 
@@ -78,7 +79,7 @@ to catch a moonrise over the ocean or a skyline, you need the **time** and the
 
 - **NFR1 · Accuracy:** ±2 min / ±2° versus USNO for test locations.
 - **NFR2 · Performance:** Calculation < 50 ms on device.
-- **NFR3 · Offline:** Everything except geocoding works with no network.
+- **NFR3 · Offline:** Everything except geocoding and the map (MAP.md, needs map tiles) works with no network.
 - **NFR4 · Accessibility:** Full VoiceOver labels (read "east-southeast," not "ESE"), Dynamic Type, and WCAG AA contrast in light and dark mode.
 - **NFR5 · Privacy:** No analytics or tracking in V1. Location is never stored or sent anywhere except the geocoder.
 

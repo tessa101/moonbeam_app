@@ -1880,3 +1880,11 @@ From a recording of Got it → noCity (0.23 s of pure black, then an empty beat,
 ## 2026-10-17: Test doubles are DEBUG-only (Step 5.16, Tessa)
 - The Fake*Service and InMemory*Store types (connectivity, heading, location, place search, moon, place store, onboarding store) are wrapped in `#if DEBUG`, and so are the previews that use them. They no longer ship in Release; `strings -a -n 1` and `nm` confirm none of them are in the Release binary.
 - `LocationViewModel` and `CompassViewModel` no longer default `onboardingStore` or `connectivity` to a double. Production and preview code must pass every service explicitly. The test target's `TestDependencyDefaults.swift` restores the old defaults for tests only.
+
+## 2026-11-24: Map feature planned; flat map first, then 3D, tried in sequence (Tessa)
+- New feature: a map sheet showing the selected day's rise and set bearings from a "stand here" pin, so you can see what lies in that direction and try other spots. Spec: MAP.md. Steps: 6.1 flat map with follow-me heading, 6.2 3D toggle (realistic elevation), 6.3 "look along the line" camera, each checked on the phone before the next.
+- Key simplification: within a city the bearing doesn't change as you move, so the map only draws the existing bearing from the pin. No new astronomy, no change to MoonDay, MoonEvent or MoonService.
+- The map is the one online feature besides geocoding (NFR3 updated): tiles need the network. Offline it says so and still gives the bearing as text. Map tiles come from Apple, like the geocoder; no new dependency, permission or privacy-manifest entry.
+- Parked: real terrain-obstruction maths (needs third-party elevation data, a dependency and a network service; conflicts with NFR5), Look Around (likely can't be aimed), and AR. The moon's-climb ticks are the likely next step after 6.3.
+- Considered: a draggable pin (a fixed centre pin with the map panning under it is simpler and one-handed); opening the map from the lock pill only (it only shows while pointing at a target).
+
