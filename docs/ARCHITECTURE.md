@@ -31,6 +31,7 @@ moonbeam-app/moonbeam-app/
 │   ├── Location/        # LocationViewModel, LocationScreen, MadlibSentence, LocationOffDialog, CalendarSheet
 │   ├── Compass/         # CompassView, CompassDial, CompassNote, CompassViewModel, CompassLock, CompassTarget, CompassContext
 │   ├── MoonTable/       # MoonCard, MoonTableViewModel, PhaseGlyph, PhaseGlyphGeometry
+│   ├── Map/             # BearingLine (great-circle line from the pin); map sheet to come (MAP.md, 6.1)
 │   └── Onboarding/      # OnboardingViewModel, OnboardingView + one view per screen, OnboardingPage, OnboardingCopy
 ├── Services/
 │   ├── Moon/            # MoonService protocol + AstronomyEngineMoonService

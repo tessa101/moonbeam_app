@@ -699,3 +699,4 @@
 2026-11-24 21:28 6.1 map: started; planning spec docs/MAP.md (docs only, no build possible in cloud session)
 21:29 6.0 map spec: MAP.md, PRODUCT, DECISIONS, STATUS, latest.md written; committing 1/1
 22:55 6.0 map spec: Tessa's answers recorded (entry = rise/set cells, 30 km, satellite default); committing
+22:55 6.1a bearing line: code + tests written, NOT built (no Xcode here); committing

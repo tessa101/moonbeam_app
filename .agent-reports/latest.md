@@ -1,3 +1,22 @@
+# Step 6.1a: bearing line maths (2026-11-24)
+
+Done: `Features/Map/BearingLine.swift` (great-circle destination point, longitude wrap, 30 km default) and
+`moonbeam-appTests/BearingLineTests.swift` (16 cases). ARCHITECTURE.md lists `Features/Map/`.
+Earlier commit the same day: Tessa's answers in MAP.md and DECISIONS.md (entry = rise/set cells, 30 km, satellite).
+
+**Not built or tested.** This cloud session has no Xcode or Swift toolchain. The formula was checked in Python only.
+The project uses synchronized folders, so both new files should join their targets automatically.
+
+To verify on the Mac:
+`xcodebuild test -project moonbeam-app/moonbeam-app.xcodeproj -scheme moonbeam-app -destination 'platform=iOS Simulator,name=iPhone 17' -only-testing:moonbeam-appTests/BearingLineTests`
+
+Next: 6.1b `MoonMapViewModel` (pin, style Satellite/Explore, follow me, offline, lines for the selected day, tapped
+event emphasised) with tests. Then 6.1c the sheet and rise/set cell taps.
+
+Blocked: building and testing need Tessa's Mac (or Remote Control attached to this session).
+
+---
+
 # Step 6.0: map feature spec (2026-11-24)
 
 Done: `docs/MAP.md` (new), PRODUCT.md (feature row, NFR3 now excludes the map), DECISIONS.md entry, STATUS.md line.
