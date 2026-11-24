@@ -253,6 +253,66 @@ struct MoonMapViewModelTests {
         #expect(model.lines[0].accessibilityLabel.hasSuffix("You're facing it."))
     }
 
+    // MARK: - Look along the line (6.3)
+
+    @Test("Look along is offered only in 3D")
+    func lookAlongNeeds3D() {
+        let model = Self.makeViewModel()
+        #expect(!model.canLookAlong)
+        #expect(model.lookAlong() == nil)
+        #expect(model.lookingAlong == nil)
+        model.style = .threeD
+        #expect(model.canLookAlong)
+    }
+
+    @Test("The camera faces the selected line, looking at a point ahead along it")
+    func lookAlongCamera() throws {
+        let model = Self.makeViewModel(selected: .set)
+        model.style = .threeD
+        let request = try #require(model.lookAlong())
+        #expect(model.lookingAlong == .set)
+        #expect(request.heading == 301)
+        #expect(request.pitch == MoonMapViewModel.lookAlongPitch)
+        #expect(request.distance == MoonMapViewModel.lookAlongDistance)
+        let ahead = MoonMapViewModel.lookAlongDistance * sin(MoonMapViewModel.lookAlongPitch * .pi / 180)
+        let expected = BearingLine.destination(from: model.pin, bearing: 301, distance: ahead)
+        #expect(abs(request.center.latitude - expected.latitude) < 1e-9)
+        #expect(abs(request.center.longitude - expected.longitude) < 1e-9)
+    }
+
+    @Test("While looking along, the pin stays where you stand and nothing locks")
+    func lookAlongKeepsPin() {
+        let model = Self.makeViewModel()
+        model.style = .threeD
+        let stand = model.pin
+        _ = model.lookAlong()
+        let ahead = BearingLine.Coordinate(latitude: 33.69, longitude: -117.82)
+        model.cameraChanged(center: ahead, heading: 58, distance: 600, followsHeading: true)
+        #expect(model.pin == stand)
+        #expect(model.locked == nil)
+    }
+
+    @Test("Stopping goes back over the pin, still tilted for 3D")
+    func stopLookingAlong() {
+        let model = Self.makeViewModel()
+        model.style = .threeD
+        _ = model.lookAlong()
+        let request = model.stopLookingAlong()
+        #expect(model.lookingAlong == nil)
+        #expect(request.center == model.pin)
+        #expect(request.pitch == MoonMapViewModel.threeDPitch)
+    }
+
+    @Test("Leaving 3D ends looking along")
+    func leaving3DStops() {
+        let model = Self.makeViewModel()
+        model.style = .threeD
+        _ = model.lookAlong()
+        model.style = .satellite
+        #expect(model.lookingAlong == nil)
+        #expect(!model.canLookAlong)
+    }
+
     // MARK: - Offline
 
     private static func settle(until condition: () -> Bool) async {

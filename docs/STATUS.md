@@ -1,5 +1,7 @@
 # Status & Handoff
 
+_6.2–6.3 map 3D and look along, 2026-11-24 (not built): the style switch now reads Satellite / Explore / 3D (realistic elevation, tilts to 60°, pitch control). In 3D a binoculars button looks along the selected line from the pin (600 m, 80°); the pin freezes meanwhile; Moonrise/Moonset re-aims; Follow me, the button or leaving 3D ends it. Tests added to `MoonMapViewModelTests`. **Not compiled or run.** Earlier: 6.1d–e confirmed working on the phone. Next: Tessa tries 3D, then look along; then the moon's path (parked) or polish._
+
 _6.1d–e builds and runs on Tessa's phone, 2026-11-24, after two fixes: `tag(_:)` renamed `lineTag(_:)` (clashed with `View.tag`), and `.annotationTitles(.hidden)` moved from the `Map` onto the `Annotation` (it's a MapContent modifier). Map test suites not yet run on the Mac; feel of lock, haptic and tags not yet reported. Next: Tessa's notes on the feel, then 6.2 (3D)._
 
 _6.1d–e map feedback, 2026-11-24 (not built): Tessa's 6.1c build worked on the phone (pin and lines correct). Now: Follow me on by default (back to the place if over 50 km away), Moonrise/Moonset selection from the legend cells and line tags, a tag on each line near the pin, lock while turning with the compass rules (heavy haptic, line amber) and turn hints. Tests updated and added in `MoonMapViewModelTests` and `BearingLineTests`. **Not compiled or run.** Next: Tessa builds and tries it on the phone; then 6.2 (3D). Parked: the moon's path at any time._

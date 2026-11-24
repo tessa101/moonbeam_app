@@ -1906,3 +1906,7 @@ From a recording of Got it → noCity (0.23 s of pure black, then an empty beat,
 - A Moonrise / Moonset switch inside the map: the legend cells (and the line tags) select a line. Each legend cell shows which way to turn ("Turn 23° right", "Facing it").
 - The moon's path at times other than rise and set is parked as a larger step (MAP.md §8).
 
+## 2026-11-24: Map 3D (6.2) and look along the line (6.3) as built
+- 3D is the third option in the style switch: satellite imagery over real terrain (`.hybrid(elevation: .realistic)`), tilted to 60° on switching, with MapKit's pitch control. Standard-map 3D is the fallback if satellite reads badly.
+- "Look along the line" only in 3D: the camera stands behind the pin facing the selected bearing at 80° tilt, 600 m from the point it looks at. The pin freezes meanwhile, because the camera's centre is out on the line. MapKit clamps tilt, so this is an elevated view, not eye level; to be judged on the phone.
+

@@ -72,6 +72,18 @@ final class MoonMapViewModel {
         var id: MoonTableFormatter.Event { event }
     }
 
+    /// Where the view should put MapKit's camera: a request, not a reading.
+    nonisolated struct CameraRequest: Equatable, Sendable {
+        /// What the camera looks at, not where it stands.
+        let center: BearingLine.Coordinate
+        /// Degrees from true north.
+        let heading: Double
+        /// Metres from the camera to `center`.
+        let distance: Double
+        /// Degrees from straight down.
+        let pitch: Double
+    }
+
     // MARK: - Constants
 
     /// The camera's starting distance from the ground, in metres: a few
@@ -81,6 +93,13 @@ final class MoonMapViewModel {
     /// The tilt, in degrees from straight down, that switching to 3D gives
     /// the camera, so the terrain reads as 3D at once (MAP.md §4).
     static let threeDPitch = 60.0
+
+    /// "Look along the line" (MAP.md §5, step 6.3): the camera's distance
+    /// and tilt. MapKit clamps the tilt (more so zoomed out), so the eye
+    /// sits roughly `distance × cos(pitch)` up: about 100 m here at best,
+    /// not eye level. Tune on the phone.
+    static let lookAlongDistance = 600.0
+    static let lookAlongPitch = 80.0
 
     /// How far along a line its tag sits, as a fraction of the camera's
     /// distance: near enough to stay on screen at any zoom.
@@ -99,7 +118,22 @@ final class MoonMapViewModel {
     /// Moonrise / Moonset switch (MAP.md §3.9).
     private(set) var selected: MoonTableFormatter.Event
 
-    var style: Style = .satellite
+    /// Leaving 3D ends "look along the line", which only works in 3D.
+    var style: Style = .satellite {
+        didSet {
+            if style != .threeD { lookingAlong = nil }
+        }
+    }
+
+    /// The line the camera looks along from the pin (MAP.md §5), or `nil`.
+    /// Meanwhile the pin stays put: the camera's centre is out along the
+    /// line, not where you stand.
+    private(set) var lookingAlong: MoonTableFormatter.Event?
+
+    /// "Look along the line" is offered in 3D, for a line that exists.
+    var canLookAlong: Bool {
+        style == .threeD && azimuth(for: selected) != nil
+    }
 
     /// Where you'd stand: the map's centre. Starts at the place.
     private(set) var pin: BearingLine.Coordinate
@@ -210,8 +244,12 @@ final class MoonMapViewModel {
         distance: Double,
         followsHeading: Bool
     ) {
-        pin = center
         cameraDistance = distance
+        if lookingAlong != nil {
+            updateLock(heading: nil)
+            return
+        }
+        pin = center
 
         if followsHeading, isAutoFollowing, BearingLine.distance(from: center, to: placeCoordinate) > Self.followMaximumDistance {
             isAutoFollowing = false
@@ -223,9 +261,42 @@ final class MoonMapViewModel {
         updateLock(heading: followsHeading ? heading : nil)
     }
 
-    /// The map's own Moonrise / Moonset switch.
+    /// The map's own Moonrise / Moonset switch. While looking along a line,
+    /// the view calls `lookAlong()` again to turn to the new one.
     func select(_ event: MoonTableFormatter.Event) {
         selected = event
+    }
+
+    /// Starts (or re-aims) "look along the line" for the selected line:
+    /// the camera stands back over the pin, faces the line's bearing and
+    /// tilts toward the horizon. `nil` outside 3D or without that line.
+    func lookAlong() -> CameraRequest? {
+        guard style == .threeD, let bearing = azimuth(for: selected) else { return nil }
+        lookingAlong = selected
+        isAutoFollowing = false
+        updateLock(heading: nil)
+        // The camera looks at a point ahead and stands `distance` back from
+        // it, so that point is `distance × sin(pitch)` along the line.
+        let ahead = Self.lookAlongDistance * sin(Self.lookAlongPitch * .pi / Self.halfTurn)
+        return CameraRequest(
+            center: BearingLine.destination(from: pin, bearing: bearing, distance: ahead),
+            heading: bearing,
+            distance: Self.lookAlongDistance,
+            pitch: Self.lookAlongPitch
+        )
+    }
+
+    /// Back to the map over the pin, still tilted as 3D is. Follow me
+    /// calls it too, ignoring the camera request since MapKit takes over.
+    @discardableResult
+    func stopLookingAlong() -> CameraRequest {
+        lookingAlong = nil
+        return CameraRequest(
+            center: pin,
+            heading: 0,
+            distance: Self.initialCameraDistance,
+            pitch: style == .threeD ? Self.threeDPitch : 0
+        )
     }
 
     /// Follows the network path until the caller's task is cancelled (the
@@ -233,6 +304,13 @@ final class MoonMapViewModel {
     func observeConnectivity() async {
         for await online in connectivity.pathUpdates() {
             isOnline = online
+        }
+    }
+
+    private func azimuth(for event: MoonTableFormatter.Event) -> Double? {
+        switch event {
+        case .rise: riseEvent?.azimuth
+        case .set: setEvent?.azimuth
         }
     }
 

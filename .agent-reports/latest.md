@@ -1,3 +1,21 @@
+# Steps 6.2–6.3: 3D and look along the line (2026-11-24)
+
+Tessa confirmed 6.1d–e works on the phone (follow default, lock and haptic, turn hints, tags, switch).
+
+Done (two commits, not built here, no Xcode):
+- 6.2: 3D in the style switch (`.hybrid(elevation: .realistic)`), tilt to 60° when switching (not while following),
+  `MapPitchToggle`.
+- 6.3: in 3D, a binoculars button: camera behind the pin facing the selected line, 600 m / 80°; pin frozen and drawn
+  as an annotation; re-aims on Moonrise/Moonset; ends on the button, Follow me or leaving 3D.
+- Tests: styles, look-along camera maths, pin frozen, stop, leaving 3D.
+
+Try in order on the phone: (1) 3D, in Irvine and somewhere hilly or with tall buildings; (2) the binoculars. Note how
+low the view gets and whether it helps judge obstructions.
+
+Next: Tessa's verdict on 3D and look along. Parked: moon's path at any time; Xcode agent handoff (Tessa: later).
+
+---
+
 # Step 6.1d–e: builds on the phone (2026-11-24)
 
 Tessa: "it works" after `3484515` (annotationTitles on the Annotation) and `024b418` (`lineTag` rename). Not yet

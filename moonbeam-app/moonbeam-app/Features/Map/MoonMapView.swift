@@ -64,7 +64,11 @@ struct MoonMapView: View {
     var body: some View {
         NavigationStack {
             map
-                .overlay { pin }
+                .overlay {
+                    // Looking along a line, the camera's centre is out on
+                    // the line; the stand point is a map annotation instead.
+                    if viewModel.lookingAlong == nil { pin }
+                }
                 .overlay(alignment: .bottom) { legend }
                 .toolbar { toolbar }
                 .navigationBarTitleDisplayMode(.inline)
@@ -78,6 +82,34 @@ struct MoonMapView: View {
         .onChange(of: viewModel.style) { old, new in
             tiltForStyle(from: old, to: new)
         }
+        .onChange(of: viewModel.selected) {
+            // Turn to the newly selected line while looking along one.
+            guard viewModel.lookingAlong != nil, let request = viewModel.lookAlong() else { return }
+            move(to: request)
+        }
+    }
+
+    /// Animates MapKit's camera to the model's request.
+    private func move(to request: MoonMapViewModel.CameraRequest) {
+        withAnimation {
+            position = .camera(
+                MapCamera(
+                    centerCoordinate: request.center.location,
+                    distance: request.distance,
+                    heading: request.heading,
+                    pitch: request.pitch
+                )
+            )
+        }
+    }
+
+    /// "Look along the line" on and off (MAP.md §5).
+    private func toggleLookAlong() {
+        if viewModel.lookingAlong != nil {
+            move(to: viewModel.stopLookingAlong())
+        } else if let request = viewModel.lookAlong() {
+            move(to: request)
+        }
     }
 
     /// Switching to 3D tilts the camera where it is, so the terrain reads
@@ -85,7 +117,8 @@ struct MoonMapView: View {
     /// you the camera is MapKit's, so it's left alone (the pitch control
     /// still works).
     private func tiltForStyle(from old: MoonMapViewModel.Style, to new: MoonMapViewModel.Style) {
-        guard !position.followsUserLocation, let lastCamera, (old == .threeD) != (new == .threeD) else { return }
+        guard !position.followsUserLocation, viewModel.lookingAlong == nil, let lastCamera,
+              (old == .threeD) != (new == .threeD) else { return }
         let pitch = new == .threeD ? MoonMapViewModel.threeDPitch : 0
         withAnimation {
             position = .camera(
@@ -114,6 +147,12 @@ struct MoonMapView: View {
     private var map: some View {
         Map(position: $position) {
             UserAnnotation()
+            if viewModel.lookingAlong != nil {
+                Annotation("Stand here", coordinate: viewModel.pin.location, anchor: .center) {
+                    pin
+                }
+                .annotationTitles(.hidden)
+            }
             ForEach(viewModel.lines) { line in
                 MapPolyline(
                     coordinates: [line.bearingLine.start.location, line.bearingLine.end.location],
@@ -294,9 +333,18 @@ struct MoonMapView: View {
         ToolbarItem(placement: .confirmationAction) {
             Button("Done") { dismiss() }
         }
+        if viewModel.canLookAlong {
+            ToolbarItem(placement: .topBarLeading) {
+                Button(action: toggleLookAlong) {
+                    Image(systemName: viewModel.lookingAlong == nil ? "binoculars" : "binoculars.fill")
+                }
+                .accessibilityLabel(viewModel.lookingAlong == nil ? "Look along the line" : "Back to the map")
+            }
+        }
         if viewModel.canFollowUser {
             ToolbarItem(placement: .topBarLeading) {
                 Button {
+                    viewModel.stopLookingAlong()
                     position = .userLocation(followsHeading: true, fallback: position)
                 } label: {
                     Image(systemName: position.followsUserLocation ? "location.north.line.fill" : "location.north.line")
