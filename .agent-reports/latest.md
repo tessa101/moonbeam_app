@@ -1,3 +1,11 @@
+# Step 6.1d–e: builds on the phone (2026-11-24)
+
+Tessa: "it works" after `3484515` (annotationTitles on the Annotation) and `024b418` (`lineTag` rename). Not yet
+run: `MoonMapViewModelTests`, `LocationViewModelMapTests`, `BearingLineTests`, full suite. Waiting on Tessa's notes on
+the lock, haptic, tags and Follow me default. Next: 6.2 (3D).
+
+---
+
 # Step 6.1d–e: map feedback (2026-11-24)
 
 From Tessa's phone test of 6.1c (build OK, pin and lines correct):

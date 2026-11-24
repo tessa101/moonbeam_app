@@ -707,3 +707,4 @@
 23:32 6.1d-e map feedback: follow default, in-map switch, tags, lock+haptic, turn hints written, NOT built; committing
 23:48 6.1d-e: Tessa reports build fails on phone; fixed suspected tag() name clash and traits ternary, pushed; awaiting error text if still failing
 23:49 6.1d-e: Tessa's error: Map has no member (annotationTitles is a MapContent modifier); moved onto Annotation; pushed
+23:52 6.1d-e: builds and runs on Tessa's phone; status/report updated
