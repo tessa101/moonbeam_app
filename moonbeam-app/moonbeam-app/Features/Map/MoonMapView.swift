@@ -97,7 +97,7 @@ struct MoonMapView: View {
             }
             ForEach(viewModel.lines) { line in
                 Annotation(line.mapLabel, coordinate: line.mapLabelCoordinate.location, anchor: .center) {
-                    tag(line)
+                    lineTag(line)
                 }
             }
         }
@@ -131,7 +131,7 @@ struct MoonMapView: View {
     }
 
     /// "Moonrise 58°" on the line near the pin. Tapping it selects the line.
-    private func tag(_ line: MoonMapViewModel.Line) -> some View {
+    private func lineTag(_ line: MoonMapViewModel.Line) -> some View {
         Text(line.mapLabel)
             .font(Theme.Fonts.label)
             .foregroundStyle(line.isLocked ? Theme.Colors.onAccent : Theme.Colors.textPrimary)
@@ -225,7 +225,7 @@ struct MoonMapView: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(Self.cellPadding)
-            .background(line.isLocked ? Theme.Colors.accent.opacity(Self.cellLockedFillOpacity) : .clear, in: shape)
+            .background(line.isLocked ? Theme.Colors.accent.opacity(Self.cellLockedFillOpacity) : Color.clear, in: shape)
             .overlay {
                 shape.strokeBorder(cellBorder(line), lineWidth: Theme.Metrics.hairline)
             }
@@ -234,12 +234,18 @@ struct MoonMapView: View {
         .buttonStyle(.row)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(line.accessibilityLabel)
-        .accessibilityAddTraits(line.isSelected ? [.isButton, .isSelected] : .isButton)
+        .accessibilityAddTraits(cellTraits(line))
+    }
+
+    private func cellTraits(_ line: MoonMapViewModel.Line) -> AccessibilityTraits {
+        var traits: AccessibilityTraits = .isButton
+        if line.isSelected { traits.insert(.isSelected) }
+        return traits
     }
 
     private func cellBorder(_ line: MoonMapViewModel.Line) -> Color {
         if line.isLocked { return Theme.Colors.accent }
-        return line.isSelected ? Theme.Colors.textPrimary.opacity(Self.cellSelectedBorderOpacity) : .clear
+        return line.isSelected ? Theme.Colors.textPrimary.opacity(Self.cellSelectedBorderOpacity) : Color.clear
     }
 
     // MARK: - Toolbar

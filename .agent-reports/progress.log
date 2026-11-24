@@ -705,3 +705,4 @@
 23:10 6.1c map sheet + cell taps committed; awaiting Tessa's build
 23:16 6.1c: Tessa reports build failed on phone (errors not yet seen); pushed defensive fixes, waiting for error text
 23:32 6.1d-e map feedback: follow default, in-map switch, tags, lock+haptic, turn hints written, NOT built; committing
+23:48 6.1d-e: Tessa reports build fails on phone; fixed suspected tag() name clash and traits ternary, pushed; awaiting error text if still failing
