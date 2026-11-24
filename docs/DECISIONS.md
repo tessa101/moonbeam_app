@@ -1888,3 +1888,9 @@ From a recording of Got it → noCity (0.23 s of pure black, then an empty beat,
 - Parked: real terrain-obstruction maths (needs third-party elevation data, a dependency and a network service; conflicts with NFR5), Look Around (likely can't be aimed), and AR. The moon's-climb ticks are the likely next step after 6.3.
 - Considered: a draggable pin (a fixed centre pin with the map panning under it is simpler and one-handed); opening the map from the lock pill only (it only shows while pointing at a target).
 
+## 2026-11-24: Map entry, line length and default style (Tessa)
+- Entry: tapping the card's Moonrise or Moonset area opens the map, with that event's line emphasised. Other entry points can come later.
+- Bearing lines 30 km long, tuned on the phone.
+- Map opens in satellite (hybrid, with labels); a switch offers Explore (standard map), and 3D once step 6.2 lands.
+- Considered: a Map button in the compass block, and the lock pill (only visible while pointing at a target).
+

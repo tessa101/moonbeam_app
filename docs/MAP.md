@@ -1,6 +1,6 @@
 # Map: where to stand to see the moonrise
 
-Status: planned 2026-11-24 (Tessa agreed the approach in chat). Flat map first, then a 3D view, tried in sequence on
+Status: planned 2026-11-24 (Tessa agreed the approach in chat; entry, line length and style settled the same day). Flat map first, then a 3D view, tried in sequence on
 the phone. Terrain-obstruction maths, Look Around and AR are parked (§8).
 
 _Last updated: 2026-11-24_
@@ -21,17 +21,18 @@ draws the selected day's bearing from wherever you put the pin, and you look at 
 
 ## 3. What it does (step 6.1, flat map)
 
-1. **Entry.** A "Map" button in the compass block, always visible when the card has a place (the lock pill only shows
-   while you point at a target, so it can't be the only way in). Tapping the lock pill also opens the map, already
-   showing that target. **Proposed, confirm on the phone.**
-2. **Sheet.** A full-height sheet with a dark map (`Map` from SwiftUI MapKit, standard style, `.flat` elevation) and a
-   Done button.
+1. **Entry (Tessa, 2026-11-24).** Tapping the **Moonrise** or **Moonset** area of the card opens the map, with the
+   tapped event's line emphasised. The cells become buttons (VoiceOver hint: "Opens the map"). A different or
+   additional entry point can come later.
+2. **Sheet.** A full-height sheet with a Done button. The map (`Map` from SwiftUI MapKit) opens in **satellite**
+   (hybrid, with labels), `.flat` elevation (Tessa, 2026-11-24). A style switch offers **Explore** (the standard map);
+   **3D** joins it in 6.2.
 3. **"Stand here" pin.** A fixed pin at the centre of the map; you pan the map under it (like ride-share pickup
    pins). That avoids custom drag code and is easy to use one-handed. It starts at the place's coordinate.
 4. **Bearing lines** from the pin:
    - Moonrise: amber (`Theme` accent), labelled at the far end "Moonrise 4:42 PM · 58° ENE".
    - Moonset: dimmer secondary line, same label format.
-   - Length: `bearingLineLength` = 30 km (a named constant, **open**: tune on the phone). Drawn as a geodesic, since
+   - Length: `bearingLineLength` = 30 km (a named constant; Tessa agreed 2026-11-24, tune on the phone). Drawn as a geodesic, since
      an azimuth is the starting direction of a great circle.
    - Times use the **place's** time zone, as everywhere.
    - The lines are for the **selected day** (the card's ‹ › date), not always today.
@@ -54,9 +55,9 @@ draws the selected day's bearing from wherever you put the pin, and you look at 
 
 ## 4. Step 6.2: 3D
 
-1. A "3D" toggle switches the map to `.realistic` elevation (terrain, and 3D buildings where Apple has them), plus
-   MapKit's pitch control. The pin and lines stay.
-2. Optional style switch: standard / satellite (hybrid). Satellite often makes the coast or a ridge easier to read.
+1. **3D** joins the style switch (Satellite / Explore / 3D) and turns on `.realistic` elevation (terrain, and 3D
+   buildings where Apple has them), plus MapKit's pitch control. The pin and lines stay.
+2. Whether 3D sits on satellite imagery or the standard map: try both on the phone.
 3. Where Apple has no 3D data, the map just tilts flat. There's no reliable public way to ask "is 3D available
    here?", so the toggle is always shown. **Check on the phone** whether that's confusing.
 
@@ -103,7 +104,8 @@ keep 6.2 and skip this.
 
 ## 9. Open questions
 
-- Entry point: "Map" button placement in the compass block, and whether the lock pill also opens it (§3.1).
-- Line length (30 km to start).
-- Default map style: standard dark or satellite.
 - Copy for the offline state and the line labels' exact wording.
+- Later: another entry point besides the rise/set cells.
+
+Settled 2026-11-24 (Tessa): entry is the rise/set cells; lines 30 km; satellite by default with Explore (and later
+3D) as options.
