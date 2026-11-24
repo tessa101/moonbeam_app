@@ -4,7 +4,7 @@ Done: `Features/Map/BearingLine.swift` (great-circle destination point, longitud
 `moonbeam-appTests/BearingLineTests.swift` (16 cases). ARCHITECTURE.md lists `Features/Map/`.
 Earlier commit the same day: Tessa's answers in MAP.md and DECISIONS.md (entry = rise/set cells, 30 km, satellite).
 
-**Not built or tested.** This cloud session has no Xcode or Swift toolchain. The formula was checked in Python only.
+**Tests pass:** Tessa ran `BearingLineTests` on her Mac (xcodebuild, iPhone 17), 2026-11-24. Full suite not run. This cloud session has no Xcode or Swift toolchain. The formula was checked in Python only.
 The project uses synchronized folders, so both new files should join their targets automatically.
 
 To verify on the Mac:
