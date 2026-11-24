@@ -8,8 +8,9 @@ import Testing
 @testable import moonbeam_app
 
 /// The map sheet's state (MAP.md §3, §7): lines from the pin for the events
-/// the card shows, labels in the place's zone, the tapped line emphasised,
-/// Follow me only with location, and the offline state.
+/// the card shows, labels in the place's zone, the selected line, Follow me
+/// (on by default, undone far from the place), the lock and turn hints while
+/// the map turns with the phone, and the offline state.
 ///
 /// Irvine on 2026-11-24, as in Tessa's screenshot: moonrise 4:42 PM at 58°
 /// ENE, moonset 6:46 AM at 301° WNW. The events are fixed inputs here; the
@@ -46,7 +47,7 @@ struct MoonMapViewModelTests {
         place: Place = irvine,
         rise: MoonEvent? = rise,
         set: MoonEvent? = set,
-        emphasised: MoonTableFormatter.Event = .rise,
+        selected: MoonTableFormatter.Event = .rise,
         canFollowUser: Bool = true,
         connectivity: FakeConnectivityService = FakeConnectivityService()
     ) -> MoonMapViewModel {
@@ -55,7 +56,7 @@ struct MoonMapViewModelTests {
             day: day,
             rise: rise,
             set: set,
-            emphasised: emphasised,
+            selected: selected,
             canFollowUser: canFollowUser,
             connectivity: connectivity,
             formatter: formatter
@@ -86,16 +87,35 @@ struct MoonMapViewModelTests {
     func pinMoves() {
         let model = Self.makeViewModel()
         let beach = BearingLine.Coordinate(latitude: 33.59, longitude: -117.87)
-        model.pinMoved(to: beach)
+        model.cameraChanged(center: beach, heading: 0, distance: 6_000, followsHeading: false)
         #expect(model.pin == beach)
         #expect(model.lines.allSatisfy { $0.bearingLine.start == beach })
         #expect(model.lines.map(\.bearingLine.bearing) == [58, 301])
     }
 
-    @Test("The tapped cell's line is emphasised", arguments: [MoonTableFormatter.Event.rise, .set])
-    func emphasis(event: MoonTableFormatter.Event) {
-        let model = Self.makeViewModel(emphasised: event)
-        #expect(model.lines.filter(\.isEmphasised).map(\.event) == [event])
+    @Test("The tapped cell's line starts selected", arguments: [MoonTableFormatter.Event.rise, .set])
+    func initialSelection(event: MoonTableFormatter.Event) {
+        let model = Self.makeViewModel(selected: event)
+        #expect(model.lines.filter(\.isSelected).map(\.event) == [event])
+    }
+
+    @Test("The map's own switch changes the selected line")
+    func switchSelection() {
+        let model = Self.makeViewModel(selected: .rise)
+        model.select(.set)
+        #expect(model.selected == .set)
+        #expect(model.lines.filter(\.isSelected).map(\.event) == [.set])
+    }
+
+    @Test("Each line has a tag near the pin, a quarter of the view away")
+    func mapLabels() {
+        let model = Self.makeViewModel()
+        model.cameraChanged(center: model.pin, heading: 0, distance: 8_000, followsHeading: false)
+        let rise = model.lines[0]
+        #expect(rise.mapLabel == "Moonrise 58°")
+        let away = BearingLine.distance(from: model.pin, to: rise.mapLabelCoordinate)
+        #expect(abs(away - 2_000) < 0.01)
+        #expect(model.lines[1].mapLabel == "Moonset 301°")
     }
 
     @Test("No event, no line")
@@ -140,16 +160,91 @@ struct MoonMapViewModelTests {
 
     // MARK: - Follow me
 
-    @Test(
-        "Follow me needs location; it starts on only at your own position",
-        arguments: [(true, true, true), (true, false, false), (false, true, false), (false, false, false)]
-    )
-    func followMe(canFollow: Bool, isCurrentLocation: Bool, startsFollowing: Bool) {
-        var place = Self.irvine
-        place.isCurrentLocation = isCurrentLocation
-        let model = Self.makeViewModel(place: place, canFollowUser: canFollow)
+    @Test("Follow me is on by default whenever location is allowed", arguments: [true, false])
+    func followMeDefault(canFollow: Bool) {
+        let model = Self.makeViewModel(canFollowUser: canFollow)
         #expect(model.canFollowUser == canFollow)
-        #expect(model.startsFollowingUser == startsFollowing)
+        #expect(model.startsFollowingUser == canFollow)
+    }
+
+    @Test("Following you far from the place sends the map back to the place, once")
+    func farFromPlace() {
+        let model = Self.makeViewModel()
+        let sydney = BearingLine.Coordinate(latitude: -33.87, longitude: 151.21)
+        model.cameraChanged(center: sydney, heading: 0, distance: 6_000, followsHeading: true)
+        #expect(model.returnToPlaceCount == 1)
+        #expect(model.heading == nil)
+
+        // A later, deliberate Follow me there is left alone.
+        model.cameraChanged(center: sydney, heading: 0, distance: 6_000, followsHeading: true)
+        #expect(model.returnToPlaceCount == 1)
+    }
+
+    @Test("Following you near the place stays put")
+    func nearPlace() {
+        let model = Self.makeViewModel()
+        let beach = BearingLine.Coordinate(latitude: 33.59, longitude: -117.87)
+        model.cameraChanged(center: beach, heading: 0, distance: 6_000, followsHeading: true)
+        #expect(model.returnToPlaceCount == 0)
+        #expect(model.heading == 0)
+    }
+
+    // MARK: - Lock and turn hints
+
+    private static func turn(_ model: MoonMapViewModel, to heading: Double) {
+        model.cameraChanged(center: model.pin, heading: heading, distance: 6_000, followsHeading: true)
+    }
+
+    @Test("Pointing along a line locks it, once per acquisition, with the compass's ±5° / ±8°")
+    func lock() {
+        let model = Self.makeViewModel()
+        Self.turn(model, to: 40)
+        #expect(model.locked == nil)
+        #expect(model.lockAcquisitionCount == 0)
+
+        Self.turn(model, to: 55)
+        #expect(model.locked == .rise)
+        #expect(model.lockAcquisitionCount == 1)
+        #expect(model.lines[0].isLocked)
+        #expect(!model.lines[1].isLocked)
+
+        Self.turn(model, to: 51)
+        #expect(model.locked == .rise)
+        #expect(model.lockAcquisitionCount == 1)
+
+        Self.turn(model, to: 49)
+        #expect(model.locked == nil)
+
+        Self.turn(model, to: 300)
+        #expect(model.locked == .set)
+        #expect(model.lockAcquisitionCount == 2)
+    }
+
+    @Test("No lock or hints unless the map turns with the phone")
+    func noLockWithoutHeading() {
+        let model = Self.makeViewModel()
+        model.cameraChanged(center: model.pin, heading: 58, distance: 6_000, followsHeading: false)
+        #expect(model.locked == nil)
+        #expect(model.lines.allSatisfy { $0.turnHint == nil })
+    }
+
+    @Test("Turn hints say which way and how far, the short way round", arguments: [
+        (35.0, "Turn 23° right", "Turn 94° left"),
+        (80.0, "Turn 22° left", "Turn 139° left"),
+        (350.0, "Turn 68° right", "Turn 49° left")
+    ])
+    func turnHints(heading: Double, rise: String, set: String) {
+        let model = Self.makeViewModel()
+        Self.turn(model, to: heading)
+        #expect(model.lines.map(\.turnHint) == [rise, set])
+    }
+
+    @Test("A locked line says you're facing it, in words for VoiceOver too")
+    func facingIt() {
+        let model = Self.makeViewModel()
+        Self.turn(model, to: 58)
+        #expect(model.lines[0].turnHint == "Facing it")
+        #expect(model.lines[0].accessibilityLabel.hasSuffix("You're facing it."))
     }
 
     // MARK: - Offline

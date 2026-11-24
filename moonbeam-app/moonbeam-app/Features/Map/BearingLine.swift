@@ -75,6 +75,17 @@ nonisolated struct BearingLine: Equatable, Sendable {
         return Coordinate(latitude: degrees(φ2), longitude: normalizedLongitude(degrees(λ2)))
     }
 
+    /// Metres along the ground between two points (haversine): how far you
+    /// are from the place, to decide whether Follow me suits it.
+    static func distance(from a: Coordinate, to b: Coordinate) -> Double {
+        let φ1 = radians(a.latitude)
+        let φ2 = radians(b.latitude)
+        let Δφ = φ2 - φ1
+        let Δλ = radians(b.longitude - a.longitude)
+        let h = sin(Δφ / 2) * sin(Δφ / 2) + cos(φ1) * cos(φ2) * sin(Δλ / 2) * sin(Δλ / 2)
+        return 2 * earthRadius * asin(min(1, sqrt(h)))
+    }
+
     /// Wraps a longitude into −180..<180, so a line across the antimeridian
     /// ends at −179.5 rather than 180.5.
     static func normalizedLongitude(_ longitude: Double) -> Double {

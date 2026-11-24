@@ -1,3 +1,22 @@
+# Step 6.1d–e: map feedback (2026-11-24)
+
+From Tessa's phone test of 6.1c (build OK, pin and lines correct):
+- Done: Follow me on by default (returns to the place once if you're over 50 km away); Moonrise/Moonset switch in
+  the legend (cells side by side, tap to select; line tags also select); "Moonrise 58°" tags on the lines near the
+  pin; lock while turning with the compass's ±5°/±8° rules, heavy haptic, line and tag amber; "Turn 23° right" /
+  "Facing it" in the legend. Selected line is now cream and the other faint, so amber only means locked.
+- Tests: `MoonMapViewModelTests` (selection, tags, follow default and far-away return, lock, turn hints),
+  `BearingLineTests` (distance), `LocationViewModelMapTests` (renamed `selected`).
+
+**Not built or tested here** (no Xcode). On the Mac: pull, ⇧⌘K, ⌘R to the phone; run the three map suites.
+
+Watch on the phone: the haptic and amber on lock; whether the tags sit well at different zooms; whether a lock can
+flicker when MapKit smooths its heading.
+
+Next: 6.2 (3D in the style switch). Parked: the moon's path at any time (MAP.md §8).
+
+---
+
 # Step 6.1b–c: map sheet (2026-11-24)
 
 Done (two commits): `MoonMapViewModel` + tests (6.1b); `MoonMapView`, rise/set cell taps, `presentMap(_:)`, the sheet

@@ -8,7 +8,7 @@ import Testing
 @testable import moonbeam_app
 
 /// Opening the map from the card (MAP.md §3.1): a tapped Moonrise or Moonset
-/// cell builds the map for the card's own events, with that line emphasised.
+/// cell builds the map for the card's own events, with that line selected.
 @Suite("Location view model: map", .timeLimit(.minutes(1)))
 @MainActor
 struct LocationViewModelMapTests {
@@ -68,7 +68,7 @@ struct LocationViewModelMapTests {
         #expect(viewModel.isMapPresented)
         let map = try #require(viewModel.mapSheet)
         #expect(map.place == Self.irvine)
-        #expect(map.emphasised == event)
+        #expect(map.selected == event)
         #expect(map.lines.map(\.bearingLine.bearing) == [58, 301])
         #expect(map.pin == BearingLine.Coordinate(latitude: 33.68, longitude: -117.83))
     }

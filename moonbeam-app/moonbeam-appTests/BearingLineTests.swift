@@ -88,6 +88,15 @@ nonisolated struct BearingLineTests {
         #expect(abs(Self.angleBetween(Self.initialBearing(start, end), bearing)) < Self.bearingTolerance)
     }
 
+    @Test("Distance between two points, both ways")
+    func distance() {
+        let a = Coordinate(latitude: 0, longitude: 0)
+        let b = Coordinate(latitude: 0, longitude: 1)
+        #expect(abs(BearingLine.distance(from: a, to: b) - Self.oneDegree) < Self.distanceTolerance)
+        #expect(abs(BearingLine.distance(from: b, to: a) - Self.oneDegree) < Self.distanceTolerance)
+        #expect(BearingLine.distance(from: a, to: a) == 0)
+    }
+
     @Test("Default length is 30 km")
     func defaultLength() {
         #expect(BearingLine.defaultLength == 30_000)

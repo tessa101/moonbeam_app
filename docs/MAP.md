@@ -40,12 +40,21 @@ draws the selected day's bearing from wherever you put the pin, and you look at 
    - If the day has no rise or set (FR2), that line uses the next one, the same event the card shows, and the label
      says its day ("Sun 12:20 AM"). While the moon is up, the card shows the current pass ("↑ Rose"), so the map
      uses that pass's rise and set.
-5. **Follow me.** A button (top left) that switches to your GPS position with the map **turning with your phone** (MapKit's
+5. **Follow me.** On by default whenever location is allowed (Tessa, 2026-11-24, after 6.1c: the top-left arrow
+   wasn't obvious). If you're more than 50 km from the place (browsing another city), the map goes back to the place,
+   since its bearings wouldn't apply where you stand. The button (top left) switches to your GPS position with the map **turning with your phone** (MapKit's
    heading-following user location). The pin is then you. Panning the map leaves Follow me; the button brings it
    back. Hidden when location is off or not allowed, and the map still works on the searched place. When the place
    already is your detected location, the map opens following you.
 6. **North / heading.** Outside Follow me the map is north-up with MapKit's compass control; rotating with two
    fingers works as usual.
+8. **Lock while turning (6.1e).** While the map turns with the phone, a line locks when the phone points along it,
+   with the compass's rules (acquire ±5°, hold ±8°, COMPASS.md §1): a heavy haptic, as the compass gives, and the line
+   and its tag turn amber. Otherwise the selected line is light and the other faint. Each legend cell shows which way
+   to turn: "Turn 23° right", then "Facing it". MapKit gives no heading accuracy, so there's no low-accuracy rule.
+9. **Moonrise / Moonset switch (6.1d).** The legend's two cells, side by side like the card's, select a line; so does
+   tapping a line's tag. Each line carries a tag near the pin ("Moonrise 58°"), a quarter of the view away, so it
+   stays on screen at any zoom.
 7. **No connection.** Uses the existing `ConnectivityService`. With no network the sheet says the map needs a
    connection (copy TBD, tone of the existing offline messages) and still shows the bearing as text.
 
@@ -95,6 +104,10 @@ keep 6.2 and skip this.
   selected day; nil rise or set uses the next event.
 
 ## 8. Parked (not in 6.x)
+
+- **The moon's path at any time** (Tessa, 2026-11-24): see where the moon is and will be, not only at rise and set,
+  e.g. the pass drawn as a fan of bearings with times, or the moon's current direction as a third line. Bigger than
+  6.x; pairs with the moon's-climb idea below.
 
 - **Moon's climb** on the line: ticks for the first hour after rise with its altitude ("+20 min: 4° up"), so you can
   judge when it clears a hill. Needs altitude samples next to `MoonPass.path`. A good next step after 6.3.

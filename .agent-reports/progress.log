@@ -704,3 +704,4 @@
 23:10 6.1b/c map: view model, sheet, cell taps and tests written, NOT built (no Xcode here); committing 2 commits
 23:10 6.1c map sheet + cell taps committed; awaiting Tessa's build
 23:16 6.1c: Tessa reports build failed on phone (errors not yet seen); pushed defensive fixes, waiting for error text
+23:32 6.1d-e map feedback: follow default, in-map switch, tags, lock+haptic, turn hints written, NOT built; committing

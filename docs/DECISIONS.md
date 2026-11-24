@@ -1900,3 +1900,9 @@ From a recording of Got it → noCity (0.23 s of pure black, then an empty beat,
 - The pin is the camera's centre, an overlay that ignores touches. The camera stays view state (MapKit's); the model only hears where the centre is.
 - While the moon is up, the map uses the current pass's rise and set, as the card does ("↑ Rose"). `CompassViewModel.currentPass` exposes it read-only.
 
+## 2026-11-24: Map feedback after 6.1c (Tessa, on the phone)
+- Follow me is on by default whenever location is allowed; the top-left arrow alone wasn't obvious. Undone once if you're over 50 km from the place, so browsing another city still opens on that city.
+- Lock while the map turns with the phone, with the compass's rules and haptic: the line and its tag turn amber. To keep amber meaning "locked", as on the compass and card, the selected line is now light (cream) and the other faint; before, the tapped line was amber.
+- A Moonrise / Moonset switch inside the map: the legend cells (and the line tags) select a line. Each legend cell shows which way to turn ("Turn 23° right", "Facing it").
+- The moon's path at times other than rise and set is parked as a larger step (MAP.md §8).
+

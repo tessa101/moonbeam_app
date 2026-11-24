@@ -1122,7 +1122,7 @@ final class LocationViewModel {
     // MARK: - Map sheet (MAP.md §3)
 
     /// Opens the map from a tapped Moonrise or Moonset cell, with that
-    /// event's line emphasised. The lines are the events the card shows:
+    /// event's line selected. The lines are the events the card shows:
     /// the current pass's while the moon is up ("↑ Rose"), otherwise the
     /// selected day's, or the next one on a day without.
     func presentMap(_ event: MoonTableFormatter.Event) {
@@ -1133,7 +1133,7 @@ final class LocationViewModel {
             day: moonTable.day,
             rise: pass?.rise ?? moonTable.shownRise,
             set: pass?.set ?? moonTable.shownSet,
-            emphasised: event,
+            selected: event,
             canFollowUser: lastSeenAuthState.isAuthorized,
             connectivity: connectivity
         )

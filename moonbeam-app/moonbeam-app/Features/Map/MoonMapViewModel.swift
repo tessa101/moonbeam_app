@@ -39,7 +39,7 @@ final class MoonMapViewModel {
         }
     }
 
-    /// One bearing line and its legend text.
+    /// One bearing line, its labels and how it's drawn.
     nonisolated struct Line: Equatable, Identifiable, Sendable {
         let event: MoonTableFormatter.Event
         let bearingLine: BearingLine
@@ -48,10 +48,22 @@ final class MoonMapViewModel {
         /// "4:42 PM · 58° ENE", or "Sun 12:20 AM · 58° ENE" for an event
         /// on another day than the selected one.
         let detail: String
-        /// "Moonrise at 4:42 PM, east-northeast, 58 degrees."
+        /// "Moonrise 58°": the tag on the line itself, near the pin.
+        let mapLabel: String
+        /// Where the tag sits: along the line, a fraction of the view away.
+        let mapLabelCoordinate: BearingLine.Coordinate
+        /// "Turn 23° right", "Facing it", or `nil` unless the map turns
+        /// with the phone (MAP.md §3.8).
+        let turnHint: String?
+        /// "Moonrise at 4:42 PM, east-northeast, 58 degrees." plus the turn
+        /// hint when there is one.
         let accessibilityLabel: String
-        /// The line for the cell that was tapped, drawn stronger.
-        let isEmphasised: Bool
+        /// The line chosen in the map's Moonrise / Moonset switch (first
+        /// the tapped cell's), drawn stronger.
+        let isSelected: Bool
+        /// The phone points along it (MAP.md §3.8): drawn amber, as the
+        /// compass's lock is.
+        let isLocked: Bool
 
         var id: MoonTableFormatter.Event { event }
     }
@@ -62,12 +74,22 @@ final class MoonMapViewModel {
     /// kilometres across, enough to see the neighbourhood the line leaves.
     static let initialCameraDistance: Double = 6_000
 
+    /// How far along a line its tag sits, as a fraction of the camera's
+    /// distance: near enough to stay on screen at any zoom.
+    static let mapLabelDistanceFraction = 0.25
+
+    /// Follow me starts on by default (Tessa, 2026-11-24), but not when
+    /// you're this far from the place: you're browsing another city, and
+    /// its bearings wouldn't apply where you stand.
+    static let followMaximumDistance: Double = 50_000
+
     // MARK: - State
 
     let place: Place
 
-    /// Which line was tapped.
-    let emphasised: MoonTableFormatter.Event
+    /// The line in focus: first the tapped cell's, then the map's own
+    /// Moonrise / Moonset switch (MAP.md §3.9).
+    private(set) var selected: MoonTableFormatter.Event
 
     var style: Style = .satellite
 
@@ -81,11 +103,24 @@ final class MoonMapViewModel {
     /// Location is allowed, so Follow me can be offered (MAP.md §3.5).
     let canFollowUser: Bool
 
-    /// Open straight onto your own position, turning with the phone, when
-    /// the place already is where you are.
-    var startsFollowingUser: Bool {
-        canFollowUser && place.isCurrentLocation
-    }
+    /// Open straight onto your own position, turning with the phone,
+    /// whenever location is allowed (Tessa, 2026-11-24). If you turn out to
+    /// be far from the place, `returnToPlaceCount` sends the map back to it.
+    var startsFollowingUser: Bool { canFollowUser }
+
+    /// Bumped when an automatic Follow me finds you more than
+    /// `followMaximumDistance` from the place: the view moves the camera
+    /// back to the place.
+    private(set) var returnToPlaceCount = 0
+
+    /// The map's heading while it turns with the phone, else `nil`.
+    private(set) var heading: Double?
+
+    /// The line the phone points along, under the compass's lock rules.
+    private(set) var locked: MoonTableFormatter.Event?
+
+    /// Bumped on each new lock, for the haptic (like the compass's).
+    private(set) var lockAcquisitionCount = 0
 
     var lines: [Line] {
         [riseLine, setLine].compactMap { $0 }
@@ -112,6 +147,13 @@ final class MoonMapViewModel {
     @ObservationIgnored private let formatter: MoonTableFormatter
     @ObservationIgnored private let compass = CompassFormatter()
 
+    /// Following started by default rather than by a tap, so being far from
+    /// the place should undo it. Cleared once you stop following.
+    @ObservationIgnored private var isAutoFollowing: Bool
+
+    /// The camera's last distance from the ground, for placing line tags.
+    private var cameraDistance: Double = MoonMapViewModel.initialCameraDistance
+
     // MARK: - Init
 
     /// - Parameters:
@@ -120,14 +162,14 @@ final class MoonMapViewModel {
     ///   - rise: the moonrise the card shows (the day's, the next one on a
     ///     day without, or the current pass's while the moon is up).
     ///   - set: likewise for moonset.
-    ///   - emphasised: the cell that was tapped.
+    ///   - selected: the cell that was tapped.
     ///   - canFollowUser: location is authorized.
     init(
         place: Place,
         day: Date,
         rise: MoonEvent?,
         set: MoonEvent?,
-        emphasised: MoonTableFormatter.Event,
+        selected: MoonTableFormatter.Event,
         canFollowUser: Bool,
         connectivity: any ConnectivityService,
         formatter: MoonTableFormatter = MoonTableFormatter()
@@ -136,8 +178,9 @@ final class MoonMapViewModel {
         self.day = day
         riseEvent = rise
         setEvent = set
-        self.emphasised = emphasised
+        self.selected = selected
         self.canFollowUser = canFollowUser
+        isAutoFollowing = canFollowUser
         self.connectivity = connectivity
         self.formatter = formatter
         pin = BearingLine.Coordinate(latitude: place.latitude, longitude: place.longitude)
@@ -145,9 +188,36 @@ final class MoonMapViewModel {
 
     // MARK: - Actions
 
-    /// The map's centre moved (a pan, a zoom, or following the user).
-    func pinMoved(to coordinate: BearingLine.Coordinate) {
-        pin = coordinate
+    /// The map's camera moved: a pan, a zoom, a turn, or following you.
+    /// The pin is its centre.
+    ///
+    /// - Parameters:
+    ///   - heading: the camera's heading, degrees from true north.
+    ///   - distance: metres from the ground.
+    ///   - followsHeading: the map turns with the phone, so `heading` is
+    ///     where the phone points.
+    func cameraChanged(
+        center: BearingLine.Coordinate,
+        heading: Double,
+        distance: Double,
+        followsHeading: Bool
+    ) {
+        pin = center
+        cameraDistance = distance
+
+        if followsHeading, isAutoFollowing, BearingLine.distance(from: center, to: placeCoordinate) > Self.followMaximumDistance {
+            isAutoFollowing = false
+            returnToPlaceCount += 1
+            updateLock(heading: nil)
+            return
+        }
+        if !followsHeading { isAutoFollowing = false }
+        updateLock(heading: followsHeading ? heading : nil)
+    }
+
+    /// The map's own Moonrise / Moonset switch.
+    func select(_ event: MoonTableFormatter.Event) {
+        selected = event
     }
 
     /// Follows the network path until the caller's task is cancelled (the
@@ -156,6 +226,65 @@ final class MoonMapViewModel {
         for await online in connectivity.pathUpdates() {
             isOnline = online
         }
+    }
+
+    // MARK: - Lock
+
+    private var placeCoordinate: BearingLine.Coordinate {
+        BearingLine.Coordinate(latitude: place.latitude, longitude: place.longitude)
+    }
+
+    /// The compass's lock rules (COMPASS.md §1): acquire within ±5°, hold
+    /// to ±8°. MapKit gives no heading accuracy, so none is applied here.
+    private func updateLock(heading: Double?) {
+        self.heading = heading
+        var targets: [CompassTarget] = []
+        if let riseEvent { targets.append(CompassTarget(kind: .moonrise, azimuth: riseEvent.azimuth)) }
+        if let setEvent { targets.append(CompassTarget(kind: .moonset, azimuth: setEvent.azimuth)) }
+        let next = CompassLock.next(
+            locked: locked.map(Self.targetKind),
+            heading: heading,
+            isLowAccuracy: false,
+            targets: targets
+        )
+        let nextEvent = next.flatMap(Self.event)
+        if let nextEvent, nextEvent != locked {
+            lockAcquisitionCount += 1
+        }
+        locked = nextEvent
+    }
+
+    private static func targetKind(_ event: MoonTableFormatter.Event) -> CompassTarget.Kind {
+        switch event {
+        case .rise: .moonrise
+        case .set: .moonset
+        }
+    }
+
+    private static func event(_ kind: CompassTarget.Kind) -> MoonTableFormatter.Event? {
+        switch kind {
+        case .moonrise: .rise
+        case .moonset: .set
+        case .moon: nil
+        }
+    }
+
+    // MARK: - Turn hint
+
+    private static let fullTurn = 360.0
+    private static let halfTurn = 180.0
+
+    /// How far to turn, and which way, to face `bearing` from `heading`:
+    /// "Turn 23° right"; "Facing it" once locked.
+    private func turnHint(to bearing: Double, isLocked: Bool) -> (shown: String, spoken: String)? {
+        guard let heading else { return nil }
+        if isLocked { return ("Facing it", "You're facing it") }
+        var turn = (bearing - heading).truncatingRemainder(dividingBy: Self.fullTurn)
+        if turn >= Self.halfTurn { turn -= Self.fullTurn }
+        if turn < -Self.halfTurn { turn += Self.fullTurn }
+        let degrees = Int(abs(turn).rounded())
+        let side = turn >= 0 ? "right" : "left"
+        return ("Turn \(degrees)° \(side)", "Turn \(degrees) degrees \(side)")
     }
 
     // MARK: - Lines
@@ -182,13 +311,22 @@ final class MoonMapViewModel {
             spokenTime = next.spoken
         }
         let direction = "\(compass.spokenName(for: moonEvent.azimuth)), \(compass.spokenDegrees(for: moonEvent.azimuth))"
+        let isLocked = locked == event
+        let hint = turnHint(to: moonEvent.azimuth, isLocked: isLocked)
+        let labelDistance = min(cameraDistance * Self.mapLabelDistanceFraction, BearingLine.defaultLength)
+        var spoken = "\(formatter.eventName(event)) \(spokenTime), \(direction)."
+        if let hint { spoken += " \(hint.spoken)." }
         return Line(
             event: event,
             bearingLine: BearingLine(start: pin, bearing: moonEvent.azimuth),
             title: formatter.eventTitle(event),
             detail: "\(shownTime) · \(formatter.direction(for: moonEvent.azimuth))",
-            accessibilityLabel: "\(formatter.eventName(event)) \(spokenTime), \(direction).",
-            isEmphasised: event == emphasised
+            mapLabel: "\(formatter.eventName(event)) \(compass.bearingParts(for: moonEvent.azimuth).degrees)",
+            mapLabelCoordinate: BearingLine.destination(from: pin, bearing: moonEvent.azimuth, distance: labelDistance),
+            turnHint: hint?.shown,
+            accessibilityLabel: spoken,
+            isSelected: event == selected,
+            isLocked: isLocked
         )
     }
 
