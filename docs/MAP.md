@@ -48,6 +48,8 @@ draws the selected day's bearing from wherever you put the pin, and you look at 
    already is your detected location, the map opens following you.
 6. **North / heading.** Outside Follow me the map is north-up with MapKit's compass control; rotating with two
    fingers works as usual.
+7. **No connection.** Uses the existing `ConnectivityService`. With no network the sheet says the map needs a
+   connection (copy TBD, tone of the existing offline messages) and still shows the bearing as text.
 8. **Lock while turning (6.1e).** While the map turns with the phone, a line locks when the phone points along it,
    with the compass's rules (acquire ±5°, hold ±8°, COMPASS.md §1): a heavy haptic, as the compass gives, and the line
    and its tag turn amber. Otherwise the selected line is light and the other faint. Each legend cell shows which way
@@ -55,8 +57,6 @@ draws the selected day's bearing from wherever you put the pin, and you look at 
 9. **Moonrise / Moonset switch (6.1d).** The legend's two cells, side by side like the card's, select a line; so does
    tapping a line's tag. Each line carries a tag near the pin ("Moonrise 58°"), a quarter of the view away, so it
    stays on screen at any zoom.
-7. **No connection.** Uses the existing `ConnectivityService`. With no network the sheet says the map needs a
-   connection (copy TBD, tone of the existing offline messages) and still shows the bearing as text.
 
 ### Accessibility
 
