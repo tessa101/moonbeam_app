@@ -1,5 +1,7 @@
 # Status & Handoff
 
+_TestFlight 1.0 (12) prepared, 2026-11-25: Tessa approved the map on the phone. Build number 11 → 12 (app target); notes and What to Test in `docs/TESTFLIGHT-BUILD-12.md`. Not done from the cloud: test runs, Release build, archive and upload (Tessa, on the Mac; checklist in that doc)._
+
 _6.1i, 2026-11-25 (not built): Tessa likes the button column. Follow me wasn't on by default: the far-from-place check now ignores zoomed-out cameras (>20 km) MapKit reports while finding you. Switching to 3D now goes straight to look along; the 3D overview hints at the binoculars._
 
 _6.1h map buttons, 2026-11-25 (not built): Tessa's screenshots show the freeze fix working (3D look-along at ~300 ft) but the top bar overlapping. Follow me, turn-with-phone and look-along moved to a round-button column at the map's top left; the bar keeps the style switch and Done._

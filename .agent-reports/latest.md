@@ -1,3 +1,12 @@
+# TestFlight 1.0 (12) prep (2026-11-25)
+
+Tessa: the map looks good; push and prep TestFlight. All map commits were already pushed (`e1a782a`).
+Done: `CURRENT_PROJECT_VERSION` 11 → 12 (app target, Debug + Release; tests target untouched), `docs/TESTFLIGHT-BUILD-12.md`
+(scope, Mac checklist, What to Test text), PRODUCT feature row marked built.
+Blocked here (no Xcode): test suites, Release build, archive, upload. Checklist is in the build doc.
+
+---
+
 # Step 6.1i: Follow me default, 3D entry (2026-11-25)
 
 Tessa: button column placement is better; Follow me isn't on by default; in 3D the binoculars aren't obvious.
