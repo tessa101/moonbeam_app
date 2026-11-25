@@ -39,6 +39,9 @@ struct MoonMapView: View {
     private static let cellCornerRadius: CGFloat = 14
     private static let cellSelectedBorderOpacity = 0.5
     private static let cellLockedFillOpacity = 0.15
+    /// Short enough to keep up with the phone, long enough to smooth the
+    /// 2° steps.
+    private static let turnAnimationDuration = 0.15
     private static let pinSize: CGFloat = 18
     private static let pinStrokeWidth: CGFloat = 3
     private static let pinDotSize: CGFloat = 6
@@ -75,6 +78,10 @@ struct MoonMapView: View {
                 .toolbarBackground(.visible, for: .navigationBar)
         }
         .task { await viewModel.observeConnectivity() }
+        .task { await viewModel.observeHeading() }
+        .onChange(of: viewModel.cameraHeadingRequest) { _, heading in
+            turnCamera(to: heading)
+        }
         .sensoryFeedback(.impact(weight: .heavy), trigger: viewModel.lockAcquisitionCount)
         .onChange(of: viewModel.returnToPlaceCount) {
             position = .camera(Self.placeCamera(for: viewModel))
@@ -86,6 +93,41 @@ struct MoonMapView: View {
             // Turn to the newly selected line while looking along one.
             guard viewModel.lookingAlong != nil, let request = viewModel.lookAlong() else { return }
             move(to: request)
+        }
+    }
+
+    /// Turns the map with the phone at a chosen spot (MAP.md §3.10): the
+    /// same centre, zoom and tilt, the phone's heading. MapKit does this
+    /// itself while following you.
+    private func turnCamera(to heading: Double?) {
+        guard let heading, let lastCamera, !position.followsUserLocation, viewModel.lookingAlong == nil else { return }
+        withAnimation(.linear(duration: Self.turnAnimationDuration)) {
+            position = .camera(
+                MapCamera(
+                    centerCoordinate: lastCamera.centerCoordinate,
+                    distance: lastCamera.distance,
+                    heading: heading,
+                    pitch: lastCamera.pitch
+                )
+            )
+        }
+    }
+
+    /// A tap on the map: stand there, keeping the zoom, tilt and heading.
+    private func standHere(_ coordinate: BearingLine.Coordinate) {
+        if let request = viewModel.standHere(coordinate) {
+            move(to: request)
+            return
+        }
+        withAnimation {
+            position = .camera(
+                MapCamera(
+                    centerCoordinate: coordinate.location,
+                    distance: lastCamera?.distance ?? MoonMapViewModel.initialCameraDistance,
+                    heading: lastCamera?.heading ?? 0,
+                    pitch: lastCamera?.pitch ?? 0
+                )
+            )
         }
     }
 
@@ -144,7 +186,18 @@ struct MoonMapView: View {
 
     // MARK: - Map
 
+    /// The map, plus tap to stand somewhere else (MAP.md §3.10).
     private var map: some View {
+        MapReader { proxy in
+            mapView
+                .onTapGesture { point in
+                    guard let coordinate = proxy.convert(point, from: .local) else { return }
+                    standHere(BearingLine.Coordinate(coordinate))
+                }
+        }
+    }
+
+    private var mapView: some View {
         Map(position: $position) {
             UserAnnotation()
             if viewModel.lookingAlong != nil {
@@ -351,11 +404,21 @@ struct MoonMapView: View {
             ToolbarItem(placement: .topBarLeading) {
                 Button {
                     viewModel.stopLookingAlong()
+                    viewModel.turnsWithPhone = true
                     position = .userLocation(followsHeading: true, fallback: position)
                 } label: {
                     Image(systemName: position.followsUserLocation ? "location.north.line.fill" : "location.north.line")
                 }
                 .accessibilityLabel("Follow my location")
+            }
+            ToolbarItem(placement: .topBarLeading) {
+                Button {
+                    viewModel.turnsWithPhone.toggle()
+                } label: {
+                    Image(systemName: viewModel.turnsWithPhone ? "safari.fill" : "safari")
+                }
+                .accessibilityLabel("Turn the map with the phone")
+                .accessibilityAddTraits(viewModel.turnsWithPhone ? AccessibilityTraits.isSelected : AccessibilityTraits())
             }
         }
     }
@@ -388,7 +451,8 @@ private extension BearingLine.Coordinate {
             set: MoonEvent(date: .now, azimuth: 301),
             selected: .rise,
             canFollowUser: true,
-            connectivity: FakeConnectivityService()
+            connectivity: FakeConnectivityService(),
+            headingService: FakeHeadingService()
         )
     )
 }
@@ -402,7 +466,8 @@ private extension BearingLine.Coordinate {
             set: nil,
             selected: .rise,
             canFollowUser: false,
-            connectivity: FakeConnectivityService(isOnline: false)
+            connectivity: FakeConnectivityService(isOnline: false),
+            headingService: FakeHeadingService()
         )
     )
 }

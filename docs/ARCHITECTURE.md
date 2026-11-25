@@ -145,6 +145,8 @@ protocol PlaceStore {                                          // @MainActor
   while location runs (COMPASS.md §1). A session also ends if its stream is cancelled or
   dropped, so an abandoned stream can't leave the sensors on.
 - All five get fake implementations for SwiftUI previews and tests.
+- The map sheet (`MoonMapViewModel`) also takes the `HeadingService`, so the map can turn and lock at any spot
+  (MAP.md §3.10). One session at a time: `LocationViewModel` pauses the compass's sensors while the sheet is open.
 - `CompassViewModel` is owned by `LocationViewModel` and fed a `CompassContext`. It never reads
   location state itself, and it takes rise/set bearings from the moon table's own `MoonDay`.
 

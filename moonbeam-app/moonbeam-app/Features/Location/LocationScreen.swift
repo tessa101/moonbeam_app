@@ -217,7 +217,7 @@ struct LocationScreen: View {
         .sheet(isPresented: $viewModel.isCalendarPresented) {
             CalendarSheet(viewModel: viewModel, maximumHeight: viewportHeight ?? 0)
         }
-        .sheet(isPresented: $viewModel.isMapPresented) {
+        .sheet(isPresented: $viewModel.isMapPresented, onDismiss: viewModel.mapDidDismiss) {
             if let mapSheet = viewModel.mapSheet {
                 MoonMapView(viewModel: mapSheet)
                     .presentationDetents([.large])

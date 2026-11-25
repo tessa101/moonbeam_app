@@ -1,5 +1,7 @@
 # Status & Handoff
 
+_6.1f turn and lock at any spot, 2026-11-25 (not built): drag or tap to stand anywhere; the map keeps turning with the phone and locking there. The map runs its own heading session (compass paused while the sheet is open), turns the camera in 2° steps away from your location, and a toolbar toggle turns turning off/on. Tap while looking along re-aims from there. Tests reworked around phone readings. **Not compiled or run.** Watch: compass entrance after closing the map; turning vs dragging._
+
 _6.3b look along, 2026-11-25 (not built): Tessa found 6.2–6.3 working but the view "pretty high up", and missed dragging the pin. Now the stand point is the ground under the camera's eye, so dragging moves it; camera 250 m (was 600); a legend note gives the real eye height ("Seen from about 140 ft up · drag to move"). Tests updated. **Not compiled or run.** Next: Tessa's check on the phone._
 
 _6.2–6.3 map 3D and look along, 2026-11-24 (not built): the style switch now reads Satellite / Explore / 3D (realistic elevation, tilts to 60°, pitch control). In 3D a binoculars button looks along the selected line from the pin (600 m, 80°); the pin freezes meanwhile; Moonrise/Moonset re-aims; Follow me, the button or leaving 3D ends it. Tests added to `MoonMapViewModelTests`. **Not compiled or run.** Earlier: 6.1d–e confirmed working on the phone. Next: Tessa tries 3D, then look along; then the moon's path (parked) or polish._

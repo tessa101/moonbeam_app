@@ -1,3 +1,18 @@
+# Step 6.1f: turn and lock at any spot (2026-11-25)
+
+Tessa: wants to drag the pin or tap a spot, then turn and lock as at her own location.
+Done (not built, no Xcode): `MoonMapViewModel` takes the `HeadingService` and runs its own session while the sheet is
+open; the compass pauses (`setCoveredByMap`) and resumes on dismiss. Lock and turn hints use the phone's heading with
+the compass's accuracy rule. Away from your location the view turns the camera in 2° steps. Tap to stand (`MapReader`);
+tap while looking along re-aims. Toolbar toggle for turning; Follow me turns it on.
+Tests: readings drive the lock, low accuracy, turning toggle and default, camera turning steps, following vs spot,
+drag keeps turning, tap to stand, look-along pauses turning.
+
+Check on the phone: drag or tap somewhere, turn, lock; does turning fight the drag; does the compass come back
+normally after Done (its entrance may replay).
+
+---
+
 # Step 6.3b: look along, drag to move (2026-11-25)
 
 Tessa: 6.2–6.3 work, but the view is high up; she liked dragging the pin to a new spot.

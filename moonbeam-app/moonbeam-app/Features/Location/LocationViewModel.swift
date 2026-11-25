@@ -225,6 +225,8 @@ final class LocationViewModel {
     /// Reduce Motion: "Aha" without the ride (§11.2.2). Read when it's needed.
     @ObservationIgnored private let reducesMotion: () -> Bool
     private let moonService: any MoonService
+    /// Handed to the map sheet while it's open; the compass otherwise.
+    @ObservationIgnored private let headingService: any HeadingService
     private let fetchTimeout: Duration
     private let fetchTimeoutSleep: @Sendable (Duration) async throws -> Void
     private let deviceTimeZone: TimeZone
@@ -342,6 +344,7 @@ final class LocationViewModel {
         self.connectivity = connectivity
         self.reducesMotion = reducesMotion
         self.moonService = moonService
+        self.headingService = headingService
         self.fetchTimeout = fetchTimeout
         self.fetchTimeoutSleep = fetchTimeoutSleep
         self.deviceTimeZone = deviceTimeZone
@@ -1135,9 +1138,18 @@ final class LocationViewModel {
             set: pass?.set ?? moonTable.shownSet,
             selected: event,
             canFollowUser: lastSeenAuthState.isAuthorized,
-            connectivity: connectivity
+            connectivity: connectivity,
+            headingService: headingService
         )
+        // One heading session at a time: the map's replaces the compass's.
+        compass.setCoveredByMap(true)
         isMapPresented = true
+    }
+
+    /// Call from the map sheet's `onDismiss`: the compass takes the heading
+    /// back.
+    func mapDidDismiss() {
+        compass.setCoveredByMap(false)
     }
 
     // MARK: - Search sheet (SEARCH-RECENTS.md §2)

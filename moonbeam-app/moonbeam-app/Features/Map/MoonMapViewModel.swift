@@ -110,6 +110,11 @@ final class MoonMapViewModel {
     /// its bearings wouldn't apply where you stand.
     static let followMaximumDistance: Double = 50_000
 
+    /// Turning the map at a chosen spot moves the camera only when the
+    /// phone's heading has changed this much, so a still hand doesn't make
+    /// the map shiver or fight a drag (MAP.md §3.10).
+    static let turnThresholdDegrees = 2.0
+
     // MARK: - State
 
     let place: Place
@@ -121,9 +126,10 @@ final class MoonMapViewModel {
     /// Leaving 3D ends "look along the line", which only works in 3D.
     var style: Style = .satellite {
         didSet {
-            if style != .threeD {
+            if style != .threeD, lookingAlong != nil {
                 lookingAlong = nil
                 eyeHeight = nil
+                applyHeading()
             }
         }
     }
@@ -171,8 +177,21 @@ final class MoonMapViewModel {
     /// back to the place.
     private(set) var returnToPlaceCount = 0
 
-    /// The map's heading while it turns with the phone, else `nil`.
+    /// The map turns with the phone, at your location or wherever the pin
+    /// is (Tessa, 2026-11-25: drag or tap to a spot and keep turning and
+    /// locking there). On by default when location is allowed.
+    var turnsWithPhone: Bool {
+        didSet { applyHeading() }
+    }
+
+    /// The phone's true heading while the map turns with it, else `nil`.
+    /// Drives the lock and the turn hints.
     private(set) var heading: Double?
+
+    /// Where the view should turn the camera when the map turns at a chosen
+    /// spot (MapKit turns it itself while following you). Moves only in
+    /// `turnThresholdDegrees` steps.
+    private(set) var cameraHeadingRequest: Double?
 
     /// The line the phone points along, under the compass's lock rules.
     private(set) var locked: MoonTableFormatter.Event?
@@ -202,6 +221,17 @@ final class MoonMapViewModel {
     @ObservationIgnored private let setEvent: MoonEvent?
     @ObservationIgnored private let day: Date
     @ObservationIgnored private let connectivity: any ConnectivityService
+    @ObservationIgnored private let headingService: any HeadingService
+
+    /// The phone's last reading, kept so toggling turning applies at once.
+    @ObservationIgnored private var reading: HeadingReading?
+
+    /// The compass's low-accuracy state for the map's own readings: no lock
+    /// while the heading could be 25° out (COMPASS.md §1).
+    @ObservationIgnored private var isLowAccuracy = true
+
+    /// MapKit is following you, turning the camera itself.
+    @ObservationIgnored private var isFollowingUser = false
     @ObservationIgnored private let formatter: MoonTableFormatter
     @ObservationIgnored private let compass = CompassFormatter()
 
@@ -222,6 +252,9 @@ final class MoonMapViewModel {
     ///   - set: likewise for moonset.
     ///   - selected: the cell that was tapped.
     ///   - canFollowUser: location is authorized.
+    ///   - headingService: the phone's heading, for turning the map and the
+    ///     lock. The caller pauses the compass meanwhile: one session at a
+    ///     time.
     init(
         place: Place,
         day: Date,
@@ -230,6 +263,7 @@ final class MoonMapViewModel {
         selected: MoonTableFormatter.Event,
         canFollowUser: Bool,
         connectivity: any ConnectivityService,
+        headingService: any HeadingService,
         formatter: MoonTableFormatter = MoonTableFormatter()
     ) {
         self.place = place
@@ -240,7 +274,9 @@ final class MoonMapViewModel {
         self.canFollowUser = canFollowUser
         isAutoFollowing = canFollowUser
         self.connectivity = connectivity
+        self.headingService = headingService
         self.formatter = formatter
+        turnsWithPhone = canFollowUser
         pin = BearingLine.Coordinate(latitude: place.latitude, longitude: place.longitude)
     }
 
@@ -268,19 +304,38 @@ final class MoonMapViewModel {
             let tilt = pitch * .pi / Self.halfTurn
             pin = BearingLine.destination(from: center, bearing: heading + Self.halfTurn, distance: distance * sin(tilt))
             eyeHeight = distance * cos(tilt)
-            updateLock(heading: nil)
             return
         }
         pin = center
+        if followsHeading != isFollowingUser {
+            // Following stopped (a drag or a tap elsewhere): the map keeps
+            // turning, now at the new spot; or MapKit took over turning.
+            isFollowingUser = followsHeading
+            applyHeading()
+        }
 
         if followsHeading, isAutoFollowing, BearingLine.distance(from: center, to: placeCoordinate) > Self.followMaximumDistance {
             isAutoFollowing = false
             returnToPlaceCount += 1
-            updateLock(heading: nil)
             return
         }
         if !followsHeading { isAutoFollowing = false }
-        updateLock(heading: followsHeading ? heading : nil)
+    }
+
+    /// A reading from the phone's heading session (`observeHeading()`).
+    func headingChanged(_ newReading: HeadingReading) {
+        reading = newReading
+        isLowAccuracy = CompassAccuracy.isLow(after: newReading, wasLow: isLowAccuracy)
+        applyHeading()
+    }
+
+    /// Runs the phone's heading session while the sheet is open, when
+    /// location is allowed; it ends when the caller's task is cancelled.
+    func observeHeading() async {
+        guard canFollowUser else { return }
+        for await newReading in headingService.start() {
+            headingChanged(newReading)
+        }
     }
 
     /// The map's own Moonrise / Moonset switch. While looking along a line,
@@ -296,7 +351,7 @@ final class MoonMapViewModel {
         guard style == .threeD, let bearing = azimuth(for: selected) else { return nil }
         lookingAlong = selected
         isAutoFollowing = false
-        updateLock(heading: nil)
+        applyHeading()
         // The camera looks at a point ahead and stands `distance` back from
         // it, so that point is `distance × sin(pitch)` along the line.
         let ahead = Self.lookAlongDistance * sin(Self.lookAlongPitch * .pi / Self.halfTurn)
@@ -308,12 +363,21 @@ final class MoonMapViewModel {
         )
     }
 
+    /// A tap on the map: stand there (MAP.md §3.10). While looking along a
+    /// line, returns the camera that looks along it from the new spot;
+    /// otherwise `nil`, and the view centres the camera on the spot.
+    func standHere(_ coordinate: BearingLine.Coordinate) -> CameraRequest? {
+        pin = coordinate
+        return lookingAlong == nil ? nil : lookAlong()
+    }
+
     /// Back to the map over the pin, still tilted as 3D is. Follow me
     /// calls it too, ignoring the camera request since MapKit takes over.
     @discardableResult
     func stopLookingAlong() -> CameraRequest {
         lookingAlong = nil
         eyeHeight = nil
+        applyHeading()
         return CameraRequest(
             center: pin,
             heading: 0,
@@ -343,17 +407,40 @@ final class MoonMapViewModel {
         BearingLine.Coordinate(latitude: place.latitude, longitude: place.longitude)
     }
 
+    /// Turning applies unless it's off or the view is looking along a line
+    /// (its camera faces the line, not the phone).
+    private var isTurning: Bool {
+        turnsWithPhone && lookingAlong == nil
+    }
+
+    /// Recomputes the heading, the lock and the camera's turn from the last
+    /// reading and the current mode.
+    private func applyHeading() {
+        let newHeading = isTurning ? reading?.trueHeading : nil
+        heading = newHeading
+        updateLock(heading: newHeading)
+
+        guard let newHeading, !isFollowingUser else {
+            cameraHeadingRequest = nil
+            return
+        }
+        if let current = cameraHeadingRequest,
+           CompassLock.angularDistance(current, newHeading) < Self.turnThresholdDegrees {
+            return
+        }
+        cameraHeadingRequest = newHeading
+    }
+
     /// The compass's lock rules (COMPASS.md §1): acquire within ±5°, hold
-    /// to ±8°. MapKit gives no heading accuracy, so none is applied here.
+    /// to ±8°, none in low accuracy.
     private func updateLock(heading: Double?) {
-        self.heading = heading
         var targets: [CompassTarget] = []
         if let riseEvent { targets.append(CompassTarget(kind: .moonrise, azimuth: riseEvent.azimuth)) }
         if let setEvent { targets.append(CompassTarget(kind: .moonset, azimuth: setEvent.azimuth)) }
         let next = CompassLock.next(
             locked: locked.map(Self.targetKind),
             heading: heading,
-            isLowAccuracy: false,
+            isLowAccuracy: isLowAccuracy,
             targets: targets
         )
         let nextEvent = next.flatMap(Self.event)

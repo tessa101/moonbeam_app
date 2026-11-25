@@ -275,6 +275,11 @@ final class CompassViewModel {
 
     @ObservationIgnored private var context = CompassContext.empty
     @ObservationIgnored private var isOnScreen = false
+
+    /// The map sheet is open and running its own heading session (MAP.md
+    /// §3.10). The heading service takes one session at a time, so the
+    /// compass's sensors pause meanwhile.
+    @ObservationIgnored private var isCoveredByMap = false
     @ObservationIgnored private var isInForeground = true
 
     /// Iterates, and so holds, the heading stream. Non-nil exactly while the
@@ -643,6 +648,14 @@ final class CompassViewModel {
         updateSensors()
     }
 
+    /// The map sheet opened or closed: pause the sensors while it runs its
+    /// own heading session, and resume after.
+    func setCoveredByMap(_ covered: Bool) {
+        guard covered != isCoveredByMap else { return }
+        isCoveredByMap = covered
+        updateSensors()
+    }
+
     /// Where the dial's centre is against the fold (COMPASS-1.1.md §9.6).
     /// The pinned bar shows the live heading, so the sensors run while it's
     /// up, even with all of the compass below the fold (AX sizes).
@@ -994,7 +1007,7 @@ final class CompassViewModel {
     // MARK: - Sensors (COMPASS.md §1 Sensor lifecycle)
 
     private var shouldSense: Bool {
-        visibility.showsCompass && (isOnScreen || showsPinnedBar) && isInForeground
+        visibility.showsCompass && (isOnScreen || showsPinnedBar) && isInForeground && !isCoveredByMap
     }
 
     private func updateSensors() {

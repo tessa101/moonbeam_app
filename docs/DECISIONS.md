@@ -1915,3 +1915,9 @@ From a recording of Got it → noCity (0.23 s of pure black, then an empty beat,
 - Camera distance 600 → 250 m: MapKit clamps tilt less close in, so the eye sits lower.
 - The legend states the eye height from the tilt MapKit actually gave, in the locale's road units, so the view isn't mistaken for eye level. True eye level stays parked (Look Around, AR; MAP.md §8).
 
+## 2026-11-25: Turn and lock at any spot on the map (Tessa)
+- Ask: drag the pin or tap a spot, and keep turning and locking as at your own location. MapKit only turns the map with the phone around your location, so the map now reads the phone's heading itself, from the same `HeadingService` as the compass.
+- One heading session at a time, so the compass pauses while the map sheet is open (`CompassViewModel.setCoveredByMap`) and resumes on dismiss. Considered: reading the compass's heading (it stops whenever the compass is off screen or hidden for a searched city).
+- The lock now uses the phone's heading, not the camera's, with the compass's low-accuracy rule. Away from your location the camera turns in 2° steps, to avoid shivering and fighting a drag.
+- Watch on the phone: whether the compass's entrance replays after closing the map (a new heading session begins it), and whether turning fights a drag.
+

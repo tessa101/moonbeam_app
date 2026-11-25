@@ -59,6 +59,7 @@ struct MoonMapViewModelTests {
             selected: selected,
             canFollowUser: canFollowUser,
             connectivity: connectivity,
+            headingService: FakeHeadingService(),
             formatter: formatter
         )
     }
@@ -179,7 +180,6 @@ struct MoonMapViewModelTests {
         let sydney = BearingLine.Coordinate(latitude: -33.87, longitude: 151.21)
         model.cameraChanged(center: sydney, heading: 0, distance: 6_000, followsHeading: true)
         #expect(model.returnToPlaceCount == 1)
-        #expect(model.heading == nil)
 
         // A later, deliberate Follow me there is left alone.
         model.cameraChanged(center: sydney, heading: 0, distance: 6_000, followsHeading: true)
@@ -192,13 +192,16 @@ struct MoonMapViewModelTests {
         let beach = BearingLine.Coordinate(latitude: 33.59, longitude: -117.87)
         model.cameraChanged(center: beach, heading: 0, distance: 6_000, followsHeading: true)
         #expect(model.returnToPlaceCount == 0)
-        #expect(model.heading == 0)
     }
 
     // MARK: - Lock and turn hints
 
+    /// Good accuracy, well under the compass's 20° exit from low accuracy.
+    private static let goodAccuracy = 5.0
+
+    /// The phone points at `heading`.
     private static func turn(_ model: MoonMapViewModel, to heading: Double) {
-        model.cameraChanged(center: model.pin, heading: heading, distance: 6_000, followsHeading: true)
+        model.headingChanged(HeadingReading(trueHeading: heading, accuracy: goodAccuracy))
     }
 
     @Test("Pointing along a line locks it, once per acquisition, with the compass's ±5° / ±8°")
@@ -226,12 +229,97 @@ struct MoonMapViewModelTests {
         #expect(model.lockAcquisitionCount == 2)
     }
 
-    @Test("No lock or hints unless the map turns with the phone")
-    func noLockWithoutHeading() {
+    @Test("No lock or hints with turning off; they come back when it's on")
+    func noLockWithoutTurning() {
         let model = Self.makeViewModel()
-        model.cameraChanged(center: model.pin, heading: 58, distance: 6_000, followsHeading: false)
+        model.turnsWithPhone = false
+        Self.turn(model, to: 58)
+        #expect(model.heading == nil)
         #expect(model.locked == nil)
         #expect(model.lines.allSatisfy { $0.turnHint == nil })
+
+        model.turnsWithPhone = true
+        #expect(model.heading == 58)
+        #expect(model.locked == .rise)
+    }
+
+    @Test("Turning is on by default only with location", arguments: [true, false])
+    func turningDefault(canFollow: Bool) {
+        #expect(Self.makeViewModel(canFollowUser: canFollow).turnsWithPhone == canFollow)
+    }
+
+    @Test("No lock in low accuracy, as on the compass")
+    func lowAccuracy() {
+        let model = Self.makeViewModel()
+        model.headingChanged(HeadingReading(trueHeading: 58, accuracy: 40))
+        #expect(model.locked == nil)
+        Self.turn(model, to: 58)
+        #expect(model.locked == .rise)
+    }
+
+    // MARK: - Turning at a chosen spot (MAP.md §3.10)
+
+    @Test("Away from your location the map is turned for you, in 2° steps")
+    func turnsCameraAtSpot() {
+        let model = Self.makeViewModel()
+        model.cameraChanged(center: model.pin, heading: 0, distance: 6_000, followsHeading: false)
+        Self.turn(model, to: 40)
+        #expect(model.cameraHeadingRequest == 40)
+        Self.turn(model, to: 41)
+        #expect(model.cameraHeadingRequest == 40)
+        Self.turn(model, to: 42.5)
+        #expect(model.cameraHeadingRequest == 42.5)
+        #expect(model.locked == nil)
+    }
+
+    @Test("While following you MapKit turns the map; locking still works")
+    func followingLeavesCameraToMapKit() {
+        let model = Self.makeViewModel()
+        model.cameraChanged(center: model.pin, heading: 0, distance: 6_000, followsHeading: true)
+        Self.turn(model, to: 58)
+        #expect(model.cameraHeadingRequest == nil)
+        #expect(model.locked == .rise)
+    }
+
+    @Test("Dragging off your location keeps turning and locking at the new spot")
+    func dragKeepsTurning() {
+        let model = Self.makeViewModel()
+        model.cameraChanged(center: model.pin, heading: 0, distance: 6_000, followsHeading: true)
+        Self.turn(model, to: 58)
+        let beach = BearingLine.Coordinate(latitude: 33.59, longitude: -117.87)
+        model.cameraChanged(center: beach, heading: 58, distance: 6_000, followsHeading: false)
+        #expect(model.pin == beach)
+        #expect(model.cameraHeadingRequest == 58)
+        #expect(model.locked == .rise)
+        #expect(model.lines.allSatisfy { $0.bearingLine.start == beach })
+    }
+
+    @Test("A tap moves the pin; looking along, it re-aims from there")
+    func tapToStand() throws {
+        let model = Self.makeViewModel()
+        let spot = BearingLine.Coordinate(latitude: 33.62, longitude: -117.93)
+        #expect(model.standHere(spot) == nil)
+        #expect(model.pin == spot)
+
+        model.style = .threeD
+        _ = model.lookAlong()
+        let other = BearingLine.Coordinate(latitude: 33.65, longitude: -117.90)
+        let request = try #require(model.standHere(other))
+        #expect(model.pin == other)
+        #expect(request.heading == 58)
+    }
+
+    @Test("Looking along pauses turning and the lock")
+    func lookAlongPausesTurning() {
+        let model = Self.makeViewModel()
+        Self.turn(model, to: 58)
+        #expect(model.locked == .rise)
+        model.style = .threeD
+        _ = model.lookAlong()
+        #expect(model.locked == nil)
+        #expect(model.heading == nil)
+        model.stopLookingAlong()
+        #expect(model.locked == .rise)
     }
 
     @Test("Turn hints say which way and how far, the short way round", arguments: [
