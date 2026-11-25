@@ -21,9 +21,13 @@ struct MoonMapView: View {
 
     @State private var position: MapCameraPosition
 
-    /// The camera as last reported, so switching to or from 3D can tilt it
-    /// in place.
-    @State private var lastCamera: MapCamera?
+    /// The camera as last reported, and whether it's moving. A reference
+    /// MapKit writes to every frame, deliberately unobserved: as `@State`
+    /// it redrew the whole sheet each frame, which with 3D and the phone's
+    /// heading froze the map (Tessa, 2026-11-25).
+    @State private var tracker = CameraTracker()
+
+    private var lastCamera: MapCamera? { tracker.camera }
 
     @Environment(\.dismiss) private var dismiss
 
@@ -39,9 +43,11 @@ struct MoonMapView: View {
     private static let cellCornerRadius: CGFloat = 14
     private static let cellSelectedBorderOpacity = 0.5
     private static let cellLockedFillOpacity = 0.15
-    /// Short enough to keep up with the phone, long enough to smooth the
-    /// 2° steps.
-    private static let turnAnimationDuration = 0.15
+    /// How long the camera must be still before the map turns again.
+    private static let settleDelay = Duration.milliseconds(300)
+    /// Closer than this, the camera already faces the heading: setting it
+    /// again would only report another move, and so on.
+    private static let alreadyFacingDegrees = 0.5
     private static let pinSize: CGFloat = 18
     private static let pinStrokeWidth: CGFloat = 3
     private static let pinDotSize: CGFloat = 6
@@ -99,17 +105,34 @@ struct MoonMapView: View {
     /// Turns the map with the phone at a chosen spot (MAP.md §3.10): the
     /// same centre, zoom and tilt, the phone's heading. MapKit does this
     /// itself while following you.
+    ///
+    /// Never mid-gesture or mid-animation: setting the camera then fights
+    /// your finger. A turn that arrives meanwhile is applied when the camera
+    /// settles.
     private func turnCamera(to heading: Double?) {
-        guard let heading, let lastCamera, !position.followsUserLocation, viewModel.lookingAlong == nil else { return }
-        withAnimation(.linear(duration: Self.turnAnimationDuration)) {
-            position = .camera(
-                MapCamera(
-                    centerCoordinate: lastCamera.centerCoordinate,
-                    distance: lastCamera.distance,
-                    heading: heading,
-                    pitch: lastCamera.pitch
-                )
+        guard let heading, let lastCamera, !tracker.isMoving,
+              !position.followsUserLocation, viewModel.lookingAlong == nil,
+              CompassLock.angularDistance(lastCamera.heading, heading) >= Self.alreadyFacingDegrees else { return }
+        position = .camera(
+            MapCamera(
+                centerCoordinate: lastCamera.centerCoordinate,
+                distance: lastCamera.distance,
+                heading: heading,
+                pitch: lastCamera.pitch
             )
+        )
+    }
+
+    /// The camera moved (a gesture, an animation, or a turn): hold off
+    /// turning until it has been still for `settleDelay`, then apply any
+    /// turn that waited. This also caps turns at a few a second.
+    private func cameraMoved() {
+        tracker.isMoving = true
+        tracker.settle?.cancel()
+        tracker.settle = Task { @MainActor in
+            do { try await Task.sleep(for: Self.settleDelay) } catch { return }
+            tracker.isMoving = false
+            turnCamera(to: viewModel.cameraHeadingRequest)
         }
     }
 
@@ -228,7 +251,8 @@ struct MoonMapView: View {
             MapScaleView()
         }
         .onMapCameraChange(frequency: .continuous) { context in
-            lastCamera = context.camera
+            tracker.camera = context.camera
+            cameraMoved()
             viewModel.cameraChanged(
                 center: BearingLine.Coordinate(context.camera.centerCoordinate),
                 heading: context.camera.heading,
@@ -422,6 +446,16 @@ struct MoonMapView: View {
             }
         }
     }
+}
+
+// MARK: - Camera tracker
+
+/// The camera MapKit last reported and whether it's still moving, kept out
+/// of SwiftUI's observation so per-frame updates don't redraw the sheet.
+private final class CameraTracker {
+    var camera: MapCamera?
+    var isMoving = false
+    var settle: Task<Void, Never>?
 }
 
 // MARK: - Coordinates

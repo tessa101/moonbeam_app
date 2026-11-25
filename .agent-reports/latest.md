@@ -1,3 +1,14 @@
+# Step 6.1g: 3D freeze fix (2026-11-25)
+
+Tessa: 6.1f worked, then froze in 3D and couldn't come out.
+Likely: per-reading and per-frame redraws of the whole sheet plus camera re-sets mid-gesture, heavy with realistic
+terrain. Fixed (not built, not reproduced): whole-degree heading publishing, unobserved camera tracker, turning only
+after 300 ms still, 3° steps, no animation, skip when already facing. Tests: 3° steps, heading throttle.
+
+If it still freezes: note what was on (3D, binoculars, turning, Follow me) and whether the toolbar still responds.
+
+---
+
 # Step 6.1f: turn and lock at any spot (2026-11-25)
 
 Tessa: wants to drag the pin or tap a spot, then turn and lock as at her own location.

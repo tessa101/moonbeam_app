@@ -714,3 +714,5 @@
 00:02 6.3b: Tessa: look-along too high, wants to drag the stand point; starting
 00:03 6.3b: drag-to-move look-along, 250 m, eye-height note written, NOT built; committing
 00:10 6.1f turn/lock at any spot: written, NOT built; committing
+00:14 6.1f: Tessa: froze in 3D, can't get out; fixing (throttle heading, no camera turn during gestures, camera state off the render path)
+00:15 6.1g freeze fix written, NOT built; committing

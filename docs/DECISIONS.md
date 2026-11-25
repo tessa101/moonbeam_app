@@ -1921,3 +1921,8 @@ From a recording of Got it → noCity (0.23 s of pure black, then an empty beat,
 - The lock now uses the phone's heading, not the camera's, with the compass's low-accuracy rule. Away from your location the camera turns in 2° steps, to avoid shivering and fighting a drag.
 - Watch on the phone: whether the compass's entrance replays after closing the map (a new heading session begins it), and whether turning fights a drag.
 
+## 2026-11-25: Map froze in 3D after 6.1f (Tessa); made the turning lighter
+- Likely cause: every heading reading (many a second) republished `heading` and every camera frame wrote `@State`, so the whole sheet and the map's content rebuilt continuously, and the camera was re-set mid-gesture. With 3D's realistic terrain that saturated the main thread.
+- Fix: `heading` republishes only when its whole degree changes (the lock still sees every reading); the camera's last state lives in an unobserved tracker, not `@State`; the map turns only after the camera has been still for 300 ms, never mid-gesture, without animation, and not when already facing; the turn step is 3° (was 2°).
+- Not reproduced here (no Xcode). If it recurs, turning off "turns with the phone" in 3D is the fallback.
+

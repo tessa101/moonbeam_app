@@ -112,8 +112,8 @@ final class MoonMapViewModel {
 
     /// Turning the map at a chosen spot moves the camera only when the
     /// phone's heading has changed this much, so a still hand doesn't make
-    /// the map shiver or fight a drag (MAP.md §3.10).
-    static let turnThresholdDegrees = 2.0
+    /// the map shiver (MAP.md §3.10). 2° was too busy in 3D.
+    static let turnThresholdDegrees = 3.0
 
     // MARK: - State
 
@@ -417,7 +417,11 @@ final class MoonMapViewModel {
     /// reading and the current mode.
     private func applyHeading() {
         let newHeading = isTurning ? reading?.trueHeading : nil
-        heading = newHeading
+        // `heading` feeds the hints, shown in whole degrees: publish it only
+        // when that changes, so a sensor's many readings a second don't
+        // redraw the map each time (Tessa's 3D freeze, 2026-11-25).
+        let shown = newHeading.map { $0.rounded() }
+        if shown != heading.map({ $0.rounded() }) { heading = newHeading }
         updateLock(heading: newHeading)
 
         guard let newHeading, !isFollowingUser else {

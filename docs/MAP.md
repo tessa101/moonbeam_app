@@ -60,8 +60,8 @@ draws the selected day's bearing from wherever you put the pin, and you look at 
 10. **Turn and lock at any spot (6.1f, Tessa 2026-11-25).** Drag the map or tap a spot to stand there, and the map
     keeps turning with the phone and locking there, as it does at your own location. The map runs its own heading
     session (the shared `HeadingService`, one session at a time, so the compass pauses while the sheet is open and
-    resumes after). Away from your location the view turns the camera itself in 2° steps; while following you MapKit
-    does. The lock uses the phone's heading and the compass's low-accuracy rule. A toolbar toggle (compass icon) turns
+    resumes after). Away from your location the view turns the camera itself in 3° steps, only once the camera has been
+    still for 300 ms (never mid-drag); while following you MapKit does. The lock uses the phone's heading and the compass's low-accuracy rule. A toolbar toggle (compass icon) turns
     turning off and on; Follow me turns it back on. Looking along a line pauses it. Tapping while looking along
     re-aims from the tapped spot.
 

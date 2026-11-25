@@ -1,5 +1,7 @@
 # Status & Handoff
 
+_6.1g freeze fix, 2026-11-25 (not built): Tessa's map froze in 3D after 6.1f and couldn't leave it. Heading now republishes only per whole degree, camera state is unobserved, turning waits for the camera to settle (300 ms), steps 3°, no animation. Not reproduced here. Next: Tessa retries 3D with turning on._
+
 _6.1f turn and lock at any spot, 2026-11-25 (not built): drag or tap to stand anywhere; the map keeps turning with the phone and locking there. The map runs its own heading session (compass paused while the sheet is open), turns the camera in 2° steps away from your location, and a toolbar toggle turns turning off/on. Tap while looking along re-aims from there. Tests reworked around phone readings. **Not compiled or run.** Watch: compass entrance after closing the map; turning vs dragging._
 
 _6.3b look along, 2026-11-25 (not built): Tessa found 6.2–6.3 working but the view "pretty high up", and missed dragging the pin. Now the stand point is the ground under the camera's eye, so dragging moves it; camera 250 m (was 600); a legend note gives the real eye height ("Seen from about 140 ft up · drag to move"). Tests updated. **Not compiled or run.** Next: Tessa's check on the phone._

@@ -259,17 +259,30 @@ struct MoonMapViewModelTests {
 
     // MARK: - Turning at a chosen spot (MAP.md §3.10)
 
-    @Test("Away from your location the map is turned for you, in 2° steps")
+    @Test("Away from your location the map is turned for you, in 3° steps")
     func turnsCameraAtSpot() {
         let model = Self.makeViewModel()
         model.cameraChanged(center: model.pin, heading: 0, distance: 6_000, followsHeading: false)
         Self.turn(model, to: 40)
         #expect(model.cameraHeadingRequest == 40)
-        Self.turn(model, to: 41)
+        Self.turn(model, to: 42)
         #expect(model.cameraHeadingRequest == 40)
-        Self.turn(model, to: 42.5)
-        #expect(model.cameraHeadingRequest == 42.5)
+        Self.turn(model, to: 43.5)
+        #expect(model.cameraHeadingRequest == 43.5)
         #expect(model.locked == nil)
+    }
+
+    @Test("The shown heading changes only by whole degrees; the lock still sees every reading")
+    func headingThrottle() {
+        let model = Self.makeViewModel()
+        Self.turn(model, to: 40.1)
+        #expect(model.heading == 40.1)
+        Self.turn(model, to: 40.3)
+        #expect(model.heading == 40.1)
+        Self.turn(model, to: 41.2)
+        #expect(model.heading == 41.2)
+        Self.turn(model, to: 53.2)
+        #expect(model.locked == .rise)
     }
 
     @Test("While following you MapKit turns the map; locking still works")
