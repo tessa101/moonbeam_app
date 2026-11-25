@@ -85,7 +85,9 @@ draws the selected day's bearing from wherever you put the pin, and you look at 
 
 ## 5. Step 6.3: "Look along the line" (try on the phone)
 
-Built 2026-11-24. In 3D, a binoculars button (top left) places the camera behind the pin, facing the selected line's
+Built 2026-11-24. Switching to 3D goes straight to this view (Tessa 2026-11-25: the binoculars alone weren't obvious);
+the binoculars button (map buttons, top left) toggles it and the 3D overview, which says "Tap the binoculars to look
+along the moonrise line". It places the camera behind the pin, facing the selected line's
 bearing and tilted toward the horizon (`lookAlongDistance` 250 m, `lookAlongPitch` 80°; 600 m read as "pretty high
 up", Tessa 2026-11-25): roughly what's in that direction. The pin is the ground under the camera's eye (drawn as a map
 annotation, since the camera's centre is out on the line), so **dragging the view moves where you stand** and the

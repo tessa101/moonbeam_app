@@ -1,5 +1,7 @@
 # Status & Handoff
 
+_6.1i, 2026-11-25 (not built): Tessa likes the button column. Follow me wasn't on by default: the far-from-place check now ignores zoomed-out cameras (>20 km) MapKit reports while finding you. Switching to 3D now goes straight to look along; the 3D overview hints at the binoculars._
+
 _6.1h map buttons, 2026-11-25 (not built): Tessa's screenshots show the freeze fix working (3D look-along at ~300 ft) but the top bar overlapping. Follow me, turn-with-phone and look-along moved to a round-button column at the map's top left; the bar keeps the style switch and Done._
 
 _6.1g freeze fix, 2026-11-25 (not built): Tessa's map froze in 3D after 6.1f and couldn't leave it. Heading now republishes only per whole degree, camera state is unobserved, turning waits for the camera to settle (300 ms), steps 3°, no animation. Not reproduced here. Next: Tessa retries 3D with turning on._

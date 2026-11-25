@@ -110,6 +110,13 @@ final class MoonMapViewModel {
     /// its bearings wouldn't apply where you stand.
     static let followMaximumDistance: Double = 50_000
 
+    /// The far-from-place check only trusts cameras closer than this to the
+    /// ground. Opening, MapKit can report a zoomed-out default view before
+    /// it has found you, whose centre is far from anywhere: judged on that,
+    /// the check sent the map back to the place and Follow me never came on
+    /// (Tessa, 2026-11-25).
+    static let followCheckMaximumCameraDistance: Double = 20_000
+
     /// Turning the map at a chosen spot moves the camera only when the
     /// phone's heading has changed this much, so a still hand doesn't make
     /// the map shiver (MAP.md §3.10). 2° was too busy in 3D.
@@ -150,6 +157,13 @@ final class MoonMapViewModel {
         let height = Measurement(value: eyeHeight.rounded(), unit: UnitLength.meters)
             .formatted(.measurement(width: .abbreviated, usage: .road).locale(formatter.locale))
         return "Seen from about \(height) up · drag to move"
+    }
+
+    /// In 3D but not looking along: point at the binoculars, which weren't
+    /// obvious (Tessa, 2026-11-25).
+    var threeDHint: String? {
+        guard style == .threeD, lookingAlong == nil, canLookAlong else { return nil }
+        return "Tap the binoculars to look along the \(formatter.eventName(selected).lowercased()) line"
     }
 
     /// "Look along the line" is offered in 3D, for a line that exists.
@@ -314,7 +328,8 @@ final class MoonMapViewModel {
             applyHeading()
         }
 
-        if followsHeading, isAutoFollowing, BearingLine.distance(from: center, to: placeCoordinate) > Self.followMaximumDistance {
+        if followsHeading, isAutoFollowing, distance <= Self.followCheckMaximumCameraDistance,
+           BearingLine.distance(from: center, to: placeCoordinate) > Self.followMaximumDistance {
             isAutoFollowing = false
             returnToPlaceCount += 1
             return

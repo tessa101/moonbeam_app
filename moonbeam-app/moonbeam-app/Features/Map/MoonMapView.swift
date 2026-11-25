@@ -96,7 +96,14 @@ struct MoonMapView: View {
             position = .camera(Self.placeCamera(for: viewModel))
         }
         .onChange(of: viewModel.style) { old, new in
-            tiltForStyle(from: old, to: new)
+            // Switching to 3D goes straight to looking along the selected
+            // line: the binoculars alone weren't obvious (Tessa,
+            // 2026-11-25). The button then switches to the 3D overview.
+            if new == .threeD, let request = viewModel.lookAlong() {
+                move(to: request)
+            } else {
+                tiltForStyle(from: old, to: new)
+            }
         }
         .onChange(of: viewModel.selected) {
             // Turn to the newly selected line while looking along one.
@@ -333,7 +340,7 @@ struct MoonMapView: View {
                 }
                 .accessibilityElement(children: .combine)
             }
-            if let note = viewModel.lookAlongNote {
+            if let note = viewModel.lookAlongNote ?? viewModel.threeDHint {
                 Text(note)
                     .font(Theme.Fonts.detail)
                     .foregroundStyle(Theme.Colors.textSecondary)

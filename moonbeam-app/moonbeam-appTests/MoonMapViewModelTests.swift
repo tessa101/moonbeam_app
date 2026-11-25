@@ -186,6 +186,18 @@ struct MoonMapViewModelTests {
         #expect(model.returnToPlaceCount == 1)
     }
 
+    @Test("A zoomed-out camera while MapKit finds you doesn't count as far away")
+    func zoomedOutDoesNotReturn() {
+        let model = Self.makeViewModel()
+        let middleOfNowhere = BearingLine.Coordinate(latitude: 39, longitude: -98)
+        model.cameraChanged(center: middleOfNowhere, heading: 0, distance: 5_000_000, followsHeading: true)
+        #expect(model.returnToPlaceCount == 0)
+        // Found you, nearby: still following.
+        let beach = BearingLine.Coordinate(latitude: 33.59, longitude: -117.87)
+        model.cameraChanged(center: beach, heading: 0, distance: 1_500, followsHeading: true)
+        #expect(model.returnToPlaceCount == 0)
+    }
+
     @Test("Following you near the place stays put")
     func nearPlace() {
         let model = Self.makeViewModel()
@@ -422,6 +434,16 @@ struct MoonMapViewModelTests {
         #expect(model.lookingAlong == nil)
         #expect(request.center == model.pin)
         #expect(request.pitch == MoonMapViewModel.threeDPitch)
+    }
+
+    @Test("The 3D overview points at the binoculars; looking along, it doesn't")
+    func threeDHint() {
+        let model = Self.makeViewModel(selected: .set)
+        #expect(model.threeDHint == nil)
+        model.style = .threeD
+        #expect(model.threeDHint == "Tap the binoculars to look along the moonset line")
+        _ = model.lookAlong()
+        #expect(model.threeDHint == nil)
     }
 
     @Test("Leaving 3D ends looking along")

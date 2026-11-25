@@ -717,3 +717,5 @@
 00:14 6.1f: Tessa: froze in 3D, can't get out; fixing (throttle heading, no camera turn during gestures, camera state off the render path)
 00:15 6.1g freeze fix written, NOT built; committing
 00:20 6.1h map buttons moved to a floating column, NOT built; committing
+00:24 6.1i: Tessa: follow me not on by default; 3D needs binoculars hint; fixing
+00:24 6.1i: follow default guard + 3D auto look-along + hint, NOT built; committing

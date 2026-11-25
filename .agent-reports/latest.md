@@ -1,3 +1,12 @@
+# Step 6.1i: Follow me default, 3D entry (2026-11-25)
+
+Tessa: button column placement is better; Follow me isn't on by default; in 3D the binoculars aren't obvious.
+Done (not built): far-from-place check ignores cameras over 20 km from the ground (MapKit's opening view); 3D goes
+straight to look along; 3D overview shows "Tap the binoculars to look along the … line". Tests for both.
+If Follow me still isn't on at open: next suspect is MapKit swapping the `.userLocation` position for its fallback.
+
+---
+
 # Step 6.1h: map buttons off the top bar (2026-11-25)
 
 Tessa's screenshots: 3D and look-along work (note reads ~300 ft up); the top bar's buttons overlap the style switch.

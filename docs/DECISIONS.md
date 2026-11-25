@@ -1929,3 +1929,7 @@ From a recording of Got it → noCity (0.23 s of pure black, then an empty beat,
 ## 2026-11-25: Map buttons move off the top bar (Tessa)
 - With binoculars, Follow me, turn-with-phone, the three-way style switch and Done, the sheet's top bar overlapped itself. The bar now holds only the style switch and Done; the three map buttons are a column of 44 pt round glass buttons at the map's top-leading edge, clear of MapKit's compass and 2D/3D controls on the trailing edge. A button that's on is outlined and tinted amber.
 
+## 2026-11-25: Follow me default and the way into look along (Tessa)
+- Follow me wasn't on when the map opened. Likely cause: the far-from-place check judged MapKit's zoomed-out opening camera (centred far from anywhere) before it had found you, sent the map back to the place and ended following. The check now only trusts cameras under 20 km from the ground. Not confirmed here; if it persists, look next at MapKit replacing the `.userLocation` position with its fallback.
+- 3D: the binoculars weren't obvious. Switching to 3D now goes straight to looking along the selected line; the binoculars button then toggles the 3D overview, where a note says "Tap the binoculars to look along the moonrise line".
+
