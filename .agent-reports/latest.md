@@ -1,3 +1,11 @@
+# Step 6.1h: map buttons off the top bar (2026-11-25)
+
+Tessa's screenshots: 3D and look-along work (note reads ~300 ft up); the top bar's buttons overlap the style switch.
+Done (not built): the bar holds the Satellite/Explore/3D switch and Done; Follow me, turn-with-phone and look-along are
+a column of round buttons at the map's top-left, amber when on (shared inline button style).
+
+---
+
 # Step 6.1g: 3D freeze fix (2026-11-25)
 
 Tessa: 6.1f worked, then froze in 3D and couldn't come out.

@@ -40,7 +40,8 @@ draws the selected day's bearing from wherever you put the pin, and you look at 
    - If the day has no rise or set (FR2), that line uses the next one, the same event the card shows, and the label
      says its day ("Sun 12:20 AM"). While the moon is up, the card shows the current pass ("↑ Rose"), so the map
      uses that pass's rise and set.
-5. **Follow me.** On by default whenever location is allowed (Tessa, 2026-11-24, after 6.1c: the top-left arrow
+5. **Follow me.** (Map buttons, top left of the map: Follow me, turn with phone, and in 3D look along; the top bar
+   holds only the style switch and Done, Tessa 2026-11-25.) On by default whenever location is allowed (Tessa, 2026-11-24, after 6.1c: the top-left arrow
    wasn't obvious). If you're more than 50 km from the place (browsing another city), the map goes back to the place,
    since its bearings wouldn't apply where you stand. The button (top left) switches to your GPS position with the map **turning with your phone** (MapKit's
    heading-following user location). The pin is then you. Panning the map leaves Follow me; the button brings it

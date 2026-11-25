@@ -48,6 +48,8 @@ struct MoonMapView: View {
     /// Closer than this, the camera already faces the heading: setting it
     /// again would only report another move, and so on.
     private static let alreadyFacingDegrees = 0.5
+    private static let mapButtonSpacing: CGFloat = 12
+    private static let mapButtonTopPadding: CGFloat = 12
     private static let pinSize: CGFloat = 18
     private static let pinStrokeWidth: CGFloat = 3
     private static let pinDotSize: CGFloat = 6
@@ -79,6 +81,7 @@ struct MoonMapView: View {
                     if viewModel.lookingAlong == nil { pin }
                 }
                 .overlay(alignment: .bottom) { legend }
+                .overlay(alignment: .topLeading) { mapButtons }
                 .toolbar { toolbar }
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbarBackground(.visible, for: .navigationBar)
@@ -400,8 +403,68 @@ struct MoonMapView: View {
         return line.isSelected ? Theme.Colors.textPrimary.opacity(Self.cellSelectedBorderOpacity) : Color.clear
     }
 
+    // MARK: - Map buttons
+
+    /// Follow me, turn with the phone, and (in 3D) look along the line: a
+    /// column of round buttons at the map's leading edge, clear of MapKit's
+    /// own controls at the trailing edge.
+    private var mapButtons: some View {
+        VStack(spacing: Self.mapButtonSpacing) {
+            if viewModel.canFollowUser {
+                mapButton(
+                    systemImage: position.followsUserLocation ? "location.north.line.fill" : "location.north.line",
+                    label: "Follow my location",
+                    isOn: position.followsUserLocation
+                ) {
+                    viewModel.stopLookingAlong()
+                    viewModel.turnsWithPhone = true
+                    position = .userLocation(followsHeading: true, fallback: position)
+                }
+                mapButton(
+                    systemImage: viewModel.turnsWithPhone ? "safari.fill" : "safari",
+                    label: "Turn the map with the phone",
+                    isOn: viewModel.turnsWithPhone
+                ) {
+                    viewModel.turnsWithPhone.toggle()
+                }
+            }
+            if viewModel.canLookAlong {
+                mapButton(
+                    systemImage: viewModel.lookingAlong == nil ? "binoculars" : "binoculars.fill",
+                    label: viewModel.lookingAlong == nil ? "Look along the line" : "Back to the map",
+                    isOn: viewModel.lookingAlong != nil,
+                    action: toggleLookAlong
+                )
+            }
+        }
+        .padding(.leading, Theme.Metrics.screenMargin)
+        .padding(.top, Self.mapButtonTopPadding)
+    }
+
+    private func mapButton(
+        systemImage: String,
+        label: String,
+        isOn: Bool,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            Image(systemName: systemImage)
+                .font(.title3)
+                .frame(width: Theme.Metrics.minimumHitTarget, height: Theme.Metrics.minimumHitTarget)
+                .background(Theme.Colors.glassTint, in: Circle())
+                .overlay {
+                    Circle().strokeBorder(isOn ? Theme.Colors.accent : Theme.Colors.glassBorder, lineWidth: Theme.Metrics.hairline)
+                }
+        }
+        .buttonStyle(.inline(isOn ? Theme.Colors.accent : Theme.Colors.textPrimary))
+        .accessibilityLabel(label)
+        .accessibilityAddTraits(isOn ? AccessibilityTraits.isSelected : AccessibilityTraits())
+    }
+
     // MARK: - Toolbar
 
+    /// Only the style switch and Done: with the map buttons up here as
+    /// well, the bar overlapped itself (Tessa, 2026-11-25).
     @ToolbarContentBuilder
     private var toolbar: some ToolbarContent {
         ToolbarItem(placement: .principal) {
@@ -415,35 +478,6 @@ struct MoonMapView: View {
         }
         ToolbarItem(placement: .confirmationAction) {
             Button("Done") { dismiss() }
-        }
-        if viewModel.canLookAlong {
-            ToolbarItem(placement: .topBarLeading) {
-                Button(action: toggleLookAlong) {
-                    Image(systemName: viewModel.lookingAlong == nil ? "binoculars" : "binoculars.fill")
-                }
-                .accessibilityLabel(viewModel.lookingAlong == nil ? "Look along the line" : "Back to the map")
-            }
-        }
-        if viewModel.canFollowUser {
-            ToolbarItem(placement: .topBarLeading) {
-                Button {
-                    viewModel.stopLookingAlong()
-                    viewModel.turnsWithPhone = true
-                    position = .userLocation(followsHeading: true, fallback: position)
-                } label: {
-                    Image(systemName: position.followsUserLocation ? "location.north.line.fill" : "location.north.line")
-                }
-                .accessibilityLabel("Follow my location")
-            }
-            ToolbarItem(placement: .topBarLeading) {
-                Button {
-                    viewModel.turnsWithPhone.toggle()
-                } label: {
-                    Image(systemName: viewModel.turnsWithPhone ? "safari.fill" : "safari")
-                }
-                .accessibilityLabel("Turn the map with the phone")
-                .accessibilityAddTraits(viewModel.turnsWithPhone ? AccessibilityTraits.isSelected : AccessibilityTraits())
-            }
         }
     }
 }

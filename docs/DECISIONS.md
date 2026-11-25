@@ -1926,3 +1926,6 @@ From a recording of Got it → noCity (0.23 s of pure black, then an empty beat,
 - Fix: `heading` republishes only when its whole degree changes (the lock still sees every reading); the camera's last state lives in an unobserved tracker, not `@State`; the map turns only after the camera has been still for 300 ms, never mid-gesture, without animation, and not when already facing; the turn step is 3° (was 2°).
 - Not reproduced here (no Xcode). If it recurs, turning off "turns with the phone" in 3D is the fallback.
 
+## 2026-11-25: Map buttons move off the top bar (Tessa)
+- With binoculars, Follow me, turn-with-phone, the three-way style switch and Done, the sheet's top bar overlapped itself. The bar now holds only the style switch and Done; the three map buttons are a column of 44 pt round glass buttons at the map's top-leading edge, clear of MapKit's compass and 2D/3D controls on the trailing edge. A button that's on is outlined and tinted amber.
+

@@ -716,3 +716,4 @@
 00:10 6.1f turn/lock at any spot: written, NOT built; committing
 00:14 6.1f: Tessa: froze in 3D, can't get out; fixing (throttle heading, no camera turn during gestures, camera state off the render path)
 00:15 6.1g freeze fix written, NOT built; committing
+00:20 6.1h map buttons moved to a floating column, NOT built; committing

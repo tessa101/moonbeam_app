@@ -1,5 +1,7 @@
 # Status & Handoff
 
+_6.1h map buttons, 2026-11-25 (not built): Tessa's screenshots show the freeze fix working (3D look-along at ~300 ft) but the top bar overlapping. Follow me, turn-with-phone and look-along moved to a round-button column at the map's top left; the bar keeps the style switch and Done._
+
 _6.1g freeze fix, 2026-11-25 (not built): Tessa's map froze in 3D after 6.1f and couldn't leave it. Heading now republishes only per whole degree, camera state is unobserved, turning waits for the camera to settle (300 ms), steps 3°, no animation. Not reproduced here. Next: Tessa retries 3D with turning on._
 
 _6.1f turn and lock at any spot, 2026-11-25 (not built): drag or tap to stand anywhere; the map keeps turning with the phone and locking there. The map runs its own heading session (compass paused while the sheet is open), turns the camera in 2° steps away from your location, and a toolbar toggle turns turning off/on. Tap while looking along re-aims from there. Tests reworked around phone readings. **Not compiled or run.** Watch: compass entrance after closing the map; turning vs dragging._
