@@ -1,3 +1,16 @@
+# Step 6.3b: look along, drag to move (2026-11-25)
+
+Tessa: 6.2–6.3 work, but the view is high up; she liked dragging the pin to a new spot.
+Done (not built, no Xcode): in look-along the pin is the ground under the camera's eye, so dragging moves where you
+stand and the lines follow; camera 250 m (was 600) so MapKit allows more tilt; legend note with the real eye height.
+Tests: pin from the camera's eye, eye height, the note in en_US feet.
+
+Check on the phone: how low it gets now (the note says), and whether dragging feels like moving the pin.
+
+Next: Tessa's verdict. Parked: moon's path at any time; true eye level (Look Around/AR); Xcode agent handoff.
+
+---
+
 # Steps 6.2–6.3: 3D and look along the line (2026-11-24)
 
 Tessa confirmed 6.1d–e works on the phone (follow default, lock and haptic, turn hints, tags, switch).

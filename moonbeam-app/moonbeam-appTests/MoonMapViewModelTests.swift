@@ -280,16 +280,36 @@ struct MoonMapViewModelTests {
         #expect(abs(request.center.longitude - expected.longitude) < 1e-9)
     }
 
-    @Test("While looking along, the pin stays where you stand and nothing locks")
-    func lookAlongKeepsPin() {
+    @Test("While looking along, the pin is the ground under the camera, so dragging moves it")
+    func lookAlongPinFollowsEye() {
         let model = Self.makeViewModel()
         model.style = .threeD
-        let stand = model.pin
         _ = model.lookAlong()
-        let ahead = BearingLine.Coordinate(latitude: 33.69, longitude: -117.82)
-        model.cameraChanged(center: ahead, heading: 58, distance: 600, followsHeading: true)
-        #expect(model.pin == stand)
+        let center = BearingLine.Coordinate(latitude: 33.70, longitude: -117.80)
+        model.cameraChanged(center: center, heading: 58, distance: 250, pitch: 80, followsHeading: false)
+
+        let back = 250 * sin(80 * Double.pi / 180)
+        let expected = BearingLine.destination(from: center, bearing: 238, distance: back)
+        #expect(abs(model.pin.latitude - expected.latitude) < 1e-9)
+        #expect(abs(model.pin.longitude - expected.longitude) < 1e-9)
+        #expect(abs((model.eyeHeight ?? 0) - 250 * cos(80 * Double.pi / 180)) < 1e-9)
         #expect(model.locked == nil)
+        #expect(model.lines.allSatisfy { $0.bearingLine.start == model.pin })
+    }
+
+    @Test("The note gives the eye height in the locale's road units")
+    func lookAlongNote() {
+        let model = Self.makeViewModel()
+        #expect(model.lookAlongNote == nil)
+        model.style = .threeD
+        _ = model.lookAlong()
+        model.cameraChanged(center: model.pin, heading: 58, distance: 250, pitch: 60, followsHeading: false)
+        let note = model.lookAlongNote ?? ""
+        #expect(note.hasPrefix("Seen from about "))
+        #expect(note.contains("ft"))
+        #expect(note.hasSuffix(" up · drag to move"))
+        _ = model.stopLookingAlong()
+        #expect(model.lookAlongNote == nil)
     }
 
     @Test("Stopping goes back over the pin, still tilted for 3D")

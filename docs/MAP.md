@@ -78,9 +78,11 @@ draws the selected day's bearing from wherever you put the pin, and you look at 
 ## 5. Step 6.3: "Look along the line" (try on the phone)
 
 Built 2026-11-24. In 3D, a binoculars button (top left) places the camera behind the pin, facing the selected line's
-bearing and tilted toward the horizon (`lookAlongDistance` 600 m, `lookAlongPitch` 80°): roughly what's in that
-direction. The pin stays where you stand (drawn as a map annotation, since the camera's centre is out on the line), and
-switching Moonrise / Moonset turns the view to the other line. The button again, Follow me, or leaving 3D ends it.
+bearing and tilted toward the horizon (`lookAlongDistance` 250 m, `lookAlongPitch` 80°; 600 m read as "pretty high
+up", Tessa 2026-11-25): roughly what's in that direction. The pin is the ground under the camera's eye (drawn as a map
+annotation, since the camera's centre is out on the line), so **dragging the view moves where you stand** and the
+lines follow (Tessa liked dragging the pin before). A note gives the real eye height from the tilt MapKit allowed
+("Seen from about 140 ft up · drag to move"). Switching Moonrise / Moonset turns the view to the other line. The button again, Follow me, or leaving 3D ends it.
 
 Unknown until tried on a device: MapKit clamps the tilt (more so zoomed out), so the eye sits about
 `distance × cos(pitch)` up, about 100 m at best, not eye level. If it doesn't read well, keep 6.2 and drop this.

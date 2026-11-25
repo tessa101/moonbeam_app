@@ -1,5 +1,7 @@
 # Status & Handoff
 
+_6.3b look along, 2026-11-25 (not built): Tessa found 6.2–6.3 working but the view "pretty high up", and missed dragging the pin. Now the stand point is the ground under the camera's eye, so dragging moves it; camera 250 m (was 600); a legend note gives the real eye height ("Seen from about 140 ft up · drag to move"). Tests updated. **Not compiled or run.** Next: Tessa's check on the phone._
+
 _6.2–6.3 map 3D and look along, 2026-11-24 (not built): the style switch now reads Satellite / Explore / 3D (realistic elevation, tilts to 60°, pitch control). In 3D a binoculars button looks along the selected line from the pin (600 m, 80°); the pin freezes meanwhile; Moonrise/Moonset re-aims; Follow me, the button or leaving 3D ends it. Tests added to `MoonMapViewModelTests`. **Not compiled or run.** Earlier: 6.1d–e confirmed working on the phone. Next: Tessa tries 3D, then look along; then the moon's path (parked) or polish._
 
 _6.1d–e builds and runs on Tessa's phone, 2026-11-24, after two fixes: `tag(_:)` renamed `lineTag(_:)` (clashed with `View.tag`), and `.annotationTitles(.hidden)` moved from the `Map` onto the `Annotation` (it's a MapContent modifier). Map test suites not yet run on the Mac; feel of lock, haptic and tags not yet reported. Next: Tessa's notes on the feel, then 6.2 (3D)._

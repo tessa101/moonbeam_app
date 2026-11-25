@@ -180,6 +180,7 @@ struct MoonMapView: View {
                 center: BearingLine.Coordinate(context.camera.centerCoordinate),
                 heading: context.camera.heading,
                 distance: context.camera.distance,
+                pitch: context.camera.pitch,
                 followsHeading: position.followsUserHeading
             )
         }
@@ -251,6 +252,11 @@ struct MoonMapView: View {
                         .foregroundStyle(Theme.Colors.textSecondary)
                 }
                 .accessibilityElement(children: .combine)
+            }
+            if let note = viewModel.lookAlongNote {
+                Text(note)
+                    .font(Theme.Fonts.detail)
+                    .foregroundStyle(Theme.Colors.textSecondary)
             }
             ViewThatFits(in: .horizontal) {
                 HStack(alignment: .top, spacing: Self.legendSpacing) { legendCells }

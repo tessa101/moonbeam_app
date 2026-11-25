@@ -1910,3 +1910,8 @@ From a recording of Got it → noCity (0.23 s of pure black, then an empty beat,
 - 3D is the third option in the style switch: satellite imagery over real terrain (`.hybrid(elevation: .realistic)`), tilted to 60° on switching, with MapKit's pitch control. Standard-map 3D is the fallback if satellite reads badly.
 - "Look along the line" only in 3D: the camera stands behind the pin facing the selected bearing at 80° tilt, 600 m from the point it looks at. The pin freezes meanwhile, because the camera's centre is out on the line. MapKit clamps tilt, so this is an elevated view, not eye level; to be judged on the phone.
 
+## 2026-11-25: Look along: drag to move, closer camera, honest height (Tessa, on the phone)
+- While looking along, the pin is the ground under the camera's eye (centre moved back by distance × sin(pitch) against the heading), so panning moves where you stand, as dragging the pin did in the flat map.
+- Camera distance 600 → 250 m: MapKit clamps tilt less close in, so the eye sits lower.
+- The legend states the eye height from the tilt MapKit actually gave, in the locale's road units, so the view isn't mistaken for eye level. True eye level stays parked (Look Around, AR; MAP.md §8).
+

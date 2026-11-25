@@ -95,10 +95,10 @@ final class MoonMapViewModel {
     static let threeDPitch = 60.0
 
     /// "Look along the line" (MAP.md §5, step 6.3): the camera's distance
-    /// and tilt. MapKit clamps the tilt (more so zoomed out), so the eye
-    /// sits roughly `distance × cos(pitch)` up: about 100 m here at best,
-    /// not eye level. Tune on the phone.
-    static let lookAlongDistance = 600.0
+    /// and tilt. The eye sits `distance × cos(pitch)` up. MapKit clamps the
+    /// tilt, less so close in, so a short distance gets lowest: 600 m read
+    /// as "pretty high up" on the phone (Tessa, 2026-11-25). Tune there.
+    static let lookAlongDistance = 250.0
     static let lookAlongPitch = 80.0
 
     /// How far along a line its tag sits, as a fraction of the camera's
@@ -121,7 +121,10 @@ final class MoonMapViewModel {
     /// Leaving 3D ends "look along the line", which only works in 3D.
     var style: Style = .satellite {
         didSet {
-            if style != .threeD { lookingAlong = nil }
+            if style != .threeD {
+                lookingAlong = nil
+                eyeHeight = nil
+            }
         }
     }
 
@@ -129,6 +132,19 @@ final class MoonMapViewModel {
     /// Meanwhile the pin stays put: the camera's centre is out along the
     /// line, not where you stand.
     private(set) var lookingAlong: MoonTableFormatter.Event?
+
+    /// While looking along: how high the camera's eye is, in metres, from
+    /// the tilt MapKit actually gave. `nil` otherwise.
+    private(set) var eyeHeight: Double?
+
+    /// "Seen from about 140 ft up · drag to move": says how far from eye
+    /// level the view is, and that the stand point moves (MAP.md §5).
+    var lookAlongNote: String? {
+        guard lookingAlong != nil, let eyeHeight else { return nil }
+        let height = Measurement(value: eyeHeight.rounded(), unit: UnitLength.meters)
+            .formatted(.measurement(width: .abbreviated, usage: .road).locale(formatter.locale))
+        return "Seen from about \(height) up · drag to move"
+    }
 
     /// "Look along the line" is offered in 3D, for a line that exists.
     var canLookAlong: Bool {
@@ -231,21 +247,27 @@ final class MoonMapViewModel {
     // MARK: - Actions
 
     /// The map's camera moved: a pan, a zoom, a turn, or following you.
-    /// The pin is its centre.
+    /// The pin is its centre; while looking along a line, the ground under
+    /// the camera's eye, so dragging the view moves where you stand.
     ///
     /// - Parameters:
     ///   - heading: the camera's heading, degrees from true north.
-    ///   - distance: metres from the ground.
+    ///   - distance: metres from the camera to `center`.
+    ///   - pitch: degrees from straight down.
     ///   - followsHeading: the map turns with the phone, so `heading` is
     ///     where the phone points.
     func cameraChanged(
         center: BearingLine.Coordinate,
         heading: Double,
         distance: Double,
+        pitch: Double = 0,
         followsHeading: Bool
     ) {
         cameraDistance = distance
         if lookingAlong != nil {
+            let tilt = pitch * .pi / Self.halfTurn
+            pin = BearingLine.destination(from: center, bearing: heading + Self.halfTurn, distance: distance * sin(tilt))
+            eyeHeight = distance * cos(tilt)
             updateLock(heading: nil)
             return
         }
@@ -291,6 +313,7 @@ final class MoonMapViewModel {
     @discardableResult
     func stopLookingAlong() -> CameraRequest {
         lookingAlong = nil
+        eyeHeight = nil
         return CameraRequest(
             center: pin,
             heading: 0,
