@@ -1,3 +1,11 @@
+# TestFlight 1.1 (12) (2026-11-26)
+
+Tessa: 1.0 is live in the App Store, so the map is 1.1. `MARKETING_VERSION` 1.0 → 1.1 (app target, Debug + Release;
+test target unchanged); build stays 12. TESTFLIGHT-BUILD-12.md updated (version, App Store Connect steps, What's New
+draft), PRODUCT and DECISIONS updated. Still on the Mac: tests, archive, upload.
+
+---
+
 # TestFlight 1.0 (12) prep (2026-11-25)
 
 Tessa: the map looks good; push and prep TestFlight. All map commits were already pushed (`e1a782a`).

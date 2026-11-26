@@ -62,7 +62,7 @@ to catch a moonrise over the ocean or a skyline, you need the **time** and the
 | Current location (GPS) | ➖ | V1.1, needs permission UX |
 | Date picker | ✅ | Built in Step 3 (DATE.md): ‹ / › by day, month calendar, Today chip; today ±366 days in the place's time zone |
 | Saved locations | ➖ | Later |
-| Map: where to stand | ✅ | Steps 6.1–6.3 (MAP.md), TestFlight 1.0 (12): rise/set lines from a movable pin, turns and locks with the phone anywhere, Satellite/Explore/3D, look along the line |
+| Map: where to stand | ✅ | Steps 6.1–6.3 (MAP.md), 1.1, TestFlight 1.1 (12): rise/set lines from a movable pin, turns and locks with the phone anywhere, Satellite/Explore/3D, look along the line |
 
 ## 7. Requirements
 

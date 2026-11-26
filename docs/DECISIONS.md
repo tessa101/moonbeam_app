@@ -1933,3 +1933,7 @@ From a recording of Got it → noCity (0.23 s of pure black, then an empty beat,
 - Follow me wasn't on when the map opened. Likely cause: the far-from-place check judged MapKit's zoomed-out opening camera (centred far from anywhere) before it had found you, sent the map back to the place and ended following. The check now only trusts cameras under 20 km from the ground. Not confirmed here; if it persists, look next at MapKit replacing the `.userLocation` position with its fallback.
 - 3D: the binoculars weren't obvious. Switching to 3D now goes straight to looking along the selected line; the binoculars button then toggles the 3D overview, where a note says "Tap the binoculars to look along the moonrise line".
 
+## 2026-11-26: The map ships as version 1.1 (Tessa)
+- 1.0 is live in the App Store, so the map build is 1.1 (12): App Store Connect takes no more 1.0 builds, and a new feature is a minor version. Considered: 1.0.12 (reads as twelve bug-fix releases and mixes in the build number).
+- Build numbers keep counting up across versions (…11, 12, 13), never reset. Patch versions (1.1.1) are for fix-only releases.
+
