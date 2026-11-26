@@ -22,8 +22,11 @@ Not in this build: the moon's path at times other than rise and set; true eye-le
 
 Not run from the cloud session (no Xcode there). Tessa to run and fill in:
 
-- [ ] Map suites: `BearingLineTests`, `MoonMapViewModelTests`, `LocationViewModelMapTests` pass.
-- [ ] Full suite (iPhone 17 simulator): only the known failures (SentenceTokenTests command-line-only, the
+- [x] Map suites: `BearingLineTests`, `MoonMapViewModelTests`, `LocationViewModelMapTests` pass (full ⌘U run,
+      2026-11-26: no failures outside the two known suites).
+- [x] Full suite (iPhone 17 simulator, Xcode ⌘U, 2026-11-26): only the known failures, `SentenceTokenTests`
+      (24 × `layout` line 73, 2 × `pendingPlace`) and `PlaceChangeLayoutTests.slowUseMyLocationKeepsSentenceAndSlot`
+      blank-ink. To confirm the latter passes alone: [ ]. Originally: only the known failures (SentenceTokenTests command-line-only, the
       PlaceChangeLayout timing flake that passes alone). Watch `MoonCardAccessibilityTests`: the rise/set cells are
       now buttons for VoiceOver.
 - [ ] `ButtonStyleDriftTests` passes (the map's legend and round buttons use the shared row and inline styles).
